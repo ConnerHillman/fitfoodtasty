@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -514,115 +514,124 @@ const MealsManager = () => {
             </Select>
           </div>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Meal
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingMeal ? "Edit Meal" : "Add New Meal"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setIsNewMealFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create New Meal
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={resetForm}>
+                <Edit className="h-4 w-4 mr-2" />
+                Quick Edit
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingMeal ? "Edit Meal" : "Add New Meal"}
+                </DialogTitle>
+                <DialogDescription>
+                  Quickly add or edit a meal without ingredients. Use "Create New Meal" to add ingredients during creation.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="breakfast">Breakfast</SelectItem>
-                      <SelectItem value="lunch">Lunch</SelectItem>
-                      <SelectItem value="dinner">Dinner</SelectItem>
-                      <SelectItem value="snack">Snack</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price (£)</Label>
+                  <Label htmlFor="name">Name</Label>
                   <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="image">Meal Image</Label>
-                <Input
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setImageFile(file);
-                    }
-                  }}
-                />
-                {formData.image_url && !imageFile && (
-                  <div className="mt-2">
-                    <img 
-                      src={formData.image_url} 
-                      alt="Current meal image" 
-                      className="w-32 h-32 object-cover rounded-md"
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="breakfast">Breakfast</SelectItem>
+                        <SelectItem value="lunch">Lunch</SelectItem>
+                        <SelectItem value="dinner">Dinner</SelectItem>
+                        <SelectItem value="snack">Snack</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price (£)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     />
                   </div>
-                )}
-                {imageFile && (
-                  <div className="mt-2">
-                    <img 
-                      src={URL.createObjectURL(imageFile)} 
-                      alt="Preview" 
-                      className="w-32 h-32 object-cover rounded-md"
-                    />
-                  </div>
-                )}
-              </div>
+                </div>
 
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isUploading}>
-                  {isUploading ? "Uploading..." : editingMeal ? "Update" : "Create"} Meal
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="space-y-2">
+                  <Label htmlFor="image">Meal Image</Label>
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setImageFile(file);
+                      }
+                    }}
+                  />
+                  {formData.image_url && !imageFile && (
+                    <div className="mt-2">
+                      <img 
+                        src={formData.image_url} 
+                        alt="Current meal image" 
+                        className="w-32 h-32 object-cover rounded-md"
+                      />
+                    </div>
+                  )}
+                  {imageFile && (
+                    <div className="mt-2">
+                      <img 
+                        src={URL.createObjectURL(imageFile)} 
+                        alt="Preview" 
+                        className="w-32 h-32 object-cover rounded-md"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isUploading}>
+                    {isUploading ? "Uploading..." : editingMeal ? "Update" : "Create"} Meal
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* New Meal Creation Dialog */}
@@ -630,6 +639,9 @@ const MealsManager = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Meal with Ingredients</DialogTitle>
+            <DialogDescription>
+              Add ingredients while creating the meal. Nutrition totals update automatically.
+            </DialogDescription>
           </DialogHeader>
           <MealFormWithIngredients
             onSuccess={() => {
@@ -750,6 +762,7 @@ const MealsManager = () => {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Meal Builder - Add Ingredients</DialogTitle>
+            <DialogDescription>Manage ingredients for an existing meal and recalculate nutrition.</DialogDescription>
           </DialogHeader>
           {selectedMealId && (
             <MealBuilder 
