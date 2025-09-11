@@ -43,6 +43,15 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
 
   const printMealLabel = async () => {
     try {
+      // Convert logo to base64
+      const logoResponse = await fetch('/lovable-uploads/10536b16-bcbb-425b-ad58-6c366dfcc3a9.png');
+      const logoBlob = await logoResponse.blob();
+      const logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(logoBlob);
+      });
+
       // Fetch ingredients for this meal
       const { data: mealIngredients, error } = await supabase
         .from("meal_ingredients")
@@ -208,7 +217,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
             <div class="header">
               <div class="meal-name">${meal.name}</div>
               <div style="display: flex; align-items: center; justify-content: center; margin-top: 5px;">
-                <img src="${window.location.origin}/lovable-uploads/10536b16-bcbb-425b-ad58-6c366dfcc3a9.png" alt="Fit Food Tasty" style="height: 24px; width: auto;" />
+                <img src="${logoBase64}" alt="Fit Food Tasty" style="height: 24px; width: auto;" />
               </div>
             </div>
 
