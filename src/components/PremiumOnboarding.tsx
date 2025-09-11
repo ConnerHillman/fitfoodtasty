@@ -420,14 +420,16 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <span>Back</span>
           </Button>
           
-          <Button 
-            onClick={nextStep}
-            disabled={!canProceed()}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex items-center space-x-2"
-          >
-            <span>{currentStep === steps.length - 1 ? "Create My Plan" : "Continue"}</span>
-            <ArrowRight size={16} />
-          </Button>
+          {currentStep > 0 && (
+            <Button 
+              onClick={nextStep}
+              disabled={!canProceed()}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex items-center space-x-2"
+            >
+              <span>{currentStep === steps.length - 1 ? "Create My Plan" : "Continue"}</span>
+              <ArrowRight size={16} />
+            </Button>
+          )}
         </div>
       </Card>
     </div>
