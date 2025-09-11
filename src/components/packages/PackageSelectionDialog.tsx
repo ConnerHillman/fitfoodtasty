@@ -263,7 +263,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto pointer-events-auto">
         <DialogHeader>
           <DialogTitle>
-            {pkg ? `Choose ${pkg.meal_count} meals for ${pkg.name}` : 'Choose Meals'}
+            {pkg ? `Choose ${pkg.meal_count} meals` : 'Choose Meals'}
           </DialogTitle>
         </DialogHeader>
 
@@ -279,7 +279,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
         </div>
 
         {/* Selection status */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 mt-2">
           <div className="text-muted-foreground">
             Selected: <span className="font-semibold text-foreground">{totalSelected}</span> / {pkg?.meal_count ?? 0}
           </div>
