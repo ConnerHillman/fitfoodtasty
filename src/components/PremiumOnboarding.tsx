@@ -541,14 +541,14 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                           opacity = 1;
                           scale = 1;
                         } else if (isLeft) {
-                          transform = "translateX(-120px) rotateY(25deg) translateZ(-50px)";
+                          transform = "translateX(-200px) rotateY(25deg) translateZ(-50px)";
                           zIndex = 5;
-                          opacity = 0.6;
+                          opacity = 0.7;
                           scale = 0.85;
                         } else if (isRight) {
-                          transform = "translateX(120px) rotateY(-25deg) translateZ(-50px)";
+                          transform = "translateX(200px) rotateY(-25deg) translateZ(-50px)";
                           zIndex = 5;
-                          opacity = 0.6;
+                          opacity = 0.7;
                           scale = 0.85;
                         }
 
