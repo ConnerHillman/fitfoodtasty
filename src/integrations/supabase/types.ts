@@ -14,6 +14,156 @@ export type Database = {
   }
   public: {
     Tables: {
+      ingredients: {
+        Row: {
+          calories_per_100g: number
+          carbs_per_100g: number
+          created_at: string
+          default_unit: string | null
+          description: string | null
+          fat_per_100g: number
+          fiber_per_100g: number | null
+          id: string
+          name: string
+          protein_per_100g: number
+          sodium_per_100g: number | null
+          sugar_per_100g: number | null
+          updated_at: string
+        }
+        Insert: {
+          calories_per_100g?: number
+          carbs_per_100g?: number
+          created_at?: string
+          default_unit?: string | null
+          description?: string | null
+          fat_per_100g?: number
+          fiber_per_100g?: number | null
+          id?: string
+          name: string
+          protein_per_100g?: number
+          sodium_per_100g?: number | null
+          sugar_per_100g?: number | null
+          updated_at?: string
+        }
+        Update: {
+          calories_per_100g?: number
+          carbs_per_100g?: number
+          created_at?: string
+          default_unit?: string | null
+          description?: string | null
+          fat_per_100g?: number
+          fiber_per_100g?: number | null
+          id?: string
+          name?: string
+          protein_per_100g?: number
+          sodium_per_100g?: number | null
+          sugar_per_100g?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meal_ingredients: {
+        Row: {
+          created_at: string
+          id: string
+          ingredient_id: string
+          meal_id: string
+          quantity: number
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingredient_id: string
+          meal_id: string
+          quantity: number
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingredient_id?: string
+          meal_id?: string
+          quantity?: number
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_ingredients_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meals: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          price: number | null
+          total_calories: number | null
+          total_carbs: number | null
+          total_fat: number | null
+          total_fiber: number | null
+          total_protein: number | null
+          total_sodium: number | null
+          total_sugar: number | null
+          total_weight: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          price?: number | null
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_fiber?: number | null
+          total_protein?: number | null
+          total_sodium?: number | null
+          total_sugar?: number | null
+          total_weight?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          price?: number | null
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_fiber?: number | null
+          total_protein?: number | null
+          total_sodium?: number | null
+          total_sugar?: number | null
+          total_weight?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null
@@ -55,7 +205,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_meal_nutrition: {
+        Args: { meal_id_param: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
