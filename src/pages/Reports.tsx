@@ -453,11 +453,6 @@ const Reports = () => {
                     {showFullReport ? 'Hide' : 'View'} Full Report
                   </Button>
                   
-                  <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export All
-                  </Button>
-                  
                   <Dialog open={showExportOptions} onOpenChange={setShowExportOptions}>
                     <DialogTrigger asChild>
                       <Button>
