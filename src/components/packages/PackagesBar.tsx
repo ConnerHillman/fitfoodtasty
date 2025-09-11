@@ -10,6 +10,7 @@ export interface MealPackage {
   description?: string | null;
   meal_count: number;
   price: number;
+  image_url?: string | null;
 }
 
 interface PackagesBarProps {
@@ -23,7 +24,7 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
     const fetchPackages = async () => {
       const { data, error } = await supabase
         .from("packages")
-        .select("id,name,description,meal_count,price")
+        .select("id,name,description,meal_count,price,image_url")
         .eq("is_active", true)
         .order("meal_count", { ascending: true });
       if (!error) setPackages((data || []) as MealPackage[]);
@@ -39,23 +40,32 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
       <p className="text-muted-foreground mb-4">Save with our curated bundles. Pick your meals after choosing a package.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {packages.map((pkg) => (
-          <Card key={pkg.id} className="relative">
-            <CardHeader>
+          <Card key={pkg.id} className="relative overflow-hidden hover:shadow-lg transition-shadow">
+            {pkg.image_url && (
+              <div className="aspect-[4/3] w-full overflow-hidden">
+                <img 
+                  src={pkg.image_url} 
+                  alt={pkg.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{pkg.name}</CardTitle>
                 <Badge variant="secondary">{pkg.meal_count} meals</Badge>
               </div>
             </CardHeader>
-            <CardContent className="flex items-end justify-between">
-              <div>
-                {pkg.description && (
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{pkg.description}</p>
-                )}
+            <CardContent className="pt-0">
+              {pkg.description && (
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{pkg.description}</p>
+              )}
+              <div className="flex items-center justify-between">
                 <div className="text-2xl font-bold text-primary">£{pkg.price.toFixed(2)}</div>
+                <Button onClick={() => onSelect(pkg)} aria-label={`Choose ${pkg.name}`}>
+                  Choose
+                </Button>
               </div>
-              <Button onClick={() => onSelect(pkg)} aria-label={`Choose ${pkg.name}`}>
-                Choose
-              </Button>
             </CardContent>
           </Card>
         ))}
