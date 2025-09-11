@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, CheckCircle2, ShoppingCart, Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Minus, Plus, CheckCircle2, ShoppingCart, Search, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
@@ -15,6 +16,13 @@ interface Allergen {
   id: string;
   name: string;
   description?: string;
+}
+
+interface Ingredient {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
 }
 
 interface Meal {
@@ -51,6 +59,8 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [mealAllergens, setMealAllergens] = useState<Record<string, Allergen[]>>({});
+  const [mealIngredients, setMealIngredients] = useState<Record<string, Ingredient[]>>({});
+  const [loadingIngredients, setLoadingIngredients] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const { addPackageToCart } = useCart();
   const navigate = useNavigate();
@@ -150,6 +160,40 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
         }
       });
       setMealAllergens(allergensMap);
+    }
+  };
+
+  const fetchIngredientsForMeal = async (mealId: string) => {
+    if (mealIngredients[mealId] || loadingIngredients[mealId]) return;
+    
+    setLoadingIngredients(prev => ({ ...prev, [mealId]: true }));
+    
+    try {
+      const { data, error } = await supabase
+        .from("meal_ingredients")
+        .select(`
+          quantity,
+          unit,
+          ingredients (
+            id,
+            name
+          )
+        `)
+        .eq("meal_id", mealId);
+
+      if (!error && data) {
+        const ingredients: Ingredient[] = data.map((mi: any) => ({
+          id: mi.ingredients.id,
+          name: mi.ingredients.name,
+          quantity: mi.quantity,
+          unit: mi.unit || 'g'
+        }));
+        setMealIngredients(prev => ({ ...prev, [mealId]: ingredients }));
+      }
+    } catch (error) {
+      console.error("Error fetching ingredients:", error);
+    } finally {
+      setLoadingIngredients(prev => ({ ...prev, [mealId]: false }));
     }
   };
 
@@ -379,7 +423,38 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-between">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => fetchIngredientsForMeal(meal.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Info size={14} />
+                          Ingredients
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-4 bg-background border border-border shadow-lg z-50">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-sm">Ingredients</h4>
+                          {loadingIngredients[meal.id] ? (
+                            <div className="text-sm text-muted-foreground">Loading...</div>
+                          ) : mealIngredients[meal.id] && mealIngredients[meal.id].length > 0 ? (
+                            <div className="space-y-1">
+                              {mealIngredients[meal.id].map((ingredient) => (
+                                <div key={ingredient.id} className="text-sm">
+                                  <span className="font-medium">{ingredient.quantity}{ingredient.unit}</span> {ingredient.name}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">No ingredients available</div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => dec(meal.id)} disabled={qty === 0}>
                         <Minus size={16} />
