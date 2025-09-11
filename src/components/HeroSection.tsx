@@ -4,21 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Flame, Clock, Users, Award } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalizedResults from "./PersonalizedResults";
-
 const HeroSection = () => {
   const navigate = useNavigate();
   const [showResults, setShowResults] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-
   const handleOnboardingComplete = (profile: any) => {
     setUserProfile(profile);
     setShowResults(true);
   };
-
   const handleStartOver = () => {
     setShowResults(false);
   };
-
   const handleGetStarted = () => {
     navigate('/onboarding');
   };
@@ -27,16 +23,10 @@ const HeroSection = () => {
   if (showResults && userProfile) {
     return <PersonalizedResults profile={userProfile} onStartOver={handleStartOver} />;
   }
-
-  return (
-    <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
+  return <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img 
-          src="/src/assets/about-kitchen-team.jpg" 
-          alt="Premium meal prep kitchen"
-          className="w-full h-full object-cover opacity-40"
-        />
+        <img src="/src/assets/about-kitchen-team.jpg" alt="Premium meal prep kitchen" className="w-full h-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-gray-900/50 to-transparent"></div>
       </div>
 
@@ -81,37 +71,21 @@ const HeroSection = () => {
 
              {/* CTA */}
              <div className="space-y-4">
-               <Button 
-                 size="lg"
-                 onClick={handleGetStarted}
-                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 text-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200"
-               >
+               <Button size="lg" onClick={handleGetStarted} className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 text-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200">
                  ✨ Create Your Perfect Plan
                </Button>
                
                <div className="flex items-center space-x-4">
-                 <Button 
-                   asChild
-                   variant="outline" 
-                   size="lg"
-                   className="border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold px-6 py-3 rounded-full backdrop-blur-sm"
-                 >
+                 <Button asChild variant="outline" size="lg" className="border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold px-6 py-3 rounded-full backdrop-blur-sm">
                    <Link to="/auth">Create Free Account</Link>
                  </Button>
                  
-                 <Button 
-                   asChild
-                   variant="ghost" 
-                   size="lg"
-                   className="text-white hover:bg-white/20 font-medium px-6 py-3 rounded-full"
-                 >
+                 <Button asChild variant="ghost" size="lg" className="text-white hover:bg-white/20 font-medium px-6 py-3 rounded-full">
                    <Link to="/menu">Browse Menu</Link>
                  </Button>
                </div>
                
-               <p className="text-gray-300 text-sm">
-                 No lock-in contract • Cancel anytime • Free delivery
-               </p>
+               
              </div>
           </div>
 
@@ -127,9 +101,7 @@ const HeroSection = () => {
               <div className="space-y-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={16} className="fill-green-400 text-green-400" />
-                    ))}
+                    {[...Array(5)].map((_, i) => <Star key={i} size={16} className="fill-green-400 text-green-400" />)}
                   </div>
                   <span className="text-white font-semibold">4.8/5</span>
                   <span className="text-gray-300 text-sm">Excellent on Trustpilot</span>
@@ -143,9 +115,7 @@ const HeroSection = () => {
                     </p>
                     <div className="flex items-center space-x-2">
                       <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={12} className="fill-green-400 text-green-400" />
-                        ))}
+                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-green-400 text-green-400" />)}
                       </div>
                       <span className="text-gray-300 text-xs">- Sarah M.</span>
                     </div>
@@ -157,9 +127,7 @@ const HeroSection = () => {
                     </p>
                     <div className="flex items-center space-x-2">
                       <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={12} className="fill-green-400 text-green-400" />
-                        ))}
+                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-green-400 text-green-400" />)}
                       </div>
                       <span className="text-gray-300 text-xs">- James R.</span>
                     </div>
@@ -177,8 +145,6 @@ const HeroSection = () => {
           <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
