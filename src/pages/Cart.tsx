@@ -4,9 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+  const { toast } = useToast();
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -130,7 +133,37 @@ const Cart = () => {
                   <span>£{(getTotalPrice() + 2.99).toFixed(2)}</span>
                 </div>
               </div>
-              <Button className="w-full" size="lg">
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.functions.invoke('create-payment', {
+                      body: {
+                        currency: 'gbp',
+                        items: items.map(i => ({
+                          name: i.name,
+                          amount: Math.round(i.price * 100),
+                          quantity: i.quantity,
+                          description: i.description,
+                        })),
+                        delivery_fee: 299,
+                        successPath: '/payment-success',
+                        cancelPath: '/cart'
+                      }
+                    });
+                    if (error) throw error;
+                    if (data?.url) {
+                      window.open(data.url, '_blank');
+                    } else {
+                      throw new Error('No checkout URL returned');
+                    }
+                  } catch (err: any) {
+                    console.error(err);
+                    toast({ title: 'Checkout error', description: err.message || 'Unable to start checkout', variant: 'destructive' });
+                  }
+                }}
+              >
                 Proceed to Checkout
               </Button>
               <Button
