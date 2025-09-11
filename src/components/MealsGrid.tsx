@@ -87,19 +87,14 @@ const MealsGrid = () => {
     }
   };
 
-  const selectedCategoryLower = selectedCategory.toLowerCase().trim();
-
-  const filteredMeals = selectedCategoryLower === "all" 
+  const filteredMeals = selectedCategory === "all" 
     ? meals 
-    : meals.filter(meal => (meal.category || '').toLowerCase().trim() === selectedCategoryLower);
+    : meals.filter(meal => meal.category === selectedCategory);
 
   // Create display categories including "All Meals"
   const displayCategories = [
-    { value: "all", valueLower: "all", label: "All Meals" },
-    ...categories.map(cat => {
-      const n = cat.name || '';
-      return { value: n, valueLower: n.toLowerCase().trim(), label: n };
-    })
+    { value: "all", label: "All Meals" },
+    ...categories.map(cat => ({ value: cat.name, label: cat.name }))
   ];
 
   const handleAddToCart = (meal: Meal) => {
@@ -134,7 +129,7 @@ const MealsGrid = () => {
         {displayCategories.map((category) => (
           <Button
             key={category.value}
-            variant={selectedCategoryLower === category.valueLower ? "default" : "outline"}
+            variant={selectedCategory === category.value ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedCategory(category.value)}
           >
