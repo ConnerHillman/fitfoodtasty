@@ -54,12 +54,6 @@ const steps: OnboardingStep[] = [
     icon: Heart
   },
   {
-    id: "preferences",
-    title: "Food Preferences",
-    subtitle: "What flavors and cuisines do you love?",
-    icon: UtensilsCrossed
-  },
-  {
     id: "plan",
     title: "Your Meal Plan",
     subtitle: "Choose your perfect weekly setup",
@@ -183,8 +177,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 0: return profile.goal !== "";
       case 1: return profile.activityLevel !== "";
       case 2: return true; // Dietary restrictions are optional
-      case 3: return profile.cuisinePreferences.length > 0;
-      case 4: return profile.selectedPackageId !== "" && profile.deliveryFrequency !== "";
+      case 3: return profile.selectedPackageId !== "" && profile.deliveryFrequency !== "";
       default: return true;
     }
   };
@@ -324,36 +317,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         );
 
       case 3:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">What cuisines do you love?</h3>
-              <p className="text-gray-600 mb-6">Select all that appeal to you - we'll personalize your recommendations</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  "Mediterranean", "Asian Fusion", "Mexican", "Italian", 
-                  "Indian", "Thai", "American", "Middle Eastern", "Japanese"
-                ].map((cuisine) => (
-                  <Card 
-                    key={cuisine}
-                    className={`cursor-pointer transition-all duration-200 ${
-                      profile.cuisinePreferences.includes(cuisine) 
-                        ? 'border-green-500 bg-green-50' 
-                        : 'hover:border-green-200'
-                    }`}
-                    onClick={() => toggleArrayValue("cuisinePreferences", cuisine)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="font-medium">{cuisine}</div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
         return (
           <div className="space-y-8">
             <div>
