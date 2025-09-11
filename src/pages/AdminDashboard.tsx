@@ -57,17 +57,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="meals">
-          <Card>
-            <CardHeader>
-              <CardTitle>Meals Manager</CardTitle>
-              <CardDescription>
-                Create and manage meals with automatic macro calculation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <MealsManager />
-            </CardContent>
-          </Card>
+          <MealsManager />
         </TabsContent>
 
         <TabsContent value="categories">

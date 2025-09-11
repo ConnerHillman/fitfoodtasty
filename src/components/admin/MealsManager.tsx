@@ -556,7 +556,7 @@ const MealsManager = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in-scale">
+    <div className="space-y-8">
       {/* Modern header with gradient */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-white">
         <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
