@@ -5,8 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, CheckCircle2 } from "lucide-react";
+import { Minus, Plus, CheckCircle2, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
+import { useNavigate } from "react-router-dom";
 
 interface Meal {
   id: string;
@@ -35,6 +37,8 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { addPackageToCart } = useCart();
+  const navigate = useNavigate();
 
   const totalSelected = useMemo(
     () => Object.values(selected).reduce((a, b) => a + b, 0),
@@ -107,6 +111,49 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
     });
   };
 
+  const handleAddToCart = () => {
+    if (!pkg) return;
+    if (totalSelected !== pkg.meal_count) {
+      toast({ title: "Select meals", description: `Please select exactly ${pkg.meal_count} meals.`, variant: "destructive" });
+      return;
+    }
+
+    const summary = Object.entries(selected)
+      .map(([id, qty]) => {
+        const meal = meals.find((m) => m.id === id);
+        return `${qty} x ${meal?.name ?? "Meal"}`;
+      })
+      .join(" | ");
+
+    // Create a package cart item
+    const packageCartItem = {
+      id: `package-${pkg.id}-${Date.now()}`, // Unique ID for each package selection
+      name: `${pkg.name}`,
+      description: summary,
+      category: 'package',
+      price: pkg.price,
+      total_calories: 0,
+      total_protein: 0,
+      total_carbs: 0,
+      total_fat: 0,
+      total_fiber: 0,
+      image_url: pkg.image_url,
+      packageData: {
+        packageId: pkg.id,
+        packageName: pkg.name,
+        mealCount: pkg.meal_count,
+        selectedMeals: selected,
+      },
+    };
+
+    addPackageToCart(packageCartItem);
+    toast({ 
+      title: "Added to cart", 
+      description: `${pkg.name} with ${totalSelected} meals added to cart.` 
+    });
+    onOpenChange(false);
+  };
+
   const handleCheckout = async () => {
     if (!pkg) return;
     if (totalSelected !== pkg.meal_count) {
@@ -167,11 +214,20 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           <div className="flex items-center gap-2">
             {totalSelected === (pkg?.meal_count ?? 0) ? (
               <div className="text-green-600 flex items-center gap-1">
-                <CheckCircle2 size={16} /> Ready to checkout
+                <CheckCircle2 size={16} /> Ready to add
               </div>
             ) : (
               <div className="text-muted-foreground">Pick {((pkg?.meal_count ?? 0) - totalSelected)} more</div>
             )}
+            <Button 
+              variant="outline" 
+              onClick={handleAddToCart} 
+              disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+              className="flex items-center gap-2"
+            >
+              <ShoppingCart size={16} />
+              Add to Cart
+            </Button>
             <Button onClick={handleCheckout} disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}>
               Proceed to Checkout
             </Button>

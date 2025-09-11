@@ -13,11 +13,19 @@ export interface CartItem {
   total_fiber: number;
   image_url?: string;
   quantity: number;
+  type?: 'meal' | 'package';
+  packageData?: {
+    packageId: string;
+    packageName: string;
+    mealCount: number;
+    selectedMeals: Record<string, number>;
+  };
 }
 
 interface CartContextType {
   items: CartItem[];
   addToCart: (meal: Omit<CartItem, 'quantity'>) => void;
+  addPackageToCart: (packageItem: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (mealId: string) => void;
   updateQuantity: (mealId: string, quantity: number) => void;
   clearCart: () => void;
@@ -57,16 +65,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (meal: Omit<CartItem, 'quantity'>) => {
     setItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === meal.id);
+      const existingItem = prevItems.find(item => item.id === meal.id && item.type !== 'package');
       if (existingItem) {
         return prevItems.map(item =>
-          item.id === meal.id
+          item.id === meal.id && item.type !== 'package'
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
-        return [...prevItems, { ...meal, quantity: 1 }];
+        return [...prevItems, { ...meal, quantity: 1, type: 'meal' }];
       }
+    });
+  };
+
+  const addPackageToCart = (packageItem: Omit<CartItem, 'quantity'>) => {
+    setItems(prevItems => {
+      // For packages, we always add a new item since each package selection is unique
+      return [...prevItems, { ...packageItem, quantity: 1, type: 'package' }];
     });
   };
 
@@ -105,6 +120,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         items,
         addToCart,
+        addPackageToCart,
         removeFromCart,
         updateQuantity,
         clearCart,
