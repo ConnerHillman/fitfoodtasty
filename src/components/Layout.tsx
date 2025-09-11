@@ -33,8 +33,12 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
-              <Link to="/" className="text-2xl font-bold text-primary">
-                MealPrep Pro
+              <Link to="/" className="flex items-center">
+                <img 
+                  src="/lovable-uploads/10536b16-bcbb-425b-ad58-6c366dfcc3a9.png" 
+                  alt="Fit Food Tasty" 
+                  className="h-8 w-auto"
+                />
               </Link>
               <nav className="hidden md:flex space-x-6">
                 {navItems.map((item) => {
