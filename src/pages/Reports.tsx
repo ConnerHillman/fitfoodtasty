@@ -397,21 +397,6 @@ const Reports = () => {
           </div>
         </Card>
 
-        {/* Data Import Section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Data Import & Management
-            </CardTitle>
-            <CardDescription>
-              Import meals, ingredients, and recipe data to populate your kitchen reports
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataImporter />
-          </CardContent>
-        </Card>
       </div>
 
       <Tabs defaultValue="kitchen" className="space-y-6">
@@ -714,6 +699,22 @@ const Reports = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Data Import Section */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Data Import & Management
+          </CardTitle>
+          <CardDescription>
+            Import meals, ingredients, and recipe data to populate your kitchen reports
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataImporter />
+        </CardContent>
+      </Card>
     </div>
   );
 };
