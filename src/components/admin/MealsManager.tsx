@@ -26,6 +26,7 @@ interface Meal {
   total_fiber?: number;
   total_weight?: number;
   is_active: boolean;
+  image_url?: string;
 }
 
 const MealsManager = () => {
@@ -38,8 +39,11 @@ const MealsManager = () => {
     name: "",
     description: "",
     category: "lunch",
-    price: ""
+    price: "",
+    image_url: ""
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,12 +65,53 @@ const MealsManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsUploading(true);
+    
+    let imageUrl = formData.image_url;
+    
+    // Upload image if a new file is selected
+    if (imageFile) {
+      try {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('meal-images')
+          .upload(fileName, imageFile);
+        
+        if (uploadError) {
+          throw uploadError;
+        }
+        
+        // Get the public URL for the uploaded image
+        const { data: { publicUrl } } = supabase.storage
+          .from('meal-images')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+        
+        toast({
+          title: "Success",
+          description: "Image uploaded successfully",
+        });
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast({
+          title: "Error",
+          description: "Failed to upload image",
+          variant: "destructive",
+        });
+        setIsUploading(false);
+        return;
+      }
+    }
     
     const mealData = {
       name: formData.name,
       description: formData.description,
       category: formData.category,
-      price: parseFloat(formData.price) || 0
+      price: parseFloat(formData.price) || 0,
+      image_url: imageUrl
     };
 
     let result;
@@ -89,6 +134,7 @@ const MealsManager = () => {
       resetForm();
       fetchMeals();
     }
+    setIsUploading(false);
   };
 
   const handleEdit = (meal: Meal) => {
@@ -97,8 +143,10 @@ const MealsManager = () => {
       name: meal.name,
       description: meal.description || "",
       category: meal.category || "lunch",
-      price: meal.price?.toString() || ""
+      price: meal.price?.toString() || "",
+      image_url: (meal as any).image_url || ""
     });
+    setImageFile(null);
     setIsDialogOpen(true);
   };
 
@@ -410,8 +458,10 @@ const MealsManager = () => {
       name: "",
       description: "",
       category: "lunch",
-      price: ""
+      price: "",
+      image_url: ""
     });
+    setImageFile(null);
     setEditingMeal(null);
   };
 
@@ -494,12 +544,45 @@ const MealsManager = () => {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="image">Meal Image</Label>
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImageFile(file);
+                    }
+                  }}
+                />
+                {formData.image_url && !imageFile && (
+                  <div className="mt-2">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Current meal image" 
+                      className="w-32 h-32 object-cover rounded-md"
+                    />
+                  </div>
+                )}
+                {imageFile && (
+                  <div className="mt-2">
+                    <img 
+                      src={URL.createObjectURL(imageFile)} 
+                      alt="Preview" 
+                      className="w-32 h-32 object-cover rounded-md"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingMeal ? "Update" : "Create"} Meal
+                <Button type="submit" disabled={isUploading}>
+                  {isUploading ? "Uploading..." : editingMeal ? "Update" : "Create"} Meal
                 </Button>
               </div>
             </form>
@@ -512,6 +595,7 @@ const MealsManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
@@ -523,6 +607,19 @@ const MealsManager = () => {
             <TableBody>
               {meals.map((meal) => (
                 <TableRow key={meal.id}>
+                  <TableCell>
+                    {meal.image_url ? (
+                      <img 
+                        src={meal.image_url} 
+                        alt={meal.name}
+                        className="w-16 h-16 object-cover rounded-md"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
+                        No image
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div>
                       <div>{meal.name}</div>
