@@ -122,7 +122,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto pointer-events-auto">
         <DialogHeader>
           <DialogTitle>
             {pkg ? `Choose ${pkg.meal_count} meals for ${pkg.name}` : 'Choose Meals'}
