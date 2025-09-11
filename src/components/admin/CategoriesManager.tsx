@@ -6,11 +6,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Search, Palette, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Palette, ArrowUp, ArrowDown, Users, ChefHat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+interface Meal {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  is_active: boolean;
+}
 
 interface Category {
   id: string;
@@ -23,9 +32,12 @@ interface Category {
 
 const CategoriesManager = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [meals, setMeals] = useState<Meal[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMealAssignmentOpen, setIsMealAssignmentOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +49,7 @@ const CategoriesManager = () => {
 
   useEffect(() => {
     fetchCategories();
+    fetchMeals();
   }, []);
 
   useEffect(() => {
@@ -54,6 +67,19 @@ const CategoriesManager = () => {
       toast({ title: "Error", description: "Failed to fetch categories", variant: "destructive" });
     } else {
       setCategories(data || []);
+    }
+  };
+
+  const fetchMeals = async () => {
+    const { data, error } = await supabase
+      .from("meals")
+      .select("id, name, description, category, is_active")
+      .order("name");
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to fetch meals", variant: "destructive" });
+    } else {
+      setMeals(data || []);
     }
   };
 
@@ -101,6 +127,7 @@ const CategoriesManager = () => {
       setIsDialogOpen(false);
       resetForm();
       fetchCategories();
+      fetchMeals(); // Refresh meals to update category assignments
     }
   };
 
@@ -146,6 +173,7 @@ const CategoriesManager = () => {
     } else {
       toast({ title: "Success", description: "Category deleted successfully" });
       fetchCategories();
+      fetchMeals();
     }
   };
 
@@ -190,6 +218,34 @@ const CategoriesManager = () => {
     }
 
     fetchCategories();
+  };
+
+  const openMealAssignment = (category: Category) => {
+    setSelectedCategory(category);
+    setIsMealAssignmentOpen(true);
+  };
+
+  const assignMealToCategory = async (mealId: string, newCategoryName: string) => {
+    const { error } = await supabase
+      .from("meals")
+      .update({ category: newCategoryName })
+      .eq("id", mealId);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Meal category updated successfully" });
+      fetchMeals();
+    }
+  };
+
+  const getMealsInCategory = (categoryName: string) => {
+    return meals.filter(meal => meal.category === categoryName);
+  };
+
+  const getUnassignedMeals = () => {
+    const categoryNames = categories.map(c => c.name);
+    return meals.filter(meal => !categoryNames.includes(meal.category) || !meal.category);
   };
 
   const resetForm = () => {
@@ -313,11 +369,12 @@ const CategoriesManager = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Color</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Order</TableHead>
-                <TableHead className="w-[150px]">Actions</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Color</TableHead>
+              <TableHead>Meals</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Order</TableHead>
+              <TableHead className="w-[200px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -352,6 +409,21 @@ const CategoriesManager = () => {
                     </div>
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {getMealsInCategory(category.name).length} meals
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openMealAssignment(category)}
+                        title="Manage meals in this category"
+                      >
+                        <Users className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center space-x-1">
                       <Button
                         size="sm"
@@ -377,13 +449,23 @@ const CategoriesManager = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleEdit(category)}
+                        title="Edit category"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
+                        variant="outline"
+                        onClick={() => openMealAssignment(category)}
+                        title="Manage meals"
+                      >
+                        <ChefHat className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="destructive"
                         onClick={() => handleDelete(category.id)}
+                        title="Delete category"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -395,6 +477,168 @@ const CategoriesManager = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Meal Assignment Dialog */}
+      <Dialog open={isMealAssignmentOpen} onOpenChange={setIsMealAssignmentOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ChefHat className="h-5 w-5" />
+              Manage Meals in "{selectedCategory?.name}" Category
+            </DialogTitle>
+            <DialogDescription>
+              Add or remove meals from this category. You can also move meals to other categories.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedCategory && (
+            <div className="space-y-6">
+              {/* Current Meals in Category */}
+              <div>
+                <h4 className="font-medium mb-3">
+                  Meals in {selectedCategory.name} ({getMealsInCategory(selectedCategory.name).length})
+                </h4>
+                <div className="border rounded-lg">
+                  {getMealsInCategory(selectedCategory.name).length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Meal Name</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Move to Category</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {getMealsInCategory(selectedCategory.name).map((meal) => (
+                          <TableRow key={meal.id}>
+                            <TableCell className="font-medium">
+                              <div>
+                                <div>{meal.name}</div>
+                                {meal.description && (
+                                  <div className="text-sm text-muted-foreground">{meal.description}</div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={meal.is_active ? "default" : "secondary"}>
+                                {meal.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={meal.category}
+                                onValueChange={(newCategory) => assignMealToCategory(meal.id, newCategory)}
+                              >
+                                <SelectTrigger className="w-48">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((cat) => (
+                                    <SelectItem key={cat.id} value={cat.name}>
+                                      <div className="flex items-center gap-2">
+                                        <div 
+                                          className="w-3 h-3 rounded-full" 
+                                          style={{ backgroundColor: cat.color }}
+                                        />
+                                        {cat.name}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => assignMealToCategory(meal.id, "uncategorized")}
+                                title="Remove from category"
+                              >
+                                Remove
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <ChefHat className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No meals in this category yet.</p>
+                      <p className="text-sm">Add meals from the unassigned section below.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Available Meals to Add */}
+              <div>
+                <h4 className="font-medium mb-3">
+                  Other Meals ({meals.filter(m => m.category !== selectedCategory.name).length})
+                </h4>
+                <div className="border rounded-lg max-h-60 overflow-y-auto">
+                  {meals.filter(m => m.category !== selectedCategory.name).length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Meal Name</TableHead>
+                          <TableHead>Current Category</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {meals.filter(m => m.category !== selectedCategory.name).map((meal) => (
+                          <TableRow key={meal.id}>
+                            <TableCell className="font-medium">
+                              <div>
+                                <div>{meal.name}</div>
+                                {meal.description && (
+                                  <div className="text-sm text-muted-foreground">{meal.description}</div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {meal.category ? (
+                                <Badge style={{ 
+                                  backgroundColor: categories.find(c => c.name === meal.category)?.color || '#3b82f6',
+                                  color: '#fff'
+                                }}>
+                                  {meal.category}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">Unassigned</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                onClick={() => assignMealToCategory(meal.id, selectedCategory.name)}
+                              >
+                                Add to {selectedCategory.name}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <p>All meals are already in this category.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-end">
+            <Button onClick={() => setIsMealAssignmentOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
