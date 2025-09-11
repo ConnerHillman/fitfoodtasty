@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, CheckCircle2, ShoppingCart } from "lucide-react";
+import { Minus, Plus, CheckCircle2, ShoppingCart, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
@@ -47,11 +48,20 @@ const CategoryColors: Record<string, string> = {
 const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selected, setSelected] = useState<Record<string, number>>({});
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [mealAllergens, setMealAllergens] = useState<Record<string, Allergen[]>>({});
   const { toast } = useToast();
   const { addPackageToCart } = useCart();
   const navigate = useNavigate();
+
+  const filteredMeals = useMemo(
+    () => meals.filter(meal => 
+      meal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      meal.description.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [meals, searchTerm]
+  );
 
   const totalSelected = useMemo(
     () => Object.values(selected).reduce((a, b) => a + b, 0),
@@ -61,6 +71,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
   useEffect(() => {
     if (open) {
       setSelected({});
+      setSearchTerm("");
       (async () => {
         setLoading(true);
         
@@ -256,6 +267,17 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           </DialogTitle>
         </DialogHeader>
 
+        {/* Search bar */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search meals..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         {/* Selection status */}
         <div className="flex items-center justify-between mb-4">
           <div className="text-muted-foreground">
@@ -289,7 +311,12 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           {loading && Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="h-40" />
           ))}
-          {!loading && meals.map((meal) => {
+          {!loading && filteredMeals.length === 0 && searchTerm && (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              No meals found matching "{searchTerm}"
+            </div>
+          )}
+          {!loading && filteredMeals.map((meal) => {
             const qty = selected[meal.id] || 0;
             return (
               <Card key={meal.id} className="overflow-hidden">
