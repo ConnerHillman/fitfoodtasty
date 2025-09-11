@@ -118,7 +118,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     setProfile(prev => ({ ...prev, [key]: value }));
     
     // Auto-advance steps with radio group selections and visual effects
-    const autoAdvanceSteps = ["goal", "activityLevel"];
+    const autoAdvanceSteps = ["goal", "activityLevel", "mealCount"];
     
     if (autoAdvanceSteps.includes(key)) {
       setSelectedOption(value);
@@ -374,10 +374,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 2:
         return (
           <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Dietary Preferences</h3>
-              <p className="text-gray-600 text-lg">Any dietary restrictions we should know about? Select all that apply, or skip if none</p>
-            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo"].map((restriction) => (
                 <Card 
@@ -415,11 +411,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 3:
         return (
           <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">How many meals do you want?</h3>
-              <p className="text-gray-600 text-lg">Choose the number of meals you'd like per week</p>
-            </div>
-            
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[5, 7, 10, 14].map((count) => (
                 <Card 
@@ -465,10 +456,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         const recommendedPackage = getRecommendedPackage();
         return (
           <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Your Perfect Plan</h3>
-              <p className="text-gray-600 text-lg">Based on your preferences, we recommend this package</p>
-            </div>
             
             {recommendedPackage ? (
               <div className="space-y-8">
