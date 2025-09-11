@@ -3,6 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Facebook, Instagram, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import kitchenTeamImage from '@/assets/about-kitchen-team.jpg';
+import mealSelectionImage from '@/assets/about-meal-selection.jpg';
+import deliveryServiceImage from '@/assets/about-delivery-service.jpg';
+import founderImage from '@/assets/about-founder.jpg';
 
 const About = () => {
   return (
@@ -20,27 +24,48 @@ const About = () => {
         {/* History Section */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-6">A History Of Promoting Healthy Eating</h2>
-          <div className="prose prose-lg max-w-none text-foreground">
-            <p className="mb-4">
-              Fit Food Tasty is a leading provider of healthy meal prep services. Based in Bridgwater, we serve quality meals to our local customers in Taunton, Weston Super Mare, Bristol, and the surrounding areas. Due to growing demand, we now also deliver our delicious food to the rest of the UK via DPD.
-            </p>
-            <p className="mb-6">
-              Eating healthy should be easy, convenient, and most important of all, delicious. Our founder experienced the struggle of finding nutritious and healthy meals during the lockdown period of 2020. Frustrated with the lack of options available that support a healthy lifestyle, we set out to create a solution.
-            </p>
-            
-            <div className="bg-muted p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-semibold mb-4">Enter Fit Food Tasty</h3>
-              <p>
-                We provide fresh, nutritional meals, using only high quality ingredients, without the time and effort involved in preparing your own meals.
+          
+          <div className="grid md:grid-cols-2 gap-8 items-center mb-8">
+            <div className="prose prose-lg max-w-none text-foreground">
+              <p className="mb-4">
+                Fit Food Tasty is a leading provider of healthy meal prep services. Based in Bridgwater, we serve quality meals to our local customers in Taunton, Weston Super Mare, Bristol, and the surrounding areas. Due to growing demand, we now also deliver our delicious food to the rest of the UK via DPD.
+              </p>
+              <p className="mb-6">
+                Eating healthy should be easy, convenient, and most important of all, delicious. Our founder experienced the struggle of finding nutritious and healthy meals during the lockdown period of 2020. Frustrated with the lack of options available that support a healthy lifestyle, we set out to create a solution.
               </p>
             </div>
+            <div className="relative">
+              <img 
+                src={founderImage} 
+                alt="Our founder, Conner, the biggest fan of healthy eating options" 
+                className="w-full h-64 object-cover rounded-lg shadow-lg"
+              />
+            </div>
+          </div>
+          
+          <div className="bg-muted p-6 rounded-lg mb-6">
+            <h3 className="text-xl font-semibold mb-4">Enter Fit Food Tasty</h3>
+            <p>
+              We provide fresh, nutritional meals, using only high quality ingredients, without the time and effort involved in preparing your own meals.
+            </p>
+          </div>
 
-            <p className="mb-4">
-              We understand that everyone has different preferences when it comes to food, which is why we offer a full menu and wide range of meal plans to choose from.
-            </p>
-            <p className="mb-6">
-              Do you prefer to cook the same meals every day? Or like to mix it up with variety? We have a solution for you. Our in-house expert chefs cook all our healthy meals using the highest quality ingredients. It's almost like having your own personal chef.
-            </p>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <p className="mb-4">
+                We understand that everyone has different preferences when it comes to food, which is why we offer a full menu and wide range of meal plans to choose from.
+              </p>
+              <p className="mb-6">
+                Do you prefer to cook the same meals every day? Or like to mix it up with variety? We have a solution for you. Our in-house expert chefs cook all our healthy meals using the highest quality ingredients. It's almost like having your own personal chef.
+              </p>
+            </div>
+            <div className="relative">
+              <img 
+                src={mealSelectionImage} 
+                alt="Meal Selection from Fit Food Tasty" 
+                className="w-full h-64 object-cover rounded-lg shadow-lg"
+              />
+            </div>
           </div>
         </section>
 
@@ -126,6 +151,13 @@ const About = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4">Local Delivery</h3>
+                <div className="mb-4">
+                  <img 
+                    src={deliveryServiceImage} 
+                    alt="Local delivery service in Bridgwater area" 
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                </div>
                 <p className="mb-4">
                   From January 2021 when we first opened our doors, until September 2022, we focused our efforts on providing a great service to our local customers in Bridgwater and surrounding areas including Taunton, Weston Super Mare, and Bristol.
                 </p>
@@ -141,6 +173,13 @@ const About = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4">UK Nationwide</h3>
+                <div className="mb-4">
+                  <img 
+                    src={deliveryServiceImage} 
+                    alt="Nationwide delivery across the UK" 
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                </div>
                 <p className="mb-4">
                   Wherever you are in the UK, we can still get your food delivered to you safe, sound and fresh! We achieve this by using DPD courier, combined with high quality insulative packaging, complete with ice gel packs.
                 </p>
@@ -198,6 +237,13 @@ const About = () => {
         {/* Team Section */}
         <section className="text-center">
           <h2 className="text-2xl font-semibold mb-6">THE FIT FOOD TASTY MEAL PREP TEAM</h2>
+          <div className="mb-6">
+            <img 
+              src={kitchenTeamImage} 
+              alt="The Fit Food Tasty meal prep team" 
+              className="w-full max-w-4xl h-64 object-cover rounded-lg shadow-lg mx-auto"
+            />
+          </div>
           <p className="text-muted-foreground">
             Our passionate team is dedicated to providing you with the highest quality meal prep experience.
           </p>
