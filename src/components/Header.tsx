@@ -15,9 +15,11 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              FIT FOOD TASTY
-            </div>
+            <img 
+              src="/lovable-uploads/a26a6a7e-725d-4909-a524-70b0f1c49683.png" 
+              alt="FIT FOOD TASTY Logo" 
+              className="h-10 w-auto"
+            />
             <Badge className="bg-green-100 text-green-800 text-xs">PREMIUM MEAL PREP</Badge>
           </Link>
 
