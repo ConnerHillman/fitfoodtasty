@@ -53,7 +53,7 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                <Badge variant="secondary">{pkg.meal_count} meals</Badge>
+                
               </div>
             </CardHeader>
             <CardContent className="pt-0">
