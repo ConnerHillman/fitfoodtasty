@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Flame, Users, ChevronLeft, ChevronRight, Package, Calendar, Clock } from "lucide-react";
+import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Flame, Users, ChevronLeft, ChevronRight, Package, Calendar, Clock, Dumbbell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Data interfaces
@@ -326,7 +326,7 @@ const Onboarding = () => {
                               ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
                               : 'bg-gradient-to-br from-blue-100/80 via-indigo-100/80 to-cyan-100/80 group-hover:from-blue-200/80 group-hover:via-indigo-200/80 group-hover:to-cyan-200/80 shadow-lg'
                           }`}>
-                            <Activity className={getIconClassName("muscle-gain")} size={28} />
+                            <Dumbbell className={getIconClassName("muscle-gain")} size={28} />
                           </div>
                           <div className="flex-1">
                             <div className="font-bold text-xl text-gray-900 mb-1">Muscle Gain</div>
