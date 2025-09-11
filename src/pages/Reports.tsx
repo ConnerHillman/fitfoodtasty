@@ -44,6 +44,7 @@ const Reports = () => {
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showExportOptions, setShowExportOptions] = useState(false);
+  const [showFullReport, setShowFullReport] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -149,8 +150,6 @@ const Reports = () => {
       }))
       .sort((a, b) => b.quantity - a.quantity);
   };
-
-  const [showFullReport, setShowFullReport] = useState(false);
 
   const quickDateOptions = [
     { label: 'Today', value: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }) },
