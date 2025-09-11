@@ -1,8 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat } from 'lucide-react';
 
 const BusinessDashboard = () => {
   const todayStats = {
@@ -37,6 +38,12 @@ const BusinessDashboard = () => {
           <p className="text-muted-foreground text-lg">Today's overview and recent activity</p>
         </div>
         <div className="flex space-x-3">
+          <Link to="/admin">
+            <Button variant="default">
+              <ChefHat className="h-4 w-4 mr-2" />
+              Admin Panel
+            </Button>
+          </Link>
           <Button variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
