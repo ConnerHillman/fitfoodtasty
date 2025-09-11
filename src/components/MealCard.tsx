@@ -392,11 +392,6 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
               {meal.description}
             </CardDescription>
           </div>
-          <div className="flex flex-col gap-1 items-end">
-            <Badge className={getCategoryColor(meal.category)}>
-              {meal.category}
-            </Badge>
-          </div>
         </div>
       </CardHeader>
 
