@@ -433,24 +433,43 @@ export async function importGoPrepMenu() {
   }
 }
 
-// Sample ingredients data that would come from GoPrep
+// Basic ingredients with default nutrition values (to be updated later)
 const sampleIngredients = [
-  { name: 'Chicken Breast', calories_per_100g: 165, protein_per_100g: 31, carbs_per_100g: 0, fat_per_100g: 3.6, fiber_per_100g: 0, sugar_per_100g: 0, sodium_per_100g: 74, default_unit: 'g' },
-  { name: 'Basmati Rice', calories_per_100g: 130, protein_per_100g: 2.7, carbs_per_100g: 25, fat_per_100g: 0.3, fiber_per_100g: 0.4, sugar_per_100g: 0.1, sodium_per_100g: 1, default_unit: 'g' },
-  { name: 'Broccoli', calories_per_100g: 34, protein_per_100g: 2.8, carbs_per_100g: 7, fat_per_100g: 0.4, fiber_per_100g: 2.6, sugar_per_100g: 1.5, sodium_per_100g: 33, default_unit: 'g' },
-  { name: 'Sweet Potato', calories_per_100g: 86, protein_per_100g: 1.6, carbs_per_100g: 20, fat_per_100g: 0.1, fiber_per_100g: 3, sugar_per_100g: 4.2, sodium_per_100g: 54, default_unit: 'g' },
-  { name: 'Beef Mince', calories_per_100g: 250, protein_per_100g: 26, carbs_per_100g: 0, fat_per_100g: 15, fiber_per_100g: 0, sugar_per_100g: 0, sodium_per_100g: 78, default_unit: 'g' },
-  { name: 'New Potatoes', calories_per_100g: 77, protein_per_100g: 2, carbs_per_100g: 17, fat_per_100g: 0.1, fiber_per_100g: 2.2, sugar_per_100g: 0.8, sodium_per_100g: 10, default_unit: 'g' },
-  { name: 'Penne Pasta', calories_per_100g: 131, protein_per_100g: 5, carbs_per_100g: 25, fat_per_100g: 1.1, fiber_per_100g: 1.8, sugar_per_100g: 0.6, sodium_per_100g: 1, default_unit: 'g' },
-  { name: 'Olive Oil', calories_per_100g: 884, protein_per_100g: 0, carbs_per_100g: 0, fat_per_100g: 100, fiber_per_100g: 0, sugar_per_100g: 0, sodium_per_100g: 2, default_unit: 'ml' },
-  { name: 'Onion', calories_per_100g: 40, protein_per_100g: 1.1, carbs_per_100g: 9, fat_per_100g: 0.1, fiber_per_100g: 1.7, sugar_per_100g: 4.2, sodium_per_100g: 4, default_unit: 'g' },
-  { name: 'Tomato Sauce', calories_per_100g: 29, protein_per_100g: 1.6, carbs_per_100g: 7, fat_per_100g: 0.2, fiber_per_100g: 1.4, sugar_per_100g: 3.2, sodium_per_100g: 9, default_unit: 'g' },
-  { name: 'Cheese', calories_per_100g: 403, protein_per_100g: 25, carbs_per_100g: 1.3, fat_per_100g: 33, fiber_per_100g: 0, sugar_per_100g: 0.4, sodium_per_100g: 621, default_unit: 'g' },
-  { name: 'Eggs', calories_per_100g: 155, protein_per_100g: 13, carbs_per_100g: 1.1, fat_per_100g: 11, fiber_per_100g: 0, sugar_per_100g: 1.1, sodium_per_100g: 124, default_unit: 'g' },
-  { name: 'Garlic', calories_per_100g: 149, protein_per_100g: 6.4, carbs_per_100g: 33, fat_per_100g: 0.5, fiber_per_100g: 2.1, sugar_per_100g: 1, sodium_per_100g: 17, default_unit: 'g' },
-  { name: 'Bell Pepper', calories_per_100g: 31, protein_per_100g: 1, carbs_per_100g: 7, fat_per_100g: 0.3, fiber_per_100g: 2.5, sugar_per_100g: 4.2, sodium_per_100g: 4, default_unit: 'g' },
-  { name: 'Spinach', calories_per_100g: 23, protein_per_100g: 2.9, carbs_per_100g: 3.6, fat_per_100g: 0.4, fiber_per_100g: 2.2, sugar_per_100g: 0.4, sodium_per_100g: 79, default_unit: 'g' },
-];
+  { name: 'Chicken Breast', description: 'Boneless, skinless chicken breast', default_unit: 'g' },
+  { name: 'Basmati Rice', description: 'Whole grain basmati rice', default_unit: 'g' },
+  { name: 'Broccoli', description: 'Fresh broccoli florets', default_unit: 'g' },
+  { name: 'Sweet Potato', description: 'Roasted sweet potato', default_unit: 'g' },
+  { name: 'Beef Mince', description: 'Lean ground beef', default_unit: 'g' },
+  { name: 'New Potatoes', description: 'Small new potatoes', default_unit: 'g' },
+  { name: 'Penne Pasta', description: 'Durum wheat pasta', default_unit: 'g' },
+  { name: 'Olive Oil', description: 'Extra virgin olive oil', default_unit: 'ml' },
+  { name: 'Onion', description: 'Yellow onion', default_unit: 'g' },
+  { name: 'Tomato Sauce', description: 'Plain tomato sauce', default_unit: 'g' },
+  { name: 'Cheese', description: 'Cheddar cheese', default_unit: 'g' },
+  { name: 'Eggs', description: 'Large chicken eggs', default_unit: 'g' },
+  { name: 'Garlic', description: 'Fresh garlic cloves', default_unit: 'g' },
+  { name: 'Bell Pepper', description: 'Fresh bell pepper', default_unit: 'g' },
+  { name: 'Spinach', description: 'Fresh spinach leaves', default_unit: 'g' },
+  { name: 'Salmon', description: 'Fresh Atlantic salmon', default_unit: 'g' },
+  { name: 'Quinoa', description: 'Cooked quinoa', default_unit: 'g' },
+  { name: 'Avocado', description: 'Fresh avocado', default_unit: 'g' },
+  { name: 'Black Beans', description: 'Cooked black beans', default_unit: 'g' },
+  { name: 'Greek Yogurt', description: 'Plain Greek yogurt', default_unit: 'g' },
+  { name: 'Almonds', description: 'Raw almonds', default_unit: 'g' },
+  { name: 'Carrot', description: 'Fresh carrot', default_unit: 'g' },
+  { name: 'Zucchini', description: 'Fresh zucchini', default_unit: 'g' },
+  { name: 'Lemon', description: 'Fresh lemon', default_unit: 'g' },
+  { name: 'Cucumber', description: 'Fresh cucumber', default_unit: 'g' },
+].map(ingredient => ({
+  ...ingredient,
+  calories_per_100g: 0,
+  protein_per_100g: 0,
+  carbs_per_100g: 0,
+  fat_per_100g: 0,
+  fiber_per_100g: 0,
+  sugar_per_100g: 0,
+  sodium_per_100g: 0
+}));
 
 // Sample meal ingredients mapping
 const sampleMealIngredients = {
