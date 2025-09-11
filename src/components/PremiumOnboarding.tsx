@@ -32,6 +32,7 @@ interface UserProfile {
   cuisinePreferences: string[];
   selectedPackageId: string;
   deliveryFrequency: string;
+  mealCount: number;
 }
 
 const steps: OnboardingStep[] = [
@@ -54,9 +55,15 @@ const steps: OnboardingStep[] = [
     icon: Heart
   },
   {
-    id: "plan",
-    title: "Your Meal Plan",
-    subtitle: "Choose your perfect weekly setup",
+    id: "mealCount",
+    title: "How Many Meals?",
+    subtitle: "Tell us how many meals you want per week",
+    icon: UtensilsCrossed
+  },
+  {
+    id: "recommendation",
+    title: "Your Perfect Plan",
+    subtitle: "We've found the ideal package for you",
     icon: Zap
   }
 ];
@@ -78,7 +85,8 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     dietaryRestrictions: [],
     cuisinePreferences: [],
     selectedPackageId: "",
-    deliveryFrequency: ""
+    deliveryFrequency: "",
+    mealCount: 0
   });
 
   // Fetch packages from database
@@ -179,9 +187,36 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 0: return profile.goal !== "";
       case 1: return profile.activityLevel !== "";
       case 2: return true; // Dietary restrictions are optional
-      case 3: return profile.selectedPackageId !== "" && profile.deliveryFrequency !== "";
+      case 3: return profile.mealCount > 0;
+      case 4: return profile.deliveryFrequency !== "";
       default: return true;
     }
+  };
+
+  // Get recommended package based on goal and meal count
+  const getRecommendedPackage = () => {
+    // Determine meal size based on goal
+    let mealSizeKeyword = "";
+    switch (profile.goal) {
+      case "weight-loss":
+        mealSizeKeyword = "lowcal";
+        break;
+      case "convenience":
+      case "performance":
+        mealSizeKeyword = "regular";
+        break;
+      case "muscle-gain":
+        mealSizeKeyword = "big";
+        break;
+      default:
+        mealSizeKeyword = "regular";
+    }
+
+    // Find package that matches meal count and contains the size keyword
+    return packages.find(pkg => 
+      pkg.meal_count === profile.mealCount && 
+      pkg.name.toLowerCase().includes(mealSizeKeyword)
+    ) || packages.find(pkg => pkg.meal_count === profile.mealCount);
   };
 
   const renderStepContent = () => {
@@ -384,95 +419,169 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 3:
         return (
           <div className="space-y-8">
-            <div className="mb-12">
-              <div className="text-center mb-8">
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Choose your perfect package</h3>
-                <p className="text-gray-600 text-lg">Select the meal plan that fits your lifestyle</p>
-              </div>
-              {loadingPackages ? (
-                <div className="text-center text-gray-500 py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-                  <p className="text-lg">Loading premium packages...</p>
-                </div>
-              ) : (
-                <RadioGroup value={profile.selectedPackageId} onValueChange={(value) => updateProfile("selectedPackageId", value)}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {packages.map((pkg, index) => {
-                      const isPopular = index === Math.floor(packages.length / 2);
-                      return (
-                        <Card key={pkg.id} className="group cursor-pointer transition-all duration-500 ease-out border-0 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden">
-                          {isPopular && (
-                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20">
-                              <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold px-4 py-2 shadow-lg shadow-emerald-500/40 rounded-full">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">How many meals do you want?</h3>
+              <p className="text-gray-600 text-lg">Choose the number of meals you'd like per week</p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[5, 7, 10, 14].map((count) => (
+                <Card 
+                  key={count} 
+                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
+                    profile.mealCount === count
+                      ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
+                      : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
+                  }`}
+                  onClick={() => updateProfile("mealCount", count)}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                  <CardContent className="p-8 relative z-10">
+                    <div className="text-center">
+                      <div className={`relative mx-auto mb-6 w-20 h-20 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
+                        profile.mealCount === count
+                          ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
+                          : 'bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80 group-hover:from-emerald-200/80 group-hover:via-green-200/80 group-hover:to-teal-200/80'
+                      }`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={`text-2xl font-bold transition-all duration-500 ${
+                            profile.mealCount === count 
+                              ? 'text-white scale-110 drop-shadow-xl' 
+                              : 'text-emerald-600 group-hover:text-emerald-700 group-hover:scale-105'
+                          }`}>
+                            {count}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="font-bold text-xl text-gray-900 mb-2">{count} Meals</div>
+                      <div className="text-gray-600 text-sm leading-relaxed">Per week</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 4:
+        const recommendedPackage = getRecommendedPackage();
+        return (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Your Perfect Plan</h3>
+              <p className="text-gray-600 text-lg">Based on your preferences, we recommend this package</p>
+            </div>
+            
+            {recommendedPackage ? (
+              <div className="space-y-8">
+                {/* Recommended Package Card */}
+                <Card className="group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 shadow-2xl shadow-emerald-500/40 max-w-md mx-auto">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                  <div className="absolute top-4 right-4 z-20">
+                    <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg">
+                      Recommended
+                    </Badge>
+                  </div>
+                  <CardContent className="p-8 relative z-10">
+                    <div className="text-center">
+                      <div className="relative mx-auto mb-6 w-20 h-20 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <UtensilsCrossed className="text-white scale-110 drop-shadow-xl" size={32} />
+                        </div>
+                      </div>
+                      
+                      <div className="font-bold text-2xl text-gray-900 mb-2">{recommendedPackage.name}</div>
+                      <div className="text-gray-600 mb-4 leading-relaxed">{recommendedPackage.description}</div>
+                      
+                      <div className="space-y-3 mb-6">
+                        <div className="flex justify-center items-center space-x-2">
+                          <Badge variant="secondary" className="bg-emerald-100/80 text-emerald-800 border-emerald-200/50 backdrop-blur-sm">
+                            {recommendedPackage.meal_count} meals
+                          </Badge>
+                        </div>
+                        
+                        <div className="text-3xl font-bold text-gray-900">
+                          £{recommendedPackage.price}
+                          <span className="text-lg font-normal text-gray-600">/week</span>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={() => updateProfile("selectedPackageId", recommendedPackage.id)}
+                        className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        Select This Package
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Delivery Frequency Selection */}
+                {profile.selectedPackageId && (
+                  <div className="space-y-6 animate-fade-in">
+                    <div className="text-center">
+                      <h4 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-2">Delivery Frequency</h4>
+                      <p className="text-gray-600">How often would you like your meals delivered?</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[
+                        { value: "weekly", label: "Weekly", desc: "Fresh meals every week", popular: true },
+                        { value: "biweekly", label: "Bi-weekly", desc: "Delivery every 2 weeks" },
+                        { value: "monthly", label: "Monthly", desc: "Once per month delivery" }
+                      ].map((freq) => (
+                        <Card 
+                          key={freq.value} 
+                          className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
+                            profile.deliveryFrequency === freq.value
+                              ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
+                              : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
+                          }`}
+                          onClick={() => updateProfile("deliveryFrequency", freq.value)}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                          {freq.popular && (
+                            <div className="absolute top-4 right-4 z-20">
+                              <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg">
                                 Most Popular
                               </Badge>
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                          <CardContent className="p-8 relative z-10 text-center">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value={pkg.id} id={`package-${pkg.id}`} className="sr-only" />
-                              <Label htmlFor={`package-${pkg.id}`} className="cursor-pointer flex-1">
-                                <div className="space-y-4">
-                                  <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">£{pkg.price.toFixed(2)}</div>
-                                  <div className="text-xl font-bold text-gray-900">{pkg.meal_count} Meals</div>
-                                  <div className="text-gray-600 leading-relaxed">{pkg.description}</div>
-                                  <div className="text-sm text-gray-500 font-medium">£{(pkg.price / pkg.meal_count).toFixed(2)} per meal</div>
+                          <CardContent className="p-6 relative z-10">
+                            <div className="text-center">
+                              <div className={`relative mx-auto mb-4 w-16 h-16 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
+                                profile.deliveryFrequency === freq.value
+                                  ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
+                                  : 'bg-gradient-to-br from-blue-100/80 via-indigo-100/80 to-purple-100/80 group-hover:from-blue-200/80 group-hover:via-indigo-200/80 group-hover:to-purple-200/80'
+                              }`}>
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Users className={`transition-all duration-500 ${
+                                    profile.deliveryFrequency === freq.value 
+                                      ? 'text-white scale-110 drop-shadow-xl' 
+                                      : 'text-blue-600 group-hover:text-blue-700 group-hover:scale-105'
+                                  }`} size={24} />
                                 </div>
-                              </Label>
+                              </div>
+                              
+                              <div className="font-bold text-xl text-gray-900 mb-1">{freq.label}</div>
+                              <div className="text-gray-600 text-sm leading-relaxed">{freq.desc}</div>
                             </div>
                           </CardContent>
                         </Card>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </RadioGroup>
-              )}
-            </div>
-
-            <div>
-              <div className="text-center mb-8">
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Delivery frequency</h3>
-                <p className="text-gray-600 text-lg">Choose how often you'd like fresh meals delivered</p>
+                )}
               </div>
-              <RadioGroup value={profile.deliveryFrequency} onValueChange={(value) => updateProfile("deliveryFrequency", value)}>
-                <div className="space-y-4">
-                  {[
-                    { value: "weekly", label: "Weekly Subscription", desc: "Fresh meals every week, save 10%", badge: "Best Value" },
-                    { value: "bi-weekly", label: "Bi-Weekly", desc: "Every two weeks, save 5%", badge: "Popular" },
-                    { value: "one-time", label: "One-Time Order", desc: "Try us out first", badge: null }
-                  ].map((option) => (
-                    <Card key={option.value} className="group cursor-pointer transition-all duration-500 ease-out border-0 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 hover:scale-[1.01] hover:-translate-y-1 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                      {option.badge && (
-                        <div className="absolute top-4 right-4 z-20">
-                          <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-medium px-3 py-1 shadow-lg shadow-emerald-500/40 rounded-full text-xs">
-                            {option.badge}
-                          </Badge>
-                        </div>
-                      )}
-                      <CardContent className="p-6 relative z-10">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={`freq-${option.value}`} className="sr-only" />
-                          <Label htmlFor={`freq-${option.value}`} className="cursor-pointer flex-1">
-                            <div className="flex items-center space-x-4">
-                              <div className="relative p-3 rounded-2xl bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80 group-hover:from-emerald-200/80 group-hover:via-green-200/80 group-hover:to-teal-200/80 shadow-lg transition-all duration-500 backdrop-blur-sm">
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                                <Users className="text-emerald-600 group-hover:text-emerald-700 transition-all duration-500" size={24} />
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-bold text-lg text-gray-900 mb-1">{option.label}</div>
-                                <div className="text-gray-600 leading-relaxed">{option.desc}</div>
-                              </div>
-                            </div>
-                          </Label>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </RadioGroup>
-            </div>
+            ) : (
+              <div className="text-center p-8">
+                <p className="text-gray-600">No matching package found. Please adjust your preferences.</p>
+              </div>
+            )}
           </div>
         );
 
