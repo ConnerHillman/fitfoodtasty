@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
+import Orders from "./pages/Orders";
 import RequireAuth from "./components/RequireAuth";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/menu" element={<Layout><Menu /></Layout>} />
             <Route path="/cart" element={<Layout><Cart /></Layout>} />
+            <Route path="/orders" element={<RequireAuth><Layout><Orders /></Layout></RequireAuth>} />
             <Route path="/payment-success" element={<Layout><PaymentSuccess /></Layout>} />
             <Route path="/admin" element={<RequireAuth><Layout><AdminDashboard /></Layout></RequireAuth>} />
             <Route path="/business" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />
