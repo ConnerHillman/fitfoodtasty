@@ -255,9 +255,12 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       const index = similarPackages.findIndex(pkg => pkg.id === recommendedPackage.id);
       setCarouselIndex(index >= 0 ? index : 0);
       
-      // Auto-select the recommended package when reaching the recommendation step
-      if (currentStep === 2 && !profile.selectedPackageId) {
-        setProfile(prev => ({ ...prev, selectedPackageId: recommendedPackage.id }));
+      // Auto-select the current carousel package when reaching the recommendation step
+      if (currentStep === 2) {
+        const currentCarouselPackage = similarPackages[index >= 0 ? index : 0];
+        if (currentCarouselPackage) {
+          setProfile(prev => ({ ...prev, selectedPackageId: currentCarouselPackage.id }));
+        }
       }
     }
   }, [packages, profile.goal, profile.mealCount, currentStep]);
@@ -272,6 +275,17 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       setCarouselIndex(prev => prev === similarPackages.length - 1 ? 0 : prev + 1);
     }
   };
+
+  // Auto-select package when carousel index changes
+  useEffect(() => {
+    if (currentStep === 2) {
+      const similarPackages = getSimilarPackages();
+      const currentCarouselPackage = similarPackages[carouselIndex];
+      if (currentCarouselPackage) {
+        setProfile(prev => ({ ...prev, selectedPackageId: currentCarouselPackage.id }));
+      }
+    }
+  }, [carouselIndex, currentStep]);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -432,26 +446,155 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
       case 2:
         const recommendedPackage = getRecommendedPackage();
-        const currentPackage = recommendedPackage;
+        const similarPackages = getSimilarPackages();
+        const currentPackage = similarPackages[carouselIndex] || recommendedPackage;
         
         return (
           <div className="space-y-8">
-            {currentPackage ? (
-              <div className="text-center space-y-6">
-                <div className="bg-gradient-to-br from-white via-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl p-8 shadow-2xl">
-                  <div className="text-4xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
-                    {currentPackage.name}
+            {currentPackage && similarPackages.length > 0 ? (
+              <div className="space-y-8">
+                {/* 3D Package Carousel */}
+                <div className="relative">
+                  <div className="flex items-center justify-center">
+                    {/* Left Arrow */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigateCarousel('prev')}
+                      disabled={similarPackages.length <= 1}
+                      className="absolute left-0 z-20 group bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 hover:from-emerald-400 hover:via-green-400 hover:to-teal-500 rounded-2xl w-16 h-16 p-0 shadow-2xl shadow-emerald-500/60 hover:shadow-emerald-400/80 transition-all duration-300 hover:scale-125 hover:-translate-y-2 border-2 border-white/50 hover:border-white/70 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:translate-y-0"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/20 to-transparent rounded-2xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 rounded-2xl"></div>
+                      <ChevronLeft size={32} className="text-white drop-shadow-xl group-hover:drop-shadow-2xl transition-all duration-300 group-hover:scale-110 relative z-10 font-bold stroke-[2.5]" />
+                    </Button>
+
+                    {/* Package Cards Container */}
+                    <div className="relative w-full max-w-6xl h-96 flex items-center justify-center" style={{ perspective: '1200px' }}>
+                      {similarPackages.map((pkg, index) => {
+                        const isCenter = index === carouselIndex;
+                        const isLeft = index === (carouselIndex - 1 + similarPackages.length) % similarPackages.length;
+                        const isRight = index === (carouselIndex + 1) % similarPackages.length;
+                        const isVisible = isCenter || isLeft || isRight;
+                        
+                        if (!isVisible) return null;
+
+                        let transform = "";
+                        let zIndex = 1;
+                        let opacity = 0.4;
+                        let scale = 0.8;
+                        let blur = "blur(2px)";
+
+                        if (isCenter) {
+                          transform = "translateX(0) rotateY(0deg) translateZ(0px)";
+                          zIndex = 10;
+                          opacity = 1;
+                          scale = 1;
+                          blur = "blur(0px)";
+                        } else if (isLeft) {
+                          transform = "translateX(-240px) rotateY(35deg) translateZ(-100px)";
+                          zIndex = 5;
+                          opacity = 0.6;
+                          scale = 0.85;
+                          blur = "blur(1px)";
+                        } else if (isRight) {
+                          transform = "translateX(240px) rotateY(-35deg) translateZ(-100px)";
+                          zIndex = 5;
+                          opacity = 0.6;
+                          scale = 0.85;
+                          blur = "blur(1px)";
+                        }
+
+                        return (
+                          <Card
+                            key={pkg.id}
+                            className={`absolute w-96 h-80 bg-gradient-to-br from-white via-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl shadow-2xl transition-all duration-700 ease-out cursor-pointer overflow-hidden backdrop-blur-sm hover:shadow-3xl ${
+                              isCenter ? 'shadow-emerald-500/30' : 'shadow-gray-500/20'
+                            }`}
+                            style={{ 
+                              transform, 
+                              zIndex, 
+                              opacity,
+                              transformStyle: 'preserve-3d',
+                              scale: scale.toString(),
+                              filter: blur
+                            }}
+                            onClick={() => setCarouselIndex(index)}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-green-50/30 to-emerald-50/40 rounded-3xl"></div>
+                            {isCenter && (
+                              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-green-500/5 to-teal-500/10 rounded-3xl animate-pulse"></div>
+                            )}
+                            <CardContent className="p-8 relative z-10 h-full flex flex-col justify-center items-center text-center">
+                              <div className="mb-6">
+                                <div className={`text-3xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3 transition-all duration-300 ${
+                                  isCenter ? 'scale-110' : 'scale-100'
+                                }`}>
+                                  {pkg.name}
+                                </div>
+                                <p className="text-gray-600 text-sm leading-relaxed mb-6 max-w-sm">{pkg.description}</p>
+                                <div className="flex items-center justify-center space-x-6">
+                                  <div className={`text-4xl font-bold text-green-600 transition-all duration-300 ${
+                                    isCenter ? 'scale-110' : 'scale-100'
+                                  }`}>
+                                    £{pkg.price}
+                                  </div>
+                                  <div className="text-lg text-gray-500">{pkg.meal_count} meals</div>
+                                </div>
+                              </div>
+                              {isCenter && (
+                                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                                  <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg animate-fade-in">
+                                    Recommended
+                                  </Badge>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+
+                    {/* Right Arrow */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigateCarousel('next')}
+                      disabled={similarPackages.length <= 1}
+                      className="absolute right-0 z-20 group bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 hover:from-emerald-400 hover:via-green-400 hover:to-teal-500 rounded-2xl w-16 h-16 p-0 shadow-2xl shadow-emerald-500/60 hover:shadow-emerald-400/80 transition-all duration-300 hover:scale-125 hover:-translate-y-2 border-2 border-white/50 hover:border-white/70 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:translate-y-0"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/20 to-transparent rounded-2xl"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 rounded-2xl"></div>
+                      <ChevronRight size={32} className="text-white drop-shadow-xl group-hover:drop-shadow-2xl transition-all duration-300 group-hover:scale-110 relative z-10 font-bold stroke-[2.5]" />
+                    </Button>
                   </div>
-                  <p className="text-gray-600 text-lg mb-6">{currentPackage.description}</p>
-                  <div className="flex items-center justify-center space-x-6">
-                    <div className="text-5xl font-bold text-green-600">£{currentPackage.price}</div>
-                    <div className="text-2xl text-gray-500">{currentPackage.meal_count} meals</div>
+                </div>
+
+                {/* Package Selection Info */}
+                <div className="text-center space-y-4 animate-fade-in">
+                  <div className="flex items-center justify-center space-x-2">
+                    {similarPackages.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
+                          index === carouselIndex 
+                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 scale-125 shadow-lg shadow-emerald-500/50' 
+                            : 'bg-gray-300 hover:bg-gray-400 hover:scale-110'
+                        }`}
+                        onClick={() => setCarouselIndex(index)}
+                      />
+                    ))}
                   </div>
+                  <p className="text-gray-600">
+                    {similarPackages.length > 1 ? 'Use arrows or click to explore options' : 'Perfect match for your goals!'}
+                  </p>
                 </div>
               </div>
             ) : (
-              <div className="text-center text-gray-500">
-                No packages available
+              <div className="text-center text-gray-500 py-12">
+                <div className="text-6xl mb-4">📦</div>
+                <div className="text-xl font-semibold mb-2">No packages available</div>
+                <p>Please adjust your preferences or contact support.</p>
               </div>
             )}
           </div>
