@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import BusinessDashboard from "./pages/BusinessDashboard";
+import BusinessSettings from "./pages/BusinessSettings";
 import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import Menu from "./pages/Menu";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/payment-success" element={<Layout><PaymentSuccess /></Layout>} />
             <Route path="/admin" element={<RequireAuth><Layout><AdminDashboard /></Layout></RequireAuth>} />
             <Route path="/business" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />
+            <Route path="/business/settings" element={<RequireAuth><Layout><BusinessSettings /></Layout></RequireAuth>} />
             <Route path="/reports" element={<RequireAuth><Layout><Reports /></Layout></RequireAuth>} />
             <Route path="/business/*" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
