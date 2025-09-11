@@ -42,11 +42,11 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
         {packages.map((pkg) => (
           <Card key={pkg.id} className="relative overflow-hidden hover:shadow-lg transition-shadow">
             {pkg.image_url && (
-              <div className="aspect-[4/3] w-full overflow-hidden">
+              <div className="w-full overflow-hidden bg-muted">
                 <img 
                   src={pkg.image_url} 
                   alt={pkg.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain"
                 />
               </div>
             )}
