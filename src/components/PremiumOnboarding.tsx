@@ -732,7 +732,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <span>Back</span>
           </Button>
           
-          {(currentStep > 1 && currentStep < steps.length - 1) && (
+          {(currentStep > 0 && currentStep < steps.length - 1) && (
             <Button 
               onClick={nextStep}
               disabled={!canProceed()}
