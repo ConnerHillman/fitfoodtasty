@@ -43,9 +43,15 @@ const steps: OnboardingStep[] = [
   },
   {
     id: "lifestyle",
-    title: "Your Lifestyle",
-    subtitle: "Tell us about your activity level and preferences",
+    title: "How Active Are You?",
+    subtitle: "Tell us about your activity level",
     icon: Activity
+  },
+  {
+    id: "restrictions",
+    title: "Dietary Preferences",
+    subtitle: "Any dietary restrictions we should know about?",
+    icon: Heart
   },
   {
     id: "preferences",
@@ -57,7 +63,7 @@ const steps: OnboardingStep[] = [
     id: "plan",
     title: "Your Meal Plan",
     subtitle: "Choose your perfect weekly setup",
-    icon: Heart
+    icon: Zap
   }
 ];
 
@@ -71,6 +77,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const [packages, setPackages] = useState<MealPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [selectedGoal, setSelectedGoal] = useState<string>("");
+  const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     goal: "",
@@ -116,7 +123,17 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       setTimeout(() => {
         setIsTransitioning(false);
         nextStep();
-      }, 800); // Longer delay for better effect
+      }, 800);
+    }
+    
+    // Auto-advance on activity level selection with visual effects
+    if (key === "activityLevel" && currentStep === 1) {
+      setSelectedActivity(value);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        nextStep();
+      }, 800);
     }
   };
 
@@ -150,8 +167,9 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     switch (currentStep) {
       case 0: return profile.goal !== "";
       case 1: return profile.activityLevel !== "";
-      case 2: return profile.cuisinePreferences.length > 0;
-      case 3: return profile.selectedPackageId !== "" && profile.deliveryFrequency !== "";
+      case 2: return true; // Dietary restrictions are optional
+      case 3: return profile.cuisinePreferences.length > 0;
+      case 4: return profile.selectedPackageId !== "" && profile.deliveryFrequency !== "";
       default: return true;
     }
   };
@@ -272,7 +290,11 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                     { value: "high", label: "High Activity", desc: "Daily training, very active lifestyle" },
                     { value: "athlete", label: "Professional Athlete", desc: "Elite training regimen" }
                   ].map((option) => (
-                    <Card key={option.value} className="cursor-pointer hover:shadow-md transition-all duration-200">
+                    <Card key={option.value} className={`cursor-pointer transition-all duration-300 border-2 ${
+                      selectedActivity === option.value && isTransitioning 
+                        ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
+                        : 'hover:border-green-200 hover:shadow-md'
+                    }`}>
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value={option.value} id={option.value} />
@@ -289,9 +311,15 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                 </div>
               </RadioGroup>
             </div>
+          </div>
+        );
 
+      case 2:
+        return (
+          <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold mb-4">Any dietary restrictions?</h3>
+              <p className="text-gray-600 mb-6">Select any that apply, or skip if none</p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo"].map((restriction) => (
                   <div key={restriction} className="flex items-center space-x-2">
@@ -308,7 +336,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           </div>
         );
 
-      case 2:
+      case 4:
         return (
           <div className="space-y-6">
             <div>
@@ -451,13 +479,24 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <span>Back</span>
           </Button>
           
-          {currentStep > 0 && (
+          {(currentStep > 1 && currentStep < steps.length - 1) && (
             <Button 
               onClick={nextStep}
               disabled={!canProceed()}
               className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex items-center space-x-2"
             >
               <span>{currentStep === steps.length - 1 ? "Create My Plan" : "Continue"}</span>
+              <ArrowRight size={16} />
+            </Button>
+          )}
+          
+          {currentStep === steps.length - 1 && (
+            <Button 
+              onClick={nextStep}
+              disabled={!canProceed()}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex items-center space-x-2"
+            >
+              <span>Create My Plan</span>
               <ArrowRight size={16} />
             </Button>
           )}
