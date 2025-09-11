@@ -10,6 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 
+interface Allergen {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface Meal {
   id: string;
   name: string;
@@ -17,6 +23,7 @@ interface Meal {
   category: string;
   price: number;
   image_url?: string;
+  allergens?: Allergen[];
 }
 
 interface Props {
@@ -36,6 +43,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
+  const [mealAllergens, setMealAllergens] = useState<Record<string, Allergen[]>>({});
   const { toast } = useToast();
   const { addPackageToCart } = useCart();
   const navigate = useNavigate();
@@ -72,7 +80,11 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
               .eq("is_active", true)
               .order("category", { ascending: true })
               .order("name", { ascending: true });
-            if (!error) setMeals((data || []) as Meal[]);
+            if (!error) {
+              const mealsData = (data || []) as Meal[];
+              setMeals(mealsData);
+              await fetchAllergensForMeals(mealsData.map(m => m.id));
+            }
           } else {
             // Get the actual meal data for the assigned meals
             const mealIds = packageMealData.map(pm => pm.meal_id);
@@ -83,7 +95,11 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
               .eq("is_active", true)
               .order("category", { ascending: true })
               .order("name", { ascending: true });
-            if (!error) setMeals((data || []) as Meal[]);
+            if (!error) {
+              const mealsData = (data || []) as Meal[];
+              setMeals(mealsData);
+              await fetchAllergensForMeals(mealsData.map(m => m.id));
+            }
           }
         }
         
@@ -91,6 +107,35 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
       })();
     }
   }, [open]);
+
+  const fetchAllergensForMeals = async (mealIds: string[]) => {
+    if (mealIds.length === 0) return;
+    
+    const { data, error } = await supabase
+      .from("meal_allergens")
+      .select(`
+        meal_id,
+        allergens (
+          id,
+          name,
+          description
+        )
+      `)
+      .in("meal_id", mealIds);
+
+    if (!error && data) {
+      const allergensMap: Record<string, Allergen[]> = {};
+      data.forEach((ma: any) => {
+        if (ma.allergens) {
+          if (!allergensMap[ma.meal_id]) {
+            allergensMap[ma.meal_id] = [];
+          }
+          allergensMap[ma.meal_id].push(ma.allergens);
+        }
+      });
+      setMealAllergens(allergensMap);
+    }
+  };
 
   const inc = (id: string) => {
     if (!pkg) return;
@@ -249,15 +294,25 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                   </div>
                 )}
                 <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-base">{meal.name}</CardTitle>
-                    <Badge className={CategoryColors[meal.category] || 'bg-gray-100 text-gray-800 border-gray-200'}>
-                      {meal.category}
-                    </Badge>
-                  </div>
+                  <CardTitle className="text-base">{meal.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{meal.description}</p>
+                  
+                  {/* Display allergens */}
+                  {mealAllergens[meal.id] && mealAllergens[meal.id].length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Allergens:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {mealAllergens[meal.id].map((allergen) => (
+                          <Badge key={allergen.id} className="bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
+                            {allergen.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between">
                     <div className="font-semibold">£{meal.price.toFixed(2)}</div>
                     <div className="flex items-center gap-2">

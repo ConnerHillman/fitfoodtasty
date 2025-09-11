@@ -68,9 +68,6 @@ const Cart = () => {
                         <p className="text-muted-foreground text-sm mb-2">
                           {item.description}
                         </p>
-                        <Badge variant="secondary" className={getCategoryColor(item.category)}>
-                          {item.category}
-                        </Badge>
                       </div>
                       <Button
                         variant="ghost"
