@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Title-case labels for display only
+const toTitleCase = (str: string) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1));
+
 interface Category {
   id: string;
   name: string;
@@ -94,7 +97,10 @@ const MealsGrid = () => {
   // Create display categories including "All Meals"
   const displayCategories = [
     { value: "all", label: "All Meals" },
-    ...categories.map(cat => ({ value: cat.name, label: cat.name }))
+    ...categories.map(cat => {
+      const raw = cat.name || '';
+      return { value: raw, label: toTitleCase(raw) };
+    })
   ];
 
   const handleAddToCart = (meal: Meal) => {
