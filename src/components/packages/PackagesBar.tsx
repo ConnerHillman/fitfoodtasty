@@ -26,7 +26,7 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
         .from("packages")
         .select("id,name,description,meal_count,price,image_url")
         .eq("is_active", true)
-        .order("meal_count", { ascending: true });
+        .order("sort_order", { ascending: true });
       if (!error) setPackages((data || []) as MealPackage[]);
     };
     fetchPackages();

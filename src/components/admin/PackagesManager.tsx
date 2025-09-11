@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Upload, Image, Settings } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, Image, Settings, ChevronUp, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +19,7 @@ interface Package {
   price: number;
   image_url?: string;
   is_active: boolean;
+  sort_order: number;
 }
 
 const PackagesManager = () => {
@@ -47,7 +48,7 @@ const PackagesManager = () => {
     const { data, error } = await supabase
       .from("packages")
       .select("*")
-      .order("meal_count", { ascending: true });
+      .order("sort_order", { ascending: true });
 
     if (error) {
       toast({ title: "Error", description: "Failed to fetch packages", variant: "destructive" });
@@ -250,6 +251,35 @@ const PackagesManager = () => {
     }
   };
 
+  const movePackage = async (packageId: string, direction: 'up' | 'down') => {
+    const currentIndex = packages.findIndex(p => p.id === packageId);
+    if (currentIndex === -1) return;
+    
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= packages.length) return;
+
+    const currentPackage = packages[currentIndex];
+    const targetPackage = packages[newIndex];
+
+    // Swap sort_order values
+    const { error: error1 } = await supabase
+      .from("packages")
+      .update({ sort_order: targetPackage.sort_order })
+      .eq("id", currentPackage.id);
+
+    const { error: error2 } = await supabase
+      .from("packages")
+      .update({ sort_order: currentPackage.sort_order })
+      .eq("id", targetPackage.id);
+
+    if (error1 || error2) {
+      toast({ title: "Error", description: "Failed to reorder packages", variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Package order updated" });
+      fetchPackages();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -367,6 +397,7 @@ const PackagesManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Order</TableHead>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
@@ -377,8 +408,30 @@ const PackagesManager = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {packages.map((pkg) => (
+              {packages.map((pkg, index) => (
                 <TableRow key={pkg.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => movePackage(pkg.id, 'up')}
+                        disabled={index === 0}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronUp size={14} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => movePackage(pkg.id, 'down')}
+                        disabled={index === packages.length - 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronDown size={14} />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {pkg.image_url ? (
                       <img
