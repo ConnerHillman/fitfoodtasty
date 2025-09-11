@@ -106,6 +106,11 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
   const updateProfile = (key: keyof UserProfile, value: any) => {
     setProfile(prev => ({ ...prev, [key]: value }));
+    
+    // Auto-advance on goal selection
+    if (key === "goal" && currentStep === 0) {
+      setTimeout(() => nextStep(), 300); // Small delay for visual feedback
+    }
   };
 
   const toggleArrayValue = (key: keyof UserProfile, value: string) => {
