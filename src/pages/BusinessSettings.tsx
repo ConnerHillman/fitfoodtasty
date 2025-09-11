@@ -30,7 +30,6 @@ const businessProfileSchema = z.object({
 
 const deliverySettingsSchema = z.object({
   delivery_fee: z.string().min(0, 'Delivery fee must be 0 or greater'),
-  free_delivery_threshold: z.string().min(0),
   max_delivery_distance: z.string().min(1),
   delivery_time_slots: z.string(),
   minimum_order_value: z.string().min(0),
@@ -70,7 +69,6 @@ const BusinessSettings = () => {
     resolver: zodResolver(deliverySettingsSchema),
     defaultValues: {
       delivery_fee: '5.00',
-      free_delivery_threshold: '50.00',
       max_delivery_distance: '15',
       delivery_time_slots: 'Morning (9-12), Afternoon (12-17), Evening (17-20)',
       minimum_order_value: '25.00',
@@ -242,19 +240,38 @@ const BusinessSettings = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <FormField
-                      control={businessForm.control}
-                      name="operating_hours_start"
+                      control={deliveryForm.control}
+                      name="max_delivery_distance"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Opening Time</FormLabel>
+                          <FormLabel>Max Delivery Distance (miles)</FormLabel>
                           <FormControl>
-                            <Input type="time" {...field} />
+                            <Input type="number" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                   </div>
+
+                  <FormField
+                    control={deliveryForm.control}
+                    name="delivery_time_slots"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Available Time Slots</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Morning (9-12), Afternoon (12-17), Evening (17-20)"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                     <FormField
                       control={businessForm.control}
                       name="operating_hours_end"
@@ -316,35 +333,6 @@ const BusinessSettings = () => {
                           <FormLabel>Delivery Fee (£)</FormLabel>
                           <FormControl>
                             <Input type="number" step="0.01" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={deliveryForm.control}
-                      name="free_delivery_threshold"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Free Delivery Above (£)</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.01" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={deliveryForm.control}
-                      name="max_delivery_distance"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Max Delivery Distance (miles)</FormLabel>
-                          <FormControl>
-                            <Input type="number" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
