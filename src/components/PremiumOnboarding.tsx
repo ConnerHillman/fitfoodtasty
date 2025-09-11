@@ -302,7 +302,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         return (
           <div className="space-y-6">
             <RadioGroup value={profile.goal} onValueChange={(value) => updateProfile("goal", value)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
                 <Card className={getCardClassName("weight-loss")}>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
                   <CardContent className="p-8 relative z-10">
@@ -346,31 +346,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                           <div className="flex-1">
                             <div className="font-bold text-xl text-gray-900 mb-1">Muscle Gain</div>
                             <div className="text-gray-600 text-sm leading-relaxed">High-protein, performance-focused nutrition for muscle building and recovery</div>
-                          </div>
-                        </div>
-                      </Label>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className={getCardClassName("convenience")}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                  <CardContent className="p-8 relative z-10">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="convenience" id="convenience" className="sr-only" />
-                      <Label htmlFor="convenience" className="cursor-pointer flex-1">
-                        <div className="flex items-center space-x-4">
-                          <div className={`relative p-4 rounded-2xl transition-all duration-500 backdrop-blur-sm ${
-                            isOptionSelectedAndTransitioning("convenience") 
-                              ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
-                              : 'bg-gradient-to-br from-purple-100/80 via-pink-100/80 to-rose-100/80 group-hover:from-purple-200/80 group-hover:via-pink-200/80 group-hover:to-rose-200/80 shadow-lg'
-                          }`}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                            <Heart className={getIconClassName("convenience")} size={28} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-bold text-xl text-gray-900 mb-1">Convenience</div>
-                            <div className="text-gray-600 text-sm leading-relaxed">Healthy meals without the planning, perfectly suited for busy lifestyles</div>
                           </div>
                         </div>
                       </Label>
