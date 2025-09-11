@@ -34,6 +34,7 @@ const CategoriesManager = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mealSearchQuery, setMealSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showInactive, setShowInactive] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -231,6 +232,7 @@ const CategoriesManager = () => {
 
   const openMealAssignment = (category: Category) => {
     setSelectedCategory(category);
+    setMealSearchQuery(""); // Reset search when opening dialog
     setIsMealAssignmentOpen(true);
   };
 
@@ -249,12 +251,27 @@ const CategoriesManager = () => {
   };
 
   const getMealsInCategory = (categoryName: string) => {
-    return meals.filter(meal => meal.category === categoryName);
+    const mealsInCategory = meals.filter(meal => meal.category === categoryName);
+    if (!mealSearchQuery.trim()) return mealsInCategory;
+    
+    const query = mealSearchQuery.toLowerCase().trim();
+    return mealsInCategory.filter(meal =>
+      meal.name.toLowerCase().includes(query) ||
+      (meal.description && meal.description.toLowerCase().includes(query))
+    );
   };
 
   const getUnassignedMeals = () => {
     const categoryNames = categories.map(c => c.name);
-    return meals.filter(meal => !categoryNames.includes(meal.category) || !meal.category);
+    const unassignedMeals = meals.filter(meal => !categoryNames.includes(meal.category) || !meal.category);
+    
+    if (!mealSearchQuery.trim()) return unassignedMeals;
+    
+    const query = mealSearchQuery.toLowerCase().trim();
+    return unassignedMeals.filter(meal =>
+      meal.name.toLowerCase().includes(query) ||
+      (meal.description && meal.description.toLowerCase().includes(query))
+    );
   };
 
   const resetForm = () => {
@@ -265,6 +282,16 @@ const CategoriesManager = () => {
       is_active: true
     });
     setEditingCategory(null);
+  };
+
+  // Get total counts for display (without search filter)
+  const getTotalMealsInCategory = (categoryName: string) => {
+    return meals.filter(meal => meal.category === categoryName).length;
+  };
+
+  const getTotalUnassignedMeals = () => {
+    const categoryNames = categories.map(c => c.name);
+    return meals.filter(meal => !categoryNames.includes(meal.category) || !meal.category).length;
   };
 
   const displayedCategories = (filteredCategories.length > 0 || searchQuery || !showInactive) ? filteredCategories : categories;
@@ -335,7 +362,7 @@ const CategoriesManager = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="text-xs">
-              {getMealsInCategory(category.name).length} meals
+              {getTotalMealsInCategory(category.name)} meals
             </Badge>
           </div>
           <div className="flex items-center space-x-1">
@@ -581,7 +608,7 @@ const CategoriesManager = () => {
                       </div>
                       <div className="flex items-center space-x-4">
                         <Badge variant="outline" className="text-xs">
-                          {getMealsInCategory(category.name).length} meals
+                          {getTotalMealsInCategory(category.name)} meals
                         </Badge>
                         {!category.is_active && (
                           <Badge variant="secondary" className="text-xs">
@@ -649,25 +676,45 @@ const CategoriesManager = () => {
           </DialogHeader>
           
           <div className="space-y-6">
+            {/* Search bar for meals */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search meals..."
+                value={mealSearchQuery}
+                onChange={(e) => setMealSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
             {/* Current meals in category */}
             <div>
-              <h4 className="font-semibold mb-3">Current Meals ({getMealsInCategory(selectedCategory?.name || '').length})</h4>
+              <h4 className="font-semibold mb-3 flex items-center justify-between">
+                <span>Current Meals</span>
+                <Badge variant="outline">
+                  {mealSearchQuery ? 
+                    `${getMealsInCategory(selectedCategory?.name || '').length} of ${getTotalMealsInCategory(selectedCategory?.name || '')}` :
+                    getTotalMealsInCategory(selectedCategory?.name || '')
+                  }
+                </Badge>
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {getMealsInCategory(selectedCategory?.name || '').map((meal) => (
-                  <Card key={meal.id} className="p-3">
+                  <Card key={meal.id} className="p-3 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h5 className="font-medium">{meal.name}</h5>
-                        <p className="text-sm text-muted-foreground">{meal.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-medium truncate">{meal.name}</h5>
+                        <p className="text-sm text-muted-foreground line-clamp-1">{meal.description}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={meal.is_active ? "default" : "secondary"}>
+                      <div className="flex items-center space-x-2 ml-2">
+                        <Badge variant={meal.is_active ? "default" : "secondary"} className="text-xs">
                           {meal.is_active ? "Active" : "Inactive"}
                         </Badge>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => assignMealToCategory(meal.id, '')}
+                          className="shrink-0"
                         >
                           Remove
                         </Button>
@@ -676,27 +723,49 @@ const CategoriesManager = () => {
                   </Card>
                 ))}
                 {getMealsInCategory(selectedCategory?.name || '').length === 0 && (
-                  <p className="text-muted-foreground col-span-2 text-center py-8">
-                    No meals in this category yet.
-                  </p>
+                  <div className="col-span-2 text-center py-8">
+                    <ChefHat className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground">
+                      {mealSearchQuery ? "No meals match your search" : "No meals in this category yet"}
+                    </p>
+                    {mealSearchQuery && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setMealSearchQuery("")}
+                        className="mt-2"
+                      >
+                        Clear search
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Unassigned meals */}
             <div>
-              <h4 className="font-semibold mb-3">Unassigned Meals ({getUnassignedMeals().length})</h4>
+              <h4 className="font-semibold mb-3 flex items-center justify-between">
+                <span>Unassigned Meals</span>
+                <Badge variant="outline">
+                  {mealSearchQuery ? 
+                    `${getUnassignedMeals().length} of ${getTotalUnassignedMeals()}` :
+                    getTotalUnassignedMeals()
+                  }
+                </Badge>
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {getUnassignedMeals().map((meal) => (
-                  <Card key={meal.id} className="p-3">
+                  <Card key={meal.id} className="p-3 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h5 className="font-medium">{meal.name}</h5>
-                        <p className="text-sm text-muted-foreground">{meal.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-medium truncate">{meal.name}</h5>
+                        <p className="text-sm text-muted-foreground line-clamp-1">{meal.description}</p>
                       </div>
                       <Button
                         size="sm"
                         onClick={() => assignMealToCategory(meal.id, selectedCategory?.name || '')}
+                        className="shrink-0"
                       >
                         Add to {selectedCategory?.name}
                       </Button>
@@ -704,9 +773,22 @@ const CategoriesManager = () => {
                   </Card>
                 ))}
                 {getUnassignedMeals().length === 0 && (
-                  <p className="text-muted-foreground col-span-2 text-center py-8">
-                    All meals are assigned to categories.
-                  </p>
+                  <div className="col-span-2 text-center py-8">
+                    <ChefHat className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground">
+                      {mealSearchQuery ? "No unassigned meals match your search" : "All meals are assigned to categories"}
+                    </p>
+                    {mealSearchQuery && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setMealSearchQuery("")}
+                        className="mt-2"
+                      >
+                        Clear search
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
