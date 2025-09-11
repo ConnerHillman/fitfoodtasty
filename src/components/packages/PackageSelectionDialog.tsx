@@ -375,14 +375,13 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm" 
                           onClick={() => fetchIngredientsForMeal(meal.id)}
-                          className="h-7 px-2"
+                          className="h-7 px-2.5 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
                         >
-                          <Info size={14} />
-                          <span className="sr-only">Ingredients</span>
-                          <span className="ml-1 hidden sm:inline">Ingredients</span>
+                          <Info size={11} className="text-green-600" />
+                          <span className="ml-1 text-xs font-medium tracking-wide hidden sm:inline">INGREDIENTS</span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-64 p-4 bg-background border border-border shadow-lg z-50">

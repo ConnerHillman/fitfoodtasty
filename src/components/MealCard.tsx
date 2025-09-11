@@ -439,14 +439,13 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
           <Popover>
             <PopoverTrigger asChild>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
                 onClick={fetchIngredients}
-                className="h-8 px-2"
+                className="h-8 px-3 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <Info size={14} />
-                <span className="sr-only">Ingredients</span>
-                <span className="ml-1 hidden sm:inline">Ingredients</span>
+                <Info size={12} className="text-green-600" />
+                <span className="ml-1.5 text-xs font-medium tracking-wide">INGREDIENTS</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-4 bg-background border border-border shadow-lg z-50">
