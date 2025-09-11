@@ -86,7 +86,7 @@ const MealBuilder = ({ mealId, onClose }: MealBuilderProps) => {
     }
   };
 
-  const calculateNutrition = (mealIngs: MealIngredient[]) => {
+  const calculateNutrition = async (mealIngs: MealIngredient[]) => {
     let totalCalories = 0;
     let totalProtein = 0;
     let totalCarbs = 0;
@@ -102,13 +102,36 @@ const MealBuilder = ({ mealId, onClose }: MealBuilderProps) => {
       totalWeight += mi.quantity;
     });
 
-    setMealNutrition({
+    const nutritionData = {
       calories: totalCalories,
       protein: totalProtein,
       carbs: totalCarbs,
       fat: totalFat,
       weight: totalWeight
-    });
+    };
+
+    setMealNutrition(nutritionData);
+
+    // Save nutrition totals to the meals table
+    const { error } = await supabase
+      .from("meals")
+      .update({
+        total_calories: totalCalories,
+        total_protein: totalProtein,
+        total_carbs: totalCarbs,
+        total_fat: totalFat,
+        total_weight: totalWeight
+      })
+      .eq("id", mealId);
+
+    if (error) {
+      console.error("Error updating meal nutrition:", error);
+      toast({ 
+        title: "Warning", 
+        description: "Nutrition calculated but failed to save to meal", 
+        variant: "destructive" 
+      });
+    }
   };
 
   const addIngredient = async () => {
