@@ -370,7 +370,41 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                   </div>
                 )}
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{meal.name}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">{meal.name}</CardTitle>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => fetchIngredientsForMeal(meal.id)}
+                          className="h-7 px-2"
+                        >
+                          <Info size={14} />
+                          <span className="sr-only">Ingredients</span>
+                          <span className="ml-1 hidden sm:inline">Ingredients</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-4 bg-background border border-border shadow-lg z-50">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-sm">Ingredients</h4>
+                          {loadingIngredients[meal.id] ? (
+                            <div className="text-sm text-muted-foreground">Loading...</div>
+                          ) : mealIngredients[meal.id] && mealIngredients[meal.id].length > 0 ? (
+                            <div className="space-y-1">
+                              {mealIngredients[meal.id].map((ingredient) => (
+                                <div key={ingredient.id} className="text-sm">
+                                  <span className="font-medium">{ingredient.quantity}{ingredient.unit}</span> {ingredient.name}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">No ingredients available</div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{meal.description}</p>
@@ -423,38 +457,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => fetchIngredientsForMeal(meal.id)}
-                          className="flex items-center gap-1"
-                        >
-                          <Info size={14} />
-                          Ingredients
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 p-4 bg-background border border-border shadow-lg z-50">
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-sm">Ingredients</h4>
-                          {loadingIngredients[meal.id] ? (
-                            <div className="text-sm text-muted-foreground">Loading...</div>
-                          ) : mealIngredients[meal.id] && mealIngredients[meal.id].length > 0 ? (
-                            <div className="space-y-1">
-                              {mealIngredients[meal.id].map((ingredient) => (
-                                <div key={ingredient.id} className="text-sm">
-                                  <span className="font-medium">{ingredient.quantity}{ingredient.unit}</span> {ingredient.name}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-sm text-muted-foreground">No ingredients available</div>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                  <div className="flex items-center justify-end">
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => dec(meal.id)} disabled={qty === 0}>
                         <Minus size={16} />
