@@ -312,7 +312,7 @@ const Reports = () => {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
               <ChefHat className="h-8 w-8 text-primary" />
@@ -320,17 +320,10 @@ const Reports = () => {
             </h1>
             <p className="text-muted-foreground text-lg">Production planning and order management</p>
           </div>
-          <div className="flex items-center gap-3">
-            <DataImporter />
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export All
-            </Button>
-          </div>
         </div>
         
         {/* Date Range Selector */}
-        <Card className="p-4">
+        <Card className="p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h3 className="font-semibold">Date Range:</h3>
@@ -403,6 +396,22 @@ const Reports = () => {
             </div>
           </div>
         </Card>
+
+        {/* Data Import Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Data Import & Management
+            </CardTitle>
+            <CardDescription>
+              Import meals, ingredients, and recipe data to populate your kitchen reports
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataImporter />
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="kitchen" className="space-y-6">
@@ -442,6 +451,11 @@ const Reports = () => {
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     {showFullReport ? 'Hide' : 'View'} Full Report
+                  </Button>
+                  
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export All
                   </Button>
                   
                   <Dialog open={showExportOptions} onOpenChange={setShowExportOptions}>
