@@ -432,140 +432,22 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
       case 2:
         const recommendedPackage = getRecommendedPackage();
-        const similarPackages = getSimilarPackages();
-        const currentPackage = similarPackages[carouselIndex] || recommendedPackage;
+        const currentPackage = recommendedPackage;
         
         return (
           <div className="space-y-8">
             {currentPackage ? (
-              <div className="space-y-8">
-                {/* 3D Package Carousel */}
-                <div className="relative">
-                  <div className="flex items-center justify-center">
-                    {/* Left Arrow */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigateCarousel('prev')}
-                      className="absolute left-0 z-20 group bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 hover:from-emerald-400 hover:via-green-400 hover:to-teal-500 rounded-2xl w-16 h-16 p-0 shadow-2xl shadow-emerald-500/60 hover:shadow-emerald-400/80 transition-all duration-300 hover:scale-125 hover:-translate-y-2 border-2 border-white/50 hover:border-white/70"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/20 to-transparent rounded-2xl"></div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 rounded-2xl"></div>
-                      <ChevronLeft size={32} className="text-white drop-shadow-xl group-hover:drop-shadow-2xl transition-all duration-300 group-hover:scale-110 relative z-10 font-bold stroke-[2.5]" />
-                    </Button>
-
-                    {/* Package Cards Container */}
-                    <div className="relative w-full max-w-6xl h-80 flex items-center justify-center perspective-1000">
-                      {similarPackages.map((pkg, index) => {
-                        const isCenter = index === carouselIndex;
-                        const isLeft = index === (carouselIndex - 1 + similarPackages.length) % similarPackages.length;
-                        const isRight = index === (carouselIndex + 1) % similarPackages.length;
-                        const isVisible = isCenter || isLeft || isRight;
-                        
-                        if (!isVisible) return null;
-
-                        let transform = "";
-                        let zIndex = 1;
-                        let opacity = 0.4;
-                        let scale = 0.8;
-
-                        if (isCenter) {
-                          transform = "translateX(0) rotateY(0deg) translateZ(0px)";
-                          zIndex = 10;
-                          opacity = 1;
-                          scale = 1;
-                        } else if (isLeft) {
-                          transform = "translateX(-200px) rotateY(25deg) translateZ(-50px)";
-                          zIndex = 5;
-                          opacity = 0.7;
-                          scale = 0.85;
-                        } else if (isRight) {
-                          transform = "translateX(200px) rotateY(-25deg) translateZ(-50px)";
-                          zIndex = 5;
-                          opacity = 0.7;
-                          scale = 0.85;
-                        }
-
-                        return (
-                          <Card 
-                            key={pkg.id}
-                            className={`absolute cursor-pointer transition-all duration-700 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden ${
-                              isCenter 
-                                ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 shadow-2xl shadow-emerald-500/40' 
-                                : 'bg-white/70 hover:bg-white/80 shadow-lg hover:shadow-xl'
-                            }`}
-                            style={{
-                              transform,
-                              zIndex,
-                              opacity,
-                              scale,
-                              width: '280px'
-                            }}
-                            onClick={() => {
-                              const clickedIndex = similarPackages.findIndex(p => p.id === pkg.id);
-                              setCarouselIndex(clickedIndex);
-                            }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                            {isCenter && (
-                              <div className="absolute top-4 right-4 z-20">
-                                <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg">
-                                  {pkg.id === recommendedPackage?.id ? 'Recommended' : 'Selected'}
-                                </Badge>
-                              </div>
-                            )}
-                            <CardContent className="p-6 relative z-10">
-                              <div className="text-center">
-                                <div className={`relative mx-auto mb-4 w-16 h-16 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
-                                  isCenter
-                                    ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
-                                    : 'bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80'
-                                }`}>
-                                  <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <UtensilsCrossed className={`transition-all duration-500 ${
-                                      isCenter 
-                                        ? 'text-white scale-110 drop-shadow-xl' 
-                                        : 'text-emerald-600'
-                                    }`} size={24} />
-                                  </div>
-                                </div>
-                                
-                                <div className="font-bold text-lg text-gray-900 mb-2">{pkg.name}</div>
-                                <div className="text-gray-600 mb-3 text-sm leading-relaxed">{pkg.description}</div>
-                                
-                                <div className="space-y-2">
-                                  <div className="flex justify-center items-center space-x-2">
-                                    <Badge variant="secondary" className="bg-emerald-100/80 text-emerald-800 border-emerald-200/50 backdrop-blur-sm text-xs">
-                                      {pkg.meal_count} meals
-                                    </Badge>
-                                  </div>
-                                  
-                                  <div className="text-2xl font-bold text-gray-900">
-                                    £{pkg.price}
-                                    <span className="text-sm font-normal text-gray-600">/week</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-
-                    {/* Right Arrow */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigateCarousel('next')}
-                      className="absolute right-0 z-20 group bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 hover:from-emerald-400 hover:via-green-400 hover:to-teal-500 rounded-2xl w-16 h-16 p-0 shadow-2xl shadow-emerald-500/60 hover:shadow-emerald-400/80 transition-all duration-300 hover:scale-125 hover:-translate-y-2 border-2 border-white/50 hover:border-white/70"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/20 to-transparent rounded-2xl"></div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 rounded-2xl"></div>
-                      <ChevronRight size={32} className="text-white drop-shadow-xl group-hover:drop-shadow-2xl transition-all duration-300 group-hover:scale-110 relative z-10 font-bold stroke-[2.5]" />
-                    </Button>
+              <div className="text-center space-y-6">
+                <div className="bg-gradient-to-br from-white via-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl p-8 shadow-2xl">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
+                    {currentPackage.name}
                   </div>
-
+                  <p className="text-gray-600 text-lg mb-6">{currentPackage.description}</p>
+                  <div className="flex items-center justify-center space-x-6">
+                    <div className="text-5xl font-bold text-green-600">£{currentPackage.price}</div>
+                    <div className="text-2xl text-gray-500">{currentPackage.meal_count} meals</div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center text-gray-500">
@@ -643,47 +525,54 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <Button 
               variant="ghost" 
               onClick={onClose} 
-              className="text-gray-400 hover:text-gray-600 hover:bg-white/60 backdrop-blur-sm rounded-full w-10 h-10 p-0 transition-all duration-300 hover:scale-110"
+              className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-white/60 transition-all duration-300"
             >
               ✕
             </Button>
-            <div className="flex items-center space-x-3">
-              <div className="relative p-3 rounded-2xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-lg shadow-emerald-500/40">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl"></div>
-                <StepIcon className="text-white relative z-10" size={24} />
+            
+            <div className="flex items-center space-x-3 bg-gradient-to-r from-emerald-500/10 via-green-500/10 to-teal-500/10 px-6 py-3 rounded-2xl border border-emerald-200/50 backdrop-blur-sm shadow-lg">
+              <div className="relative">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  <Zap size={16} className="text-white drop-shadow-sm" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
               </div>
-              <div className="text-left">
-                <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Progress</span>
-                <div className="text-sm text-gray-700 font-semibold">Step {currentStep + 1} of {steps.length}</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="relative mb-8">
-            <div className="w-full h-2 bg-gradient-to-r from-gray-200/50 to-gray-300/50 rounded-full backdrop-blur-sm shadow-inner">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500 rounded-full transition-all duration-700 ease-out shadow-lg shadow-emerald-500/50 relative overflow-hidden"
-                style={{ width: `${progress}%` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-transparent"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-medium text-emerald-700 uppercase tracking-wider">Progress</span>
+                <span className="text-sm font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
+                  Step {currentStep + 1} of {steps.length}
+                </span>
               </div>
             </div>
           </div>
+
+          <Progress 
+            value={progress} 
+            className="w-full h-3 mb-8 bg-gradient-to-r from-emerald-100 via-green-100 to-teal-100 rounded-full shadow-inner" 
+          />
           
-          <div className="space-y-3">
-            <CardTitle className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent tracking-tight">
+          <div className="space-y-4">
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <div className="relative p-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-3xl shadow-2xl shadow-emerald-500/40">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/20 to-transparent rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 rounded-3xl"></div>
+                <StepIcon size={32} className="text-white drop-shadow-xl relative z-10" />
+              </div>
+            </div>
+            <CardTitle className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">
               {steps[currentStep].title}
             </CardTitle>
-            <p className="text-gray-600 text-xl font-medium leading-relaxed">{steps[currentStep].subtitle}</p>
+            <p className="text-gray-600 text-lg font-medium leading-relaxed">
+              {steps[currentStep].subtitle}
+            </p>
           </div>
         </CardHeader>
 
-        <CardContent className="p-10 bg-gradient-to-b from-white/50 to-gray-50/30 backdrop-blur-sm">
+        <CardContent className="p-12">
           {renderStepContent()}
         </CardContent>
 
-        <div className="border-t-0 bg-gradient-to-r from-gray-50/80 via-white/80 to-gray-50/80 backdrop-blur-sm p-8 flex justify-between rounded-b-3xl">
+        <div className="flex justify-between items-center p-8 bg-gradient-to-r from-gray-50/80 via-white/80 to-gray-50/80 backdrop-blur-sm rounded-b-3xl border-t border-gray-100/50">
           <Button 
             variant="outline" 
             onClick={prevStep} 
