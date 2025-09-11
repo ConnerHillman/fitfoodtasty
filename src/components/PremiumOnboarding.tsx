@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Zap, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Zap, Users, ChevronLeft, ChevronRight, Package, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingStep {
@@ -575,9 +575,9 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {[
-                        { value: "weekly", label: "Weekly", desc: "Fresh meals every week", popular: true },
-                        { value: "biweekly", label: "Bi-weekly", desc: "Delivery every 2 weeks" },
-                        { value: "monthly", label: "Monthly", desc: "Once per month delivery" }
+                        { value: "onetime", label: "One Time", desc: "Single delivery order", icon: Package },
+                        { value: "weekly", label: "Weekly", desc: "Fresh meals every week", icon: Calendar, popular: true },
+                        { value: "monthly", label: "Monthly", desc: "Once per month delivery", icon: Clock }
                       ].map((freq) => (
                         <Card 
                           key={freq.value} 
@@ -605,7 +605,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                               }`}>
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                  <Users className={`transition-all duration-500 ${
+                                  <freq.icon className={`transition-all duration-500 ${
                                     profile.deliveryFrequency === freq.value 
                                       ? 'text-white scale-110 drop-shadow-xl' 
                                       : 'text-blue-600 group-hover:text-blue-700 group-hover:scale-105'
