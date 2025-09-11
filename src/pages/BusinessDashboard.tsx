@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer, PlusCircle, Eye, TrendingDown, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer, PlusCircle, Eye, TrendingDown, Activity, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -461,6 +461,12 @@ const BusinessDashboard = () => {
           <p className="text-muted-foreground text-lg">Today's overview and recent activity</p>
         </div>
         <div className="flex space-x-3">
+          <Link to="/reports">
+            <Button variant="outline">
+              <FileText className="h-4 w-4 mr-2" />
+              Reports
+            </Button>
+          </Link>
           <Link to="/admin">
             <Button variant="default">
               <ChefHat className="h-4 w-4 mr-2" />
