@@ -381,7 +381,7 @@ const Reports = () => {
               </Dialog>
             </div>
             <div className="flex gap-2">
-              {quickDateOptions.slice(0, 3).map((option, index) => (
+              {quickDateOptions.map((option, index) => (
                 <Button
                   key={index}
                   variant="ghost"
