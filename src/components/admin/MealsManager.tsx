@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -34,6 +34,8 @@ interface Meal {
   total_weight?: number;
   is_active: boolean;
   image_url?: string;
+  created_at: string;
+  sort_order: number;
 }
 
 const MealsManager = () => {
@@ -71,7 +73,7 @@ const MealsManager = () => {
     const { data, error } = await supabase
       .from("meals")
       .select("*")
-      .order("name");
+      .order("sort_order", { ascending: true });
 
     if (error) {
       toast({ title: "Error", description: "Failed to fetch meals", variant: "destructive" });
@@ -507,6 +509,35 @@ const MealsManager = () => {
     }
   };
 
+  const moveMeal = async (mealId: string, direction: 'up' | 'down') => {
+    const currentIndex = meals.findIndex(m => m.id === mealId);
+    if (currentIndex === -1) return;
+    
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= meals.length) return;
+
+    const currentMeal = meals[currentIndex];
+    const targetMeal = meals[newIndex];
+
+    // Swap sort_order values
+    const { error: error1 } = await supabase
+      .from("meals")
+      .update({ sort_order: targetMeal.sort_order })
+      .eq("id", currentMeal.id);
+
+    const { error: error2 } = await supabase
+      .from("meals")
+      .update({ sort_order: currentMeal.sort_order })
+      .eq("id", targetMeal.id);
+
+    if (error1 || error2) {
+      toast({ title: "Error", description: "Failed to reorder meals", variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Meal order updated" });
+      fetchMeals();
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -713,6 +744,7 @@ const MealsManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Order</TableHead>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
@@ -723,9 +755,33 @@ const MealsManager = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMeals.map((meal) => (
-                <TableRow key={meal.id}>
-                  <TableCell>
+              {filteredMeals.map((meal, index) => {
+                const isNew = new Date(meal.created_at) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+                return (
+                  <TableRow key={meal.id}>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveMeal(meal.id, 'up')}
+                          disabled={index === 0}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronUp size={14} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveMeal(meal.id, 'down')}
+                          disabled={index === filteredMeals.length - 1}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronDown size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                     {meal.image_url ? (
                       <img 
                         src={meal.image_url} 
@@ -804,7 +860,8 @@ const MealsManager = () => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

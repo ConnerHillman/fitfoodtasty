@@ -20,6 +20,8 @@ interface Meal {
   total_fiber: number;
   total_weight?: number;
   image_url?: string;
+  created_at: string;
+  sort_order: number;
 }
 
 const MealsGrid = () => {
@@ -47,8 +49,7 @@ const MealsGrid = () => {
       .from("meals")
       .select("*")
       .eq("is_active", true)
-      .order("category", { ascending: true })
-      .order("name", { ascending: true });
+      .order("sort_order", { ascending: true });
 
     if (error) {
       toast({ 
@@ -121,14 +122,19 @@ const MealsGrid = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMeals.map((meal) => (
-            <MealCard
-              key={meal.id}
-              meal={meal}
-              onAddToCart={handleAddToCart}
-              showNutrition={true}
-            />
-          ))}
+          {filteredMeals.map((meal) => {
+            // Check if meal is new (created within 2 weeks)
+            const isNew = new Date(meal.created_at) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+            return (
+              <MealCard
+                key={meal.id}
+                meal={meal}
+                onAddToCart={handleAddToCart}
+                showNutrition={true}
+                isNew={isNew}
+              />
+            );
+          })}
         </div>
       )}
     </div>

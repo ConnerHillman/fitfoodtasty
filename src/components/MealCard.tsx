@@ -26,9 +26,10 @@ interface MealCardProps {
   onAddToCart?: (meal: Meal) => void;
   showNutrition?: boolean;
   showPrintButton?: boolean;
+  isNew?: boolean;
 }
 
-const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = false }: MealCardProps) => {
+const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = false, isNew = false }: MealCardProps) => {
   const { toast } = useToast();
 
   const getCategoryColor = (category: string) => {
@@ -335,7 +336,14 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
   };
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow">
+    <Card className="h-full hover:shadow-lg transition-shadow relative">
+      {isNew && (
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className="bg-red-500 text-white shadow-md animate-pulse">
+            NEW
+          </Badge>
+        </div>
+      )}
       {meal.image_url && (
         <div className="aspect-video w-full overflow-hidden rounded-t-lg">
           <img 
@@ -354,9 +362,11 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
               {meal.description}
             </CardDescription>
           </div>
-          <Badge className={getCategoryColor(meal.category)}>
-            {meal.category}
-          </Badge>
+          <div className="flex flex-col gap-1 items-end">
+            <Badge className={getCategoryColor(meal.category)}>
+              {meal.category}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 

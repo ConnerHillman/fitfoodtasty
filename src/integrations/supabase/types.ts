@@ -147,6 +147,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           price: number | null
+          sort_order: number | null
           total_calories: number | null
           total_carbs: number | null
           total_fat: number | null
@@ -166,6 +167,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           price?: number | null
+          sort_order?: number | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
@@ -185,6 +187,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           price?: number | null
+          sort_order?: number | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
