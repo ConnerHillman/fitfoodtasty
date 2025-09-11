@@ -880,6 +880,21 @@ const MealsManager = () => {
                 setIsBuilderOpen(false);
                 fetchMeals(); // Refresh to show updated nutrition
               }}
+              onNutritionUpdate={(data) => {
+                // Optimistically update the list while the builder is open
+                setMeals((prev) => prev.map((m) =>
+                  m.id === selectedMealId
+                    ? {
+                        ...m,
+                        total_calories: data.calories,
+                        total_protein: data.protein,
+                        total_carbs: data.carbs,
+                        total_fat: data.fat,
+                        total_weight: data.weight,
+                      }
+                    : m
+                ));
+              }}
             />
           )}
         </DialogContent>

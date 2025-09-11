@@ -31,9 +31,10 @@ interface MealIngredient {
 interface MealBuilderProps {
   mealId: string;
   onClose: () => void;
+  onNutritionUpdate?: (data: { calories: number; protein: number; carbs: number; fat: number; weight: number }) => void;
 }
 
-const MealBuilder = ({ mealId, onClose }: MealBuilderProps) => {
+const MealBuilder = ({ mealId, onClose, onNutritionUpdate }: MealBuilderProps) => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [mealIngredients, setMealIngredients] = useState<MealIngredient[]>([]);
   const [selectedIngredientId, setSelectedIngredientId] = useState("");
@@ -111,6 +112,7 @@ const MealBuilder = ({ mealId, onClose }: MealBuilderProps) => {
     };
 
     setMealNutrition(nutritionData);
+    onNutritionUpdate?.(nutritionData);
 
     // Save nutrition totals to the meals table
     const { error } = await supabase
