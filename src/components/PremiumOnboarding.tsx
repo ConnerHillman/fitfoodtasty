@@ -130,19 +130,21 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
   // Generic card styling with transition effects
   const getCardClassName = (optionValue: string, isRadioCard: boolean = true) => {
-    if (!isRadioCard) return "cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200";
+    if (!isRadioCard) return "cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200 bg-gradient-to-r from-white to-gray-50/50";
     
-    return `cursor-pointer transition-all duration-300 border-2 ${
+    return `cursor-pointer transition-all duration-300 border-2 bg-gradient-to-r from-white to-gray-50/50 hover:shadow-xl ${
       isOptionSelectedAndTransitioning(optionValue)
-        ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
-        : 'hover:border-green-200 hover:shadow-lg'
+        ? 'border-green-500 from-green-50 to-emerald-50 scale-105 shadow-2xl shadow-green-500/25 animate-pulse' 
+        : 'hover:border-green-300 hover:from-green-50/50 hover:to-emerald-50/50 hover:shadow-lg hover:shadow-green-500/10'
     }`;
   };
 
   // Generic icon styling with animation
   const getIconClassName = (optionValue: string) => {
-    return `text-green-600 transition-all duration-300 ${
-      isOptionSelectedAndTransitioning(optionValue) ? 'animate-bounce' : ''
+    return `transition-all duration-300 ${
+      isOptionSelectedAndTransitioning(optionValue) 
+        ? 'text-white animate-bounce drop-shadow-lg' 
+        : 'text-green-600 group-hover:text-green-700'
     }`;
   };
 
@@ -190,15 +192,21 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <RadioGroup value={profile.goal} onValueChange={(value) => updateProfile("goal", value)}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className={getCardClassName("weight-loss")}>
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 group">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="weight-loss" id="weight-loss" />
                       <Label htmlFor="weight-loss" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Zap className={getIconClassName("weight-loss")} size={24} />
+                          <div className={`p-3 rounded-full transition-all duration-300 ${
+                            isOptionSelectedAndTransitioning("weight-loss") 
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                              : 'bg-gradient-to-r from-green-100 to-emerald-100 group-hover:from-green-200 group-hover:to-emerald-200'
+                          }`}>
+                            <Zap className={getIconClassName("weight-loss")} size={24} />
+                          </div>
                           <div>
-                            <div className="font-semibold">Weight Loss</div>
-                            <div className="text-sm text-gray-500">Calorie-controlled, nutrient-dense meals</div>
+                            <div className="font-semibold text-gray-800">Weight Loss</div>
+                            <div className="text-sm text-gray-600">Calorie-controlled, nutrient-dense meals</div>
                           </div>
                         </div>
                       </Label>
@@ -207,15 +215,21 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                 </Card>
 
                 <Card className={getCardClassName("muscle-gain")}>
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 group">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="muscle-gain" id="muscle-gain" />
                       <Label htmlFor="muscle-gain" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Activity className={getIconClassName("muscle-gain")} size={24} />
+                          <div className={`p-3 rounded-full transition-all duration-300 ${
+                            isOptionSelectedAndTransitioning("muscle-gain") 
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                              : 'bg-gradient-to-r from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200'
+                          }`}>
+                            <Activity className={getIconClassName("muscle-gain")} size={24} />
+                          </div>
                           <div>
-                            <div className="font-semibold">Muscle Gain</div>
-                            <div className="text-sm text-gray-500">High-protein, performance-focused nutrition</div>
+                            <div className="font-semibold text-gray-800">Muscle Gain</div>
+                            <div className="text-sm text-gray-600">High-protein, performance-focused nutrition</div>
                           </div>
                         </div>
                       </Label>
@@ -224,15 +238,21 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                 </Card>
 
                 <Card className={getCardClassName("convenience")}>
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 group">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="convenience" id="convenience" />
                       <Label htmlFor="convenience" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Heart className={getIconClassName("convenience")} size={24} />
+                          <div className={`p-3 rounded-full transition-all duration-300 ${
+                            isOptionSelectedAndTransitioning("convenience") 
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                              : 'bg-gradient-to-r from-purple-100 to-pink-100 group-hover:from-purple-200 group-hover:to-pink-200'
+                          }`}>
+                            <Heart className={getIconClassName("convenience")} size={24} />
+                          </div>
                           <div>
-                            <div className="font-semibold">Convenience</div>
-                            <div className="text-sm text-gray-500">Healthy meals without the planning</div>
+                            <div className="font-semibold text-gray-800">Convenience</div>
+                            <div className="text-sm text-gray-600">Healthy meals without the planning</div>
                           </div>
                         </div>
                       </Label>
@@ -241,15 +261,21 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                 </Card>
 
                 <Card className={getCardClassName("performance")}>
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 group">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="performance" id="performance" />
                       <Label htmlFor="performance" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Target className={getIconClassName("performance")} size={24} />
+                          <div className={`p-3 rounded-full transition-all duration-300 ${
+                            isOptionSelectedAndTransitioning("performance") 
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                              : 'bg-gradient-to-r from-orange-100 to-red-100 group-hover:from-orange-200 group-hover:to-red-200'
+                          }`}>
+                            <Target className={getIconClassName("performance")} size={24} />
+                          </div>
                           <div>
-                            <div className="font-semibold">Performance</div>
-                            <div className="text-sm text-gray-500">Athlete-level nutrition optimization</div>
+                            <div className="font-semibold text-gray-800">Performance</div>
+                            <div className="text-sm text-gray-600">Athlete-level nutrition optimization</div>
                           </div>
                         </div>
                       </Label>
@@ -393,37 +419,44 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const StepIcon = steps[currentStep].icon;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="text-center border-b">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-sm border border-white/20 shadow-2xl">
+        <CardHeader className="text-center border-b bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-200/20">
           <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" onClick={onClose} className="text-gray-500">
+            <Button variant="ghost" onClick={onClose} className="text-gray-500 hover:text-gray-700 hover:bg-white/50">
               ✕
             </Button>
             <div className="flex items-center space-x-2">
-              <StepIcon className="text-green-600" size={24} />
-              <span className="text-sm text-gray-500">Step {currentStep + 1} of {steps.length}</span>
+              <div className="p-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500">
+                <StepIcon className="text-white" size={20} />
+              </div>
+              <span className="text-sm text-gray-600 font-medium">Step {currentStep + 1} of {steps.length}</span>
             </div>
           </div>
           
-          <Progress value={progress} className="w-full mb-6" />
+          <Progress value={progress} className="w-full mb-6 h-3 bg-gray-200/50">
+            <div 
+              className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500 ease-out shadow-lg shadow-green-500/30"
+              style={{ width: `${progress}%` }}
+            />
+          </Progress>
           
-          <CardTitle className="text-2xl font-bold text-gray-800">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
             {steps[currentStep].title}
           </CardTitle>
-          <p className="text-gray-600">{steps[currentStep].subtitle}</p>
+          <p className="text-gray-600 text-lg">{steps[currentStep].subtitle}</p>
         </CardHeader>
 
         <CardContent className="p-8">
           {renderStepContent()}
         </CardContent>
 
-        <div className="border-t p-6 flex justify-between">
+        <div className="border-t bg-gradient-to-r from-gray-50 to-white p-6 flex justify-between">
           <Button 
             variant="outline" 
             onClick={prevStep} 
             disabled={currentStep === 0}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 border-gray-300 hover:border-green-300 hover:bg-green-50"
           >
             <ArrowLeft size={16} />
             <span>Back</span>
@@ -433,7 +466,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <Button 
               onClick={nextStep}
               disabled={!canProceed()}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex items-center space-x-2"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold flex items-center space-x-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
             >
               <span>Continue</span>
               <ArrowRight size={16} />
@@ -444,7 +477,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <Button 
               onClick={nextStep}
               disabled={!canProceed()}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex items-center space-x-2"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold flex items-center space-x-2 shadow-2xl hover:shadow-green-500/25 hover:scale-105 transition-all duration-200 px-8 py-3"
             >
               <span>Create My Plan</span>
               <ArrowRight size={16} />
