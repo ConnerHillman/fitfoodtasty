@@ -515,9 +515,10 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                       variant="ghost"
                       size="sm"
                       onClick={() => navigateCarousel('prev')}
-                      className="absolute left-4 z-20 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full w-10 h-10 p-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                      className="absolute left-0 z-20 group bg-gradient-to-br from-white/90 via-emerald-50/70 to-green-50/70 backdrop-blur-xl hover:from-emerald-100/90 hover:via-green-100/80 hover:to-teal-100/80 rounded-2xl w-14 h-14 p-0 shadow-2xl shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-500 hover:scale-110 hover:-translate-y-1 border border-white/30"
                     >
-                      <ChevronLeft size={20} className="text-gray-700" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-2xl"></div>
+                      <ChevronLeft size={28} className="text-emerald-600 group-hover:text-emerald-700 transition-all duration-500 group-hover:scale-110 drop-shadow-sm group-hover:drop-shadow-md relative z-10" />
                     </Button>
 
                     {/* Package Cards Container */}
@@ -624,9 +625,10 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                       variant="ghost"
                       size="sm"
                       onClick={() => navigateCarousel('next')}
-                      className="absolute right-4 z-20 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full w-10 h-10 p-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                      className="absolute right-0 z-20 group bg-gradient-to-br from-white/90 via-emerald-50/70 to-green-50/70 backdrop-blur-xl hover:from-emerald-100/90 hover:via-green-100/80 hover:to-teal-100/80 rounded-2xl w-14 h-14 p-0 shadow-2xl shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-500 hover:scale-110 hover:-translate-y-1 border border-white/30"
                     >
-                      <ChevronRight size={20} className="text-gray-700" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-2xl"></div>
+                      <ChevronRight size={28} className="text-emerald-600 group-hover:text-emerald-700 transition-all duration-500 group-hover:scale-110 drop-shadow-sm group-hover:drop-shadow-md relative z-10" />
                     </Button>
                   </div>
 
