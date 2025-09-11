@@ -432,3 +432,173 @@ export async function importGoPrepMenu() {
     return { success: false, error: error.message };
   }
 }
+
+// Sample ingredients data that would come from GoPrep
+const sampleIngredients = [
+  { name: 'Chicken Breast', calories_per_100g: 165, protein_per_100g: 31, carbs_per_100g: 0, fat_per_100g: 3.6, fiber_per_100g: 0, sugar_per_100g: 0, sodium_per_100g: 74, default_unit: 'g' },
+  { name: 'Basmati Rice', calories_per_100g: 130, protein_per_100g: 2.7, carbs_per_100g: 25, fat_per_100g: 0.3, fiber_per_100g: 0.4, sugar_per_100g: 0.1, sodium_per_100g: 1, default_unit: 'g' },
+  { name: 'Broccoli', calories_per_100g: 34, protein_per_100g: 2.8, carbs_per_100g: 7, fat_per_100g: 0.4, fiber_per_100g: 2.6, sugar_per_100g: 1.5, sodium_per_100g: 33, default_unit: 'g' },
+  { name: 'Sweet Potato', calories_per_100g: 86, protein_per_100g: 1.6, carbs_per_100g: 20, fat_per_100g: 0.1, fiber_per_100g: 3, sugar_per_100g: 4.2, sodium_per_100g: 54, default_unit: 'g' },
+  { name: 'Beef Mince', calories_per_100g: 250, protein_per_100g: 26, carbs_per_100g: 0, fat_per_100g: 15, fiber_per_100g: 0, sugar_per_100g: 0, sodium_per_100g: 78, default_unit: 'g' },
+  { name: 'New Potatoes', calories_per_100g: 77, protein_per_100g: 2, carbs_per_100g: 17, fat_per_100g: 0.1, fiber_per_100g: 2.2, sugar_per_100g: 0.8, sodium_per_100g: 10, default_unit: 'g' },
+  { name: 'Penne Pasta', calories_per_100g: 131, protein_per_100g: 5, carbs_per_100g: 25, fat_per_100g: 1.1, fiber_per_100g: 1.8, sugar_per_100g: 0.6, sodium_per_100g: 1, default_unit: 'g' },
+  { name: 'Olive Oil', calories_per_100g: 884, protein_per_100g: 0, carbs_per_100g: 0, fat_per_100g: 100, fiber_per_100g: 0, sugar_per_100g: 0, sodium_per_100g: 2, default_unit: 'ml' },
+  { name: 'Onion', calories_per_100g: 40, protein_per_100g: 1.1, carbs_per_100g: 9, fat_per_100g: 0.1, fiber_per_100g: 1.7, sugar_per_100g: 4.2, sodium_per_100g: 4, default_unit: 'g' },
+  { name: 'Tomato Sauce', calories_per_100g: 29, protein_per_100g: 1.6, carbs_per_100g: 7, fat_per_100g: 0.2, fiber_per_100g: 1.4, sugar_per_100g: 3.2, sodium_per_100g: 9, default_unit: 'g' },
+  { name: 'Cheese', calories_per_100g: 403, protein_per_100g: 25, carbs_per_100g: 1.3, fat_per_100g: 33, fiber_per_100g: 0, sugar_per_100g: 0.4, sodium_per_100g: 621, default_unit: 'g' },
+  { name: 'Eggs', calories_per_100g: 155, protein_per_100g: 13, carbs_per_100g: 1.1, fat_per_100g: 11, fiber_per_100g: 0, sugar_per_100g: 1.1, sodium_per_100g: 124, default_unit: 'g' },
+  { name: 'Garlic', calories_per_100g: 149, protein_per_100g: 6.4, carbs_per_100g: 33, fat_per_100g: 0.5, fiber_per_100g: 2.1, sugar_per_100g: 1, sodium_per_100g: 17, default_unit: 'g' },
+  { name: 'Bell Pepper', calories_per_100g: 31, protein_per_100g: 1, carbs_per_100g: 7, fat_per_100g: 0.3, fiber_per_100g: 2.5, sugar_per_100g: 4.2, sodium_per_100g: 4, default_unit: 'g' },
+  { name: 'Spinach', calories_per_100g: 23, protein_per_100g: 2.9, carbs_per_100g: 3.6, fat_per_100g: 0.4, fiber_per_100g: 2.2, sugar_per_100g: 0.4, sodium_per_100g: 79, default_unit: 'g' },
+];
+
+// Sample meal ingredients mapping
+const sampleMealIngredients = {
+  'Bang Bang Chicken': [
+    { ingredient: 'Chicken Breast', quantity: 150 },
+    { ingredient: 'Basmati Rice', quantity: 100 },
+    { ingredient: 'Broccoli', quantity: 80 },
+    { ingredient: 'Olive Oil', quantity: 10 }
+  ],
+  'Beef Jalfrezi and Pilau Rice': [
+    { ingredient: 'Beef Mince', quantity: 120 },
+    { ingredient: 'Basmati Rice', quantity: 100 },
+    { ingredient: 'Bell Pepper', quantity: 60 },
+    { ingredient: 'Onion', quantity: 40 },
+    { ingredient: 'Olive Oil', quantity: 8 }
+  ],
+  'Penne Bolognese': [
+    { ingredient: 'Beef Mince', quantity: 100 },
+    { ingredient: 'Penne Pasta', quantity: 80 },
+    { ingredient: 'Tomato Sauce', quantity: 100 },
+    { ingredient: 'Onion', quantity: 30 },
+    { ingredient: 'Olive Oil', quantity: 5 }
+  ],
+  'Chorizo & Spinach Omelette': [
+    { ingredient: 'Eggs', quantity: 100 },
+    { ingredient: 'Spinach', quantity: 60 },
+    { ingredient: 'Cheese', quantity: 30 },
+    { ingredient: 'Olive Oil', quantity: 8 }
+  ],
+  'Honey & Garlic Chicken Bowl with Basmati & Broccoli': [
+    { ingredient: 'Chicken Breast', quantity: 140 },
+    { ingredient: 'Basmati Rice', quantity: 90 },
+    { ingredient: 'Broccoli', quantity: 100 },
+    { ingredient: 'Garlic', quantity: 5 },
+    { ingredient: 'Olive Oil', quantity: 12 }
+  ]
+};
+
+export const importGoPrepIngredients = async () => {
+  try {
+    // Clear existing ingredients
+    const { error: deleteError } = await supabase
+      .from('ingredients')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (deleteError) {
+      console.error('Error clearing existing ingredients:', deleteError);
+      return { success: false, error: 'Failed to clear existing ingredients' };
+    }
+
+    // Insert ingredients
+    const { data, error } = await supabase
+      .from('ingredients')
+      .insert(sampleIngredients)
+      .select();
+
+    if (error) {
+      console.error('Error inserting ingredients:', error);
+      return { success: false, error: `Failed to insert ingredients: ${error.message}` };
+    }
+
+    return { success: true, imported: data?.length || 0 };
+  } catch (error) {
+    console.error('Ingredients import error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+export const importGoPrepMealIngredients = async () => {
+  try {
+    // Clear existing meal ingredients
+    const { error: deleteError } = await supabase
+      .from('meal_ingredients')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (deleteError) {
+      console.error('Error clearing existing meal ingredients:', deleteError);
+      return { success: false, error: 'Failed to clear existing meal ingredients' };
+    }
+
+    // Get all meals and ingredients from database
+    const { data: meals, error: mealsError } = await supabase
+      .from('meals')
+      .select('id, name');
+
+    const { data: ingredients, error: ingredientsError } = await supabase
+      .from('ingredients')
+      .select('id, name');
+
+    if (mealsError || ingredientsError) {
+      return { success: false, error: 'Failed to fetch meals or ingredients' };
+    }
+
+    // Create mappings
+    const mealMap = new Map(meals?.map(m => [m.name, m.id]) || []);
+    const ingredientMap = new Map(ingredients?.map(i => [i.name, i.id]) || []);
+
+    const mealIngredientsToInsert = [];
+    let totalMappings = 0;
+
+    // Process sample meal ingredients
+    for (const [mealName, ingredientsList] of Object.entries(sampleMealIngredients)) {
+      const mealId = mealMap.get(mealName);
+      if (!mealId) continue;
+
+      for (const mealIngredient of ingredientsList) {
+        const ingredientId = ingredientMap.get(mealIngredient.ingredient);
+        if (!ingredientId) continue;
+
+        mealIngredientsToInsert.push({
+          meal_id: mealId,
+          ingredient_id: ingredientId,
+          quantity: mealIngredient.quantity,
+          unit: 'g'
+        });
+        totalMappings++;
+      }
+    }
+
+    // Insert meal ingredients in batches
+    if (mealIngredientsToInsert.length > 0) {
+      const batchSize = 50;
+      let totalInserted = 0;
+
+      for (let i = 0; i < mealIngredientsToInsert.length; i += batchSize) {
+        const batch = mealIngredientsToInsert.slice(i, i + batchSize);
+        
+        const { data, error } = await supabase
+          .from('meal_ingredients')
+          .insert(batch)
+          .select();
+
+        if (error) {
+          console.error('Error inserting meal ingredients batch:', error);
+          return { success: false, error: `Failed to insert meal ingredients: ${error.message}` };
+        }
+
+        totalInserted += data?.length || 0;
+      }
+
+      return { success: true, imported: totalInserted };
+    }
+
+    return { success: true, imported: 0 };
+  } catch (error) {
+    console.error('Meal ingredients import error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
