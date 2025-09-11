@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
+import MealFormWithIngredients from "./MealFormWithIngredients";
 
 interface Meal {
   id: string;
@@ -35,6 +36,7 @@ const MealsManager = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [isNewMealFormOpen, setIsNewMealFormOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -622,6 +624,22 @@ const MealsManager = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* New Meal Creation Dialog */}
+      <Dialog open={isNewMealFormOpen} onOpenChange={setIsNewMealFormOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Meal with Ingredients</DialogTitle>
+          </DialogHeader>
+          <MealFormWithIngredients
+            onSuccess={() => {
+              setIsNewMealFormOpen(false);
+              fetchMeals();
+            }}
+            onCancel={() => setIsNewMealFormOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardContent>
