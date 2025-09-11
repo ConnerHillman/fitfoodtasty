@@ -554,15 +554,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                     </Button>
                   </div>
 
-                  {/* Selection Button */}
-                  <div className="flex justify-center mt-8">
-                    <Button 
-                      onClick={() => updateProfile("selectedPackageId", currentPackage.id)}
-                      className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3"
-                    >
-                      Select This Package
-                    </Button>
-                  </div>
                 </div>
 
                 {/* Delivery Frequency Selection */}
