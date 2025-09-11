@@ -1,10 +1,44 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Flame, Clock, Users, Award } from "lucide-react";
 import { Link } from "react-router-dom";
+import PremiumOnboarding from "./PremiumOnboarding";
+import PersonalizedResults from "./PersonalizedResults";
 
 const HeroSection = () => {
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  const handleOnboardingComplete = (profile: any) => {
+    setUserProfile(profile);
+    setShowOnboarding(false);
+    setShowResults(true);
+  };
+
+  const handleStartOver = () => {
+    setShowResults(false);
+    setShowOnboarding(true);
+  };
+
+  const handleGetStarted = () => {
+    setShowOnboarding(true);
+  };
+
+  // If showing results, render the PersonalizedResults component
+  if (showResults && userProfile) {
+    return <PersonalizedResults profile={userProfile} onStartOver={handleStartOver} />;
+  }
+
   return (
+    <>
+      {showOnboarding && (
+        <PremiumOnboarding 
+          onComplete={handleOnboardingComplete}
+          onClose={() => setShowOnboarding(false)}
+        />
+      )}
     <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
@@ -58,11 +92,11 @@ const HeroSection = () => {
             {/* CTA */}
             <div className="space-y-4">
               <Button 
-                asChild
                 size="lg"
+                onClick={handleGetStarted}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 text-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200"
               >
-                <Link to="/menu">GET STARTED</Link>
+                GET STARTED
               </Button>
               
               <p className="text-gray-300 text-sm">
@@ -134,6 +168,7 @@ const HeroSection = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 
