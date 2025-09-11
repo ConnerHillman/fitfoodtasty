@@ -43,7 +43,7 @@ const MealsManager = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isNewMealFormOpen, setIsNewMealFormOpen] = useState(false);
