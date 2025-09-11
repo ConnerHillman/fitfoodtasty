@@ -1,16 +1,159 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, CheckCircle, AlertCircle, Loader2, Package, Utensils } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, Loader2, Package, Utensils, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { importGoPrepMenu, importGoPrepIngredients, importGoPrepMealIngredients } from '@/utils/importGoPrep';
+import { supabase } from '@/integrations/supabase/client';
+
+// Function to parse pasted recipe data and import meal-ingredient relationships
+const importPastedRecipes = async (pasteData: string) => {
+  try {
+    // Parse the pasted data
+    const lines = pasteData.trim().split('\n');
+    const mealIngredients: Array<{
+      mealName: string;
+      ingredientName: string;
+      quantity: number;
+      unit: string;
+    }> = [];
+
+    let currentMeal = '';
+    
+    for (const line of lines) {
+      const parts = line.split('\t').map(p => p.trim()).filter(p => p);
+      
+      if (parts.length >= 4) {
+        // This is a meal with first ingredient
+        currentMeal = parts[0];
+        const ingredientName = parts[1];
+        const quantity = parseFloat(parts[2]);
+        const unit = parts[3];
+        
+        if (!isNaN(quantity)) {
+          mealIngredients.push({
+            mealName: currentMeal,
+            ingredientName,
+            quantity,
+            unit
+          });
+        }
+      } else if (parts.length >= 3 && currentMeal) {
+        // This is an additional ingredient for the current meal
+        const ingredientName = parts[0];
+        const quantity = parseFloat(parts[1]);
+        const unit = parts[2];
+        
+        if (!isNaN(quantity)) {
+          mealIngredients.push({
+            mealName: currentMeal,
+            ingredientName,
+            quantity,
+            unit
+          });
+        }
+      }
+    }
+
+    if (mealIngredients.length === 0) {
+      return { success: false, error: 'No valid meal-ingredient data found in the pasted text' };
+    }
+
+    // Get all meals and ingredients from database
+    const { data: meals, error: mealsError } = await supabase
+      .from('meals')
+      .select('id, name');
+
+    const { data: ingredients, error: ingredientsError } = await supabase
+      .from('ingredients')
+      .select('id, name');
+
+    if (mealsError || ingredientsError) {
+      return { success: false, error: 'Failed to fetch meals or ingredients from database' };
+    }
+
+    // Create lookup maps
+    const mealMap = new Map(meals?.map(m => [m.name, m.id]) || []);
+    const ingredientMap = new Map(ingredients?.map(i => [i.name, i.id]) || []);
+
+    // Convert to database format
+    const relationshipsToInsert = [];
+    const missingMeals = new Set<string>();
+    const missingIngredients = new Set<string>();
+
+    for (const item of mealIngredients) {
+      const mealId = mealMap.get(item.mealName);
+      const ingredientId = ingredientMap.get(item.ingredientName);
+      
+      if (!mealId) {
+        missingMeals.add(item.mealName);
+        continue;
+      }
+      
+      if (!ingredientId) {
+        missingIngredients.add(item.ingredientName);
+        continue;
+      }
+      
+      relationshipsToInsert.push({
+        meal_id: mealId,
+        ingredient_id: ingredientId,
+        quantity: item.quantity,
+        unit: item.unit
+      });
+    }
+
+    // Clear existing meal ingredients first
+    const { error: deleteError } = await supabase
+      .from('meal_ingredients')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (deleteError) {
+      return { success: false, error: 'Failed to clear existing meal ingredients' };
+    }
+
+    // Insert new relationships
+    if (relationshipsToInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from('meal_ingredients')
+        .insert(relationshipsToInsert);
+
+      if (insertError) {
+        return { success: false, error: `Failed to insert meal ingredients: ${insertError.message}` };
+      }
+    }
+
+    let warnings = '';
+    if (missingMeals.size > 0) {
+      warnings += `Missing meals: ${Array.from(missingMeals).slice(0, 3).join(', ')}${missingMeals.size > 3 ? '...' : ''}. `;
+    }
+    if (missingIngredients.size > 0) {
+      warnings += `Missing ingredients: ${Array.from(missingIngredients).slice(0, 3).join(', ')}${missingIngredients.size > 3 ? '...' : ''}.`;
+    }
+
+    return {
+      success: true,
+      imported: relationshipsToInsert.length,
+      warning: warnings || undefined
+    };
+  } catch (error) {
+    console.error('Error importing pasted recipes:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+};
 
 const DataImporter = () => {
-  const [importing, setImporting] = useState({ meals: false, ingredients: false, mealIngredients: false });
+  const [importing, setImporting] = useState({ meals: false, ingredients: false, mealIngredients: false, pasteRecipes: false });
+  const [pasteData, setPasteData] = useState('');
   const [results, setResults] = useState<{
     meals?: { success: boolean; imported?: number; error?: string };
     ingredients?: { success: boolean; imported?: number; error?: string };
     mealIngredients?: { success: boolean; imported?: number; error?: string };
+    pasteRecipes?: { success: boolean; imported?: number; error?: string };
   }>({});
   const { toast } = useToast();
 
@@ -110,6 +253,48 @@ const DataImporter = () => {
     }
   };
 
+  const handlePasteRecipesImport = async () => {
+    if (!pasteData.trim()) {
+      toast({
+        title: "No Data Provided",
+        description: "Please paste your recipe data first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImporting(prev => ({ ...prev, pasteRecipes: true }));
+    
+    try {
+      const result = await importPastedRecipes(pasteData);
+      setResults(prev => ({ ...prev, pasteRecipes: result }));
+      
+      if (result.success) {
+        toast({
+          title: "Recipes Import Successful!",
+          description: `Successfully imported ${result.imported} recipe mappings.`,
+        });
+        setPasteData(''); // Clear the textarea on success
+      } else {
+        toast({
+          title: "Recipes Import Failed",
+          description: result.error || "Unknown error occurred",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setResults(prev => ({ ...prev, pasteRecipes: { success: false, error: errorMessage } }));
+      toast({
+        title: "Recipes Import Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setImporting(prev => ({ ...prev, pasteRecipes: false }));
+    }
+  };
+
   const ResultDisplay = ({ result, type }: { result?: { success: boolean; imported?: number; error?: string }, type: string }) => {
     if (!result) return null;
     
@@ -133,7 +318,7 @@ const DataImporter = () => {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Meals Import */}
       <Card>
         <CardHeader>
@@ -235,8 +420,54 @@ const DataImporter = () => {
           <ResultDisplay result={results.mealIngredients} type="meal ingredient mappings" />
         </CardContent>
       </Card>
+
+      {/* Paste Recipes Import */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <FileText className="h-5 w-5" />
+            Paste Recipes
+          </CardTitle>
+          <CardDescription>
+            Paste your spreadsheet data to map all ingredients to meals
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <textarea
+            value={pasteData}
+            onChange={(e) => setPasteData(e.target.value)}
+            placeholder={`Paste your recipe data here. Format:
+Bang Bang Chicken	Chicken Breast	150	g
+	Spaghetti	80	g
+	Mayo (Light)	46	g
+Bang Bang Chicken (BIG)	Chicken Breast	200	g
+...`}
+            className="w-full h-32 p-2 border rounded text-sm font-mono resize-none"
+          />
+          
+          <Button 
+            onClick={handlePasteRecipesImport} 
+            disabled={importing.pasteRecipes || !pasteData.trim()}
+            className="w-full"
+          >
+            {importing.pasteRecipes ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4 mr-2" />
+                Import Pasted Recipes
+              </>
+            )}
+          </Button>
+          
+          <ResultDisplay result={results.pasteRecipes} type="recipe mappings" />
+        </CardContent>
+      </Card>
       
-      <div className="md:col-span-3 text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
+      <div className="lg:col-span-4 text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
         <p><strong>Import Order:</strong></p>
         <ol className="list-decimal list-inside mt-2 space-y-1">
           <li>First import meals (280+ from GoPrep data)</li>
