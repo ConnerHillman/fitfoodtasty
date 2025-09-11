@@ -30,9 +30,9 @@ const Auth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Redirect authenticated users to business dashboard
+        // Redirect authenticated users to home page
         if (session?.user) {
-          navigate('/business');
+          navigate('/');
         }
       }
     );
@@ -43,7 +43,7 @@ const Auth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        navigate('/business');
+        navigate('/');
       }
     });
 
@@ -116,8 +116,8 @@ const Auth = () => {
           </CardTitle>
           <CardDescription>
             {isSignUp 
-              ? "Create your meal prep business account" 
-              : "Access your meal prep dashboard"
+              ? "Create your FIT FOOD TASTY account" 
+              : "Sign in to FIT FOOD TASTY"
             }
           </CardDescription>
         </CardHeader>

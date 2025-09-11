@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Star, ChevronDown } from "lucide-react";
+import { Star, ChevronDown, User, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 const Header = () => {
   const location = useLocation();
+  const { user, signOut } = useAuth();
   return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
       {/* Promo Banner */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-sm font-medium">
@@ -70,17 +73,44 @@ const Header = () => {
 
           {/* Trust & Actions */}
           <div className="flex items-center space-x-4">
-            {/* Trustpilot */}
-            
-
             {/* User Actions */}
-            <Link to="/auth" className="text-gray-700 hover:text-green-600 font-medium hidden md:block">
-              LOGIN
-            </Link>
-            
-            <Button asChild variant="outline" className="hidden md:flex border-green-500 text-green-600 hover:bg-green-50 font-bold px-4 py-2 rounded-full transition-all duration-200">
-              <Link to="/auth">CREATE ACCOUNT</Link>
-            </Button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600 hidden md:block">
+                  Welcome back!
+                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span className="hidden md:block">{user.email}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to="/orders" className="flex items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        My Orders
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={signOut} className="flex items-center">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <>
+                <Link to="/auth" className="text-gray-700 hover:text-green-600 font-medium hidden md:block">
+                  LOGIN
+                </Link>
+                
+                <Button asChild variant="outline" className="hidden md:flex border-green-500 text-green-600 hover:bg-green-50 font-bold px-4 py-2 rounded-full transition-all duration-200">
+                  <Link to="/auth">CREATE ACCOUNT</Link>
+                </Button>
+              </>
+            )}
             
             <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
               <Link to="/menu">ORDER NOW</Link>

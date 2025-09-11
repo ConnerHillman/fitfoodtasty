@@ -1,4 +1,5 @@
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const getCategoryColor = (category: string) => {
@@ -131,22 +133,24 @@ const Cart = () => {
                 </div>
               </div>
               
-              {/* Account Creation CTA */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold text-green-800 mb-1">Save 20% on your first order!</h4>
-                    <p className="text-sm text-green-700">Create a free account to unlock exclusive savings</p>
+              {/* Account Creation CTA - Only show for non-authenticated users */}
+              {!user && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-green-800 mb-1">Save 20% on your first order!</h4>
+                      <p className="text-sm text-green-700">Create a free account to unlock exclusive savings</p>
+                    </div>
+                    <Button 
+                      asChild
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-full"
+                    >
+                      <Link to="/auth">Create Account</Link>
+                    </Button>
                   </div>
-                  <Button 
-                    asChild
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-full"
-                  >
-                    <Link to="/auth">Create Account</Link>
-                  </Button>
                 </div>
-              </div>
+              )}
               
               <Button
                 className="w-full"

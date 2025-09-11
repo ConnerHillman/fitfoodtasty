@@ -19,6 +19,7 @@ import RequireAuth from "./components/RequireAuth";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import PaymentSuccess from "./pages/PaymentSuccess";
 
 const queryClient = new QueryClient();
@@ -26,10 +27,11 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CartProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/onboarding" element={<Onboarding />} />
@@ -48,8 +50,9 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </CartProvider>
+          </BrowserRouter>
+        </CartProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
