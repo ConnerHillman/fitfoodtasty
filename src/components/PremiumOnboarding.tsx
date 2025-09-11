@@ -190,20 +190,23 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         break;
       case "convenience":
       case "performance":
-        mealSizeKeyword = "regular";
+        mealSizeKeyword = "package"; // Match basic packages (not LowCal or MASSIVE)
         break;
       case "muscle-gain":
-        mealSizeKeyword = "big";
+        mealSizeKeyword = "massive";
         break;
       default:
-        mealSizeKeyword = "regular";
+        mealSizeKeyword = "package";
     }
 
     // Find package that matches meal count and contains the size keyword
-    return packages.find(pkg => 
+    const matchingPackage = packages.find(pkg => 
       pkg.meal_count === profile.mealCount && 
       pkg.name.toLowerCase().includes(mealSizeKeyword)
-    ) || packages.find(pkg => pkg.meal_count === profile.mealCount);
+    );
+    
+    // If no specific match, find any package with the meal count
+    return matchingPackage || packages.find(pkg => pkg.meal_count === profile.mealCount);
   };
 
   // Get similar packages (same type, different meal counts)
@@ -215,19 +218,26 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         break;
       case "convenience":
       case "performance":
-        mealSizeKeyword = "regular";
+        mealSizeKeyword = "package"; // Match basic packages
         break;
       case "muscle-gain":
-        mealSizeKeyword = "big";
+        mealSizeKeyword = "massive";
         break;
       default:
-        mealSizeKeyword = "regular";
+        mealSizeKeyword = "package";
     }
 
     // Filter packages by the same meal type and sort by meal count
-    return packages
-      .filter(pkg => pkg.name.toLowerCase().includes(mealSizeKeyword))
-      .sort((a, b) => a.meal_count - b.meal_count);
+    const filteredPackages = packages.filter(pkg => {
+      const name = pkg.name.toLowerCase();
+      if (mealSizeKeyword === "package") {
+        // For regular packages, exclude LowCal and MASSIVE
+        return !name.includes("lowcal") && !name.includes("massive");
+      }
+      return name.includes(mealSizeKeyword);
+    });
+    
+    return filteredPackages.sort((a, b) => a.meal_count - b.meal_count);
   };
 
   // Set initial carousel index when packages are loaded or goal changes
