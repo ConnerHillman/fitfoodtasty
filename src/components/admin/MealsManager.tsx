@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, Sparkles, Heart, Zap, Star, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -556,163 +556,402 @@ const MealsManager = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold">Meals Manager</h2>
-          
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search meals..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-[300px]"
-            />
+    <div className="space-y-8 animate-fade-in-scale">
+      {/* Modern header with gradient */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-white">
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-4xl font-bold tracking-tight">Meals Manager</h2>
+            </div>
+            <p className="text-white/90 text-lg">
+              Create and manage your delicious meal offerings with style ✨
+            </p>
+            <div className="flex items-center gap-4 text-sm text-white/80">
+              <span className="flex items-center gap-1">
+                <Star className="h-4 w-4" />
+                {filteredMeals.length} meals total
+              </span>
+              <span className="flex items-center gap-1">
+                <Heart className="h-4 w-4" />
+                {filteredMeals.filter(m => m.is_active).length} active
+              </span>
+            </div>
           </div>
-          
-          {/* Status Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Meals</SelectItem>
-                <SelectItem value="active">Active Only</SelectItem>
-                <SelectItem value="inactive">Inactive Only</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              onClick={() => {
+                resetForm();
+                setIsNewMealFormOpen(true);
+              }}
+              className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 hover-glow shadow-lg"
+              size="lg"
+            >
+              <Zap className="mr-2 h-5 w-5" />
+              Quick Create
+            </Button>
+            <Button
+              onClick={() => {
+                resetForm();
+                setIsDialogOpen(true);
+              }}
+              variant="outline"
+              className="bg-white text-primary hover:bg-white/90 border-white/30 shadow-lg"
+              size="lg"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Full Editor
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setIsNewMealFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Meal
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" onClick={resetForm}>
-                <Edit className="h-4 w-4 mr-2" />
-                Quick Edit
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingMeal ? "Edit Meal" : "Add New Meal"}
-                </DialogTitle>
-                <DialogDescription>
-                  Quickly add or edit a meal without ingredients. Use "Create New Meal" to add ingredients during creation.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: category.color }}
-                            />
-                            {category.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Price (£)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="image">Meal Image</Label>
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setImageFile(file);
-                      }
-                    }}
-                  />
-                  {formData.image_url && !imageFile && (
-                    <div className="mt-2">
-                      <img 
-                        src={formData.image_url} 
-                        alt="Current meal image" 
-                        className="w-32 h-32 object-cover rounded-md"
-                      />
-                    </div>
-                  )}
-                  {imageFile && (
-                    <div className="mt-2">
-                      <img 
-                        src={URL.createObjectURL(imageFile)} 
-                        alt="Preview" 
-                        className="w-32 h-32 object-cover rounded-md"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isUploading}>
-                    {isUploading ? "Uploading..." : editingMeal ? "Update" : "Create"} Meal
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
+
+      {/* Modern Search and Filter Controls */}
+      <div className="glass-card rounded-2xl p-6 animate-slide-in-up">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+              <Search className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <Input
+              placeholder="Search meals by name, description, or category... 🔍"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 text-lg border-0 bg-white/50 focus:bg-white/80 transition-all duration-300 rounded-xl shadow-sm"
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Filter className="h-4 w-4" />
+              <span className="text-sm font-medium">Filter:</span>
+            </div>
+            <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
+              <SelectTrigger className="w-[160px] h-12 border-0 bg-white/50 hover:bg-white/80 transition-all duration-300 rounded-xl shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-0 bg-white/95 backdrop-blur-sm shadow-xl">
+                <SelectItem value="all" className="rounded-lg">All Status</SelectItem>
+                <SelectItem value="active" className="rounded-lg">Active Only</SelectItem>
+                <SelectItem value="inactive" className="rounded-lg">Inactive Only</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-white/30 rounded-lg px-3 py-2">
+              <span className="font-medium text-primary">{filteredMeals.length}</span>
+              <span>of {meals.length} meals</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modern Meals Grid */}
+      <div className="space-y-6">
+        {filteredMeals.length === 0 ? (
+          <div className="glass-card rounded-2xl p-12 text-center animate-bounce-subtle">
+            <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center mb-4">
+              <Search className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">
+              {searchQuery ? "No meals found" : "No meals yet"}
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              {searchQuery 
+                ? "Try adjusting your search terms or filters" 
+                : "Create your first delicious meal to get started!"}
+            </p>
+            {!searchQuery && (
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setIsNewMealFormOpen(true);
+                }}
+                className="gradient-primary text-white hover:opacity-90 shadow-lg"
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                Create Your First Meal
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredMeals.map((meal, index) => (
+              <div
+                key={meal.id}
+                className="group glass-card rounded-2xl overflow-hidden hover-lift hover-glow animate-fade-in-scale"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {/* Meal Image */}
+                <div className="relative h-48 overflow-hidden">
+                  {(meal as any).image_url ? (
+                    <img
+                      src={(meal as any).image_url}
+                      alt={meal.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                      <div className="text-center">
+                        <ImageIcon className="h-12 w-12 text-primary/60 mx-auto mb-2" />
+                        <span className="text-sm text-primary/80 font-medium">No Image</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Status Badge */}
+                  <div className="absolute top-3 right-3">
+                    <Badge
+                      className={meal.is_active 
+                        ? "status-active shadow-lg animate-pulse" 
+                        : "status-inactive"}
+                    >
+                      {meal.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  
+                  {/* Order Controls */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => moveMeal(meal.id, 'up')}
+                      disabled={index === 0}
+                      className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => moveMeal(meal.id, 'down')}
+                      disabled={index === filteredMeals.length - 1}
+                      className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Meal Content */}
+                <div className="p-6 space-y-4">
+                  {/* Header */}
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-lg leading-tight">{meal.name}</h3>
+                      <span className="font-bold text-xl text-primary">£{meal.price.toFixed(2)}</span>
+                    </div>
+                    {meal.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {meal.description}
+                      </p>
+                    )}
+                    {meal.category && (
+                      <Badge 
+                        style={{ backgroundColor: getCategoryColor(meal.category) }}
+                        className="text-white text-xs"
+                      >
+                        {meal.category}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Nutrition Info */}
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-xl">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-primary">{Math.round(meal.total_calories)}</div>
+                      <div className="text-xs text-muted-foreground">calories</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-600">{(meal.total_protein || 0).toFixed(0)}g</div>
+                      <div className="text-xs text-muted-foreground">protein</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-medium">{(meal.total_carbs || 0).toFixed(0)}g</div>
+                      <div className="text-xs text-muted-foreground">carbs</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-medium">{(meal.total_fat || 0).toFixed(0)}g</div>
+                      <div className="text-xs text-muted-foreground">fat</div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-4 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => printMealLabel(meal)}
+                      className="h-10 hover-glow"
+                      title="Print Label"
+                    >
+                      <Printer className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleBuildMeal(meal.id)}
+                      className="h-10 hover-glow"
+                      title="Build/Edit Ingredients"
+                    >
+                      <Calculator className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(meal)}
+                      className="h-10 hover-glow"
+                      title="Edit Meal"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleActive(meal)}
+                      className={`h-10 ${meal.is_active 
+                        ? "text-green-600 hover:text-green-700 border-green-200 hover:bg-green-50" 
+                        : "text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"}`}
+                      title="Toggle Status"
+                    >
+                      {meal.is_active ? <Eye className="h-4 w-4" /> : <Eye className="h-4 w-4 opacity-50" />}
+                    </Button>
+                  </div>
+
+                  {/* Delete Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(meal.id)}
+                    className="w-full text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Meal
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Quick Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingMeal ? "Edit Meal" : "Quick Add Meal"}
+            </DialogTitle>
+            <DialogDescription>
+              Create or edit a meal quickly. Use the full editor for advanced features.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Meal Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter meal name..."
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Price (£)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe this delicious meal..."
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => setFormData({ ...formData, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: category.color }}
+                        />
+                        {category.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="image">Meal Image</Label>
+              <Input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setImageFile(file);
+                  }
+                }}
+              />
+              {formData.image_url && !imageFile && (
+                <div className="mt-2">
+                  <img 
+                    src={formData.image_url} 
+                    alt="Current meal image" 
+                    className="w-32 h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+              {imageFile && (
+                <div className="mt-2">
+                  <img 
+                    src={URL.createObjectURL(imageFile)} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isUploading} className="gradient-primary text-white">
+                {isUploading ? "Uploading..." : editingMeal ? "Update" : "Create"} Meal
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* New Meal Creation Dialog */}
       <Dialog open={isNewMealFormOpen} onOpenChange={setIsNewMealFormOpen}>
@@ -733,140 +972,7 @@ const MealsManager = () => {
         </DialogContent>
       </Dialog>
 
-      <Card>
-        <CardContent>
-          <div className="mb-4 flex justify-between items-center text-sm text-muted-foreground">
-            <span>Showing {filteredMeals.length} of {meals.length} meals</span>
-            {searchQuery && (
-              <span>Search: "{searchQuery}"</span>
-            )}
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order</TableHead>
-                <TableHead>Image</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Nutrition</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[150px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredMeals.map((meal, index) => {
-                const isNew = new Date(meal.created_at) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-                return (
-                  <TableRow key={meal.id}>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => moveMeal(meal.id, 'up')}
-                          disabled={index === 0}
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronUp size={14} />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => moveMeal(meal.id, 'down')}
-                          disabled={index === filteredMeals.length - 1}
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronDown size={14} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                    {meal.image_url ? (
-                      <img 
-                        src={meal.image_url} 
-                        alt={meal.name}
-                        className="w-16 h-16 object-cover rounded-md"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
-                        No image
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div>
-                      <div>{meal.name}</div>
-                      {meal.description && (
-                        <div className="text-sm text-muted-foreground">{meal.description}</div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge style={{ backgroundColor: getCategoryColor(meal.category), color: '#fff' }}>
-                      {meal.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>£{meal.price?.toFixed(2) || '0.00'}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{Math.round(meal.total_calories)} kcal</div>
-                      <div className="text-muted-foreground">
-                        P: {meal.total_protein?.toFixed(1)}g | 
-                        C: {meal.total_carbs?.toFixed(1)}g | 
-                        F: {meal.total_fat?.toFixed(1)}g
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={meal.is_active ? "default" : "secondary"}>
-                      {meal.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => printMealLabel(meal)}
-                        title="Print Label"
-                      >
-                        <Printer className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleBuildMeal(meal.id)}
-                        title="Build Meal"
-                      >
-                        <Calculator className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(meal)}
-                        title="Edit"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(meal.id)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
+      {/* Meal Builder Dialog */}
       <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
