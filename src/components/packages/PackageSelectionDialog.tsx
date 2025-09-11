@@ -336,17 +336,6 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                         </div>
                       </div>
                     </div>
-                    {meal.total_fiber > 0 && (
-                      <div className="mt-2 pt-2 border-t border-border/30">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fiber</span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-foreground">{(meal.total_fiber || 0).toFixed(1)}</span>
-                            <span className="text-xs text-muted-foreground">g</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                   
                   {/* Display allergens */}
