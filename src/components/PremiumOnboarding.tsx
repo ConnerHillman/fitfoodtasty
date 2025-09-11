@@ -43,12 +43,6 @@ const steps: OnboardingStep[] = [
     icon: Target
   },
   {
-    id: "lifestyle",
-    title: "How Active Are You?",
-    subtitle: "Tell us about your activity level",
-    icon: Activity
-  },
-  {
     id: "restrictions",
     title: "Dietary Preferences",
     subtitle: "Any dietary restrictions we should know about?",
@@ -119,7 +113,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     setProfile(prev => ({ ...prev, [key]: value }));
     
     // Auto-advance steps with radio group selections and visual effects
-    const autoAdvanceSteps = ["goal", "activityLevel", "mealCount"];
+    const autoAdvanceSteps = ["goal", "mealCount"];
     
     if (autoAdvanceSteps.includes(key)) {
       setSelectedOption(value);
@@ -186,10 +180,9 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const canProceed = () => {
     switch (currentStep) {
       case 0: return profile.goal !== "";
-      case 1: return profile.activityLevel !== "";
-      case 2: return true; // Dietary restrictions are optional
-      case 3: return profile.mealCount > 0;
-      case 4: return profile.deliveryFrequency !== "";
+      case 1: return true; // Dietary restrictions are optional
+      case 2: return profile.mealCount > 0;
+      case 3: return profile.deliveryFrequency !== "";
       default: return true;
     }
   };
@@ -379,47 +372,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 1:
         return (
           <div className="space-y-8">
-            <RadioGroup value={profile.activityLevel} onValueChange={(value) => updateProfile("activityLevel", value)}>
-              <div className="space-y-4">
-                {[
-                  { value: "low", label: "Light Activity", desc: "Desk job, minimal exercise", gradient: "from-blue-100/80 via-indigo-100/80 to-purple-100/80", hoverGradient: "group-hover:from-blue-200/80 group-hover:via-indigo-200/80 group-hover:to-purple-200/80" },
-                  { value: "moderate", label: "Moderate Activity", desc: "Regular workouts 3-4 times per week", gradient: "from-green-100/80 via-emerald-100/80 to-teal-100/80", hoverGradient: "group-hover:from-green-200/80 group-hover:via-emerald-200/80 group-hover:to-teal-200/80" },
-                  { value: "high", label: "High Activity", desc: "Daily training, very active lifestyle", gradient: "from-orange-100/80 via-amber-100/80 to-yellow-100/80", hoverGradient: "group-hover:from-orange-200/80 group-hover:via-amber-200/80 group-hover:to-yellow-200/80" },
-                  { value: "athlete", label: "Professional Athlete", desc: "Elite training regimen", gradient: "from-red-100/80 via-pink-100/80 to-rose-100/80", hoverGradient: "group-hover:from-red-200/80 group-hover:via-pink-200/80 group-hover:to-rose-200/80" }
-                ].map((option) => (
-                  <Card key={option.value} className={getCardClassName(option.value)}>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                    <CardContent className="p-6 relative z-10">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value={option.value} id={option.value} className="sr-only" />
-                        <Label htmlFor={option.value} className="cursor-pointer flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div className={`relative p-3 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
-                              isOptionSelectedAndTransitioning(option.value) 
-                                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
-                                : `bg-gradient-to-br ${option.gradient} ${option.hoverGradient}`
-                            }`}>
-                              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                              <Activity className={getIconClassName(option.value)} size={24} />
-                            </div>
-                            <div className="flex-1">
-                              <div className="font-bold text-lg text-gray-900 mb-1">{option.label}</div>
-                              <div className="text-gray-600 leading-relaxed">{option.desc}</div>
-                            </div>
-                          </div>
-                        </Label>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </RadioGroup>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-8">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo"].map((restriction) => (
                 <Card 
@@ -454,7 +406,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           </div>
         );
 
-      case 3:
+      case 2:
         // Get unique meal counts from available packages, sorted ascending
         const availableMealCounts = [...new Set(packages.map(pkg => pkg.meal_count))].sort((a, b) => a - b);
         
@@ -501,7 +453,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           </div>
         );
 
-      case 4:
+      case 3:
         const recommendedPackage = getRecommendedPackage();
         const similarPackages = getSimilarPackages();
         const currentPackage = similarPackages[carouselIndex] || recommendedPackage;
