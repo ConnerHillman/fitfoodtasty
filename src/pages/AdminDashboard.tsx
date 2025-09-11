@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import IngredientsManager from "@/components/admin/IngredientsManager";
 import MealsManager from "@/components/admin/MealsManager";
-import { ChefHat, Package } from "lucide-react";
+import PackagesManager from "@/components/admin/PackagesManager";
+import { ChefHat, Package, ShoppingBag } from "lucide-react";
 
 const AdminDashboard = () => {
   return (
@@ -17,7 +18,7 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="ingredients" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ingredients" className="flex items-center space-x-2">
             <Package className="h-4 w-4" />
             <span>Ingredients</span>
@@ -25,6 +26,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="meals" className="flex items-center space-x-2">
             <ChefHat className="h-4 w-4" />
             <span>Meals</span>
+          </TabsTrigger>
+          <TabsTrigger value="packages" className="flex items-center space-x-2">
+            <ShoppingBag className="h-4 w-4" />
+            <span>Packages</span>
           </TabsTrigger>
         </TabsList>
 
@@ -52,6 +57,20 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <MealsManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="packages">
+          <Card>
+            <CardHeader>
+              <CardTitle>Package Manager</CardTitle>
+              <CardDescription>
+                Create and manage meal packages with pricing and promotional images
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PackagesManager />
             </CardContent>
           </Card>
         </TabsContent>
