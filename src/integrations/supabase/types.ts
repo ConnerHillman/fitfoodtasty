@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      allergens: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -46,6 +70,42 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ingredient_allergens: {
+        Row: {
+          allergen_id: string
+          created_at: string
+          id: string
+          ingredient_id: string
+        }
+        Insert: {
+          allergen_id: string
+          created_at?: string
+          id?: string
+          ingredient_id: string
+        }
+        Update: {
+          allergen_id?: string
+          created_at?: string
+          id?: string
+          ingredient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_allergens_allergen_id_fkey"
+            columns: ["allergen_id"]
+            isOneToOne: false
+            referencedRelation: "allergens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingredient_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ingredients: {
         Row: {
@@ -94,6 +154,42 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      meal_allergens: {
+        Row: {
+          allergen_id: string
+          created_at: string
+          id: string
+          meal_id: string
+        }
+        Insert: {
+          allergen_id: string
+          created_at?: string
+          id?: string
+          meal_id: string
+        }
+        Update: {
+          allergen_id?: string
+          created_at?: string
+          id?: string
+          meal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_allergens_allergen_id_fkey"
+            columns: ["allergen_id"]
+            isOneToOne: false
+            referencedRelation: "allergens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_allergens_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meal_ingredients: {
         Row: {
