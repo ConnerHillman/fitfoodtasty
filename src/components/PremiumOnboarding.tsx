@@ -247,8 +247,13 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     if (recommendedPackage && similarPackages.length > 0) {
       const index = similarPackages.findIndex(pkg => pkg.id === recommendedPackage.id);
       setCarouselIndex(index >= 0 ? index : 0);
+      
+      // Auto-select the recommended package when reaching the final step
+      if (currentStep === 2 && !profile.selectedPackageId) {
+        setProfile(prev => ({ ...prev, selectedPackageId: recommendedPackage.id }));
+      }
     }
-  }, [packages, profile.goal, profile.mealCount]);
+  }, [packages, profile.goal, profile.mealCount, currentStep]);
 
   const navigateCarousel = (direction: 'prev' | 'next') => {
     const similarPackages = getSimilarPackages();
@@ -556,8 +561,8 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
                 </div>
 
-                {/* Delivery Frequency Selection */}
-                {profile.selectedPackageId && (
+                {/* Delivery Frequency Selection - Auto-show when on this step */}
+                {currentStep === 2 && (
                   <div className="space-y-6 animate-fade-in">
                     <div className="text-center">
                       <h4 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-2">Delivery Frequency</h4>
