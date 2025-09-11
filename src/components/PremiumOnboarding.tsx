@@ -76,8 +76,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [packages, setPackages] = useState<MealPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
-  const [selectedGoal, setSelectedGoal] = useState<string>("");
-  const [selectedActivity, setSelectedActivity] = useState<string>("");
+  const [selectedOption, setSelectedOption] = useState<string>("");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     goal: "",
@@ -116,25 +115,41 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const updateProfile = (key: keyof UserProfile, value: any) => {
     setProfile(prev => ({ ...prev, [key]: value }));
     
-    // Auto-advance on goal selection with visual effects
-    if (key === "goal" && currentStep === 0) {
-      setSelectedGoal(value);
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setIsTransitioning(false);
-        nextStep();
-      }, 800);
-    }
+    // Auto-advance steps with radio group selections and visual effects
+    const autoAdvanceSteps = ["goal", "activityLevel"];
     
-    // Auto-advance on activity level selection with visual effects
-    if (key === "activityLevel" && currentStep === 1) {
-      setSelectedActivity(value);
+    if (autoAdvanceSteps.includes(key)) {
+      setSelectedOption(value);
       setIsTransitioning(true);
       setTimeout(() => {
         setIsTransitioning(false);
+        setSelectedOption("");
         nextStep();
       }, 800);
     }
+  };
+
+  // Helper function to check if current option is selected and transitioning
+  const isOptionSelectedAndTransitioning = (optionValue: string) => {
+    return selectedOption === optionValue && isTransitioning;
+  };
+
+  // Generic card styling with transition effects
+  const getCardClassName = (optionValue: string, isRadioCard: boolean = true) => {
+    if (!isRadioCard) return "cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200";
+    
+    return `cursor-pointer transition-all duration-300 border-2 ${
+      isOptionSelectedAndTransitioning(optionValue)
+        ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
+        : 'hover:border-green-200 hover:shadow-lg'
+    }`;
+  };
+
+  // Generic icon styling with animation
+  const getIconClassName = (optionValue: string) => {
+    return `text-green-600 transition-all duration-300 ${
+      isOptionSelectedAndTransitioning(optionValue) ? 'animate-bounce' : ''
+    }`;
   };
 
   const toggleArrayValue = (key: keyof UserProfile, value: string) => {
@@ -181,19 +196,13 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           <div className="space-y-6">
             <RadioGroup value={profile.goal} onValueChange={(value) => updateProfile("goal", value)}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
-                  selectedGoal === "weight-loss" && isTransitioning 
-                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
-                    : 'hover:border-green-200 hover:shadow-lg'
-                }`}>
+                <Card className={getCardClassName("weight-loss")}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="weight-loss" id="weight-loss" />
                       <Label htmlFor="weight-loss" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Zap className={`text-green-600 transition-all duration-300 ${
-                            selectedGoal === "weight-loss" && isTransitioning ? 'animate-bounce' : ''
-                          }`} size={24} />
+                          <Zap className={getIconClassName("weight-loss")} size={24} />
                           <div>
                             <div className="font-semibold">Weight Loss</div>
                             <div className="text-sm text-gray-500">Calorie-controlled, nutrient-dense meals</div>
@@ -204,19 +213,13 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                   </CardContent>
                 </Card>
 
-                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
-                  selectedGoal === "muscle-gain" && isTransitioning 
-                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
-                    : 'hover:border-green-200 hover:shadow-lg'
-                }`}>
+                <Card className={getCardClassName("muscle-gain")}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="muscle-gain" id="muscle-gain" />
                       <Label htmlFor="muscle-gain" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Activity className={`text-green-600 transition-all duration-300 ${
-                            selectedGoal === "muscle-gain" && isTransitioning ? 'animate-bounce' : ''
-                          }`} size={24} />
+                          <Activity className={getIconClassName("muscle-gain")} size={24} />
                           <div>
                             <div className="font-semibold">Muscle Gain</div>
                             <div className="text-sm text-gray-500">High-protein, performance-focused nutrition</div>
@@ -227,19 +230,13 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                   </CardContent>
                 </Card>
 
-                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
-                  selectedGoal === "convenience" && isTransitioning 
-                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
-                    : 'hover:border-green-200 hover:shadow-lg'
-                }`}>
+                <Card className={getCardClassName("convenience")}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="convenience" id="convenience" />
                       <Label htmlFor="convenience" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Heart className={`text-green-600 transition-all duration-300 ${
-                            selectedGoal === "convenience" && isTransitioning ? 'animate-bounce' : ''
-                          }`} size={24} />
+                          <Heart className={getIconClassName("convenience")} size={24} />
                           <div>
                             <div className="font-semibold">Convenience</div>
                             <div className="text-sm text-gray-500">Healthy meals without the planning</div>
@@ -250,19 +247,13 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                   </CardContent>
                 </Card>
 
-                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
-                  selectedGoal === "performance" && isTransitioning 
-                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
-                    : 'hover:border-green-200 hover:shadow-lg'
-                }`}>
+                <Card className={getCardClassName("performance")}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="performance" id="performance" />
                       <Label htmlFor="performance" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Target className={`text-green-600 transition-all duration-300 ${
-                            selectedGoal === "performance" && isTransitioning ? 'animate-bounce' : ''
-                          }`} size={24} />
+                          <Target className={getIconClassName("performance")} size={24} />
                           <div>
                             <div className="font-semibold">Performance</div>
                             <div className="text-sm text-gray-500">Athlete-level nutrition optimization</div>
@@ -290,11 +281,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                     { value: "high", label: "High Activity", desc: "Daily training, very active lifestyle" },
                     { value: "athlete", label: "Professional Athlete", desc: "Elite training regimen" }
                   ].map((option) => (
-                    <Card key={option.value} className={`cursor-pointer transition-all duration-300 border-2 ${
-                      selectedActivity === option.value && isTransitioning 
-                        ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
-                        : 'hover:border-green-200 hover:shadow-md'
-                    }`}>
+                    <Card key={option.value} className={getCardClassName(option.value)}>
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value={option.value} id={option.value} />
@@ -336,7 +323,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-6">
             <div>
@@ -366,7 +353,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-8">
             <div>
@@ -377,7 +364,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                 <RadioGroup value={profile.selectedPackageId} onValueChange={(value) => updateProfile("selectedPackageId", value)}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {packages.map((pkg, index) => {
-                      const isPopular = index === Math.floor(packages.length / 2); // Middle package is popular
+                      const isPopular = index === Math.floor(packages.length / 2);
                       return (
                         <Card key={pkg.id} className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200 relative">
                           {isPopular && (
@@ -485,7 +472,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
               disabled={!canProceed()}
               className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 flex items-center space-x-2"
             >
-              <span>{currentStep === steps.length - 1 ? "Create My Plan" : "Continue"}</span>
+              <span>Continue</span>
               <ArrowRight size={16} />
             </Button>
           )}
