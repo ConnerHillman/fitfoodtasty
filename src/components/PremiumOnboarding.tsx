@@ -353,31 +353,40 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 3:
         return (
           <div className="space-y-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Choose your perfect package</h3>
+            <div className="mb-12">
+              <div className="text-center mb-8">
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Choose your perfect package</h3>
+                <p className="text-gray-600 text-lg">Select the meal plan that fits your lifestyle</p>
+              </div>
               {loadingPackages ? (
-                <div className="text-center text-gray-500">Loading packages...</div>
+                <div className="text-center text-gray-500 py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+                  <p className="text-lg">Loading premium packages...</p>
+                </div>
               ) : (
                 <RadioGroup value={profile.selectedPackageId} onValueChange={(value) => updateProfile("selectedPackageId", value)}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {packages.map((pkg, index) => {
                       const isPopular = index === Math.floor(packages.length / 2);
                       return (
-                        <Card key={pkg.id} className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200 relative">
+                        <Card key={pkg.id} className="group cursor-pointer transition-all duration-500 ease-out border-0 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 hover:scale-[1.02] hover:-translate-y-1 relative overflow-hidden">
                           {isPopular && (
-                            <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-500">
-                              Popular
-                            </Badge>
+                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20">
+                              <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold px-4 py-2 shadow-lg shadow-emerald-500/40 rounded-full">
+                                Most Popular
+                              </Badge>
+                            </div>
                           )}
-                          <CardContent className="p-6">
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                          <CardContent className="p-8 relative z-10 text-center">
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value={pkg.id} id={`package-${pkg.id}`} />
+                              <RadioGroupItem value={pkg.id} id={`package-${pkg.id}`} className="sr-only" />
                               <Label htmlFor={`package-${pkg.id}`} className="cursor-pointer flex-1">
-                                <div className="text-center">
-                                  <div className="text-2xl font-bold text-green-600 mb-1">£{pkg.price.toFixed(2)}</div>
-                                  <div className="font-semibold">{pkg.meal_count} Meals</div>
-                                  <div className="text-sm text-gray-500">{pkg.description}</div>
-                                  <div className="text-xs text-gray-400 mt-1">£{(pkg.price / pkg.meal_count).toFixed(2)} per meal</div>
+                                <div className="space-y-4">
+                                  <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">£{pkg.price.toFixed(2)}</div>
+                                  <div className="text-xl font-bold text-gray-900">{pkg.meal_count} Meals</div>
+                                  <div className="text-gray-600 leading-relaxed">{pkg.description}</div>
+                                  <div className="text-sm text-gray-500 font-medium">£{(pkg.price / pkg.meal_count).toFixed(2)} per meal</div>
                                 </div>
                               </Label>
                             </div>
@@ -391,22 +400,39 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-4">Delivery frequency</h3>
+              <div className="text-center mb-8">
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Delivery frequency</h3>
+                <p className="text-gray-600 text-lg">Choose how often you'd like fresh meals delivered</p>
+              </div>
               <RadioGroup value={profile.deliveryFrequency} onValueChange={(value) => updateProfile("deliveryFrequency", value)}>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[
-                    { value: "weekly", label: "Weekly Subscription", desc: "Fresh meals every week, save 10%" },
-                    { value: "bi-weekly", label: "Bi-Weekly", desc: "Every two weeks, save 5%" },
-                    { value: "one-time", label: "One-Time Order", desc: "Try us out first" }
+                    { value: "weekly", label: "Weekly Subscription", desc: "Fresh meals every week, save 10%", badge: "Best Value" },
+                    { value: "bi-weekly", label: "Bi-Weekly", desc: "Every two weeks, save 5%", badge: "Popular" },
+                    { value: "one-time", label: "One-Time Order", desc: "Try us out first", badge: null }
                   ].map((option) => (
-                    <Card key={option.value} className="cursor-pointer hover:shadow-md transition-all duration-200">
-                      <CardContent className="p-4">
+                    <Card key={option.value} className="group cursor-pointer transition-all duration-500 ease-out border-0 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 hover:scale-[1.01] hover:-translate-y-1 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                      {option.badge && (
+                        <div className="absolute top-4 right-4 z-20">
+                          <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-medium px-3 py-1 shadow-lg shadow-emerald-500/40 rounded-full text-xs">
+                            {option.badge}
+                          </Badge>
+                        </div>
+                      )}
+                      <CardContent className="p-6 relative z-10">
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={`freq-${option.value}`} />
+                          <RadioGroupItem value={option.value} id={`freq-${option.value}`} className="sr-only" />
                           <Label htmlFor={`freq-${option.value}`} className="cursor-pointer flex-1">
-                            <div>
-                              <div className="font-medium">{option.label}</div>
-                              <div className="text-sm text-gray-500">{option.desc}</div>
+                            <div className="flex items-center space-x-4">
+                              <div className="relative p-3 rounded-2xl bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80 group-hover:from-emerald-200/80 group-hover:via-green-200/80 group-hover:to-teal-200/80 shadow-lg transition-all duration-500 backdrop-blur-sm">
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                                <Users className="text-emerald-600 group-hover:text-emerald-700 transition-all duration-500" size={24} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-bold text-lg text-gray-900 mb-1">{option.label}</div>
+                                <div className="text-gray-600 leading-relaxed">{option.desc}</div>
+                              </div>
                             </div>
                           </Label>
                         </div>
