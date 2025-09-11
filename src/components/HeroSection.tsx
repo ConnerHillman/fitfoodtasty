@@ -2,28 +2,25 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Flame, Clock, Users, Award } from "lucide-react";
-import { Link } from "react-router-dom";
-import PremiumOnboarding from "./PremiumOnboarding";
+import { Link, useNavigate } from "react-router-dom";
 import PersonalizedResults from "./PersonalizedResults";
 
 const HeroSection = () => {
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const navigate = useNavigate();
   const [showResults, setShowResults] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   const handleOnboardingComplete = (profile: any) => {
     setUserProfile(profile);
-    setShowOnboarding(false);
     setShowResults(true);
   };
 
   const handleStartOver = () => {
     setShowResults(false);
-    setShowOnboarding(true);
   };
 
   const handleGetStarted = () => {
-    setShowOnboarding(true);
+    navigate('/onboarding');
   };
 
   // If showing results, render the PersonalizedResults component
@@ -32,13 +29,6 @@ const HeroSection = () => {
   }
 
   return (
-    <>
-      {showOnboarding && (
-        <PremiumOnboarding 
-          onComplete={handleOnboardingComplete}
-          onClose={() => setShowOnboarding(false)}
-        />
-      )}
     <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
@@ -168,7 +158,6 @@ const HeroSection = () => {
         </div>
       </div>
     </section>
-    </>
   );
 };
 
