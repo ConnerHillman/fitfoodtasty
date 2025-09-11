@@ -310,28 +310,28 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                       <div className="flex items-center justify-between py-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Calories</span>
                         <div className="flex items-center gap-1">
-                          <span className="text-sm font-bold text-primary">{Math.round(meal.total_calories)}</span>
+                          <span className="text-sm font-bold text-foreground">{Math.round(meal.total_calories)}</span>
                           <span className="text-xs text-muted-foreground">kcal</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between py-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Protein</span>
                         <div className="flex items-center gap-1">
-                          <span className="text-sm font-bold text-blue-600">{(meal.total_protein || 0).toFixed(1)}</span>
+                          <span className="text-sm font-bold text-foreground">{(meal.total_protein || 0).toFixed(1)}</span>
                           <span className="text-xs text-muted-foreground">g</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between py-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Carbs</span>
                         <div className="flex items-center gap-1">
-                          <span className="text-sm font-bold text-green-600">{(meal.total_carbs || 0).toFixed(1)}</span>
+                          <span className="text-sm font-bold text-foreground">{(meal.total_carbs || 0).toFixed(1)}</span>
                           <span className="text-xs text-muted-foreground">g</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between py-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fat</span>
                         <div className="flex items-center gap-1">
-                          <span className="text-sm font-bold text-orange-600">{(meal.total_fat || 0).toFixed(1)}</span>
+                          <span className="text-sm font-bold text-foreground">{(meal.total_fat || 0).toFixed(1)}</span>
                           <span className="text-xs text-muted-foreground">g</span>
                         </div>
                       </div>
@@ -341,7 +341,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fiber</span>
                           <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-purple-600">{(meal.total_fiber || 0).toFixed(1)}</span>
+                            <span className="text-sm font-bold text-foreground">{(meal.total_fiber || 0).toFixed(1)}</span>
                             <span className="text-xs text-muted-foreground">g</span>
                           </div>
                         </div>
