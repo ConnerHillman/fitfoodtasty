@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Zap, Users } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingStep {
   id: string;
@@ -15,12 +16,21 @@ interface OnboardingStep {
   icon: React.ComponentType<any>;
 }
 
+interface MealPackage {
+  id: string;
+  name: string;
+  description: string;
+  meal_count: number;
+  price: number;
+  is_active: boolean;
+}
+
 interface UserProfile {
   goal: string;
   activityLevel: string;
   dietaryRestrictions: string[];
   cuisinePreferences: string[];
-  mealCount: string;
+  selectedPackageId: string;
   deliveryFrequency: string;
 }
 
@@ -58,14 +68,39 @@ interface Props {
 
 const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [packages, setPackages] = useState<MealPackage[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
   const [profile, setProfile] = useState<UserProfile>({
     goal: "",
     activityLevel: "",
     dietaryRestrictions: [],
     cuisinePreferences: [],
-    mealCount: "",
+    selectedPackageId: "",
     deliveryFrequency: ""
   });
+
+  // Fetch packages from database
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("packages")
+          .select("id, name, description, meal_count, price, is_active")
+          .eq("is_active", true)
+          .order("meal_count", { ascending: true });
+
+        if (!error && data) {
+          setPackages(data);
+        }
+      } catch (error) {
+        console.error("Error fetching packages:", error);
+      } finally {
+        setLoadingPackages(false);
+      }
+    };
+
+    fetchPackages();
+  }, []);
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
@@ -104,7 +139,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 0: return profile.goal !== "";
       case 1: return profile.activityLevel !== "";
       case 2: return profile.cuisinePreferences.length > 0;
-      case 3: return profile.mealCount !== "" && profile.deliveryFrequency !== "";
+      case 3: return profile.selectedPackageId !== "" && profile.deliveryFrequency !== "";
       default: return true;
     }
   };
@@ -271,36 +306,40 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         return (
           <div className="space-y-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4">How many meals per week?</h3>
-              <RadioGroup value={profile.mealCount} onValueChange={(value) => updateProfile("mealCount", value)}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    { value: "6", label: "6 Meals", desc: "Perfect for trying us out", price: "£51" },
-                    { value: "10", label: "10 Meals", desc: "Most popular choice", price: "£85", badge: "Popular" },
-                    { value: "15", label: "15 Meals", desc: "Maximum convenience", price: "£127.50" }
-                  ].map((option) => (
-                    <Card key={option.value} className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200 relative">
-                      {option.badge && (
-                        <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-500">
-                          {option.badge}
-                        </Badge>
-                      )}
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={`meals-${option.value}`} />
-                          <Label htmlFor={`meals-${option.value}`} className="cursor-pointer flex-1">
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-green-600 mb-1">{option.price}</div>
-                              <div className="font-semibold">{option.label}</div>
-                              <div className="text-sm text-gray-500">{option.desc}</div>
+              <h3 className="text-lg font-semibold mb-4">Choose your perfect package</h3>
+              {loadingPackages ? (
+                <div className="text-center text-gray-500">Loading packages...</div>
+              ) : (
+                <RadioGroup value={profile.selectedPackageId} onValueChange={(value) => updateProfile("selectedPackageId", value)}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {packages.map((pkg, index) => {
+                      const isPopular = index === Math.floor(packages.length / 2); // Middle package is popular
+                      return (
+                        <Card key={pkg.id} className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200 relative">
+                          {isPopular && (
+                            <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-500">
+                              Popular
+                            </Badge>
+                          )}
+                          <CardContent className="p-6">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value={pkg.id} id={`package-${pkg.id}`} />
+                              <Label htmlFor={`package-${pkg.id}`} className="cursor-pointer flex-1">
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-green-600 mb-1">£{pkg.price.toFixed(2)}</div>
+                                  <div className="font-semibold">{pkg.meal_count} Meals</div>
+                                  <div className="text-sm text-gray-500">{pkg.description}</div>
+                                  <div className="text-xs text-gray-400 mt-1">£{(pkg.price / pkg.meal_count).toFixed(2)} per meal</div>
+                                </div>
+                              </Label>
                             </div>
-                          </Label>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </RadioGroup>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </RadioGroup>
+              )}
             </div>
 
             <div>

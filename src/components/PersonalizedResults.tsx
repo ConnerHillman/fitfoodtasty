@@ -23,7 +23,7 @@ interface UserProfile {
   activityLevel: string;
   dietaryRestrictions: string[];
   cuisinePreferences: string[];
-  mealCount: string;
+  selectedPackageId: string;
   deliveryFrequency: string;
 }
 
@@ -34,20 +34,35 @@ interface Props {
 
 const PersonalizedResults = ({ profile, onStartOver }: Props) => {
   const [recommendedMeals, setRecommendedMeals] = useState<Meal[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPersonalizedMeals();
+    fetchSelectedPackageAndMeals();
   }, [profile]);
 
-  const fetchPersonalizedMeals = async () => {
+  const fetchSelectedPackageAndMeals = async () => {
     try {
-      // Fetch meals and apply basic filtering based on preferences
+      // First fetch the selected package
+      const { data: packageData, error: packageError } = await supabase
+        .from("packages")
+        .select("*")
+        .eq("id", profile.selectedPackageId)
+        .single();
+
+      if (packageError || !packageData) {
+        console.error("Error fetching package:", packageError);
+        return;
+      }
+
+      setSelectedPackage(packageData);
+
+      // Then fetch meals based on the package meal count
       const { data: meals, error } = await supabase
         .from("meals")
         .select("id,name,description,image_url,total_calories,total_protein,total_carbs,total_fat,price")
         .eq("is_active", true)
-        .limit(parseInt(profile.mealCount) || 10);
+        .limit(packageData.meal_count);
 
       if (!error && meals) {
         setRecommendedMeals(meals);
@@ -125,7 +140,7 @@ const PersonalizedResults = ({ profile, onStartOver }: Props) => {
             <CardContent className="p-6 text-center">
               <Calendar className="text-green-600 mx-auto mb-3" size={32} />
               <h3 className="font-bold text-lg mb-2">Weekly Plan</h3>
-              <p className="text-gray-600">{profile.mealCount} Premium Meals</p>
+              <p className="text-gray-600">{selectedPackage?.meal_count || 0} Premium Meals</p>
             </CardContent>
           </Card>
 
@@ -172,7 +187,7 @@ const PersonalizedResults = ({ profile, onStartOver }: Props) => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedMeals.slice(0, parseInt(profile.mealCount)).map((meal, index) => (
+              {recommendedMeals.slice(0, selectedPackage?.meal_count || 0).map((meal, index) => (
                 <Card key={meal.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm">
                   {meal.image_url && (
                     <div className="aspect-[4/3] overflow-hidden rounded-t-lg">
@@ -221,7 +236,7 @@ const PersonalizedResults = ({ profile, onStartOver }: Props) => {
                 <h3 className="text-2xl font-bold mb-4">Your Plan Summary</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span>{profile.mealCount} Premium Meals</span>
+                    <span>{selectedPackage?.meal_count || 0} Premium Meals</span>
                     <span className="font-medium">£{totalPrice.toFixed(2)}</span>
                   </div>
                   {savingsAmount > 0 && (
