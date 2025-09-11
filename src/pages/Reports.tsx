@@ -311,72 +311,98 @@ const Reports = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
-            <ChefHat className="h-8 w-8 text-primary" />
-            Kitchen Reports
-          </h1>
-          <p className="text-muted-foreground text-lg">Production planning and order management</p>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
+              <ChefHat className="h-8 w-8 text-primary" />
+              Kitchen Reports
+            </h1>
+            <p className="text-muted-foreground text-lg">Production planning and order management</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <DataImporter />
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export All
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="px-4 py-2">
-                <CalendarIcon className="h-4 w-4 mr-2" />
-                {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d, yyyy')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Choose Date Range</DialogTitle>
-              </DialogHeader>
-              <div className="flex gap-6">
-                <div className="space-y-2">
-                  {quickDateOptions.map((option, index) => (
-                    <Button
-                      key={index}
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => {
-                        const newRange = option.value();
-                        setDateRange(newRange);
-                        setShowDatePicker(false);
-                      }}
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
-                <div className="flex gap-4">
-                  <div>
-                    <p className="text-sm font-medium mb-2">From</p>
-                    <Calendar
-                      mode="single"
-                      selected={dateRange.from}
-                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, from: startOfDay(date) }))}
-                      className="pointer-events-auto"
-                    />
+        
+        {/* Date Range Selector */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h3 className="font-semibold">Date Range:</h3>
+              <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="px-4 py-2">
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d, yyyy')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Choose Date Range</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex gap-6">
+                    <div className="space-y-2">
+                      {quickDateOptions.map((option, index) => (
+                        <Button
+                          key={index}
+                          variant="ghost"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            const newRange = option.value();
+                            setDateRange(newRange);
+                            setShowDatePicker(false);
+                          }}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-sm font-medium mb-2">From</p>
+                        <Calendar
+                          mode="single"
+                          selected={dateRange.from}
+                          onSelect={(date) => date && setDateRange(prev => ({ ...prev, from: startOfDay(date) }))}
+                          className="pointer-events-auto"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium mb-2">To</p>
+                        <Calendar
+                          mode="single"
+                          selected={dateRange.to}
+                          onSelect={(date) => date && setDateRange(prev => ({ ...prev, to: endOfDay(date) }))}
+                          className="pointer-events-auto"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium mb-2">To</p>
-                    <Calendar
-                      mode="single"
-                      selected={dateRange.to}
-                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, to: endOfDay(date) }))}
-                      className="pointer-events-auto"
-                    />
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <DataImporter />
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export All
-          </Button>
-        </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="flex gap-2">
+              {quickDateOptions.slice(0, 3).map((option, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const newRange = option.value();
+                    setDateRange(newRange);
+                  }}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </Card>
       </div>
 
       <Tabs defaultValue="kitchen" className="space-y-6">
