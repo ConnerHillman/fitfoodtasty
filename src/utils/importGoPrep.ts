@@ -542,40 +542,98 @@ const goPrepIngredients = [
   sodium_per_100g: 0
 }));
 
-// Sample meal ingredients mapping
-const sampleMealIngredients = {
+// Actual meal ingredients mapping from your spreadsheet data
+const actualMealIngredients = {
   'Bang Bang Chicken': [
-    { ingredient: 'Chicken Breast', quantity: 150 },
-    { ingredient: 'Basmati Rice', quantity: 100 },
-    { ingredient: 'Broccoli', quantity: 80 },
-    { ingredient: 'Olive Oil', quantity: 10 }
+    { ingredient: 'Chicken Breast', quantity: 150, unit: 'g' },
+    { ingredient: 'Spaghetti', quantity: 80, unit: 'g' },
+    { ingredient: 'Mayo (Light)', quantity: 46, unit: 'g' },
+    { ingredient: 'Sweet Chilli Sauce', quantity: 25, unit: 'g' },
+    { ingredient: 'Sriracha Sauce', quantity: 7, unit: 'g' },
+    { ingredient: 'Garlic', quantity: 2.5, unit: 'g' },
+    { ingredient: 'Smoked Paprika', quantity: 1, unit: 'g' },
+    { ingredient: 'Olive Oil (Extra Virgin)', quantity: 1, unit: 'g' },
+    { ingredient: 'Parsley', quantity: 1, unit: 'g' },
+    { ingredient: 'Lime Juice', quantity: 1, unit: 'g' },
+    { ingredient: 'Chilli Flakes', quantity: 1, unit: 'g' }
+  ],
+  'Bang Bang Chicken (BIG)': [
+    { ingredient: 'Chicken Breast', quantity: 200, unit: 'g' },
+    { ingredient: 'Spaghetti', quantity: 120, unit: 'g' },
+    { ingredient: 'Mayo (Light)', quantity: 60, unit: 'g' },
+    { ingredient: 'Sweet Chilli Sauce', quantity: 30, unit: 'g' },
+    { ingredient: 'Sriracha Sauce', quantity: 10, unit: 'g' },
+    { ingredient: 'Garlic', quantity: 3, unit: 'g' },
+    { ingredient: 'Smoked Paprika', quantity: 1, unit: 'g' },
+    { ingredient: 'Olive Oil (Extra Virgin)', quantity: 1, unit: 'g' },
+    { ingredient: 'Parsley', quantity: 1, unit: 'g' },
+    { ingredient: 'Lime Juice', quantity: 1, unit: 'g' },
+    { ingredient: 'Chilli Flakes', quantity: 1, unit: 'g' }
+  ],
+  'Bang Bang Chicken (LowCal)': [
+    { ingredient: 'Chicken Breast', quantity: 110, unit: 'g' },
+    { ingredient: 'Spaghetti', quantity: 40, unit: 'g' },
+    { ingredient: 'Mayo (Light)', quantity: 23, unit: 'g' },
+    { ingredient: 'Sweet Chilli Sauce', quantity: 12.5, unit: 'g' },
+    { ingredient: 'Sriracha Sauce', quantity: 3.5, unit: 'g' },
+    { ingredient: 'Garlic', quantity: 1.5, unit: 'g' },
+    { ingredient: 'Olive Oil (Extra Virgin)', quantity: 1, unit: 'g' },
+    { ingredient: 'Parsley', quantity: 1, unit: 'g' },
+    { ingredient: 'Lime Juice', quantity: 1, unit: 'g' },
+    { ingredient: 'Chilli Flakes', quantity: 1, unit: 'g' },
+    { ingredient: 'Smoked Paprika', quantity: 0.5, unit: 'g' }
   ],
   'Beef Jalfrezi and Pilau Rice': [
-    { ingredient: 'Beef Mince', quantity: 120 },
-    { ingredient: 'Basmati Rice', quantity: 100 },
-    { ingredient: 'Bell Pepper', quantity: 60 },
-    { ingredient: 'Onion', quantity: 40 },
-    { ingredient: 'Olive Oil', quantity: 8 }
+    { ingredient: 'Lean Beef Mince 5%', quantity: 150, unit: 'g' },
+    { ingredient: 'Chopped Tomatoes', quantity: 150, unit: 'g' },
+    { ingredient: 'Basmati Rice (Tilda)', quantity: 50, unit: 'g' },
+    { ingredient: 'Cauliflower', quantity: 50, unit: 'g' },
+    { ingredient: 'White Onion', quantity: 30, unit: 'g' },
+    { ingredient: 'Red Peppers', quantity: 30, unit: 'g' },
+    { ingredient: 'Coconut Milk', quantity: 10, unit: 'ml' },
+    { ingredient: 'Olive Oil (Extra Virgin)', quantity: 3, unit: 'g' },
+    { ingredient: 'Chilli (Red)', quantity: 3, unit: 'g' },
+    { ingredient: 'Garlic', quantity: 2, unit: 'g' },
+    { ingredient: 'Ginger', quantity: 2, unit: 'g' },
+    { ingredient: 'Garam Masala', quantity: 1.5, unit: 'g' },
+    { ingredient: 'Cumin', quantity: 1.5, unit: 'g' },
+    { ingredient: 'Tumeric', quantity: 1.5, unit: 'g' },
+    { ingredient: 'Ground Coriander', quantity: 1.5, unit: 'g' },
+    { ingredient: 'Himalayan Pink Salt', quantity: 1, unit: 'g' },
+    { ingredient: 'Beef Bouillon Paste', quantity: 1, unit: 'g' },
+    { ingredient: 'Fresh Coriander', quantity: 0.01, unit: 'g' }
+  ],
+  'Korean Beef Bowl': [
+    { ingredient: 'Lean Beef Mince 5%', quantity: 150, unit: 'g' },
+    { ingredient: 'Basmati Rice (Tilda)', quantity: 50, unit: 'g' },
+    { ingredient: 'Sweet Chilli Sauce', quantity: 25, unit: 'g' },
+    { ingredient: 'White Onion', quantity: 20, unit: 'g' },
+    { ingredient: 'Dark Soy Sauce', quantity: 12.5, unit: 'g' },
+    { ingredient: 'Light Soy Sauce', quantity: 10, unit: 'ml' },
+    { ingredient: 'Sriracha Sauce', quantity: 5, unit: 'g' },
+    { ingredient: 'Tomato Paste', quantity: 3.75, unit: 'g' },
+    { ingredient: 'Honey', quantity: 3.75, unit: 'g' },
+    { ingredient: 'Mayo (Light)', quantity: 3.1, unit: 'g' },
+    { ingredient: 'White Rice Wine Vinegar', quantity: 0.63, unit: 'g' },
+    { ingredient: 'Garlic', quantity: 0.4, unit: 'g' },
+    { ingredient: 'Spring Onion', quantity: 0.2, unit: 'g' },
+    { ingredient: 'Chilli (Red)', quantity: 0.2, unit: 'g' },
+    { ingredient: 'Garlic Powder', quantity: 0.03, unit: 'g' }
   ],
   'Penne Bolognese': [
-    { ingredient: 'Beef Mince', quantity: 100 },
-    { ingredient: 'Penne Pasta', quantity: 80 },
-    { ingredient: 'Tomato Sauce', quantity: 100 },
-    { ingredient: 'Onion', quantity: 30 },
-    { ingredient: 'Olive Oil', quantity: 5 }
-  ],
-  'Chorizo & Spinach Omelette': [
-    { ingredient: 'Eggs', quantity: 100 },
-    { ingredient: 'Spinach', quantity: 60 },
-    { ingredient: 'Cheese', quantity: 30 },
-    { ingredient: 'Olive Oil', quantity: 8 }
-  ],
-  'Honey & Garlic Chicken Bowl with Basmati & Broccoli': [
-    { ingredient: 'Chicken Breast', quantity: 140 },
-    { ingredient: 'Basmati Rice', quantity: 90 },
-    { ingredient: 'Broccoli', quantity: 100 },
-    { ingredient: 'Garlic', quantity: 5 },
-    { ingredient: 'Olive Oil', quantity: 12 }
+    { ingredient: 'Chopped Tomatoes', quantity: 200, unit: 'g' },
+    { ingredient: 'Lean Beef Mince 5%', quantity: 150, unit: 'g' },
+    { ingredient: 'Penne Pasta', quantity: 80, unit: 'g' },
+    { ingredient: 'White Onion', quantity: 35, unit: 'g' },
+    { ingredient: 'Red Cooking Wine', quantity: 10, unit: 'g' },
+    { ingredient: 'Parmesan', quantity: 10, unit: 'g' },
+    { ingredient: 'Oregano', quantity: 4, unit: 'g' },
+    { ingredient: 'Garlic', quantity: 3, unit: 'g' },
+    { ingredient: 'Basil (Dried)', quantity: 2, unit: 'g' },
+    { ingredient: 'Beef Bouillon Paste', quantity: 2, unit: 'g' },
+    { ingredient: 'Tomato Paste', quantity: 1.5, unit: 'g' },
+    { ingredient: 'Himalayan Pink Salt', quantity: 0.5, unit: 'g' },
+    { ingredient: 'Black Pepper', quantity: 0.25, unit: 'g' }
   ]
 };
 
@@ -643,8 +701,8 @@ export const importGoPrepMealIngredients = async () => {
     const mealIngredientsToInsert = [];
     let totalMappings = 0;
 
-    // Process sample meal ingredients
-    for (const [mealName, ingredientsList] of Object.entries(sampleMealIngredients)) {
+    // Process actual meal ingredients
+    for (const [mealName, ingredientsList] of Object.entries(actualMealIngredients)) {
       const mealId = mealMap.get(mealName);
       if (!mealId) continue;
 
