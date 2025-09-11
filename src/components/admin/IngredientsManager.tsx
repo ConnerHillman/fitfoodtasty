@@ -7,9 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+interface Allergen {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 interface Ingredient {
   id: string;
@@ -21,11 +28,14 @@ interface Ingredient {
   fat_per_100g: number;
   fiber_per_100g: number;
   default_unit: string;
+  allergens?: Allergen[];
 }
 
 const IngredientsManager = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
+  const [allergens, setAllergens] = useState<Allergen[]>([]);
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
@@ -43,6 +53,7 @@ const IngredientsManager = () => {
 
   useEffect(() => {
     fetchIngredients();
+    fetchAllergens();
   }, []);
 
   useEffect(() => {
@@ -52,13 +63,40 @@ const IngredientsManager = () => {
   const fetchIngredients = async () => {
     const { data, error } = await supabase
       .from("ingredients")
-      .select("*")
+      .select(`
+        *,
+        ingredient_allergens(
+          allergen_id,
+          allergens(
+            id,
+            name,
+            description
+          )
+        )
+      `)
       .order("name");
 
     if (error) {
       toast({ title: "Error", description: "Failed to fetch ingredients", variant: "destructive" });
     } else {
-      setIngredients(data || []);
+      const ingredientsWithAllergens = data?.map(ingredient => ({
+        ...ingredient,
+        allergens: ingredient.ingredient_allergens?.map((ia: any) => ia.allergens) || []
+      })) || [];
+      setIngredients(ingredientsWithAllergens);
+    }
+  };
+
+  const fetchAllergens = async () => {
+    const { data, error } = await supabase
+      .from("allergens")
+      .select("*")
+      .order("name");
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to fetch allergens", variant: "destructive" });
+    } else {
+      setAllergens(data || []);
     }
   };
 
@@ -91,25 +129,57 @@ const IngredientsManager = () => {
     };
 
     let result;
+    let ingredientId: string;
+
     if (editingIngredient) {
       result = await supabase
         .from("ingredients")
         .update(ingredientData)
-        .eq("id", editingIngredient.id);
+        .eq("id", editingIngredient.id)
+        .select();
+      ingredientId = editingIngredient.id;
     } else {
       result = await supabase
         .from("ingredients")
-        .insert([ingredientData]);
+        .insert([ingredientData])
+        .select();
+      ingredientId = result.data?.[0]?.id;
     }
 
     if (result.error) {
       toast({ title: "Error", description: result.error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: `Ingredient ${editingIngredient ? 'updated' : 'created'} successfully` });
-      setIsDialogOpen(false);
-      resetForm();
-      fetchIngredients();
+      return;
     }
+
+    // Handle allergen associations
+    if (ingredientId) {
+      // Delete existing allergen associations
+      await supabase
+        .from("ingredient_allergens")
+        .delete()
+        .eq("ingredient_id", ingredientId);
+
+      // Insert new allergen associations
+      if (selectedAllergens.length > 0) {
+        const allergenAssociations = selectedAllergens.map(allergenId => ({
+          ingredient_id: ingredientId,
+          allergen_id: allergenId
+        }));
+
+        const allergenResult = await supabase
+          .from("ingredient_allergens")
+          .insert(allergenAssociations);
+
+        if (allergenResult.error) {
+          toast({ title: "Warning", description: "Ingredient created but allergens could not be saved", variant: "destructive" });
+        }
+      }
+    }
+
+    toast({ title: "Success", description: `Ingredient ${editingIngredient ? 'updated' : 'created'} successfully` });
+    setIsDialogOpen(false);
+    resetForm();
+    fetchIngredients();
   };
 
   const handleEdit = (ingredient: Ingredient) => {
@@ -124,6 +194,7 @@ const IngredientsManager = () => {
       fiber_per_100g: ingredient.fiber_per_100g.toString(),
       default_unit: ingredient.default_unit || "g"
     });
+    setSelectedAllergens(ingredient.allergens?.map(a => a.id) || []);
     setIsDialogOpen(true);
   };
 
@@ -152,7 +223,16 @@ const IngredientsManager = () => {
       fiber_per_100g: "",
       default_unit: "g"
     });
+    setSelectedAllergens([]);
     setEditingIngredient(null);
+  };
+
+  const handleAllergenToggle = (allergenId: string) => {
+    setSelectedAllergens(prev => 
+      prev.includes(allergenId)
+        ? prev.filter(id => id !== allergenId)
+        : [...prev, allergenId]
+    );
   };
 
   return (
@@ -273,6 +353,40 @@ const IngredientsManager = () => {
                 </div>
               </div>
 
+              {/* Allergens Section */}
+              <div className="space-y-3">
+                <Label>Allergens</Label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
+                  {allergens.map((allergen) => (
+                    <div key={allergen.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`allergen-${allergen.id}`}
+                        checked={selectedAllergens.includes(allergen.id)}
+                        onCheckedChange={() => handleAllergenToggle(allergen.id)}
+                      />
+                      <Label 
+                        htmlFor={`allergen-${allergen.id}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        {allergen.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {selectedAllergens.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedAllergens.map(allergenId => {
+                      const allergen = allergens.find(a => a.id === allergenId);
+                      return allergen ? (
+                        <Badge key={allergenId} variant="secondary" className="text-xs">
+                          {allergen.name}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
@@ -304,6 +418,7 @@ const IngredientsManager = () => {
                 <TableHead>Protein</TableHead>
                 <TableHead>Carbs</TableHead>
                 <TableHead>Fat</TableHead>
+                <TableHead>Allergens</TableHead>
                 <TableHead>Unit</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
@@ -323,6 +438,15 @@ const IngredientsManager = () => {
                   <TableCell>{ingredient.protein_per_100g}g</TableCell>
                   <TableCell>{ingredient.carbs_per_100g}g</TableCell>
                   <TableCell>{ingredient.fat_per_100g}g</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {ingredient.allergens?.map((allergen) => (
+                        <Badge key={allergen.id} variant="destructive" className="text-xs">
+                          {allergen.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{ingredient.default_unit}</Badge>
                   </TableCell>

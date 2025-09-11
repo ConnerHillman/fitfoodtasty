@@ -5,6 +5,13 @@ import { Separator } from "@/components/ui/separator";
 import { Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+
+interface Allergen {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 interface Meal {
   id: string;
@@ -19,6 +26,7 @@ interface Meal {
   total_fiber: number;
   total_weight?: number;
   image_url?: string;
+  allergens?: Allergen[];
 }
 
 interface MealCardProps {
@@ -31,6 +39,28 @@ interface MealCardProps {
 
 const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = false, isNew = false }: MealCardProps) => {
   const { toast } = useToast();
+  const [allergens, setAllergens] = useState<Allergen[]>([]);
+
+  useEffect(() => {
+    fetchMealAllergens();
+  }, [meal.id]);
+
+  const fetchMealAllergens = async () => {
+    const { data, error } = await supabase
+      .from("meal_allergens")
+      .select(`
+        allergens (
+          id,
+          name,
+          description
+        )
+      `)
+      .eq("meal_id", meal.id);
+
+    if (!error && data) {
+      setAllergens(data.map((ma: any) => ma.allergens).filter(Boolean));
+    }
+  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -400,6 +430,20 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
                 )}
               </div>
             </div>
+            
+            {/* Display allergens */}
+            {allergens.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <h4 className="font-semibold text-sm mb-2 text-red-800">⚠️ Allergens</h4>
+                <div className="flex flex-wrap gap-1">
+                  {allergens.map((allergen) => (
+                    <Badge key={allergen.id} variant="destructive" className="text-xs">
+                      {allergen.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
             <Separator />
           </>
         )}
