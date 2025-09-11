@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -33,6 +33,7 @@ interface Meal {
 const MealsManager = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -55,8 +56,8 @@ const MealsManager = () => {
   }, []);
 
   useEffect(() => {
-    applyStatusFilter();
-  }, [meals, statusFilter]);
+    applyFilters();
+  }, [meals, statusFilter, searchQuery]);
 
   const fetchMeals = async () => {
     const { data, error } = await supabase
@@ -71,13 +72,24 @@ const MealsManager = () => {
     }
   };
 
-  const applyStatusFilter = () => {
+  const applyFilters = () => {
     let filtered = meals;
     
+    // Apply status filter
     if (statusFilter === 'active') {
-      filtered = meals.filter(meal => meal.is_active);
+      filtered = filtered.filter(meal => meal.is_active);
     } else if (statusFilter === 'inactive') {
-      filtered = meals.filter(meal => !meal.is_active);
+      filtered = filtered.filter(meal => !meal.is_active);
+    }
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(meal =>
+        meal.name.toLowerCase().includes(query) ||
+        (meal.description && meal.description.toLowerCase().includes(query)) ||
+        (meal.category && meal.category.toLowerCase().includes(query))
+      );
     }
     
     setFilteredMeals(filtered);
@@ -500,6 +512,19 @@ const MealsManager = () => {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-semibold">Meals Manager</h2>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search meals..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-[300px]"
+            />
+          </div>
+          
+          {/* Status Filter */}
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
@@ -655,8 +680,11 @@ const MealsManager = () => {
 
       <Card>
         <CardContent>
-          <div className="mb-4 text-sm text-muted-foreground">
-            Showing {filteredMeals.length} of {meals.length} meals
+          <div className="mb-4 flex justify-between items-center text-sm text-muted-foreground">
+            <span>Showing {filteredMeals.length} of {meals.length} meals</span>
+            {searchQuery && (
+              <span>Search: "{searchQuery}"</span>
+            )}
           </div>
           <Table>
             <TableHeader>
