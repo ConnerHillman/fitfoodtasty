@@ -43,31 +43,6 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
 
   const printMealLabel = async () => {
     try {
-      console.log("Starting logo fetch...");
-      // Convert logo to base64
-      const logoResponse = await fetch('/lovable-uploads/10536b16-bcbb-425b-ad58-6c366dfcc3a9.png');
-      console.log("Logo response:", logoResponse.status);
-      
-      if (!logoResponse.ok) {
-        console.error("Failed to fetch logo:", logoResponse.status);
-        throw new Error("Logo fetch failed");
-      }
-      
-      const logoBlob = await logoResponse.blob();
-      console.log("Logo blob size:", logoBlob.size);
-      
-      const logoBase64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          console.log("Base64 conversion complete");
-          resolve(reader.result as string);
-        };
-        reader.onerror = () => {
-          console.error("Base64 conversion failed");
-          reject(new Error("Base64 conversion failed"));
-        };
-        reader.readAsDataURL(logoBlob);
-      });
 
       // Fetch ingredients for this meal
       const { data: mealIngredients, error } = await supabase
@@ -233,9 +208,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
           <div class="label">
             <div class="header">
               <div class="meal-name">${meal.name}</div>
-              <div style="display: flex; align-items: center; justify-content: center; margin-top: 5px;">
-                <img src="${logoBase64}" alt="Fit Food Tasty" style="height: 24px; width: auto;" />
-              </div>
+              <div class="company-name">Fit Food Tasty</div>
             </div>
 
             <div class="section">
