@@ -16,7 +16,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/a26a6a7e-725d-4909-a524-70b0f1c49683.png" 
+              src="/lovable-uploads/a4f5ea12-e388-48b6-abc3-4e7e0ec80763.png" 
               alt="FIT FOOD TASTY Logo" 
               className="h-10 w-auto"
             />
