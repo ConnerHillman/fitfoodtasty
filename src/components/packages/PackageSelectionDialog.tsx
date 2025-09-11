@@ -352,8 +352,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">£{meal.price.toFixed(2)}</div>
+                  <div className="flex items-center justify-end">
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => dec(meal.id)} disabled={qty === 0}>
                         <Minus size={16} />
