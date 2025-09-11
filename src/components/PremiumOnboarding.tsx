@@ -119,7 +119,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         setIsTransitioning(false);
         setSelectedOption("");
         nextStep();
-      }, 800);
+      }, 600);
     }
   };
 
