@@ -163,7 +163,11 @@ const Reports = () => {
       to: endOfMonth(subMonths(new Date(), 1)) 
     }) },
     { label: 'Year to Date', value: () => ({ from: startOfYear(new Date()), to: endOfDay(new Date()) }) },
-    { label: 'This year', value: () => ({ from: startOfYear(new Date()), to: endOfYear(new Date()) }) }
+    { label: 'This year', value: () => ({ from: startOfYear(new Date()), to: endOfYear(new Date()) }) },
+    { label: 'Last year', value: () => ({ 
+      from: startOfYear(new Date(new Date().getFullYear() - 1, 0, 1)), 
+      to: endOfYear(new Date(new Date().getFullYear() - 1, 11, 31)) 
+    }) }
   ];
 
   const generateKitchenReport = (exportFormat: 'csv' | 'xlsx' | 'print') => {
