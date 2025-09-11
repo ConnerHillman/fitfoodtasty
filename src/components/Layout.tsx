@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Calendar, BarChart3, Settings, ChefHat, Package } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
+  const { getTotalItems } = useCart();
   const isBusinessRoute = location.pathname.startsWith('/business');
 
   const customerNavItems = [
@@ -63,9 +65,11 @@ const Layout = ({ children }: LayoutProps) => {
             
             <div className="flex items-center space-x-4">
               {!isBusinessRoute && (
-                <Button variant="outline" size="sm">
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Cart (0)
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/cart">
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Cart ({getTotalItems()})
+                  </Link>
                 </Button>
               )}
               <Button 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 import MealCard from "./MealCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ const MealsGrid = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const { toast } = useToast();
+  const { addToCart } = useCart();
 
   const categories = [
     { value: "all", label: "All Meals" },
@@ -64,7 +66,7 @@ const MealsGrid = () => {
     : meals.filter(meal => meal.category === selectedCategory);
 
   const handleAddToCart = (meal: Meal) => {
-    // This would integrate with your cart system
+    addToCart(meal);
     toast({
       title: "Added to Cart",
       description: `${meal.name} has been added to your cart`,
