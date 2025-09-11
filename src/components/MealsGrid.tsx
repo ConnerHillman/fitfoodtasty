@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
 interface Meal {
   id: string;
   name: string;
@@ -26,25 +35,41 @@ interface Meal {
 
 const MealsGrid = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const { toast } = useToast();
   const { addToCart } = useCart();
 
-  const categories = [
-    { value: "all", label: "All Meals" },
-    { value: "breakfast", label: "Breakfast" },
-    { value: "lunch", label: "Lunch" },
-    { value: "dinner", label: "Dinner" },
-    { value: "snack", label: "Snacks" }
-  ];
-
   useEffect(() => {
-    fetchMeals();
+    fetchData();
   }, []);
 
-  const fetchMeals = async () => {
+  const fetchData = async () => {
     setLoading(true);
+    await Promise.all([fetchMeals(), fetchCategories()]);
+    setLoading(false);
+  };
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      toast({ 
+        title: "Error", 
+        description: "Failed to fetch categories", 
+        variant: "destructive" 
+      });
+    } else {
+      setCategories(data || []);
+    }
+  };
+
+  const fetchMeals = async () => {
     const { data, error } = await supabase
       .from("meals")
       .select("*")
@@ -60,12 +85,17 @@ const MealsGrid = () => {
     } else {
       setMeals(data || []);
     }
-    setLoading(false);
   };
 
   const filteredMeals = selectedCategory === "all" 
     ? meals 
     : meals.filter(meal => meal.category === selectedCategory);
+
+  // Create display categories including "All Meals"
+  const displayCategories = [
+    { value: "all", label: "All Meals" },
+    ...categories.map(cat => ({ value: cat.name, label: cat.name }))
+  ];
 
   const handleAddToCart = (meal: Meal) => {
     addToCart(meal);
@@ -79,8 +109,8 @@ const MealsGrid = () => {
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <Skeleton key={category.value} className="h-8 w-20" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-8 w-20" />
           ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -96,7 +126,7 @@ const MealsGrid = () => {
     <div className="space-y-6">
       {/* Category Filter */}
       <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
+        {displayCategories.map((category) => (
           <Button
             key={category.value}
             variant={selectedCategory === category.value ? "default" : "outline"}
