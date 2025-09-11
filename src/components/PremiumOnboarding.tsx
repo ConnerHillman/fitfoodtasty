@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Zap, Users, ChevronLeft, ChevronRight, Package, Calendar, Clock } from "lucide-react";
+import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Flame, Users, ChevronLeft, ChevronRight, Package, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingStep {
@@ -52,7 +52,7 @@ const steps: OnboardingStep[] = [
     id: "recommendation",
     title: "Your Perfect Plan",
     subtitle: "We've found the ideal package for you",
-    icon: Zap
+    icon: Flame
   },
   {
     id: "deliveryFrequency",
@@ -201,7 +201,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     // Determine meal size based on goal
     let mealSizeKeyword = "";
     switch (profile.goal) {
-      case "weight-loss":
+      case "burn-fat":
         mealSizeKeyword = "lowcal";
         break;
       case "convenience":
@@ -229,7 +229,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const getSimilarPackages = () => {
     let mealSizeKeyword = "";
     switch (profile.goal) {
-      case "weight-loss":
+      case "burn-fat":
         mealSizeKeyword = "lowcal";
         break;
       case "convenience":
@@ -303,24 +303,24 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           <div className="space-y-6">
             <RadioGroup value={profile.goal} onValueChange={(value) => updateProfile("goal", value)}>
               <div className="flex flex-col md:flex-row gap-4">
-                <Card className={getCardClassName("weight-loss")}>
+                <Card className={getCardClassName("burn-fat")}>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
                   <CardContent className="p-8 relative z-10">
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="weight-loss" id="weight-loss" className="sr-only" />
-                      <Label htmlFor="weight-loss" className="cursor-pointer flex-1">
-                        <div className="flex items-center space-x-4">
+                      <RadioGroupItem value="burn-fat" id="burn-fat" className="sr-only" />
+                      <Label htmlFor="burn-fat" className="cursor-pointer flex-1">
+                        <div className="flex flex-col items-center text-center space-y-4">
                           <div className={`relative p-4 rounded-2xl transition-all duration-500 backdrop-blur-sm ${
-                            isOptionSelectedAndTransitioning("weight-loss") 
+                            isOptionSelectedAndTransitioning("burn-fat") 
                               ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
-                              : 'bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80 group-hover:from-emerald-200/80 group-hover:via-green-200/80 group-hover:to-teal-200/80 shadow-lg'
+                              : 'bg-gradient-to-br from-red-100/80 via-orange-100/80 to-yellow-100/80 group-hover:from-red-200/80 group-hover:via-orange-200/80 group-hover:to-yellow-200/80 shadow-lg'
                           }`}>
                             <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                            <Zap className={getIconClassName("weight-loss")} size={28} />
+                            <Flame className={getIconClassName("burn-fat")} size={28} />
                           </div>
                           <div className="flex-1">
-                            <div className="font-bold text-xl text-gray-900 mb-1">Weight Loss</div>
-                            <div className="text-gray-600 text-sm leading-relaxed">Calorie-controlled, nutrient-dense meals designed for sustainable weight management</div>
+                            <div className="font-bold text-xl text-gray-900 mb-1">Burn Fat</div>
+                            <div className="text-gray-600 text-sm leading-relaxed">Calorie-controlled, nutrient-dense meals designed for sustainable fat loss</div>
                           </div>
                         </div>
                       </Label>
@@ -334,7 +334,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="muscle-gain" id="muscle-gain" className="sr-only" />
                       <Label htmlFor="muscle-gain" className="cursor-pointer flex-1">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex flex-col items-center text-center space-y-4">
                           <div className={`relative p-4 rounded-2xl transition-all duration-500 backdrop-blur-sm ${
                             isOptionSelectedAndTransitioning("muscle-gain") 
                               ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
@@ -359,7 +359,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="performance" id="performance" className="sr-only" />
                       <Label htmlFor="performance" className="cursor-pointer flex-1">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex flex-col items-center text-center space-y-4">
                           <div className={`relative p-4 rounded-2xl transition-all duration-500 backdrop-blur-sm ${
                             isOptionSelectedAndTransitioning("performance") 
                               ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
@@ -660,7 +660,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
             <div className="flex items-center space-x-3 bg-gradient-to-r from-emerald-500/10 via-green-500/10 to-teal-500/10 px-6 py-3 rounded-2xl border border-emerald-200/50 backdrop-blur-sm shadow-lg">
               <div className="relative">
                 <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                  <Zap size={16} className="text-white drop-shadow-sm" />
+                  <Flame size={16} className="text-white drop-shadow-sm" />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
               </div>
