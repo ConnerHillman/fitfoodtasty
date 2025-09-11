@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Upload, Image } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, Image, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,7 +24,11 @@ interface Package {
 const PackagesManager = () => {
   const [packages, setPackages] = useState<Package[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMealsDialogOpen, setIsMealsDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+  const [selectedPackageForMeals, setSelectedPackageForMeals] = useState<Package | null>(null);
+  const [availableMeals, setAvailableMeals] = useState<any[]>([]);
+  const [packageMeals, setPackageMeals] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -165,6 +169,84 @@ const PackagesManager = () => {
     } else {
       toast({ title: "Success", description: `Package ${!pkg.is_active ? "activated" : "deactivated"}` });
       fetchPackages();
+    }
+  };
+
+  const handleManageMeals = async (pkg: Package) => {
+    setSelectedPackageForMeals(pkg);
+    
+    // Fetch all available meals
+    const { data: meals, error: mealsError } = await supabase
+      .from("meals")
+      .select("id, name, category, is_active")
+      .eq("is_active", true)
+      .order("name");
+
+    if (mealsError) {
+      toast({ title: "Error", description: "Failed to fetch meals", variant: "destructive" });
+      return;
+    }
+
+    // Fetch current package meals
+    const { data: currentPackageMeals, error: packageMealsError } = await supabase
+      .from("package_meals")
+      .select("meal_id")
+      .eq("package_id", pkg.id);
+
+    if (packageMealsError) {
+      toast({ title: "Error", description: "Failed to fetch package meals", variant: "destructive" });
+      return;
+    }
+
+    setAvailableMeals(meals || []);
+    setPackageMeals(currentPackageMeals?.map(pm => pm.meal_id) || []);
+    setIsMealsDialogOpen(true);
+  };
+
+  const handleMealToggle = (mealId: string) => {
+    setPackageMeals(prev => 
+      prev.includes(mealId) 
+        ? prev.filter(id => id !== mealId)
+        : [...prev, mealId]
+    );
+  };
+
+  const saveMealSelections = async () => {
+    if (!selectedPackageForMeals) return;
+
+    try {
+      // Delete existing package meals
+      await supabase
+        .from("package_meals")
+        .delete()
+        .eq("package_id", selectedPackageForMeals.id);
+
+      // Insert new package meals
+      if (packageMeals.length > 0) {
+        const packageMealData = packageMeals.map(mealId => ({
+          package_id: selectedPackageForMeals.id,
+          meal_id: mealId
+        }));
+
+        const { error } = await supabase
+          .from("package_meals")
+          .insert(packageMealData);
+
+        if (error) throw error;
+      }
+
+      toast({ 
+        title: "Success", 
+        description: `Updated meals for ${selectedPackageForMeals.name}` 
+      });
+      setIsMealsDialogOpen(false);
+    } catch (error) {
+      console.error("Error saving meal selections:", error);
+      toast({ 
+        title: "Error", 
+        description: "Failed to save meal selections", 
+        variant: "destructive" 
+      });
     }
   };
 
@@ -330,6 +412,14 @@ const PackagesManager = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleManageMeals(pkg)}
+                        title="Manage Available Meals"
+                      >
+                        <Settings size={14} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEdit(pkg)}
                       >
                         <Edit size={14} />
@@ -350,6 +440,71 @@ const PackagesManager = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Meal Selection Dialog */}
+      <Dialog open={isMealsDialogOpen} onOpenChange={setIsMealsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Manage Meals for {selectedPackageForMeals?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Select which meals customers can choose from when purchasing this package.
+              Selected: {packageMeals.length} meals
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availableMeals.map((meal) => {
+                const isSelected = packageMeals.includes(meal.id);
+                return (
+                  <Card 
+                    key={meal.id} 
+                    className={`cursor-pointer transition-colors ${
+                      isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
+                    }`}
+                    onClick={() => handleMealToggle(meal.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{meal.name}</h4>
+                          <Badge variant="outline" className="mt-1">
+                            {meal.category}
+                          </Badge>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected 
+                            ? 'bg-primary border-primary' 
+                            : 'border-muted-foreground'
+                        }`}>
+                          {isSelected && (
+                            <div className="w-2 h-2 bg-white rounded-full" />
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsMealsDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={saveMealSelections}>
+                Save Meal Selection
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -46,13 +46,43 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
       setSelected({});
       (async () => {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("meals")
-          .select("id,name,description,category,price,image_url")
-          .eq("is_active", true)
-          .order("category", { ascending: true })
-          .order("name", { ascending: true });
-        if (!error) setMeals((data || []) as Meal[]);
+        
+        if (pkg) {
+          // First get the meal IDs for this package
+          const { data: packageMealData, error: packageError } = await supabase
+            .from("package_meals")
+            .select("meal_id")
+            .eq("package_id", pkg.id);
+            
+          if (packageError) {
+            console.error("Error fetching package meals:", packageError);
+            setLoading(false);
+            return;
+          }
+          
+          // If no meals are assigned to this package, show all active meals
+          if (!packageMealData || packageMealData.length === 0) {
+            const { data, error } = await supabase
+              .from("meals")
+              .select("id,name,description,category,price,image_url")
+              .eq("is_active", true)
+              .order("category", { ascending: true })
+              .order("name", { ascending: true });
+            if (!error) setMeals((data || []) as Meal[]);
+          } else {
+            // Get the actual meal data for the assigned meals
+            const mealIds = packageMealData.map(pm => pm.meal_id);
+            const { data, error } = await supabase
+              .from("meals")
+              .select("id,name,description,category,price,image_url")
+              .in("id", mealIds)
+              .eq("is_active", true)
+              .order("category", { ascending: true })
+              .order("name", { ascending: true });
+            if (!error) setMeals((data || []) as Meal[]);
+          }
+        }
+        
         setLoading(false);
       })();
     }

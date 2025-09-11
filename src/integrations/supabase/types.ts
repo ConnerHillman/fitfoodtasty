@@ -293,6 +293,27 @@ export type Database = {
           },
         ]
       }
+      package_meals: {
+        Row: {
+          created_at: string
+          id: string
+          meal_id: string
+          package_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meal_id: string
+          package_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meal_id?: string
+          package_id?: string
+        }
+        Relationships: []
+      }
       package_orders: {
         Row: {
           created_at: string
