@@ -437,7 +437,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
                 <h4 className="font-semibold text-sm mb-2">Allergens</h4>
                 <div className="flex flex-wrap gap-1">
                   {allergens.map((allergen) => (
-                    <Badge key={allergen.id} variant="destructive" className="text-xs">
+                    <Badge key={allergen.id} className="bg-yellow-100 text-yellow-800 border-yellow-300 text-xs">
                       {allergen.name}
                     </Badge>
                   ))}
