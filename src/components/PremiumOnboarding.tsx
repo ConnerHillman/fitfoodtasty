@@ -43,15 +43,9 @@ const steps: OnboardingStep[] = [
     icon: Target
   },
   {
-    id: "restrictions",
-    title: "Dietary Preferences",
-    subtitle: "Any dietary restrictions we should know about?",
-    icon: Heart
-  },
-  {
     id: "mealCount",
     title: "How Many Meals?",
-    subtitle: "Tell us how many meals you want per week",
+    subtitle: "Tell us how many meals you want",
     icon: UtensilsCrossed
   },
   {
@@ -180,9 +174,8 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const canProceed = () => {
     switch (currentStep) {
       case 0: return profile.goal !== "";
-      case 1: return true; // Dietary restrictions are optional
-      case 2: return profile.mealCount > 0;
-      case 3: return profile.deliveryFrequency !== "";
+      case 1: return profile.mealCount > 0;
+      case 2: return profile.deliveryFrequency !== "";
       default: return true;
     }
   };
@@ -370,70 +363,33 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         );
 
       case 1:
-        return (
-          <div className="space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo"].map((restriction) => (
-                <Card 
-                  key={restriction}
-                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
-                    profile.dietaryRestrictions.includes(restriction) 
-                      ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
-                      : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
-                  }`}
-                  onClick={() => toggleArrayValue("dietaryRestrictions", restriction)}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                  <CardContent className="p-6 text-center relative z-10">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Checkbox
-                        id={restriction}
-                        checked={profile.dietaryRestrictions.includes(restriction)}
-                        onCheckedChange={() => toggleArrayValue("dietaryRestrictions", restriction)}
-                        className="sr-only"
-                      />
-                      <Heart className={`transition-all duration-500 ${
-                        profile.dietaryRestrictions.includes(restriction) 
-                          ? 'text-emerald-600 scale-110' 
-                          : 'text-gray-400 group-hover:text-emerald-500'
-                      }`} size={20} />
-                    </div>
-                    <Label htmlFor={restriction} className="font-medium text-gray-900 cursor-pointer">{restriction}</Label>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 2:
         // Get unique meal counts from available packages, sorted ascending
         const availableMealCounts = [...new Set(packages.map(pkg => pkg.meal_count))].sort((a, b) => a - b);
         
         return (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {availableMealCounts.map((count) => (
                 <Card 
                   key={count} 
-                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
+                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-3xl backdrop-blur-xl overflow-hidden relative ${
                     profile.mealCount === count
                       ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
                       : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
                   }`}
                   onClick={() => updateProfile("mealCount", count)}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                  <CardContent className="p-8 relative z-10">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-3xl pointer-events-none"></div>
+                  <CardContent className="p-12 relative z-10">
                     <div className="text-center">
-                      <div className={`relative mx-auto mb-6 w-20 h-20 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
+                      <div className={`relative mx-auto mb-8 w-32 h-32 rounded-3xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
                         profile.mealCount === count
                           ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
                           : 'bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80 group-hover:from-emerald-200/80 group-hover:via-green-200/80 group-hover:to-teal-200/80'
                       }`}>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-3xl"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className={`text-2xl font-bold transition-all duration-500 ${
+                          <span className={`text-4xl font-bold transition-all duration-500 ${
                             profile.mealCount === count 
                               ? 'text-white scale-110 drop-shadow-xl' 
                               : 'text-emerald-600 group-hover:text-emerald-700 group-hover:scale-105'
@@ -443,8 +399,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                         </div>
                       </div>
                       
-                      <div className="font-bold text-xl text-gray-900 mb-2">{count} Meals</div>
-                      <div className="text-gray-600 text-sm leading-relaxed">Per week</div>
+                      <div className="font-bold text-2xl text-gray-900 mb-2">{count} Meals</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -453,7 +408,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           </div>
         );
 
-      case 3:
+      case 2:
         const recommendedPackage = getRecommendedPackage();
         const similarPackages = getSimilarPackages();
         const currentPackage = similarPackages[carouselIndex] || recommendedPackage;
