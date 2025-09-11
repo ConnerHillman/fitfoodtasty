@@ -12,6 +12,11 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -56,7 +61,14 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          phone: phone,
+          delivery_address: deliveryAddress,
+          city: city,
+          postal_code: postalCode
+        }
       }
     });
 
@@ -135,6 +147,68 @@ const Auth = () => {
                 minLength={6}
               />
             </div>
+
+            {isSignUp && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryAddress">Delivery Address</Label>
+                  <Input
+                    id="deliveryAddress"
+                    type="text"
+                    placeholder="Enter your street address"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      type="text"
+                      placeholder="City"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="postalCode">Postal Code</Label>
+                    <Input
+                      id="postalCode"
+                      type="text"
+                      placeholder="Postal Code"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             {error && (
               <Alert variant="destructive">
