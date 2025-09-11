@@ -368,11 +368,11 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         
         return (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="flex gap-4 max-w-6xl mx-auto">
               {availableMealCounts.map((count) => (
                 <Card 
                   key={count} 
-                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-3xl backdrop-blur-xl overflow-hidden relative ${
+                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-3xl backdrop-blur-xl overflow-hidden relative flex-1 ${
                     profile.mealCount === count
                       ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
                       : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
@@ -380,16 +380,16 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                   onClick={() => updateProfile("mealCount", count)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-3xl pointer-events-none"></div>
-                  <CardContent className="p-12 relative z-10">
+                  <CardContent className="p-8 relative z-10">
                     <div className="text-center">
-                      <div className={`relative mx-auto mb-8 w-32 h-32 rounded-3xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
+                      <div className={`relative mx-auto mb-6 w-24 h-24 rounded-3xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
                         profile.mealCount === count
                           ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
                           : 'bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80 group-hover:from-emerald-200/80 group-hover:via-green-200/80 group-hover:to-teal-200/80'
                       }`}>
                         <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-3xl"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className={`text-4xl font-bold transition-all duration-500 ${
+                          <span className={`text-3xl font-bold transition-all duration-500 ${
                             profile.mealCount === count 
                               ? 'text-white scale-110 drop-shadow-xl' 
                               : 'text-emerald-600 group-hover:text-emerald-700 group-hover:scale-105'
@@ -399,7 +399,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                         </div>
                       </div>
                       
-                      <div className="font-bold text-2xl text-gray-900 mb-2">{count} Meals</div>
+                      <div className="font-bold text-xl text-gray-900 mb-2">{count} Meals</div>
                     </div>
                   </CardContent>
                 </Card>
