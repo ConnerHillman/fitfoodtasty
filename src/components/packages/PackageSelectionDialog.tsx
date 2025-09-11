@@ -137,7 +137,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           <div className="flex items-center gap-2">
             {totalSelected === (pkg?.meal_count ?? 0) ? (
               <div className="text-green-600 flex items-center gap-1">
-                <CheckCircle2 className="h-4 w-4" /> Ready to checkout
+                <CheckCircle2 size={16} /> Ready to checkout
               </div>
             ) : (
               <div className="text-muted-foreground">Pick {((pkg?.meal_count ?? 0) - totalSelected)} more</div>
@@ -176,11 +176,11 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                     <div className="font-semibold">£{meal.price.toFixed(2)}</div>
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => dec(meal.id)} disabled={qty === 0}>
-                        <Minus className="h-4 w-4" />
+                        <Minus size={16} />
                       </Button>
                       <span className="w-6 text-center font-medium">{qty}</span>
                       <Button size="sm" onClick={() => inc(meal.id)} disabled={pkg ? totalSelected >= pkg.meal_count : true}>
-                        <Plus className="h-4 w-4" />
+                        <Plus size={16} />
                       </Button>
                     </div>
                   </div>
