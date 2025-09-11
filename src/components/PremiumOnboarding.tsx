@@ -333,10 +333,6 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       case 1:
         return (
           <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">How active are you?</h3>
-              <p className="text-gray-600 text-lg">Tell us about your lifestyle so we can tailor your nutrition</p>
-            </div>
             <RadioGroup value={profile.activityLevel} onValueChange={(value) => updateProfile("activityLevel", value)}>
               <div className="space-y-4">
                 {[
