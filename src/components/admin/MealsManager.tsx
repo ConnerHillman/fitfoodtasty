@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -31,6 +31,8 @@ interface Meal {
 
 const MealsManager = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
@@ -50,6 +52,10 @@ const MealsManager = () => {
     fetchMeals();
   }, []);
 
+  useEffect(() => {
+    applyStatusFilter();
+  }, [meals, statusFilter]);
+
   const fetchMeals = async () => {
     const { data, error } = await supabase
       .from("meals")
@@ -61,6 +67,18 @@ const MealsManager = () => {
     } else {
       setMeals(data || []);
     }
+  };
+
+  const applyStatusFilter = () => {
+    let filtered = meals;
+    
+    if (statusFilter === 'active') {
+      filtered = meals.filter(meal => meal.is_active);
+    } else if (statusFilter === 'inactive') {
+      filtered = meals.filter(meal => !meal.is_active);
+    }
+    
+    setFilteredMeals(filtered);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -478,7 +496,22 @@ const MealsManager = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Meals Manager</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-semibold">Meals Manager</h2>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Meals</SelectItem>
+                <SelectItem value="active">Active Only</SelectItem>
+                <SelectItem value="inactive">Inactive Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
@@ -591,7 +624,10 @@ const MealsManager = () => {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent>
+          <div className="mb-4 text-sm text-muted-foreground">
+            Showing {filteredMeals.length} of {meals.length} meals
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -605,7 +641,7 @@ const MealsManager = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {meals.map((meal) => (
+              {filteredMeals.map((meal) => (
                 <TableRow key={meal.id}>
                   <TableCell>
                     {meal.image_url ? (
