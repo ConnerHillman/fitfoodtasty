@@ -349,7 +349,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
           <img 
             src={meal.image_url} 
             alt={meal.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
       )}
