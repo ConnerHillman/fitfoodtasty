@@ -662,7 +662,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-2xl border-0 shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl">
+      <Card className="w-full max-w-5xl h-[90vh] flex flex-col bg-white/95 backdrop-blur-2xl border-0 shadow-[0_32px_64px_rgba(0,0,0,0.4)] rounded-3xl">
         <CardHeader className="text-center border-b-0 bg-gradient-to-r from-emerald-50/80 via-green-50/80 to-teal-50/80 backdrop-blur-sm rounded-t-3xl p-8">
           <div className="flex items-center justify-between mb-6">
             <Button 
@@ -711,7 +711,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           </div>
         </CardHeader>
 
-        <CardContent className="p-12">
+        <CardContent className="flex-1 overflow-y-auto p-8">
           {renderStepContent()}
         </CardContent>
 
