@@ -342,14 +342,23 @@ const BusinessDashboard = () => {
   const today = new Date().toDateString();
   const todayOrders = allOrders.filter(order => new Date(order.created_at).toDateString() === today);
   
+  // Calculate new customers (customers with their first order today)
+  const allCustomers = new Set(allOrders.map(order => order.customer_email || order.user_id));
+  const newCustomersToday = todayOrders.filter(order => {
+    const customerKey = order.customer_email || order.user_id;
+    const customerOrders = allOrders.filter(o => (o.customer_email || o.user_id) === customerKey);
+    // Check if this is their first order
+    return customerOrders.length === 1 && new Date(customerOrders[0].created_at).toDateString() === today;
+  });
+
   const todayStats = {
     orders: todayOrders.length,
     revenue: todayOrders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0),
     customers: new Set(todayOrders.map(order => order.customer_email || order.user_id)).size,
     avgOrder: todayOrders.length > 0 ? todayOrders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0) / todayOrders.length : 0,
-    newCustomers: Math.floor(Math.random() * 15) + 5, // Simulated for demo
-    totalCustomers: new Set(allOrders.map(order => order.customer_email || order.user_id)).size,
-    activeCustomers: Math.floor(new Set(allOrders.map(order => order.customer_email || order.user_id)).size * 0.6),
+    newCustomers: newCustomersToday.length,
+    totalCustomers: allCustomers.size,
+    activeCustomers: Math.floor(allCustomers.size * 0.6),
     leads: Math.floor(Math.random() * 50) + 200 // Simulated for demo
   };
 
