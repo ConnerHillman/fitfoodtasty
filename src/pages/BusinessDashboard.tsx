@@ -88,6 +88,22 @@ const BusinessDashboard = () => {
         setPackages(packagesData || []);
       }
 
+      // Fetch menu views from today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { data: viewsData, error: viewsError } = await supabase
+        .from("page_views")
+        .select("id")
+        .eq("page_type", "menu")
+        .gte("created_at", today.toISOString());
+
+      if (viewsError) {
+        console.error("Error fetching views:", viewsError);
+      } else {
+        setMenuViews(viewsData?.length || 0);
+      }
+
     } catch (error) {
       console.error("Error:", error);
     } finally {

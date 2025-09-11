@@ -2,10 +2,14 @@ import { useState } from "react";
 import MealsGrid from "@/components/MealsGrid";
 import PackagesBar, { MealPackage } from "@/components/packages/PackagesBar";
 import PackageSelectionDialog from "@/components/packages/PackageSelectionDialog";
+import { useViewTracking } from "@/hooks/useViewTracking";
 
 const Menu = () => {
   const [selectedPackage, setSelectedPackage] = useState<MealPackage | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Track menu page view
+  useViewTracking('menu');
 
   const handleSelectPackage = (pkg: MealPackage) => {
     setSelectedPackage(pkg);
