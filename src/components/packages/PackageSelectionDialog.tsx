@@ -24,6 +24,11 @@ interface Meal {
   price: number;
   image_url?: string;
   allergens?: Allergen[];
+  total_calories: number;
+  total_protein: number;
+  total_carbs: number;
+  total_fat: number;
+  total_fiber: number;
 }
 
 interface Props {
@@ -76,7 +81,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           if (!packageMealData || packageMealData.length === 0) {
             const { data, error } = await supabase
               .from("meals")
-              .select("id,name,description,category,price,image_url")
+              .select("id,name,description,category,price,image_url,total_calories,total_protein,total_carbs,total_fat,total_fiber")
               .eq("is_active", true)
               .order("category", { ascending: true })
               .order("name", { ascending: true });
@@ -90,7 +95,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
             const mealIds = packageMealData.map(pm => pm.meal_id);
             const { data, error } = await supabase
               .from("meals")
-              .select("id,name,description,category,price,image_url")
+              .select("id,name,description,category,price,image_url,total_calories,total_protein,total_carbs,total_fat,total_fiber")
               .in("id", mealIds)
               .eq("is_active", true)
               .order("category", { ascending: true })
@@ -297,7 +302,52 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                   <CardTitle className="text-base">{meal.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{meal.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{meal.description}</p>
+                  
+                  {/* Macro Information */}
+                  <div className="bg-gradient-to-br from-muted/30 to-muted/60 rounded-xl p-4 mb-4 border border-border/50">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center justify-between py-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Calories</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-bold text-primary">{Math.round(meal.total_calories)}</span>
+                          <span className="text-xs text-muted-foreground">kcal</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Protein</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-bold text-blue-600">{(meal.total_protein || 0).toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">g</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Carbs</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-bold text-green-600">{(meal.total_carbs || 0).toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">g</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between py-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fat</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-bold text-orange-600">{(meal.total_fat || 0).toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">g</span>
+                        </div>
+                      </div>
+                    </div>
+                    {meal.total_fiber > 0 && (
+                      <div className="mt-2 pt-2 border-t border-border/30">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fiber</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-bold text-purple-600">{(meal.total_fiber || 0).toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground">g</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Display allergens */}
                   {mealAllergens[meal.id] && mealAllergens[meal.id].length > 0 && (
