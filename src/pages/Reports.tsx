@@ -93,13 +93,83 @@ const Reports = () => {
   // Calculate production data
   const getItemProduction = () => {
     const production = new Map();
+    
+    // Process regular orders
     orders.forEach(order => {
       order.order_items?.forEach(item => {
-        const current = production.get(item.meal_name) || 0;
-        production.set(item.meal_name, current + item.quantity);
+        const key = item.meal_name;
+        const current = production.get(key) || { quantity: 0, orders: [], specialInstructions: [] };
+        production.set(key, {
+          ...current,
+          quantity: current.quantity + item.quantity,
+          orders: [...current.orders, order.id]
+        });
       });
     });
-    return Array.from(production.entries()).map(([name, quantity]) => ({ name, quantity }));
+
+    // Process package orders
+    packageOrders.forEach(order => {
+      order.package_meal_selections?.forEach(selection => {
+        const meal = meals.find(m => m.id === selection.meal_id);
+        if (meal) {
+          const key = meal.name;
+          const current = production.get(key) || { quantity: 0, orders: [], specialInstructions: [] };
+          production.set(key, {
+            ...current,
+            quantity: current.quantity + selection.quantity,
+            orders: [...current.orders, order.id]
+          });
+        }
+      });
+    });
+    
+    return Array.from(production.entries())
+      .map(([name, data]) => ({ 
+        name, 
+        quantity: data.quantity,
+        orders: data.orders.length,
+        specialInstructions: data.specialInstructions || []
+      }))
+      .sort((a, b) => b.quantity - a.quantity);
+  };
+
+  const [showFullReport, setShowFullReport] = useState(false);
+
+  const generateKitchenReport = () => {
+    const reportData = getItemProduction();
+    
+    // Create CSV content
+    const csvContent = [
+      ['Orders', 'Size', 'Title', 'Variations', 'Special Instructions'],
+      ...reportData.map(item => [
+        item.quantity.toString(),
+        '', // Size column - empty for now
+        item.name,
+        '', // Variations column - empty for now  
+        item.specialInstructions.join('; ') || ''
+      ])
+    ];
+    
+    // Convert to CSV string
+    const csvString = csvContent.map(row => 
+      row.map(field => `"${field}"`).join(',')
+    ).join('\n');
+    
+    // Download CSV
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kitchen-report-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Kitchen Report Generated",
+      description: "Your item production report has been downloaded",
+    });
   };
 
   const getIngredientsProduction = () => {
@@ -198,10 +268,43 @@ const Reports = () => {
                     <Badge variant="secondary">{item.quantity} units</Badge>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full mt-3">
-                  <FileText className="h-4 w-4 mr-2" />
-                  View Full Report
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1" 
+                    onClick={() => setShowFullReport(!showFullReport)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    {showFullReport ? 'Hide' : 'View'} Full Report
+                  </Button>
+                  <Button onClick={generateKitchenReport}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                </div>
+                
+                {showFullReport && (
+                  <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
+                    <div className="grid grid-cols-5 gap-2 p-2 bg-muted rounded text-xs font-medium">
+                      <span>Orders</span>
+                      <span>Size</span>
+                      <span>Title</span>
+                      <span>Variations</span>
+                      <span>Special Instructions</span>
+                    </div>
+                    {getItemProduction().map((item, index) => (
+                      <div key={index} className="grid grid-cols-5 gap-2 p-2 border rounded text-xs">
+                        <span className="font-medium">{item.quantity}</span>
+                        <span>-</span>
+                        <span>{item.name}</span>
+                        <span>-</span>
+                        <span className="text-muted-foreground">
+                          {item.specialInstructions.length > 0 ? item.specialInstructions.join('; ') : '-'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </ReportCard>
 
