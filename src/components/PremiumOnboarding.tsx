@@ -70,6 +70,8 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [packages, setPackages] = useState<MealPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
+  const [selectedGoal, setSelectedGoal] = useState<string>("");
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     goal: "",
     activityLevel: "",
@@ -107,9 +109,14 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const updateProfile = (key: keyof UserProfile, value: any) => {
     setProfile(prev => ({ ...prev, [key]: value }));
     
-    // Auto-advance on goal selection
+    // Auto-advance on goal selection with visual effects
     if (key === "goal" && currentStep === 0) {
-      setTimeout(() => nextStep(), 300); // Small delay for visual feedback
+      setSelectedGoal(value);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        nextStep();
+      }, 800); // Longer delay for better effect
     }
   };
 
@@ -156,13 +163,19 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
           <div className="space-y-6">
             <RadioGroup value={profile.goal} onValueChange={(value) => updateProfile("goal", value)}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200">
+                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
+                  selectedGoal === "weight-loss" && isTransitioning 
+                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
+                    : 'hover:border-green-200 hover:shadow-lg'
+                }`}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="weight-loss" id="weight-loss" />
                       <Label htmlFor="weight-loss" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Zap className="text-green-600" size={24} />
+                          <Zap className={`text-green-600 transition-all duration-300 ${
+                            selectedGoal === "weight-loss" && isTransitioning ? 'animate-bounce' : ''
+                          }`} size={24} />
                           <div>
                             <div className="font-semibold">Weight Loss</div>
                             <div className="text-sm text-gray-500">Calorie-controlled, nutrient-dense meals</div>
@@ -173,13 +186,19 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200">
+                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
+                  selectedGoal === "muscle-gain" && isTransitioning 
+                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
+                    : 'hover:border-green-200 hover:shadow-lg'
+                }`}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="muscle-gain" id="muscle-gain" />
                       <Label htmlFor="muscle-gain" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Activity className="text-green-600" size={24} />
+                          <Activity className={`text-green-600 transition-all duration-300 ${
+                            selectedGoal === "muscle-gain" && isTransitioning ? 'animate-bounce' : ''
+                          }`} size={24} />
                           <div>
                             <div className="font-semibold">Muscle Gain</div>
                             <div className="text-sm text-gray-500">High-protein, performance-focused nutrition</div>
@@ -190,13 +209,19 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200">
+                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
+                  selectedGoal === "convenience" && isTransitioning 
+                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
+                    : 'hover:border-green-200 hover:shadow-lg'
+                }`}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="convenience" id="convenience" />
                       <Label htmlFor="convenience" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Heart className="text-green-600" size={24} />
+                          <Heart className={`text-green-600 transition-all duration-300 ${
+                            selectedGoal === "convenience" && isTransitioning ? 'animate-bounce' : ''
+                          }`} size={24} />
                           <div>
                             <div className="font-semibold">Convenience</div>
                             <div className="text-sm text-gray-500">Healthy meals without the planning</div>
@@ -207,13 +232,19 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                   </CardContent>
                 </Card>
 
-                <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-green-200">
+                <Card className={`cursor-pointer transition-all duration-300 border-2 ${
+                  selectedGoal === "performance" && isTransitioning 
+                    ? 'border-green-500 bg-green-50 scale-105 shadow-lg animate-pulse' 
+                    : 'hover:border-green-200 hover:shadow-lg'
+                }`}>
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="performance" id="performance" />
                       <Label htmlFor="performance" className="cursor-pointer flex-1">
                         <div className="flex items-center space-x-3">
-                          <Target className="text-green-600" size={24} />
+                          <Target className={`text-green-600 transition-all duration-300 ${
+                            selectedGoal === "performance" && isTransitioning ? 'animate-bounce' : ''
+                          }`} size={24} />
                           <div>
                             <div className="font-semibold">Performance</div>
                             <div className="text-sm text-gray-500">Athlete-level nutrition optimization</div>
