@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer, PlusCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,7 +30,7 @@ const BusinessDashboard = () => {
             total_price
           )
         `)
-        .eq("status", "confirmed")
+        .in("status", ["confirmed", "preparing", "ready", "out_for_delivery"])
         .order("created_at", { ascending: false })
         .limit(10);
 
@@ -223,13 +223,78 @@ const BusinessDashboard = () => {
     });
   };
 
+  const createTestOrders = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: 'Not signed in', description: 'Please login to create test orders.', variant: 'destructive' });
+        return;
+      }
+
+      const { data: meals, error: mealsError } = await supabase
+        .from('meals')
+        .select('id, name, price')
+        .limit(3);
+      if (mealsError) throw mealsError;
+      if (!meals || meals.length === 0) {
+        toast({ title: 'No meals found', description: 'Create at least one meal first.', variant: 'destructive' });
+        return;
+      }
+
+      const baseCustomer = {
+        customer_email: user.email || 'test@example.com',
+        customer_name: (user.user_metadata as any)?.full_name || 'Test Customer',
+        delivery_address: (user.user_metadata as any)?.delivery_address || '123 Test Street, Testville',
+      };
+
+      const ordersToCreate = [
+        { status: 'confirmed', items: [ { meal: meals[0], qty: 2 } ] },
+        { status: 'preparing', items: [ { meal: meals[0], qty: 1 }, { meal: meals[1] || meals[0], qty: 3 } ] },
+      ];
+
+      for (const o of ordersToCreate) {
+        const total = o.items.reduce((sum, it) => sum + (Number(it.meal.price || 9) * it.qty), 0);
+        const { data: orderRow, error: orderErr } = await supabase
+          .from('orders')
+          .insert({
+            user_id: user.id,
+            total_amount: Number(total.toFixed(2)),
+            currency: 'gbp',
+            status: o.status,
+            stripe_session_id: null,
+            ...baseCustomer,
+          })
+          .select('id')
+          .single();
+        if (orderErr) throw orderErr;
+
+        const items = o.items.map(it => ({
+          order_id: orderRow.id,
+          meal_id: it.meal.id,
+          meal_name: it.meal.name,
+          quantity: it.qty,
+          unit_price: Number(it.meal.price || 9),
+          total_price: Number((Number(it.meal.price || 9) * it.qty).toFixed(2)),
+        }));
+
+        const { error: itemErr } = await supabase.from('order_items').insert(items);
+        if (itemErr) throw itemErr;
+      }
+
+      toast({ title: 'Test orders created', description: 'Added a couple of orders. Refreshing list...' });
+      fetchOrders();
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Failed to create test orders', description: err.message || 'Unknown error', variant: 'destructive' });
+    }
+  };
+
   const todayStats = {
     orders: orders.length,
     revenue: orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0),
     customers: new Set(orders.map(order => order.customer_email)).size,
     avgOrder: orders.length > 0 ? orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0) / orders.length : 0
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'secondary';
@@ -379,6 +444,10 @@ const BusinessDashboard = () => {
             <CardDescription>Common business operations</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Button className="w-full justify-start" variant="outline" onClick={createTestOrders}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Create Test Orders
+            </Button>
             <Button className="w-full justify-start" variant="outline">
               <Package className="h-4 w-4 mr-2" />
               Generate Kitchen Report
