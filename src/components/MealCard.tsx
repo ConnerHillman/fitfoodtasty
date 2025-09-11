@@ -43,12 +43,29 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
 
   const printMealLabel = async () => {
     try {
+      console.log("Starting logo fetch...");
       // Convert logo to base64
       const logoResponse = await fetch('/lovable-uploads/10536b16-bcbb-425b-ad58-6c366dfcc3a9.png');
+      console.log("Logo response:", logoResponse.status);
+      
+      if (!logoResponse.ok) {
+        console.error("Failed to fetch logo:", logoResponse.status);
+        throw new Error("Logo fetch failed");
+      }
+      
       const logoBlob = await logoResponse.blob();
-      const logoBase64 = await new Promise<string>((resolve) => {
+      console.log("Logo blob size:", logoBlob.size);
+      
+      const logoBase64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
+        reader.onload = () => {
+          console.log("Base64 conversion complete");
+          resolve(reader.result as string);
+        };
+        reader.onerror = () => {
+          console.error("Base64 conversion failed");
+          reject(new Error("Base64 conversion failed"));
+        };
         reader.readAsDataURL(logoBlob);
       });
 
