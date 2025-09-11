@@ -162,6 +162,7 @@ const Reports = () => {
       from: startOfMonth(subMonths(new Date(), 1)), 
       to: endOfMonth(subMonths(new Date(), 1)) 
     }) },
+    { label: 'Year to Date', value: () => ({ from: startOfYear(new Date()), to: endOfDay(new Date()) }) },
     { label: 'This year', value: () => ({ from: startOfYear(new Date()), to: endOfYear(new Date()) }) }
   ];
 
