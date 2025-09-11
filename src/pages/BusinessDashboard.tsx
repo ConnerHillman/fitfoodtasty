@@ -14,7 +14,7 @@ const BusinessDashboard = () => {
   const [meals, setMeals] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [menuViews, setMenuViews] = useState(112);
+  const [menuViews, setMenuViews] = useState(0); // No tracking implemented yet
   const { toast } = useToast();
   
   useEffect(() => {
