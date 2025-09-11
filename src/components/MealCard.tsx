@@ -417,7 +417,9 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
   };
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow relative">
+    <Card className="h-full hover:shadow-2xl transition-all duration-300 relative overflow-hidden group bg-gradient-to-br from-white via-green-50/30 to-emerald-50/30 border-2 border-green-100/50 hover:border-green-200 hover:scale-105 transform backdrop-blur-sm">
+      {/* Premium glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-400/5 to-emerald-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       {isNew && (
         <div className="absolute top-2 left-2 z-10">
           <Badge className="bg-green-500 text-white shadow-md animate-pulse">
@@ -425,31 +427,32 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
           </Badge>
         </div>
       )}
-      {meal.image_url && (
-        <div className="aspect-video w-full overflow-hidden rounded-t-lg">
-          <img 
-            src={meal.image_url} 
-            alt={meal.name}
-            className="w-full h-full object-contain"
-          />
-        </div>
-      )}
+       {meal.image_url && (
+         <div className="aspect-[4/3] w-full overflow-hidden rounded-t-lg relative">
+           <div className="absolute inset-0 bg-gradient-to-t from-green-900/20 to-transparent z-10"></div>
+           <img 
+             src={meal.image_url} 
+             alt={meal.name}
+             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+           />
+         </div>
+       )}
       
-      <CardHeader className="pb-3 text-center">
-        <CardTitle className="text-xl">{meal.name}</CardTitle>
-        <CardDescription className="mt-1">
-          {meal.description}
-        </CardDescription>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleIngredientsToggle}
-          className="mt-3 mx-auto w-fit bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
-        >
-          {showIngredients ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          <span className="ml-1.5 text-xs font-medium tracking-wide">INGREDIENTS</span>
-        </Button>
+       <CardHeader className="pb-2 text-center relative z-20">
+         <CardTitle className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent leading-tight">{meal.name}</CardTitle>
+         <CardDescription className="mt-1 text-sm text-gray-600 leading-relaxed">
+           {meal.description}
+         </CardDescription>
+         
+         <Button 
+           variant="outline" 
+           size="sm" 
+           onClick={handleIngredientsToggle}
+           className="mt-2 mx-auto w-fit px-3 py-1 h-7 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200/70 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md text-xs font-medium tracking-wide rounded-full"
+         >
+           {showIngredients ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+           <span className="ml-1">INGREDIENTS</span>
+         </Button>
         
         {showIngredients && (
           <div className="mt-3 p-3 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-lg border border-green-100 animate-fade-in">
@@ -472,32 +475,32 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
         )}
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 relative z-20 px-4 pb-4">
         {showNutrition && (
           <>
-            <div className="bg-muted/50 rounded-lg p-4">
-              <h4 className="font-semibold text-sm mb-2">Nutritional Information</h4>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Calories:</span>
-                  <span className="font-medium">{Math.round(meal.total_calories)} kcal</span>
+            <div className="bg-gradient-to-r from-green-50/70 via-emerald-50/70 to-green-50/70 rounded-xl p-3 border border-green-100/50 backdrop-blur-sm">
+              <h4 className="font-bold text-xs mb-2 text-green-800 uppercase tracking-wider">Nutrition Facts</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
+                  <span className="text-gray-600 font-medium">Calories</span>
+                  <span className="font-bold text-green-700">{Math.round(meal.total_calories)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Protein:</span>
-                  <span className="font-medium">{meal.total_protein?.toFixed(1) || '0'}g</span>
+                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
+                  <span className="text-gray-600 font-medium">Protein</span>
+                  <span className="font-bold text-green-700">{meal.total_protein?.toFixed(1) || '0'}g</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Carbs:</span>
-                  <span className="font-medium">{meal.total_carbs?.toFixed(1) || '0'}g</span>
+                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
+                  <span className="text-gray-600 font-medium">Carbs</span>
+                  <span className="font-bold text-green-700">{meal.total_carbs?.toFixed(1) || '0'}g</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Fat:</span>
-                  <span className="font-medium">{meal.total_fat?.toFixed(1) || '0'}g</span>
+                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
+                  <span className="text-gray-600 font-medium">Fat</span>
+                  <span className="font-bold text-green-700">{meal.total_fat?.toFixed(1) || '0'}g</span>
                 </div>
                 {meal.total_fiber > 0 && (
-                  <div className="flex justify-between col-span-2">
-                    <span className="text-muted-foreground">Fiber:</span>
-                    <span className="font-medium">{meal.total_fiber?.toFixed(1)}g</span>
+                  <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1 col-span-2">
+                    <span className="text-gray-600 font-medium">Fiber</span>
+                    <span className="font-bold text-green-700">{meal.total_fiber?.toFixed(1)}g</span>
                   </div>
                 )}
               </div>
@@ -520,25 +523,25 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
           </>
         )}
 
-        <div className="flex flex-col items-center gap-4 pt-2">
-          <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent tracking-tight">
+        <div className="flex flex-col items-center gap-3 pt-1">
+          <div className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 bg-clip-text text-transparent tracking-tight drop-shadow-sm">
             £{meal.price?.toFixed(2) || '0.00'}
           </div>
-          <div className="flex gap-3 w-full justify-center">
+          <div className="flex gap-2 w-full justify-center">
             {showPrintButton && (
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={printMealLabel}
-                className="bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 text-gray-700 hover:from-gray-100 hover:to-slate-100 hover:border-gray-300 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="h-8 px-3 bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200/70 text-gray-700 hover:from-gray-100 hover:to-slate-100 hover:border-gray-300 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md rounded-full"
               >
-                <Printer className="h-4 w-4" />
+                <Printer className="h-3 w-3" />
               </Button>
             )}
             {onAddToCart && (
               <Button 
                 onClick={() => onAddToCart(meal)}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                className="h-8 bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 hover:from-green-600 hover:via-emerald-600 hover:to-green-700 text-white font-semibold px-4 text-sm rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-green-400/30"
               >
                 Add to Cart
               </Button>
