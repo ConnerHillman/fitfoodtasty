@@ -1,9 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Info } from "lucide-react";
+import { Printer, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -50,6 +49,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
+  const [showIngredients, setShowIngredients] = useState(false);
 
   useEffect(() => {
     fetchMealAllergens();
@@ -104,6 +104,13 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
     } finally {
       setLoadingIngredients(false);
     }
+  };
+
+  const handleIngredientsToggle = () => {
+    if (!showIngredients && ingredients.length === 0) {
+      fetchIngredients();
+    }
+    setShowIngredients(!showIngredients);
   };
 
   const getCategoryColor = (category: string) => {
@@ -428,46 +435,41 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
         </div>
       )}
       
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-xl">{meal.name}</CardTitle>
-            <CardDescription className="mt-1">
-              {meal.description}
-            </CardDescription>
-          </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={fetchIngredients}
-                className="h-8 px-3 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                <Info size={12} className="text-green-600" />
-                <span className="ml-1.5 text-xs font-medium tracking-wide">INGREDIENTS</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-4 bg-background border border-border shadow-lg z-50">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-sm">Ingredients</h4>
-                {loadingIngredients ? (
-                  <div className="text-sm text-muted-foreground">Loading...</div>
-                ) : ingredients.length > 0 ? (
-                  <div className="space-y-1">
-                    {ingredients.map((ingredient) => (
-                      <div key={ingredient.id} className="text-sm">
-                        <span className="font-medium">{ingredient.quantity}{ingredient.unit}</span> {ingredient.name}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">No ingredients available</div>
-                )}
+      <CardHeader className="pb-3 text-center">
+        <CardTitle className="text-xl">{meal.name}</CardTitle>
+        <CardDescription className="mt-1">
+          {meal.description}
+        </CardDescription>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleIngredientsToggle}
+          className="mt-3 mx-auto w-fit bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+          {showIngredients ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          <span className="ml-1.5 text-xs font-medium tracking-wide">INGREDIENTS</span>
+        </Button>
+        
+        {showIngredients && (
+          <div className="mt-3 p-3 bg-gradient-to-r from-green-50/50 to-emerald-50/50 rounded-lg border border-green-100 animate-fade-in">
+            {loadingIngredients ? (
+              <div className="text-sm text-muted-foreground">Loading ingredients...</div>
+            ) : ingredients.length > 0 ? (
+              <div className="text-sm text-green-800">
+                <span className="font-medium text-xs uppercase tracking-wide text-green-600 block mb-1">Ingredients:</span>
+                {ingredients.map((ingredient, index) => (
+                  <span key={ingredient.id}>
+                    {ingredient.quantity}{ingredient.unit} {ingredient.name}
+                    {index < ingredients.length - 1 ? ", " : "."}
+                  </span>
+                ))}
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No ingredients available</div>
+            )}
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-4">
