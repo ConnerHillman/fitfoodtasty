@@ -73,7 +73,7 @@ const MealsManager = () => {
     const { data, error } = await supabase
       .from("meals")
       .select("*")
-      .order("sort_order", { ascending: true });
+      .order("name", { ascending: true });
 
     if (error) {
       toast({ title: "Error", description: "Failed to fetch meals", variant: "destructive" });
