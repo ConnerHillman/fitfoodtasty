@@ -1,31 +1,244 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const BusinessDashboard = () => {
-  const todayStats = {
-    orders: 45,
-    revenue: 892.50,
-    customers: 38,
-    avgOrder: 19.83
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const { data: ordersData, error } = await supabase
+        .from("orders")
+        .select(`
+          *,
+          order_items (
+            id,
+            meal_name,
+            quantity,
+            unit_price,
+            total_price
+          )
+        `)
+        .eq("status", "confirmed")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error("Error fetching orders:", error);
+        return;
+      }
+
+      setOrders(ordersData || []);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const recentOrders = [
-    { id: 'ORD-001', customer: 'John Smith', items: 3, total: 38.97, status: 'preparing', time: '2 min ago' },
-    { id: 'ORD-002', customer: 'Sarah Johnson', items: 2, total: 27.98, status: 'ready', time: '5 min ago' },
-    { id: 'ORD-003', customer: 'Mike Davis', items: 4, total: 51.96, status: 'delivered', time: '12 min ago' },
-    { id: 'ORD-004', customer: 'Emily Brown', items: 1, total: 12.99, status: 'pending', time: '15 min ago' },
-  ];
+  const printDeliveryLabels = () => {
+    if (orders.length === 0) {
+      toast({
+        title: "No Orders",
+        description: "There are no confirmed orders to print labels for.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const readyOrders = orders.filter(order => 
+      ['confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(order.status)
+    );
+
+    if (readyOrders.length === 0) {
+      toast({
+        title: "No Orders Ready",
+        description: "There are no orders ready for delivery labels.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create print window
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      toast({
+        title: "Print Blocked",
+        description: "Please allow popups to print delivery labels.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Delivery Labels</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: white;
+          }
+          .label { 
+            border: 2px solid #000; 
+            margin-bottom: 20px; 
+            padding: 15px; 
+            page-break-after: always;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          .label:last-child {
+            page-break-after: avoid;
+          }
+          .header { 
+            text-align: center; 
+            border-bottom: 1px solid #ccc; 
+            padding-bottom: 10px; 
+            margin-bottom: 15px;
+          }
+          .company-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2563eb;
+          }
+          .order-info { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 15px;
+          }
+          .order-number {
+            font-size: 18px;
+            font-weight: bold;
+          }
+          .customer-info {
+            margin-bottom: 15px;
+          }
+          .customer-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .address {
+            line-height: 1.4;
+          }
+          .items-section {
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+          }
+          .items-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+          }
+          .item {
+            margin-bottom: 3px;
+            font-size: 14px;
+          }
+          .status-badge {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+          }
+          @media print {
+            body { margin: 0; }
+            .label { 
+              page-break-after: always;
+              margin: 0;
+              border: 2px solid #000;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${readyOrders.map(order => `
+          <div class="label">
+            <div class="header">
+              <div class="company-name">Fit Food Tasty</div>
+              <div>Delivery Label</div>
+            </div>
+            
+            <div class="order-info">
+              <div>
+                <div class="order-number">Order #${order.id.slice(-8)}</div>
+                <div class="status-badge">${order.status.replace('_', ' ').toUpperCase()}</div>
+              </div>
+              <div style="text-align: right;">
+                <div><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString('en-GB')}</div>
+                <div><strong>Time:</strong> ${new Date(order.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+              </div>
+            </div>
+
+            <div class="customer-info">
+              <div class="customer-name">${order.customer_name || 'Customer'}</div>
+              <div class="address">
+                ${order.delivery_address || 'No delivery address provided'}
+              </div>
+              ${order.customer_email ? `<div style="margin-top: 5px;"><strong>Email:</strong> ${order.customer_email}</div>` : ''}
+            </div>
+
+            <div class="items-section">
+              <div class="items-title">Order Items (${order.order_items.length} item${order.order_items.length !== 1 ? 's' : ''}):</div>
+              ${order.order_items.map(item => `
+                <div class="item">${item.quantity}x ${item.meal_name}</div>
+              `).join('')}
+            </div>
+            
+            <div style="margin-top: 15px; text-align: right;">
+              <strong>Total: £${order.total_amount.toFixed(2)}</strong>
+            </div>
+          </div>
+        `).join('')}
+        
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(() => window.close(), 1000);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    toast({
+      title: "Printing Labels",
+      description: `Generated ${readyOrders.length} delivery labels for printing.`,
+    });
+  };
+
+  const todayStats = {
+    orders: orders.length,
+    revenue: orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0),
+    customers: new Set(orders.map(order => order.customer_email)).size,
+    avgOrder: orders.length > 0 ? orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0) / orders.length : 0
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'secondary';
+      case 'confirmed': return 'default';
       case 'preparing': return 'default';
       case 'ready': return 'destructive';
+      case 'out_for_delivery': return 'outline';
       case 'delivered': return 'outline';
+      case 'cancelled': return 'destructive';
       default: return 'secondary';
     }
   };
@@ -44,7 +257,7 @@ const BusinessDashboard = () => {
               Admin Panel
             </Button>
           </Link>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={fetchOrders}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -76,7 +289,7 @@ const BusinessDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${todayStats.revenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">£{todayStats.revenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-primary">+8%</span> from yesterday
             </p>
@@ -102,7 +315,7 @@ const BusinessDashboard = () => {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${todayStats.avgOrder.toFixed(2)}</div>
+            <div className="text-2xl font-bold">£{todayStats.avgOrder.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-primary">+2%</span> from yesterday
             </p>
@@ -122,21 +335,33 @@ const BusinessDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <div>
-                    <div className="font-medium">{order.id}</div>
-                    <div className="text-sm text-muted-foreground">{order.customer}</div>
-                    <div className="text-xs text-muted-foreground">{order.items} items • {order.time}</div>
-                  </div>
-                  <div className="text-right space-y-1">
-                    <div className="font-medium">${order.total.toFixed(2)}</div>
-                    <Badge variant={getStatusColor(order.status) as any} className="text-xs">
-                      {order.status}
-                    </Badge>
-                  </div>
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading orders...
                 </div>
-              ))}
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No orders found
+                </div>
+              ) : (
+                orders.slice(0, 4).map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                    <div>
+                      <div className="font-medium">#{order.id.slice(-8)}</div>
+                      <div className="text-sm text-muted-foreground">{order.customer_name || 'Customer'}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {order.order_items.length} items • {new Date(order.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <div className="font-medium">£{parseFloat(order.total_amount || 0).toFixed(2)}</div>
+                      <Badge variant={getStatusColor(order.status) as any} className="text-xs">
+                        {order.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
             <Button variant="outline" className="w-full mt-4">
               View All Orders
@@ -158,8 +383,8 @@ const BusinessDashboard = () => {
               <Package className="h-4 w-4 mr-2" />
               Generate Kitchen Report
             </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Calendar className="h-4 w-4 mr-2" />
+            <Button className="w-full justify-start" variant="outline" onClick={printDeliveryLabels}>
+              <Printer className="h-4 w-4 mr-2" />
               Print Delivery Labels
             </Button>
             <Button className="w-full justify-start" variant="outline">
