@@ -31,7 +31,6 @@ const businessProfileSchema = z.object({
 const deliverySettingsSchema = z.object({
   delivery_fee: z.string().min(0, 'Delivery fee must be 0 or greater'),
   max_delivery_distance: z.string().min(1),
-  delivery_time_slots: z.string(),
   minimum_order_value: z.string().min(0),
 });
 
@@ -70,7 +69,6 @@ const BusinessSettings = () => {
     defaultValues: {
       delivery_fee: '5.00',
       max_delivery_distance: '15',
-      delivery_time_slots: 'Morning (9-12), Afternoon (12-17), Evening (17-20)',
       minimum_order_value: '25.00',
     },
   });
@@ -239,7 +237,6 @@ const BusinessSettings = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
                   <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={deliveryForm.control}
@@ -254,121 +251,7 @@ const BusinessSettings = () => {
                         </FormItem>
                       )}
                     />
-                   </div>
-
-                  <FormField
-                    control={deliveryForm.control}
-                    name="delivery_time_slots"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Available Time Slots</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Morning (9-12), Afternoon (12-17), Evening (17-20)"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                    <FormField
-                      control={businessForm.control}
-                      name="operating_hours_end"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Closing Time</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
-
-                  <FormField
-                    control={businessForm.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Tell customers about your meal prep service..."
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button type="submit" disabled={loading}>
-                    Save Business Profile
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="delivery">
-          <Card>
-            <CardHeader>
-              <CardTitle>Delivery Settings</CardTitle>
-              <CardDescription>
-                Configure delivery zones, fees, and scheduling
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...deliveryForm}>
-                <form onSubmit={deliveryForm.handleSubmit((data) => saveSettings('delivery', data))} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={deliveryForm.control}
-                      name="delivery_fee"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Delivery Fee (£)</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.01" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={deliveryForm.control}
-                      name="minimum_order_value"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Minimum Order Value (£)</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.01" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={deliveryForm.control}
-                    name="delivery_time_slots"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Available Time Slots</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Morning (9-12), Afternoon (12-17), Evening (17-20)"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <Button type="submit" disabled={loading}>
                     Save Delivery Settings
