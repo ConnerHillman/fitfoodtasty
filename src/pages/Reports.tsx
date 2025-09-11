@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
-  Calendar, 
+  Calendar as CalendarIcon, 
   ChefHat, 
   Package2, 
   List, 
@@ -18,11 +21,15 @@ import {
   Calculator,
   Clipboard,
   Tags,
-  Upload
+  Upload,
+  FileSpreadsheet
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DataImporter from '@/components/DataImporter';
+import { format as formatDate, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from 'date-fns';
+import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
 
 const Reports = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -31,15 +38,21 @@ const Reports = () => {
   const [packages, setPackages] = useState<any[]>([]);
   const [ingredients, setIngredients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: startOfDay(new Date()),
+    to: endOfDay(new Date())
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchReportsData();
-  }, []);
+  }, [dateRange]);
 
   const fetchReportsData = async () => {
     try {
-      // Fetch all data needed for reports
+      // Fetch all data needed for reports with date filtering
       const [ordersRes, packageOrdersRes, mealsRes, packagesRes, ingredientsRes] = await Promise.all([
         supabase.from("orders").select(`
           *,
@@ -51,7 +64,9 @@ const Reports = () => {
             total_price,
             meal_id
           )
-        `).order("created_at", { ascending: false }),
+        `).gte('created_at', dateRange.from.toISOString())
+          .lte('created_at', dateRange.to.toISOString())
+          .order("created_at", { ascending: false }),
         
         supabase.from("package_orders").select(`
           *,
@@ -60,7 +75,9 @@ const Reports = () => {
             quantity,
             meal_id
           )
-        `).order("created_at", { ascending: false }),
+        `).gte('created_at', dateRange.from.toISOString())
+          .lte('created_at', dateRange.to.toISOString())
+          .order("created_at", { ascending: false }),
         
         supabase.from("meals").select("*").eq("is_active", true),
         supabase.from("packages").select("*").eq("is_active", true),
@@ -135,11 +152,84 @@ const Reports = () => {
 
   const [showFullReport, setShowFullReport] = useState(false);
 
-  const generateKitchenReport = () => {
+  const quickDateOptions = [
+    { label: 'Today', value: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }) },
+    { label: 'Yesterday', value: () => ({ 
+      from: startOfDay(new Date(Date.now() - 24 * 60 * 60 * 1000)), 
+      to: endOfDay(new Date(Date.now() - 24 * 60 * 60 * 1000)) 
+    }) },
+    { label: 'This month', value: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }) },
+    { label: 'Last month', value: () => ({ 
+      from: startOfMonth(subMonths(new Date(), 1)), 
+      to: endOfMonth(subMonths(new Date(), 1)) 
+    }) },
+    { label: 'This year', value: () => ({ from: startOfYear(new Date()), to: endOfYear(new Date()) }) }
+  ];
+
+  const generateKitchenReport = (exportFormat: 'csv' | 'xlsx' | 'print') => {
     const reportData = getItemProduction();
     
-    // Create CSV content
-    const csvContent = [
+    if (exportFormat === 'print') {
+      // Create HTML content for printing
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Kitchen Report - ${formatDate(dateRange.from, 'MMM d, yyyy')} to ${formatDate(dateRange.to, 'MMM d, yyyy')}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; font-weight: bold; }
+              tr:nth-child(even) { background-color: #f9f9f9; }
+              .date-range { color: #666; margin-bottom: 20px; }
+            </style>
+          </head>
+          <body>
+            <h1>Kitchen Production Report</h1>
+            <div class="date-range">${formatDate(dateRange.from, 'EEEE, MMMM d, yyyy')} - ${formatDate(dateRange.to, 'EEEE, MMMM d, yyyy')}</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Orders</th>
+                  <th>Size</th>
+                  <th>Title</th>
+                  <th>Variations</th>
+                  <th>Special Instructions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${reportData.map(item => `
+                  <tr>
+                    <td>${item.quantity}</td>
+                    <td>-</td>
+                    <td>${item.name}</td>
+                    <td>-</td>
+                    <td>${item.specialInstructions.join('; ') || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
+      
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
+      
+      toast({
+        title: "Report Opened",
+        description: "Kitchen report opened in new window for printing",
+      });
+      return;
+    }
+
+    const reportDataWithHeaders = [
       ['Orders', 'Size', 'Title', 'Variations', 'Special Instructions'],
       ...reportData.map(item => [
         item.quantity.toString(),
@@ -150,25 +240,34 @@ const Reports = () => {
       ])
     ];
     
-    // Convert to CSV string
-    const csvString = csvContent.map(row => 
-      row.map(field => `"${field}"`).join(',')
-    ).join('\n');
+    const dateStr = `${formatDate(dateRange.from, 'yyyy-MM-dd')}_to_${formatDate(dateRange.to, 'yyyy-MM-dd')}`;
     
-    // Download CSV
-    const blob = new Blob([csvString], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `kitchen-report-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    if (exportFormat === 'csv') {
+      // Generate CSV
+      const csvContent = reportDataWithHeaders.map(row => 
+        row.map(field => `"${field}"`).join(',')
+      ).join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kitchen-report-${dateStr}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } else if (exportFormat === 'xlsx') {
+      // Generate XLSX
+      const worksheet = XLSX.utils.aoa_to_sheet(reportDataWithHeaders);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Kitchen Report');
+      XLSX.writeFile(workbook, `kitchen-report-${dateStr}.xlsx`);
+    }
     
     toast({
       title: "Kitchen Report Generated",
-      description: "Your item production report has been downloaded",
+      description: `Your ${exportFormat.toUpperCase()} report has been downloaded`,
     });
   };
 
@@ -222,15 +321,57 @@ const Reports = () => {
           <p className="text-muted-foreground text-lg">Production planning and order management</p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="px-3 py-1">
-            <Calendar className="h-4 w-4 mr-2" />
-            {new Date().toLocaleDateString('en-GB', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Badge>
+          <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="px-4 py-2">
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d, yyyy')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Choose Date Range</DialogTitle>
+              </DialogHeader>
+              <div className="flex gap-6">
+                <div className="space-y-2">
+                  {quickDateOptions.map((option, index) => (
+                    <Button
+                      key={index}
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        const newRange = option.value();
+                        setDateRange(newRange);
+                        setShowDatePicker(false);
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex gap-4">
+                  <div>
+                    <p className="text-sm font-medium mb-2">From</p>
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.from}
+                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, from: startOfDay(date) }))}
+                      className="pointer-events-auto"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-2">To</p>
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.to}
+                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, to: endOfDay(date) }))}
+                      className="pointer-events-auto"
+                    />
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <DataImporter />
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
@@ -277,10 +418,55 @@ const Reports = () => {
                     <FileText className="h-4 w-4 mr-2" />
                     {showFullReport ? 'Hide' : 'View'} Full Report
                   </Button>
-                  <Button onClick={generateKitchenReport}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Generate Report
-                  </Button>
+                  
+                  <Dialog open={showExportOptions} onOpenChange={setShowExportOptions}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Download className="h-4 w-4 mr-2" />
+                        Generate Report
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Export Kitchen Report</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start"
+                          onClick={() => {
+                            generateKitchenReport('xlsx');
+                            setShowExportOptions(false);
+                          }}
+                        >
+                          <FileSpreadsheet className="h-4 w-4 mr-2" />
+                          Export as Excel (.XLSX)
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start"
+                          onClick={() => {
+                            generateKitchenReport('csv');
+                            setShowExportOptions(false);
+                          }}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Export as CSV
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start"
+                          onClick={() => {
+                            generateKitchenReport('print');
+                            setShowExportOptions(false);
+                          }}
+                        >
+                          <Printer className="h-4 w-4 mr-2" />
+                          Print Report
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
                 {showFullReport && (
