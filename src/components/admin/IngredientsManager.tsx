@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,6 +25,8 @@ interface Ingredient {
 
 const IngredientsManager = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [formData, setFormData] = useState({
@@ -43,6 +45,10 @@ const IngredientsManager = () => {
     fetchIngredients();
   }, []);
 
+  useEffect(() => {
+    applySearch();
+  }, [ingredients, searchQuery]);
+
   const fetchIngredients = async () => {
     const { data, error } = await supabase
       .from("ingredients")
@@ -54,6 +60,20 @@ const IngredientsManager = () => {
     } else {
       setIngredients(data || []);
     }
+  };
+
+  const applySearch = () => {
+    let filtered = ingredients;
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = ingredients.filter(ingredient =>
+        ingredient.name.toLowerCase().includes(query) ||
+        (ingredient.description && ingredient.description.toLowerCase().includes(query))
+      );
+    }
+    
+    setFilteredIngredients(filtered);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,7 +158,20 @@ const IngredientsManager = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Ingredients Database</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-semibold">Ingredients Database</h2>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search ingredients..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-[300px]"
+            />
+          </div>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
@@ -255,6 +288,14 @@ const IngredientsManager = () => {
 
       <Card>
         <CardContent className="p-0">
+          <div className="p-6 border-b">
+            <div className="flex justify-between items-center text-sm text-muted-foreground">
+              <span>Showing {(filteredIngredients.length > 0 || searchQuery) ? filteredIngredients.length : ingredients.length} of {ingredients.length} ingredients</span>
+              {searchQuery && (
+                <span>Search: "{searchQuery}"</span>
+              )}
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -268,7 +309,7 @@ const IngredientsManager = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ingredients.map((ingredient) => (
+              {((filteredIngredients.length > 0 || searchQuery) ? filteredIngredients : ingredients).map((ingredient) => (
                 <TableRow key={ingredient.id}>
                   <TableCell className="font-medium">
                     <div>
