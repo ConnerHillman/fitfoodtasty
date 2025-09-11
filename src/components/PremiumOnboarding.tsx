@@ -455,10 +455,13 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
         );
 
       case 3:
+        // Get unique meal counts from available packages, sorted ascending
+        const availableMealCounts = [...new Set(packages.map(pkg => pkg.meal_count))].sort((a, b) => a - b);
+        
         return (
           <div className="space-y-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[5, 7, 10, 14].map((count) => (
+              {availableMealCounts.map((count) => (
                 <Card 
                   key={count} 
                   className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
