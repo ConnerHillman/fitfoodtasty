@@ -369,7 +369,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
     <Card className="h-full hover:shadow-lg transition-shadow relative">
       {isNew && (
         <div className="absolute top-2 left-2 z-10">
-          <Badge className="bg-red-500 text-white shadow-md animate-pulse">
+          <Badge className="bg-green-500 text-white shadow-md animate-pulse">
             NEW
           </Badge>
         </div>
