@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Printer } from "lucide-react";
+import { Printer, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -11,6 +12,13 @@ interface Allergen {
   id: string;
   name: string;
   description?: string;
+}
+
+interface Ingredient {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
 }
 
 interface Meal {
@@ -40,6 +48,8 @@ interface MealCardProps {
 const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = false, isNew = false }: MealCardProps) => {
   const { toast } = useToast();
   const [allergens, setAllergens] = useState<Allergen[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [loadingIngredients, setLoadingIngredients] = useState(false);
 
   useEffect(() => {
     fetchMealAllergens();
@@ -59,6 +69,40 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
 
     if (!error && data) {
       setAllergens(data.map((ma: any) => ma.allergens).filter(Boolean));
+    }
+  };
+
+  const fetchIngredients = async () => {
+    if (ingredients.length > 0 || loadingIngredients) return;
+    
+    setLoadingIngredients(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from("meal_ingredients")
+        .select(`
+          quantity,
+          unit,
+          ingredients (
+            id,
+            name
+          )
+        `)
+        .eq("meal_id", meal.id);
+
+      if (!error && data) {
+        const ingredientsList: Ingredient[] = data.map((mi: any) => ({
+          id: mi.ingredients.id,
+          name: mi.ingredients.name,
+          quantity: mi.quantity,
+          unit: mi.unit || 'g'
+        }));
+        setIngredients(ingredientsList);
+      }
+    } catch (error) {
+      console.error("Error fetching ingredients:", error);
+    } finally {
+      setLoadingIngredients(false);
     }
   };
 
@@ -392,6 +436,38 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
               {meal.description}
             </CardDescription>
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={fetchIngredients}
+                className="h-8 px-2"
+              >
+                <Info size={14} />
+                <span className="sr-only">Ingredients</span>
+                <span className="ml-1 hidden sm:inline">Ingredients</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-4 bg-background border border-border shadow-lg z-50">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Ingredients</h4>
+                {loadingIngredients ? (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                ) : ingredients.length > 0 ? (
+                  <div className="space-y-1">
+                    {ingredients.map((ingredient) => (
+                      <div key={ingredient.id} className="text-sm">
+                        <span className="font-medium">{ingredient.quantity}{ingredient.unit}</span> {ingredient.name}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">No ingredients available</div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </CardHeader>
 
