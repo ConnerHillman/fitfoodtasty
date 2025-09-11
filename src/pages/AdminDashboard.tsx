@@ -3,8 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import IngredientsManager from "@/components/admin/IngredientsManager";
 import MealsManager from "@/components/admin/MealsManager";
+import CategoriesManager from "@/components/admin/CategoriesManager";
 import PackagesManager from "@/components/admin/PackagesManager";
-import { ChefHat, Package, ShoppingBag, Upload } from "lucide-react";
+import { ChefHat, Package, ShoppingBag, Upload, Tag } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
 const AdminDashboard = () => {
   return (
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="ingredients" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="ingredients" className="flex items-center space-x-2">
             <Package className="h-4 w-4" />
             <span>Ingredients</span>
@@ -26,6 +27,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="meals" className="flex items-center space-x-2">
             <ChefHat className="h-4 w-4" />
             <span>Meals</span>
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="flex items-center space-x-2">
+            <Tag className="h-4 w-4" />
+            <span>Categories</span>
           </TabsTrigger>
           <TabsTrigger value="packages" className="flex items-center space-x-2">
             <ShoppingBag className="h-4 w-4" />
@@ -61,6 +66,20 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <MealsManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="categories">
+          <Card>
+            <CardHeader>
+              <CardTitle>Categories Manager</CardTitle>
+              <CardDescription>
+                Create and manage meal categories to organize your menu
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CategoriesManager />
             </CardContent>
           </Card>
         </TabsContent>

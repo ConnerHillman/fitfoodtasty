@@ -14,6 +14,12 @@ import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
 import MealFormWithIngredients from "./MealFormWithIngredients";
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface Meal {
   id: string;
   name: string;
@@ -32,6 +38,7 @@ interface Meal {
 
 const MealsManager = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -53,6 +60,7 @@ const MealsManager = () => {
 
   useEffect(() => {
     fetchMeals();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -69,6 +77,20 @@ const MealsManager = () => {
       toast({ title: "Error", description: "Failed to fetch meals", variant: "destructive" });
     } else {
       setMeals(data || []);
+    }
+  };
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, color")
+      .eq("is_active", true)
+      .order("sort_order");
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to fetch categories", variant: "destructive" });
+    } else {
+      setCategories(data || []);
     }
   };
 
@@ -497,14 +519,9 @@ const MealsManager = () => {
     setEditingMeal(null);
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'breakfast': return 'bg-orange-100 text-orange-800';
-      case 'lunch': return 'bg-blue-100 text-blue-800';
-      case 'dinner': return 'bg-purple-100 text-purple-800';
-      case 'snack': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getCategoryColor = (categoryName: string) => {
+    const category = categories.find(c => c.name === categoryName);
+    return category ? category.color : '#3b82f6';
   };
 
   return (
@@ -584,20 +601,27 @@ const MealsManager = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="breakfast">Breakfast</SelectItem>
-                        <SelectItem value="lunch">Lunch</SelectItem>
-                        <SelectItem value="dinner">Dinner</SelectItem>
-                        <SelectItem value="snack">Snack</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: category.color }}
+                            />
+                            {category.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   </div>
 
                   <div className="space-y-2">
@@ -723,7 +747,7 @@ const MealsManager = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getCategoryColor(meal.category)}>
+                    <Badge style={{ backgroundColor: getCategoryColor(meal.category), color: '#fff' }}>
                       {meal.category}
                     </Badge>
                   </TableCell>

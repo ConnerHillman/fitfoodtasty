@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,12 @@ interface Ingredient {
   default_unit: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface SelectedIngredient {
   id: string;
   ingredient_id: string;
@@ -38,6 +44,7 @@ interface MealFormWithIngredientsProps {
 
 const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredientsProps) => {
   const [currentTab, setCurrentTab] = useState("details");
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -59,6 +66,28 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, color")
+      .eq("is_active", true)
+      .order("sort_order");
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to fetch categories", variant: "destructive" });
+    } else {
+      setCategories(data || []);
+      // Set default category if available
+      if (data && data.length > 0 && !formData.category) {
+        setFormData(prev => ({ ...prev, category: data[0].name }));
+      }
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -201,10 +230,17 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="breakfast">Breakfast</SelectItem>
-                      <SelectItem value="lunch">Lunch</SelectItem>
-                      <SelectItem value="dinner">Dinner</SelectItem>
-                      <SelectItem value="snack">Snack</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: category.color }}
+                            />
+                            {category.name}
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
