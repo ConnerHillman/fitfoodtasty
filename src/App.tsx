@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import Menu from "./pages/Menu";
 import About from "./pages/About";
+import Packages from "./pages/Packages";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import Reports from "./pages/Reports";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/menu" element={<Layout><Menu /></Layout>} />
+            <Route path="/packages" element={<Layout><Packages /></Layout>} />
             <Route path="/about" element={<Layout><About /></Layout>} />
             <Route path="/cart" element={<Layout><Cart /></Layout>} />
             <Route path="/orders" element={<RequireAuth><Layout><Orders /></Layout></RequireAuth>} />
