@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import IngredientsManager from "@/components/admin/IngredientsManager";
 import MealsManager from "@/components/admin/MealsManager";
 import PackagesManager from "@/components/admin/PackagesManager";
-import { ChefHat, Package, ShoppingBag } from "lucide-react";
-
+import { ChefHat, Package, ShoppingBag, Upload } from "lucide-react";
+import DataImporter from "@/components/DataImporter";
 const AdminDashboard = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -18,7 +18,7 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="ingredients" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="ingredients" className="flex items-center space-x-2">
             <Package className="h-4 w-4" />
             <span>Ingredients</span>
@@ -30,6 +30,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="packages" className="flex items-center space-x-2">
             <ShoppingBag className="h-4 w-4" />
             <span>Packages</span>
+          </TabsTrigger>
+          <TabsTrigger value="import" className="flex items-center space-x-2">
+            <Upload className="h-4 w-4" />
+            <span>Import</span>
           </TabsTrigger>
         </TabsList>
 
@@ -71,6 +75,20 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <PackagesManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="import">
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Importer</CardTitle>
+              <CardDescription>
+                Import meals, ingredients, and meal recipes (links) from GoPrep data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataImporter />
             </CardContent>
           </Card>
         </TabsContent>
