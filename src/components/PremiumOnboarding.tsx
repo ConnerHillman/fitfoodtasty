@@ -297,55 +297,86 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
       case 1:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">How active are you?</h3>
-              <RadioGroup value={profile.activityLevel} onValueChange={(value) => updateProfile("activityLevel", value)}>
-                <div className="space-y-3">
-                  {[
-                    { value: "low", label: "Light Activity", desc: "Desk job, minimal exercise" },
-                    { value: "moderate", label: "Moderate Activity", desc: "Regular workouts 3-4 times per week" },
-                    { value: "high", label: "High Activity", desc: "Daily training, very active lifestyle" },
-                    { value: "athlete", label: "Professional Athlete", desc: "Elite training regimen" }
-                  ].map((option) => (
-                    <Card key={option.value} className={getCardClassName(option.value)}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={option.value} />
-                          <Label htmlFor={option.value} className="cursor-pointer flex-1">
-                            <div>
-                              <div className="font-medium">{option.label}</div>
-                              <div className="text-sm text-gray-500">{option.desc}</div>
-                            </div>
-                          </Label>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </RadioGroup>
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">How active are you?</h3>
+              <p className="text-gray-600 text-lg">Tell us about your lifestyle so we can tailor your nutrition</p>
             </div>
+            <RadioGroup value={profile.activityLevel} onValueChange={(value) => updateProfile("activityLevel", value)}>
+              <div className="space-y-4">
+                {[
+                  { value: "low", label: "Light Activity", desc: "Desk job, minimal exercise", gradient: "from-blue-100/80 via-indigo-100/80 to-purple-100/80", hoverGradient: "group-hover:from-blue-200/80 group-hover:via-indigo-200/80 group-hover:to-purple-200/80" },
+                  { value: "moderate", label: "Moderate Activity", desc: "Regular workouts 3-4 times per week", gradient: "from-green-100/80 via-emerald-100/80 to-teal-100/80", hoverGradient: "group-hover:from-green-200/80 group-hover:via-emerald-200/80 group-hover:to-teal-200/80" },
+                  { value: "high", label: "High Activity", desc: "Daily training, very active lifestyle", gradient: "from-orange-100/80 via-amber-100/80 to-yellow-100/80", hoverGradient: "group-hover:from-orange-200/80 group-hover:via-amber-200/80 group-hover:to-yellow-200/80" },
+                  { value: "athlete", label: "Professional Athlete", desc: "Elite training regimen", gradient: "from-red-100/80 via-pink-100/80 to-rose-100/80", hoverGradient: "group-hover:from-red-200/80 group-hover:via-pink-200/80 group-hover:to-rose-200/80" }
+                ].map((option) => (
+                  <Card key={option.value} className={getCardClassName(option.value)}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                    <CardContent className="p-6 relative z-10">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value={option.value} id={option.value} className="sr-only" />
+                        <Label htmlFor={option.value} className="cursor-pointer flex-1">
+                          <div className="flex items-center space-x-4">
+                            <div className={`relative p-3 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
+                              isOptionSelectedAndTransitioning(option.value) 
+                                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
+                                : `bg-gradient-to-br ${option.gradient} ${option.hoverGradient}`
+                            }`}>
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                              <Activity className={getIconClassName(option.value)} size={24} />
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-bold text-lg text-gray-900 mb-1">{option.label}</div>
+                              <div className="text-gray-600 leading-relaxed">{option.desc}</div>
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </RadioGroup>
           </div>
         );
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Any dietary restrictions?</h3>
-              <p className="text-gray-600 mb-6">Select any that apply, or skip if none</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo"].map((restriction) => (
-                  <div key={restriction} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={restriction}
-                      checked={profile.dietaryRestrictions.includes(restriction)}
-                      onCheckedChange={() => toggleArrayValue("dietaryRestrictions", restriction)}
-                    />
-                    <Label htmlFor={restriction} className="text-sm">{restriction}</Label>
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-3">Dietary Preferences</h3>
+              <p className="text-gray-600 text-lg">Any dietary restrictions we should know about? Select all that apply, or skip if none</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo"].map((restriction) => (
+                <Card 
+                  key={restriction}
+                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
+                    profile.dietaryRestrictions.includes(restriction) 
+                      ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
+                      : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
+                  }`}
+                  onClick={() => toggleArrayValue("dietaryRestrictions", restriction)}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                  <CardContent className="p-6 text-center relative z-10">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <Checkbox
+                        id={restriction}
+                        checked={profile.dietaryRestrictions.includes(restriction)}
+                        onCheckedChange={() => toggleArrayValue("dietaryRestrictions", restriction)}
+                        className="sr-only"
+                      />
+                      <Heart className={`transition-all duration-500 ${
+                        profile.dietaryRestrictions.includes(restriction) 
+                          ? 'text-emerald-600 scale-110' 
+                          : 'text-gray-400 group-hover:text-emerald-500'
+                      }`} size={20} />
+                    </div>
+                    <Label htmlFor={restriction} className="font-medium text-gray-900 cursor-pointer">{restriction}</Label>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         );
