@@ -207,7 +207,9 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
           <div class="label">
             <div class="header">
               <div class="meal-name">${meal.name}</div>
-              <div class="company-name">Fit Food Tasty</div>
+              <div style="display: flex; align-items: center; justify-content: center; margin-top: 5px;">
+                <img src="/lovable-uploads/10536b16-bcbb-425b-ad58-6c366dfcc3a9.png" alt="Fit Food Tasty" style="height: 24px; width: auto;" />
+              </div>
             </div>
 
             <div class="section">
