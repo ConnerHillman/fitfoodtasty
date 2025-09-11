@@ -17,10 +17,12 @@ import {
   MapPin,
   Calculator,
   Clipboard,
-  Tags
+  Tags,
+  Upload
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import DataImporter from '@/components/DataImporter';
 
 const Reports = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -159,6 +161,7 @@ const Reports = () => {
               day: 'numeric' 
             })}
           </Badge>
+          <DataImporter />
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export All
