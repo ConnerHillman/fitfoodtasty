@@ -261,8 +261,8 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto pointer-events-auto">
-        <DialogHeader>
-          <DialogTitle className="text-center text-3xl font-inter font-semibold">
+        <DialogHeader className="mb-8">
+          <DialogTitle className="text-center text-6xl font-inter font-bold bg-gradient-to-r from-primary via-purple-600 to-blue-600 bg-clip-text text-transparent animate-fade-in tracking-tight leading-tight">
             {pkg ? `Choose ${pkg.meal_count} meals` : 'Choose Meals'}
           </DialogTitle>
         </DialogHeader>
