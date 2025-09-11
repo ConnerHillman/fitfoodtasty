@@ -43,6 +43,21 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
 
   const printMealLabel = async () => {
     try {
+      // Fetch logo and convert to base64 in main window context
+      let logoBase64 = '';
+      try {
+        const logoResponse = await fetch('/lovable-uploads/10536b16-bcbb-425b-ad58-6c366dfcc3a9.png');
+        if (logoResponse.ok) {
+          const logoBlob = await logoResponse.blob();
+          logoBase64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(logoBlob);
+          });
+        }
+      } catch (logoError) {
+        console.log("Logo fetch failed, using text fallback");
+      }
 
       // Fetch ingredients for this meal
       const { data: mealIngredients, error } = await supabase
@@ -208,7 +223,13 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
           <div class="label">
             <div class="header">
               <div class="meal-name">${meal.name}</div>
-              <div class="company-name">Fit Food Tasty</div>
+              ${logoBase64 ? `
+                <div style="display: flex; align-items: center; justify-content: center; margin-top: 5px;">
+                  <img src="${logoBase64}" alt="Fit Food Tasty" style="height: 24px; width: auto;" />
+                </div>
+              ` : `
+                <div class="company-name">Fit Food Tasty</div>
+              `}
             </div>
 
             <div class="section">
