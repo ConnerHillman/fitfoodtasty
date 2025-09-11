@@ -167,7 +167,16 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      onComplete(profile);
+      // Redirect to menu with selected package for meal selection
+      const selectedPackage = packages.find(p => p.id === profile.selectedPackageId);
+      if (selectedPackage) {
+        // Store the onboarding data in localStorage for the menu to use
+        localStorage.setItem('onboardingProfile', JSON.stringify(profile));
+        localStorage.setItem('selectedPackage', JSON.stringify(selectedPackage));
+        window.location.href = '/menu';
+      } else {
+        onComplete(profile);
+      }
     }
   };
 
