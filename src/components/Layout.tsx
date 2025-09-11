@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Calendar, BarChart3, Settings, ChefHat, Package } from 'lucide-react';
+import { ShoppingCart, Calendar, BarChart3, Settings, ChefHat, Package, Info } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
 interface LayoutProps {
@@ -15,6 +15,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const customerNavItems = [
     { to: '/', label: 'Menu', icon: ChefHat },
+    { to: '/about', label: 'About Us', icon: Info },
     { to: '/orders', label: 'My Orders', icon: Package },
     { to: '/subscription', label: 'Subscription', icon: Calendar },
   ];
