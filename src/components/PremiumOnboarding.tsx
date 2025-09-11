@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Zap, Users } from "lucide-react";
+import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Zap, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingStep {
@@ -79,6 +79,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const [profile, setProfile] = useState<UserProfile>({
     goal: "",
     activityLevel: "",
@@ -217,6 +218,51 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       pkg.meal_count === profile.mealCount && 
       pkg.name.toLowerCase().includes(mealSizeKeyword)
     ) || packages.find(pkg => pkg.meal_count === profile.mealCount);
+  };
+
+  // Get similar packages (same type, different meal counts)
+  const getSimilarPackages = () => {
+    let mealSizeKeyword = "";
+    switch (profile.goal) {
+      case "weight-loss":
+        mealSizeKeyword = "lowcal";
+        break;
+      case "convenience":
+      case "performance":
+        mealSizeKeyword = "regular";
+        break;
+      case "muscle-gain":
+        mealSizeKeyword = "big";
+        break;
+      default:
+        mealSizeKeyword = "regular";
+    }
+
+    // Filter packages by the same meal type and sort by meal count
+    return packages
+      .filter(pkg => pkg.name.toLowerCase().includes(mealSizeKeyword))
+      .sort((a, b) => a.meal_count - b.meal_count);
+  };
+
+  // Set initial carousel index when packages are loaded or goal changes
+  useEffect(() => {
+    const similarPackages = getSimilarPackages();
+    const recommendedPackage = getRecommendedPackage();
+    if (recommendedPackage && similarPackages.length > 0) {
+      const index = similarPackages.findIndex(pkg => pkg.id === recommendedPackage.id);
+      setCarouselIndex(index >= 0 ? index : 0);
+    }
+  }, [packages, profile.goal, profile.mealCount]);
+
+  const navigateCarousel = (direction: 'prev' | 'next') => {
+    const similarPackages = getSimilarPackages();
+    if (similarPackages.length === 0) return;
+
+    if (direction === 'prev') {
+      setCarouselIndex(prev => prev === 0 ? similarPackages.length - 1 : prev - 1);
+    } else {
+      setCarouselIndex(prev => prev === similarPackages.length - 1 ? 0 : prev + 1);
+    }
   };
 
   const renderStepContent = () => {
@@ -454,53 +500,146 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
 
       case 4:
         const recommendedPackage = getRecommendedPackage();
+        const similarPackages = getSimilarPackages();
+        const currentPackage = similarPackages[carouselIndex] || recommendedPackage;
+        
         return (
           <div className="space-y-8">
-            
-            {recommendedPackage ? (
+            {currentPackage ? (
               <div className="space-y-8">
-                {/* Recommended Package Card */}
-                <Card className="group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 shadow-2xl shadow-emerald-500/40 max-w-md mx-auto">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                  <div className="absolute top-4 right-4 z-20">
-                    <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg">
-                      Recommended
-                    </Badge>
-                  </div>
-                  <CardContent className="p-8 relative z-10">
-                    <div className="text-center">
-                      <div className="relative mx-auto mb-6 w-20 h-20 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <UtensilsCrossed className="text-white scale-110 drop-shadow-xl" size={32} />
-                        </div>
-                      </div>
-                      
-                      <div className="font-bold text-2xl text-gray-900 mb-2">{recommendedPackage.name}</div>
-                      <div className="text-gray-600 mb-4 leading-relaxed">{recommendedPackage.description}</div>
-                      
-                      <div className="space-y-3 mb-6">
-                        <div className="flex justify-center items-center space-x-2">
-                          <Badge variant="secondary" className="bg-emerald-100/80 text-emerald-800 border-emerald-200/50 backdrop-blur-sm">
-                            {recommendedPackage.meal_count} meals
-                          </Badge>
-                        </div>
-                        
-                        <div className="text-3xl font-bold text-gray-900">
-                          £{recommendedPackage.price}
-                          <span className="text-lg font-normal text-gray-600">/week</span>
-                        </div>
-                      </div>
+                {/* 3D Package Carousel */}
+                <div className="relative">
+                  <div className="flex items-center justify-center">
+                    {/* Left Arrow */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigateCarousel('prev')}
+                      className="absolute left-4 z-20 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full w-10 h-10 p-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                    >
+                      <ChevronLeft size={20} className="text-gray-700" />
+                    </Button>
 
-                      <Button 
-                        onClick={() => updateProfile("selectedPackageId", recommendedPackage.id)}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                      >
-                        Select This Package
-                      </Button>
+                    {/* Package Cards Container */}
+                    <div className="relative w-full max-w-6xl h-80 flex items-center justify-center perspective-1000">
+                      {similarPackages.map((pkg, index) => {
+                        const isCenter = index === carouselIndex;
+                        const isLeft = index === (carouselIndex - 1 + similarPackages.length) % similarPackages.length;
+                        const isRight = index === (carouselIndex + 1) % similarPackages.length;
+                        const isVisible = isCenter || isLeft || isRight;
+                        
+                        if (!isVisible) return null;
+
+                        let transform = "";
+                        let zIndex = 1;
+                        let opacity = 0.4;
+                        let scale = 0.8;
+
+                        if (isCenter) {
+                          transform = "translateX(0) rotateY(0deg) translateZ(0px)";
+                          zIndex = 10;
+                          opacity = 1;
+                          scale = 1;
+                        } else if (isLeft) {
+                          transform = "translateX(-120px) rotateY(25deg) translateZ(-50px)";
+                          zIndex = 5;
+                          opacity = 0.6;
+                          scale = 0.85;
+                        } else if (isRight) {
+                          transform = "translateX(120px) rotateY(-25deg) translateZ(-50px)";
+                          zIndex = 5;
+                          opacity = 0.6;
+                          scale = 0.85;
+                        }
+
+                        return (
+                          <Card 
+                            key={pkg.id}
+                            className={`absolute cursor-pointer transition-all duration-700 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden ${
+                              isCenter 
+                                ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 shadow-2xl shadow-emerald-500/40' 
+                                : 'bg-white/70 hover:bg-white/80 shadow-lg hover:shadow-xl'
+                            }`}
+                            style={{
+                              transform,
+                              zIndex,
+                              opacity,
+                              scale,
+                              width: '280px'
+                            }}
+                            onClick={() => {
+                              const clickedIndex = similarPackages.findIndex(p => p.id === pkg.id);
+                              setCarouselIndex(clickedIndex);
+                            }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                            {isCenter && (
+                              <div className="absolute top-4 right-4 z-20">
+                                <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg">
+                                  {pkg.id === recommendedPackage?.id ? 'Recommended' : 'Selected'}
+                                </Badge>
+                              </div>
+                            )}
+                            <CardContent className="p-6 relative z-10">
+                              <div className="text-center">
+                                <div className={`relative mx-auto mb-4 w-16 h-16 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
+                                  isCenter
+                                    ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
+                                    : 'bg-gradient-to-br from-emerald-100/80 via-green-100/80 to-teal-100/80'
+                                }`}>
+                                  <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <UtensilsCrossed className={`transition-all duration-500 ${
+                                      isCenter 
+                                        ? 'text-white scale-110 drop-shadow-xl' 
+                                        : 'text-emerald-600'
+                                    }`} size={24} />
+                                  </div>
+                                </div>
+                                
+                                <div className="font-bold text-lg text-gray-900 mb-2">{pkg.name}</div>
+                                <div className="text-gray-600 mb-3 text-sm leading-relaxed">{pkg.description}</div>
+                                
+                                <div className="space-y-2">
+                                  <div className="flex justify-center items-center space-x-2">
+                                    <Badge variant="secondary" className="bg-emerald-100/80 text-emerald-800 border-emerald-200/50 backdrop-blur-sm text-xs">
+                                      {pkg.meal_count} meals
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="text-2xl font-bold text-gray-900">
+                                    £{pkg.price}
+                                    <span className="text-sm font-normal text-gray-600">/week</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
-                  </CardContent>
-                </Card>
+
+                    {/* Right Arrow */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigateCarousel('next')}
+                      className="absolute right-4 z-20 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full w-10 h-10 p-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                    >
+                      <ChevronRight size={20} className="text-gray-700" />
+                    </Button>
+                  </div>
+
+                  {/* Selection Button */}
+                  <div className="flex justify-center mt-8">
+                    <Button 
+                      onClick={() => updateProfile("selectedPackageId", currentPackage.id)}
+                      className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3"
+                    >
+                      Select This Package
+                    </Button>
+                  </div>
+                </div>
 
                 {/* Delivery Frequency Selection */}
                 {profile.selectedPackageId && (
