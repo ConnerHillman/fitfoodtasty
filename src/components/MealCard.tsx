@@ -433,8 +433,8 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
             
             {/* Display allergens */}
             {allergens.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <h4 className="font-semibold text-sm mb-2 text-red-800">⚠️ Allergens</h4>
+              <div className="rounded-lg p-3">
+                <h4 className="font-semibold text-sm mb-2">Allergens</h4>
                 <div className="flex flex-wrap gap-1">
                   {allergens.map((allergen) => (
                     <Badge key={allergen.id} variant="destructive" className="text-xs">
