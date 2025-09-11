@@ -130,6 +130,24 @@ const Cart = () => {
                   <span>£{(getTotalPrice() + 2.99).toFixed(2)}</span>
                 </div>
               </div>
+              
+              {/* Account Creation CTA */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-semibold text-green-800 mb-1">Save 20% on your first order!</h4>
+                    <p className="text-sm text-green-700">Create a free account to unlock exclusive savings</p>
+                  </div>
+                  <Button 
+                    asChild
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-full"
+                  >
+                    <Link to="/auth">Create Account</Link>
+                  </Button>
+                </div>
+              </div>
+              
               <Button
                 className="w-full"
                 size="lg"

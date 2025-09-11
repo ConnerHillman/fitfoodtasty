@@ -79,20 +79,40 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* CTA */}
-            <div className="space-y-4">
-              <Button 
-                size="lg"
-                onClick={handleGetStarted}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 text-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200"
-              >
-                GET STARTED
-              </Button>
-              
-              <p className="text-gray-300 text-sm">
-                No lock-in contract • Cancel anytime • Free delivery
-              </p>
-            </div>
+             {/* CTA */}
+             <div className="space-y-4">
+               <Button 
+                 size="lg"
+                 onClick={handleGetStarted}
+                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 text-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200"
+               >
+                 ✨ Create Your Perfect Plan
+               </Button>
+               
+               <div className="flex items-center space-x-4">
+                 <Button 
+                   asChild
+                   variant="outline" 
+                   size="lg"
+                   className="border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold px-6 py-3 rounded-full backdrop-blur-sm"
+                 >
+                   <Link to="/auth">Create Free Account</Link>
+                 </Button>
+                 
+                 <Button 
+                   asChild
+                   variant="ghost" 
+                   size="lg"
+                   className="text-white hover:bg-white/20 font-medium px-6 py-3 rounded-full"
+                 >
+                   <Link to="/menu">Browse Menu</Link>
+                 </Button>
+               </div>
+               
+               <p className="text-gray-300 text-sm">
+                 No lock-in contract • Cancel anytime • Free delivery
+               </p>
+             </div>
           </div>
 
           {/* Right Content - Social Proof */}

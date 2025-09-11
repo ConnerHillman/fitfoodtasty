@@ -102,6 +102,14 @@ const Header = () => {
             
             <Button 
               asChild
+              variant="outline"
+              className="hidden md:flex border-green-500 text-green-600 hover:bg-green-50 font-bold px-4 py-2 rounded-full transition-all duration-200"
+            >
+              <Link to="/auth">CREATE ACCOUNT</Link>
+            </Button>
+            
+            <Button 
+              asChild
               className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
               <Link to="/menu">ORDER NOW</Link>
