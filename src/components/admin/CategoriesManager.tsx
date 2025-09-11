@@ -5,11 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Search, Palette, ArrowUp, ArrowDown, Users, ChefHat } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Palette, ArrowUp, ArrowDown, Users, ChefHat, Grid, List, MoreVertical, Eye, EyeOff } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,6 +34,8 @@ const CategoriesManager = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showInactive, setShowInactive] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMealAssignmentOpen, setIsMealAssignmentOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -42,7 +43,7 @@ const CategoriesManager = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    color: "#3b82f6",
+    color: "#6366f1",
     is_active: true
   });
   const { toast } = useToast();
@@ -53,8 +54,8 @@ const CategoriesManager = () => {
   }, []);
 
   useEffect(() => {
-    applySearch();
-  }, [categories, searchQuery]);
+    applyFilters();
+  }, [categories, searchQuery, showInactive]);
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
@@ -83,12 +84,18 @@ const CategoriesManager = () => {
     }
   };
 
-  const applySearch = () => {
+  const applyFilters = () => {
     let filtered = categories;
     
+    // Apply active/inactive filter
+    if (!showInactive) {
+      filtered = filtered.filter(category => category.is_active);
+    }
+    
+    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = categories.filter(category =>
+      filtered = filtered.filter(category =>
         category.name.toLowerCase().includes(query) ||
         (category.description && category.description.toLowerCase().includes(query))
       );
@@ -127,7 +134,7 @@ const CategoriesManager = () => {
       setIsDialogOpen(false);
       resetForm();
       fetchCategories();
-      fetchMeals(); // Refresh meals to update category assignments
+      fetchMeals();
     }
   };
 
@@ -143,11 +150,13 @@ const CategoriesManager = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const categoryToDelete = categories.find(c => c.id === id);
+    
     // Check if any meals use this category
     const { data: mealsWithCategory, error: mealsError } = await supabase
       .from("meals")
       .select("id, name")
-      .eq("category", categories.find(c => c.id === id)?.name);
+      .eq("category", categoryToDelete?.name);
 
     if (mealsError) {
       toast({ title: "Error", description: "Failed to check for meals using this category", variant: "destructive" });
@@ -252,35 +261,120 @@ const CategoriesManager = () => {
     setFormData({
       name: "",
       description: "",
-      color: "#3b82f6",
+      color: "#6366f1",
       is_active: true
     });
     setEditingCategory(null);
   };
 
-  const displayedCategories = (filteredCategories.length > 0 || searchQuery) ? filteredCategories : categories;
+  const displayedCategories = (filteredCategories.length > 0 || searchQuery || !showInactive) ? filteredCategories : categories;
+
+  const CategoryCard = ({ category }: { category: Category }) => (
+    <Card className={`group transition-all duration-200 hover:shadow-md hover:scale-105 border-2 ${!category.is_active ? 'opacity-60' : ''}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <div 
+              className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+              style={{ backgroundColor: category.color }}
+            />
+            <div>
+              <CardTitle className="text-lg font-semibold capitalize">
+                {category.name}
+              </CardTitle>
+              {!category.is_active && (
+                <Badge variant="secondary" className="mt-1 text-xs">
+                  Inactive
+                </Badge>
+              )}
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleEdit(category)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openMealAssignment(category)}>
+                <ChefHat className="h-4 w-4 mr-2" />
+                Manage Meals
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toggleActive(category)}>
+                {category.is_active ? (
+                  <>
+                    <EyeOff className="h-4 w-4 mr-2" />
+                    Deactivate
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Activate
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleDelete(category.id)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+          {category.description || "No description provided"}
+        </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="text-xs">
+              {getMealsInCategory(category.name).length} meals
+            </Badge>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => moveCategory(category, 'up')}
+              disabled={categories.findIndex(c => c.id === category.id) === 0}
+              className="h-8 w-8 p-0"
+            >
+              <ArrowUp className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => moveCategory(category, 'down')}
+              disabled={categories.findIndex(c => c.id === category.id) === categories.length - 1}
+              className="h-8 w-8 p-0"
+            >
+              <ArrowDown className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold">Categories Manager</h2>
-          
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search categories..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-[300px]"
-            />
-          </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Categories</h2>
+          <p className="text-muted-foreground">Organize your menu items into categories</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm}>
+            <Button onClick={resetForm} className="animate-fade-in">
               <Plus className="h-4 w-4 mr-2" />
               Add Category
             </Button>
@@ -288,15 +382,15 @@ const CategoriesManager = () => {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {editingCategory ? "Edit Category" : "Add New Category"}
+                {editingCategory ? "Edit Category" : "Create New Category"}
               </DialogTitle>
               <DialogDescription>
-                Create or edit meal categories to organize your menu items.
+                {editingCategory ? "Update category details" : "Add a new category to organize your menu items"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Category Name</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -313,23 +407,29 @@ const CategoriesManager = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe this category..."
-                  rows={2}
+                  rows={3}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="color">Color</Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="color">Brand Color</Label>
+                <div className="flex items-center gap-3">
                   <Input
                     id="color"
                     type="color"
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-12 h-10 p-1 rounded"
+                    className="w-12 h-10 p-1 rounded border"
                   />
-                  <Badge style={{ backgroundColor: formData.color, color: '#fff' }}>
-                    {formData.name || 'Category Preview'}
-                  </Badge>
+                  <div className="flex items-center space-x-2 flex-1">
+                    <div 
+                      className="w-4 h-4 rounded-full border"
+                      style={{ backgroundColor: formData.color }}
+                    />
+                    <span className="text-sm font-medium capitalize">
+                      {formData.name || 'Category Preview'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -339,15 +439,15 @@ const CategoriesManager = () => {
                   checked={formData.is_active}
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
-                <Label htmlFor="is_active">Active</Label>
+                <Label htmlFor="is_active">Active Category</Label>
               </div>
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingCategory ? "Update" : "Create"} Category
+                  {editingCategory ? "Update" : "Create"}
                 </Button>
               </div>
             </form>
@@ -355,128 +455,185 @@ const CategoriesManager = () => {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="p-6 border-b">
-            <div className="flex justify-between items-center text-sm text-muted-foreground">
-              <span>Showing {displayedCategories.length} of {categories.length} categories</span>
-              {searchQuery && (
-                <span>Search: "{searchQuery}"</span>
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search categories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-[280px]"
+            />
+          </div>
+
+          {/* Show inactive toggle */}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-inactive"
+              checked={showInactive}
+              onCheckedChange={setShowInactive}
+            />
+            <Label htmlFor="show-inactive" className="text-sm">Show inactive</Label>
+          </div>
+        </div>
+
+        {/* View mode toggle */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Palette className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium">Total Categories</p>
+                <p className="text-2xl font-bold">{categories.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Eye className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-sm font-medium">Active Categories</p>
+                <p className="text-2xl font-bold">{categories.filter(c => c.is_active).length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <ChefHat className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium">Total Meals</p>
+                <p className="text-2xl font-bold">{meals.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Categories Grid/List */}
+      {displayedCategories.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Palette className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No categories found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchQuery ? "Try adjusting your search criteria" : "Get started by creating your first category"}
+            </p>
+            {!searchQuery && (
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Category
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className={`animate-fade-in ${
+          viewMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+            : 'space-y-4'
+        }`}>
+          {displayedCategories.map((category) => (
+            <div key={category.id}>
+              {viewMode === 'grid' ? (
+                <CategoryCard category={category} />
+              ) : (
+                <Card className="group transition-all duration-200 hover:shadow-md">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div 
+                          className="w-4 h-4 rounded-full border"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <div>
+                          <h3 className="font-semibold capitalize">{category.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {category.description || "No description"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Badge variant="outline" className="text-xs">
+                          {getMealsInCategory(category.name).length} meals
+                        </Badge>
+                        {!category.is_active && (
+                          <Badge variant="secondary" className="text-xs">
+                            Inactive
+                          </Badge>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(category)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openMealAssignment(category)}>
+                              <ChefHat className="h-4 w-4 mr-2" />
+                              Manage Meals
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleActive(category)}>
+                              {category.is_active ? (
+                                <>
+                                  <EyeOff className="h-4 w-4 mr-2" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Activate
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(category.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Color</TableHead>
-              <TableHead>Meals</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Order</TableHead>
-              <TableHead className="w-[200px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayedCategories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">
-                    <Badge style={{ backgroundColor: category.color, color: '#fff' }}>
-                      {category.name}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {category.description || (
-                      <span className="text-muted-foreground italic">No description</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div 
-                      className="w-6 h-6 rounded border"
-                      style={{ backgroundColor: category.color }}
-                      title={category.color}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={category.is_active}
-                        onCheckedChange={() => toggleActive(category)}
-                      />
-                      <span className="text-sm">
-                        {category.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">
-                        {getMealsInCategory(category.name).length} meals
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openMealAssignment(category)}
-                        title="Manage meals in this category"
-                      >
-                        <Users className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => moveCategory(category, 'up')}
-                        disabled={categories.findIndex(c => c.id === category.id) === 0}
-                      >
-                        <ArrowUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => moveCategory(category, 'down')}
-                        disabled={categories.findIndex(c => c.id === category.id) === categories.length - 1}
-                      >
-                        <ArrowDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(category)}
-                        title="Edit category"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openMealAssignment(category)}
-                        title="Manage meals"
-                      >
-                        <ChefHat className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(category.id)}
-                        title="Delete category"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      )}
 
       {/* Meal Assignment Dialog */}
       <Dialog open={isMealAssignmentOpen} onOpenChange={setIsMealAssignmentOpen}>
@@ -491,151 +648,68 @@ const CategoriesManager = () => {
             </DialogDescription>
           </DialogHeader>
           
-          {selectedCategory && (
-            <div className="space-y-6">
-              {/* Current Meals in Category */}
-              <div>
-                <h4 className="font-medium mb-3">
-                  Meals in {selectedCategory.name} ({getMealsInCategory(selectedCategory.name).length})
-                </h4>
-                <div className="border rounded-lg">
-                  {getMealsInCategory(selectedCategory.name).length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Meal Name</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Move to Category</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {getMealsInCategory(selectedCategory.name).map((meal) => (
-                          <TableRow key={meal.id}>
-                            <TableCell className="font-medium">
-                              <div>
-                                <div>{meal.name}</div>
-                                {meal.description && (
-                                  <div className="text-sm text-muted-foreground">{meal.description}</div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={meal.is_active ? "default" : "secondary"}>
-                                {meal.is_active ? "Active" : "Inactive"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={meal.category}
-                                onValueChange={(newCategory) => assignMealToCategory(meal.id, newCategory)}
-                              >
-                                <SelectTrigger className="w-48">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {categories.map((cat) => (
-                                    <SelectItem key={cat.id} value={cat.name}>
-                                      <div className="flex items-center gap-2">
-                                        <div 
-                                          className="w-3 h-3 rounded-full" 
-                                          style={{ backgroundColor: cat.color }}
-                                        />
-                                        {cat.name}
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => assignMealToCategory(meal.id, "uncategorized")}
-                                title="Remove from category"
-                              >
-                                Remove
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <ChefHat className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No meals in this category yet.</p>
-                      <p className="text-sm">Add meals from the unassigned section below.</p>
+          <div className="space-y-6">
+            {/* Current meals in category */}
+            <div>
+              <h4 className="font-semibold mb-3">Current Meals ({getMealsInCategory(selectedCategory?.name || '').length})</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {getMealsInCategory(selectedCategory?.name || '').map((meal) => (
+                  <Card key={meal.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h5 className="font-medium">{meal.name}</h5>
+                        <p className="text-sm text-muted-foreground">{meal.description}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={meal.is_active ? "default" : "secondary"}>
+                          {meal.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => assignMealToCategory(meal.id, '')}
+                        >
+                          Remove
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Available Meals to Add */}
-              <div>
-                <h4 className="font-medium mb-3">
-                  Other Meals ({meals.filter(m => m.category !== selectedCategory.name).length})
-                </h4>
-                <div className="border rounded-lg max-h-60 overflow-y-auto">
-                  {meals.filter(m => m.category !== selectedCategory.name).length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Meal Name</TableHead>
-                          <TableHead>Current Category</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {meals.filter(m => m.category !== selectedCategory.name).map((meal) => (
-                          <TableRow key={meal.id}>
-                            <TableCell className="font-medium">
-                              <div>
-                                <div>{meal.name}</div>
-                                {meal.description && (
-                                  <div className="text-sm text-muted-foreground">{meal.description}</div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {meal.category ? (
-                                <Badge style={{ 
-                                  backgroundColor: categories.find(c => c.name === meal.category)?.color || '#3b82f6',
-                                  color: '#fff'
-                                }}>
-                                  {meal.category}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">Unassigned</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                size="sm"
-                                onClick={() => assignMealToCategory(meal.id, selectedCategory.name)}
-                              >
-                                Add to {selectedCategory.name}
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <p>All meals are already in this category.</p>
-                    </div>
-                  )}
-                </div>
+                  </Card>
+                ))}
+                {getMealsInCategory(selectedCategory?.name || '').length === 0 && (
+                  <p className="text-muted-foreground col-span-2 text-center py-8">
+                    No meals in this category yet.
+                  </p>
+                )}
               </div>
             </div>
-          )}
-          
-          <div className="flex justify-end">
-            <Button onClick={() => setIsMealAssignmentOpen(false)}>
-              Close
-            </Button>
+
+            {/* Unassigned meals */}
+            <div>
+              <h4 className="font-semibold mb-3">Unassigned Meals ({getUnassignedMeals().length})</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {getUnassignedMeals().map((meal) => (
+                  <Card key={meal.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h5 className="font-medium">{meal.name}</h5>
+                        <p className="text-sm text-muted-foreground">{meal.description}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => assignMealToCategory(meal.id, selectedCategory?.name || '')}
+                      >
+                        Add to {selectedCategory?.name}
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+                {getUnassignedMeals().length === 0 && (
+                  <p className="text-muted-foreground col-span-2 text-center py-8">
+                    All meals are assigned to categories.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
