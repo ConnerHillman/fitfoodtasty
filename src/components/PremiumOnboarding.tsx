@@ -53,6 +53,12 @@ const steps: OnboardingStep[] = [
     title: "Your Perfect Plan",
     subtitle: "We've found the ideal package for you",
     icon: Zap
+  },
+  {
+    id: "deliveryFrequency",
+    title: "Delivery Schedule",
+    subtitle: "How often would you like your meals delivered?",
+    icon: Calendar
   }
 ];
 
@@ -175,7 +181,8 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
     switch (currentStep) {
       case 0: return profile.goal !== "";
       case 1: return profile.mealCount > 0;
-      case 2: return profile.deliveryFrequency !== "";
+      case 2: return true; // Package recommendation step
+      case 3: return profile.deliveryFrequency !== "";
       default: return true;
     }
   };
@@ -248,7 +255,7 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
       const index = similarPackages.findIndex(pkg => pkg.id === recommendedPackage.id);
       setCarouselIndex(index >= 0 ? index : 0);
       
-      // Auto-select the recommended package when reaching the final step
+      // Auto-select the recommended package when reaching the recommendation step
       if (currentStep === 2 && !profile.selectedPackageId) {
         setProfile(prev => ({ ...prev, selectedPackageId: recommendedPackage.id }));
       }
@@ -559,71 +566,65 @@ const PremiumOnboarding = ({ onComplete, onClose }: Props) => {
                     </Button>
                   </div>
 
-                </div>
-
-                {/* Delivery Frequency Selection - Auto-show when on this step */}
-                {currentStep === 2 && (
-                  <div className="space-y-6 animate-fade-in">
-                    <div className="text-center">
-                      <h4 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent mb-2">Delivery Frequency</h4>
-                      <p className="text-gray-600">How often would you like your meals delivered?</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[
-                        { value: "onetime", label: "One Time", desc: "Single delivery order", icon: Package },
-                        { value: "weekly", label: "Weekly", desc: "Fresh meals every week", icon: Calendar, popular: true },
-                        { value: "monthly", label: "Monthly", desc: "Once per month delivery", icon: Clock }
-                      ].map((freq) => (
-                        <Card 
-                          key={freq.value} 
-                          className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
-                            profile.deliveryFrequency === freq.value
-                              ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
-                              : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
-                          }`}
-                          onClick={() => updateProfile("deliveryFrequency", freq.value)}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
-                          {freq.popular && (
-                            <div className="absolute top-4 right-4 z-20">
-                              <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg">
-                                Most Popular
-                              </Badge>
-                            </div>
-                          )}
-                          <CardContent className="p-6 relative z-10">
-                            <div className="text-center">
-                              <div className={`relative mx-auto mb-4 w-16 h-16 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
-                                profile.deliveryFrequency === freq.value
-                                  ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
-                                  : 'bg-gradient-to-br from-blue-100/80 via-indigo-100/80 to-purple-100/80 group-hover:from-blue-200/80 group-hover:via-indigo-200/80 group-hover:to-purple-200/80'
-                              }`}>
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <freq.icon className={`transition-all duration-500 ${
-                                    profile.deliveryFrequency === freq.value 
-                                      ? 'text-white scale-110 drop-shadow-xl' 
-                                      : 'text-blue-600 group-hover:text-blue-700 group-hover:scale-105'
-                                  }`} size={24} />
-                                </div>
-                              </div>
-                              
-                              <div className="font-bold text-xl text-gray-900 mb-1">{freq.label}</div>
-                              <div className="text-gray-600 text-sm leading-relaxed">{freq.desc}</div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
-              <div className="text-center p-8">
-                <p className="text-gray-600">No matching package found. Please adjust your preferences.</p>
+              <div className="text-center text-gray-500">
+                No packages available
               </div>
             )}
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { value: "onetime", label: "One Time", desc: "Single delivery order", icon: Package },
+                { value: "weekly", label: "Weekly", desc: "Fresh meals every week", icon: Calendar, popular: true },
+                { value: "monthly", label: "Monthly", desc: "Once per month delivery", icon: Clock }
+              ].map((freq) => (
+                <Card 
+                  key={freq.value} 
+                  className={`group cursor-pointer transition-all duration-500 ease-out border-0 rounded-2xl backdrop-blur-xl overflow-hidden relative ${
+                    profile.deliveryFrequency === freq.value
+                      ? 'bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 scale-105 shadow-2xl shadow-emerald-500/40 -translate-y-2' 
+                      : 'bg-white/70 hover:bg-gradient-to-br hover:from-white/80 hover:via-emerald-50/30 hover:to-green-50/30 hover:shadow-xl hover:shadow-emerald-500/10 hover:scale-[1.02] hover:-translate-y-1'
+                  }`}
+                  onClick={() => updateProfile("deliveryFrequency", freq.value)}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
+                  {freq.popular && (
+                    <div className="absolute top-4 right-4 z-20">
+                      <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg">
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+                  <CardContent className="p-6 relative z-10">
+                    <div className="text-center">
+                      <div className={`relative mx-auto mb-4 w-16 h-16 rounded-2xl transition-all duration-500 backdrop-blur-sm shadow-lg ${
+                        profile.deliveryFrequency === freq.value
+                          ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 shadow-2xl shadow-emerald-500/50' 
+                          : 'bg-gradient-to-br from-blue-100/80 via-indigo-100/80 to-purple-100/80 group-hover:from-blue-200/80 group-hover:via-indigo-200/80 group-hover:to-purple-200/80'
+                      }`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <freq.icon className={`transition-all duration-500 ${
+                            profile.deliveryFrequency === freq.value 
+                              ? 'text-white scale-110 drop-shadow-xl' 
+                              : 'text-blue-600 group-hover:text-blue-700 group-hover:scale-105'
+                          }`} size={24} />
+                        </div>
+                      </div>
+                      
+                      <div className="font-bold text-xl text-gray-900 mb-1">{freq.label}</div>
+                      <div className="text-gray-600 text-sm leading-relaxed">{freq.desc}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         );
 
