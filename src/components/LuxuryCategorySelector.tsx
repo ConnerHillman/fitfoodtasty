@@ -49,19 +49,19 @@ const LuxuryCategorySelector = ({
   className 
 }: LuxuryCategorySelectorProps) => {
   return (
-    <div className={cn("w-full mb-12", className)}>
+    <div className={cn("w-full mb-8 md:mb-12", className)}>
       {/* Section Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+      <div className="text-center mb-4 md:mb-8">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2">
           Choose Your Category
         </h2>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-muted-foreground text-base md:text-lg">
           Select from our curated collection of premium meals
         </p>
       </div>
 
       {/* Category Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 max-w-6xl mx-auto px-4">
         {categories.map((category) => {
           const isSelected = selectedCategory === category.value;
           const gradient = getCategoryGradient(category.value);
@@ -72,13 +72,13 @@ const LuxuryCategorySelector = ({
               key={category.value}
               onClick={() => onCategorySelect(category.value)}
               className={cn(
-                "group relative overflow-hidden rounded-2xl p-8 transition-all duration-300 ease-out",
-                "transform hover:scale-105 hover:-translate-y-2",
-                "border-3 backdrop-blur-sm",
+                "group relative overflow-hidden rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 transition-all duration-300 ease-out",
+                "transform hover:scale-105 hover:-translate-y-1 md:hover:-translate-y-2",
+                "border-2 backdrop-blur-sm",
                 shadow,
                 isSelected 
-                  ? `bg-gradient-to-br ${gradient} border-white/60 shadow-2xl scale-105 -translate-y-1` 
-                  : "bg-white/5 border-border hover:bg-white/10 hover:border-primary/40"
+                  ? `bg-gradient-to-br ${gradient} border-white shadow-2xl scale-105 -translate-y-1` 
+                  : "bg-white/5 border-muted hover:bg-white/10 hover:border-primary/60"
               )}
             >
               {/* Background Overlay */}
@@ -91,9 +91,9 @@ const LuxuryCategorySelector = ({
               />
               
               {/* Content */}
-              <div className="relative z-10 flex flex-col items-center justify-center min-h-[120px]">
+              <div className="relative z-10 flex flex-col items-center justify-center min-h-[80px] md:min-h-[120px]">
                 <h3 className={cn(
-                  "text-2xl md:text-3xl font-bold tracking-wide transition-colors duration-300",
+                  "text-lg md:text-2xl lg:text-3xl font-bold tracking-wide transition-colors duration-300",
                   isSelected 
                     ? "text-white drop-shadow-lg" 
                     : "text-foreground group-hover:text-white"
