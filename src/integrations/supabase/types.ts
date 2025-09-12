@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_cart_email_templates: {
+        Row: {
+          created_at: string
+          email_type: string
+          html_content: string
+          id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          html_content: string
+          id?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          html_content?: string
+          id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       abandoned_cart_emails: {
         Row: {
           abandoned_cart_id: string
