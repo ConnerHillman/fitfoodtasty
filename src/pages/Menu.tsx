@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Package } from "lucide-react";
-
 const Menu = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [selectedPackage, setSelectedPackage] = useState<MealPackage | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [onboardingPackage, setOnboardingPackage] = useState<MealPackage | null>(null);
@@ -24,7 +25,6 @@ const Menu = () => {
   useEffect(() => {
     const storedProfile = localStorage.getItem('onboardingProfile');
     const storedPackage = localStorage.getItem('selectedPackage');
-    
     if (storedProfile && storedPackage) {
       try {
         const profile = JSON.parse(storedProfile);
@@ -42,17 +42,13 @@ const Menu = () => {
       }
     }
   }, []);
-
   const handleSelectPackage = (pkg: MealPackage) => {
     setSelectedPackage(pkg);
     setDialogOpen(true);
   };
-
-  return (
-    <div className="container mx-auto px-4 py-8">
+  return <div className="container mx-auto px-4 py-8">
       {/* Special onboarding header */}
-      {onboardingPackage && onboardingProfile && (
-        <Card className="mb-8 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-emerald-200">
+      {onboardingPackage && onboardingProfile && <Card className="mb-8 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-emerald-200">
           <CardHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl">
@@ -74,31 +70,23 @@ const Menu = () => {
               Choose your {onboardingPackage.meal_count} meals below and add them to your cart to complete your plan.
             </p>
           </CardHeader>
-        </Card>
-      )}
+        </Card>}
 
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="text-center md:text-left">
-          <h1 className="font-playfair text-6xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-green-800 via-emerald-700 to-green-900 bg-clip-text text-transparent tracking-wider mb-4 drop-shadow-sm">
-            MENU
-          </h1>
+          
         </div>
         
         {/* Create Account CTA - Only show for non-authenticated users */}
-        {!user && (
-          <div className="flex items-center space-x-3">
+        {!user && <div className="flex items-center space-x-3">
             <div className="text-right hidden md:block">
               <p className="text-sm text-gray-600 mb-1">Save 20% on your first order</p>
               <p className="text-xs text-gray-500">Create a free account today</p>
             </div>
-            <Button 
-              asChild
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            >
+            <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
               <Link to="/auth">Create Account</Link>
             </Button>
-          </div>
-        )}
+          </div>}
       </div>
 
       {/* Packages at the top */}
@@ -108,13 +96,7 @@ const Menu = () => {
       <MealsGrid />
 
       {/* Package selection modal */}
-      <PackageSelectionDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        pkg={selectedPackage}
-      />
-    </div>
-  );
+      <PackageSelectionDialog open={dialogOpen} onOpenChange={setDialogOpen} pkg={selectedPackage} />
+    </div>;
 };
-
 export default Menu;
