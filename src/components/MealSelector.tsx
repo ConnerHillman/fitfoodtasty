@@ -180,18 +180,18 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
               </TabsList>
 
               <TabsContent value="all" className="mt-4 overflow-y-auto max-h-[60vh]">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1">
                   {filteredMeals.map(meal => (
-                    <MealCard key={meal.id} meal={meal} onSelect={handleSelectMeal} />
+                    <MealListItem key={meal.id} meal={meal} onSelect={handleSelectMeal} />
                   ))}
                 </div>
               </TabsContent>
 
               {categories.map(category => (
                 <TabsContent key={category.id} value={category.name} className="mt-4 overflow-y-auto max-h-[60vh]">
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-1">
                     {groupedMeals[category.name]?.map(meal => (
-                      <MealCard key={meal.id} meal={meal} onSelect={handleSelectMeal} />
+                      <MealListItem key={meal.id} meal={meal} onSelect={handleSelectMeal} />
                     ))}
                   </div>
                 </TabsContent>
@@ -210,64 +210,26 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
   );
 };
 
-interface MealCardProps {
+interface MealListItemProps {
   meal: MealData;
   onSelect: (meal: MealData) => void;
 }
 
-const MealCard: React.FC<MealCardProps> = ({ meal, onSelect }) => {
+const MealListItem: React.FC<MealListItemProps> = ({ meal, onSelect }) => {
   return (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelect(meal)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">{meal.name}</CardTitle>
+    <div 
+      className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+      onClick={() => onSelect(meal)}
+    >
+      <div className="flex-1">
+        <h3 className="font-medium text-sm">{meal.name}</h3>
         {meal.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{meal.description}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{meal.description}</p>
         )}
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {/* Nutrition Info */}
-        <div className="grid grid-cols-2 gap-1 text-xs">
-          <div className="flex justify-between">
-            <span>Calories:</span>
-            <span className="font-medium">{meal.total_calories}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Protein:</span>
-            <span className="font-medium">{meal.total_protein}g</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Fat:</span>
-            <span className="font-medium">{meal.total_fat}g</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Carbs:</span>
-            <span className="font-medium">{meal.total_carbs}g</span>
-          </div>
-        </div>
-
-        {/* Allergens */}
-        {meal.allergens.length > 0 && (
-          <div className="space-y-1">
-            <span className="text-xs font-medium">Allergens:</span>
-            <div className="flex flex-wrap gap-1">
-              {meal.allergens.slice(0, 3).map(allergen => (
-                <Badge key={allergen} variant="destructive" className="text-xs">
-                  {allergen}
-                </Badge>
-              ))}
-              {meal.allergens.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{meal.allergens.length - 3} more
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-
-        <Button size="sm" className="w-full mt-2">
-          Select Meal
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+      <Button variant="ghost" size="sm" className="ml-4">
+        Select
+      </Button>
+    </div>
   );
 };
