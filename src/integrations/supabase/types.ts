@@ -729,6 +729,51 @@ export type Database = {
           },
         ]
       }
+      saved_meal_labels: {
+        Row: {
+          allergens: string | null
+          calories: number
+          carbs: number
+          created_at: string
+          fat: number
+          heating_instructions: string | null
+          id: string
+          ingredients: string | null
+          name: string
+          protein: number
+          storage_instructions: string | null
+          updated_at: string
+        }
+        Insert: {
+          allergens?: string | null
+          calories?: number
+          carbs?: number
+          created_at?: string
+          fat?: number
+          heating_instructions?: string | null
+          id?: string
+          ingredients?: string | null
+          name: string
+          protein?: number
+          storage_instructions?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allergens?: string | null
+          calories?: number
+          carbs?: number
+          created_at?: string
+          fat?: number
+          heating_instructions?: string | null
+          id?: string
+          ingredients?: string | null
+          name?: string
+          protein?: number
+          storage_instructions?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           created_at: string

@@ -145,20 +145,22 @@ export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = f
   return (
     <div className="print-container">
       {pages}
-      <style jsx>{`
-        @media print {
-          .print-container {
-            margin: 0;
-            padding: 0;
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media print {
+            .print-container {
+              margin: 0;
+              padding: 0;
+            }
+            .page-break {
+              page-break-after: always;
+            }
+            .page-break:last-child {
+              page-break-after: auto;
+            }
           }
-          .page-break {
-            page-break-after: always;
-          }
-          .page-break:last-child {
-            page-break-after: auto;
-          }
-        }
-      `}</style>
+        `
+      }} />
     </div>
   );
 };

@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Printer, Download, Save, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LabelPreview } from './LabelPreview';
-import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -32,7 +31,14 @@ interface LabelData {
 interface SavedMeal {
   id: string;
   name: string;
-  data: Omit<LabelData, 'useByDate' | 'quantity'>;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  ingredients: string;
+  allergens: string;
+  storage_instructions: string;
+  heating_instructions: string;
 }
 
 export const LabelGenerator: React.FC = () => {
@@ -61,13 +67,11 @@ export const LabelGenerator: React.FC = () => {
 
   const loadSavedMeals = async () => {
     try {
-      const { data, error } = await supabase
-        .from('saved_meal_labels')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (data) setSavedMeals(data);
+      // For now, use localStorage until Supabase types are updated
+      const saved = localStorage.getItem('fitfoodtasty_saved_meals');
+      if (saved) {
+        setSavedMeals(JSON.parse(saved));
+      }
     } catch (error) {
       console.error('Error loading saved meals:', error);
     }
@@ -98,7 +102,8 @@ export const LabelGenerator: React.FC = () => {
     }
 
     try {
-      const mealToSave = {
+      const mealToSave: SavedMeal = {
+        id: Date.now().toString(),
         name: labelData.mealName,
         calories: labelData.calories,
         protein: labelData.protein,
@@ -110,13 +115,11 @@ export const LabelGenerator: React.FC = () => {
         heating_instructions: labelData.heatingInstructions
       };
 
-      const { data, error } = await supabase
-        .from('saved_meal_labels')
-        .insert([mealToSave])
-        .select()
-        .single();
-
-      if (error) throw error;
+      // Save to localStorage for now
+      const existing = localStorage.getItem('fitfoodtasty_saved_meals');
+      const meals = existing ? JSON.parse(existing) : [];
+      meals.push(mealToSave);
+      localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(meals));
       
       toast.success('Meal saved successfully');
       loadSavedMeals();
@@ -130,14 +133,14 @@ export const LabelGenerator: React.FC = () => {
     setLabelData(prev => ({
       ...prev,
       mealName: meal.name,
-      calories: meal.data.calories,
-      protein: meal.data.protein,
-      fat: meal.data.fat,
-      carbs: meal.data.carbs,
-      ingredients: meal.data.ingredients,
-      allergens: meal.data.allergens,
-      storageInstructions: meal.data.storageInstructions,
-      heatingInstructions: meal.data.heatingInstructions
+      calories: meal.calories,
+      protein: meal.protein,
+      fat: meal.fat,
+      carbs: meal.carbs,
+      ingredients: meal.ingredients,
+      allergens: meal.allergens,
+      storageInstructions: meal.storage_instructions,
+      heatingInstructions: meal.heating_instructions
     }));
     setShowSavedMeals(false);
     toast.success('Meal loaded');
@@ -145,12 +148,12 @@ export const LabelGenerator: React.FC = () => {
 
   const deleteSavedMeal = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('saved_meal_labels')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      const existing = localStorage.getItem('fitfoodtasty_saved_meals');
+      if (existing) {
+        const meals = JSON.parse(existing);
+        const filtered = meals.filter((meal: SavedMeal) => meal.id !== id);
+        localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(filtered));
+      }
       
       toast.success('Meal deleted');
       loadSavedMeals();
@@ -401,7 +404,7 @@ export const LabelGenerator: React.FC = () => {
                   <div>
                     <h3 className="font-medium">{meal.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {meal.data.calories} cal • {meal.data.protein}g protein • {meal.data.fat}g fat • {meal.data.carbs}g carbs
+                      {meal.calories} cal • {meal.protein}g protein • {meal.fat}g fat • {meal.carbs}g carbs
                     </p>
                   </div>
                   <Button
