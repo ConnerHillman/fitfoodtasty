@@ -34,11 +34,11 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
     {/* Header Section */}
     <div className="flex flex-col items-center">
       {/* Logo */}
-      <div className="mb-1">
+      <div className="mb-1.5">
         <img 
           src={logoImage} 
           alt="Fit Food Tasty" 
-          className="h-4 w-auto object-contain"
+          className="h-8 w-auto object-contain"
         />
       </div>
       
