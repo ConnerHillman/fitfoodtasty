@@ -170,6 +170,15 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             .no-print {
               display: none !important;
             }
+            /* Hide toast notifications and overlays during print */
+            [data-sonner-toaster], 
+            [data-testid="toast"], 
+            .toast, 
+            .toast-container,
+            [role="alert"],
+            [data-state="open"][role="alertdialog"] {
+              display: none !important;
+            }
             .print-page {
               margin: 0 !important;
               padding: 11.5mm 6.5mm !important;
