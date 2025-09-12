@@ -889,163 +889,157 @@ const MealsManager = () => {
             ))}
           </div>
         ) : (
-          /* List View */
-          <div className="space-y-4">
+          /* List View - Compact */
+          <div className="space-y-2">
             {filteredMeals.map((meal, index) => (
               <div
                 key={meal.id}
-                className="group glass-card rounded-2xl overflow-hidden hover-lift hover-glow animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
+                className="group glass-card rounded-xl overflow-hidden hover-lift hover-glow animate-fade-in"
+                style={{ animationDelay: `${index * 0.02}s` }}
               >
-                <div className="flex gap-6 p-6">
-                  {/* Meal Image */}
-                  <div className="relative w-32 h-32 flex-shrink-0">
-                    <div className="w-full h-full rounded-xl overflow-hidden">
+                <div className="flex gap-4 p-4">
+                  {/* Compact Meal Image */}
+                  <div className="relative w-20 h-20 flex-shrink-0">
+                    <div className="w-full h-full rounded-lg overflow-hidden">
                       {(meal as any).image_url ? (
                         <img
                           src={(meal as any).image_url}
                           alt={meal.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center rounded-xl">
-                          <ImageIcon className="h-8 w-8 text-primary/60" />
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center rounded-lg">
+                          <ImageIcon className="h-6 w-6 text-primary/60" />
                         </div>
                       )}
                     </div>
                     
-                    {/* Status Badge */}
-                    <div className="absolute -top-2 -right-2">
-                      <Badge
-                        className={meal.is_active 
-                          ? "status-active shadow-lg" 
-                          : "status-inactive"}
-                      >
-                        {meal.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                    {/* Compact Status Badge */}
+                    <div className="absolute -top-1 -right-1">
+                      <div className={`w-3 h-3 rounded-full ${meal.is_active ? 'bg-green-500' : 'bg-red-500'}`} 
+                           title={meal.is_active ? 'Active' : 'Inactive'} />
                     </div>
                   </div>
 
-                  {/* Meal Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-xl mb-1 truncate">{meal.name}</h3>
-                        {meal.description && (
-                          <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
-                            {meal.description}
-                          </p>
-                        )}
+                  {/* Compact Meal Content */}
+                  <div className="flex-1 min-w-0 flex items-center justify-between">
+                    {/* Left: Name, Description, Category */}
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-semibold text-lg truncate">{meal.name}</h3>
                         {meal.category && (
                           <CategoryTag 
                             category={meal.category}
                             size="sm"
                             variant="bold"
-                            className="shadow-sm"
+                            className="flex-shrink-0"
                           />
                         )}
                       </div>
-                      <div className="text-right flex-shrink-0 ml-4">
-                        <span className="font-bold text-2xl text-primary">£{meal.price.toFixed(2)}</span>
-                      </div>
+                      {meal.description && (
+                        <p className="text-muted-foreground text-sm line-clamp-1 mb-2">
+                          {meal.description}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Nutrition Info Row */}
-                    <div className="flex items-center gap-6 mb-4 p-3 bg-muted/30 rounded-xl">
+                    {/* Center: Compact Nutrition Info */}
+                    <div className="flex items-center gap-4 px-4 py-2 bg-muted/20 rounded-lg flex-shrink-0">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-primary">{Math.round(meal.total_calories)}</div>
-                        <div className="text-xs text-muted-foreground">calories</div>
+                        <div className="text-sm font-bold text-primary">{Math.round(meal.total_calories)}</div>
+                        <div className="text-xs text-muted-foreground">cal</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{(meal.total_protein || 0).toFixed(0)}g</div>
-                        <div className="text-xs text-muted-foreground">protein</div>
+                        <div className="text-sm font-bold text-green-600">{(meal.total_protein || 0).toFixed(0)}g</div>
+                        <div className="text-xs text-muted-foreground">pro</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-sm font-medium">{(meal.total_carbs || 0).toFixed(0)}g</div>
-                        <div className="text-xs text-muted-foreground">carbs</div>
+                        <div className="text-sm">{(meal.total_carbs || 0).toFixed(0)}g</div>
+                        <div className="text-xs text-muted-foreground">carb</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-sm font-medium">{(meal.total_fat || 0).toFixed(0)}g</div>
+                        <div className="text-sm">{(meal.total_fat || 0).toFixed(0)}g</div>
                         <div className="text-xs text-muted-foreground">fat</div>
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => printMealLabel(meal)}
-                        className="hover-glow"
-                        title="Print Label"
-                      >
-                        <Printer className="h-4 w-4 mr-2" />
-                        Print
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleBuildMeal(meal.id)}
-                        className="hover-glow"
-                        title="Build/Edit Ingredients"
-                      >
-                        <Calculator className="h-4 w-4 mr-2" />
-                        Build
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(meal)}
-                        className="hover-glow"
-                        title="Edit Meal"
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleActive(meal)}
-                        className={`${meal.is_active 
-                          ? "text-green-600 hover:text-green-700 border-green-200 hover:bg-green-50" 
-                          : "text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"}`}
-                        title="Toggle Status"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        {meal.is_active ? 'Active' : 'Inactive'}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(meal.id)}
-                        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 ml-auto"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </Button>
+                    {/* Right: Price and Actions */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span className="font-bold text-xl text-primary">£{meal.price.toFixed(2)}</span>
                       
-                      {/* Order Controls */}
-                      <div className="flex gap-1 ml-2">
+                      {/* Compact Action Buttons */}
+                      <div className="flex items-center gap-1">
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
-                          onClick={() => moveMeal(meal.id, 'up')}
-                          disabled={index === 0}
+                          onClick={() => printMealLabel(meal)}
                           className="h-8 w-8 p-0"
-                          title="Move Up"
+                          title="Print Label"
                         >
-                          <ChevronUp className="h-4 w-4" />
+                          <Printer className="h-3 w-3" />
                         </Button>
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
-                          onClick={() => moveMeal(meal.id, 'down')}
-                          disabled={index === filteredMeals.length - 1}
+                          onClick={() => handleBuildMeal(meal.id)}
                           className="h-8 w-8 p-0"
-                          title="Move Down"
+                          title="Build/Edit Ingredients"
                         >
-                          <ChevronDown className="h-4 w-4" />
+                          <Calculator className="h-3 w-3" />
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(meal)}
+                          className="h-8 w-8 p-0"
+                          title="Edit Meal"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleActive(meal)}
+                          className={`h-8 w-8 p-0 ${meal.is_active 
+                            ? "text-green-600 hover:text-green-700 border-green-200 hover:bg-green-50" 
+                            : "text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"}`}
+                          title="Toggle Status"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(meal.id)}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                          title="Delete Meal"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                        
+                        {/* Compact Order Controls */}
+                        <div className="flex flex-col gap-0.5 ml-1">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => moveMeal(meal.id, 'up')}
+                            disabled={index === 0}
+                            className="h-4 w-6 p-0 text-xs"
+                            title="Move Up"
+                          >
+                            <ChevronUp className="h-2 w-2" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => moveMeal(meal.id, 'down')}
+                            disabled={index === filteredMeals.length - 1}
+                            className="h-4 w-6 p-0 text-xs"
+                            title="Move Down"
+                          >
+                            <ChevronDown className="h-2 w-2" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
