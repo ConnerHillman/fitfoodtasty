@@ -236,7 +236,7 @@ const AllOrders: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {filteredOrders.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -246,16 +246,16 @@ const AllOrders: React.FC = () => {
                 filteredOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-muted/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-3 rounded-lg border border-muted/50 hover:bg-muted/30 transition-colors cursor-pointer"
                     onClick={() => navigate(`/orders/${order.id}`)}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Package className="h-6 w-6 text-primary" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Package className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <div className="font-medium">
-                          #{order.id.slice(-8)}
+                        <div className="font-bold text-lg">
+                          {order.customer_name || 'Customer'}
                           {order.type === 'package' && (
                             <Badge variant="outline" className="ml-2 text-xs">
                               Package
@@ -263,7 +263,7 @@ const AllOrders: React.FC = () => {
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {order.customer_name || 'Customer'} • {order.customer_email}
+                          #{order.id.slice(-8)} • {order.customer_email}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {order.type === 'package' 
