@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ const BusinessDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [menuViews, setMenuViews] = useState(0);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useEffect(() => {
     fetchDashboardData();
@@ -667,23 +668,37 @@ const BusinessDashboard = () => {
                 <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin" />
                 <p>Loading orders...</p>
               </div>
-            ) : orders.length === 0 ? (
+            ) : [...orders, ...packageOrders].length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>No orders found</p>
               </div>
             ) : (
-              orders.slice(0, 8).map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 rounded-lg border border-muted/50 hover:bg-muted/30 transition-colors">
+              // Combine and sort all orders
+              [...orders.map(o => ({...o, type: 'individual'})), ...packageOrders.map(o => ({...o, type: 'package'}))]
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 8)
+                .map((order) => (
+                <div 
+                  key={order.id} 
+                  className="flex items-center justify-between p-4 rounded-lg border border-muted/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/orders/${order.id}`)}
+                >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <Package className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <div className="font-medium">#{order.id.slice(-8)}</div>
-                      <div className="text-sm text-muted-foreground">{order.customer_name || 'Customer'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {order.customer_name || 'Customer'}
+                        {order.type === 'package' && <Badge variant="outline" className="ml-2 text-xs">Package</Badge>}
+                      </div>
                       <div className="text-xs text-muted-foreground">
-                        {order.order_items.length} items • {new Date(order.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                        {order.type === 'package' 
+                          ? `${order.package_meal_selections?.length || 0} selections`
+                          : `${order.order_items?.length || 0} items`
+                        } • {new Date(order.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   </div>

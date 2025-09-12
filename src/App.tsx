@@ -13,6 +13,8 @@ import About from "./pages/About";
 import Packages from "./pages/Packages";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
+import AllOrders from "./pages/AllOrders";
+import OrderDetails from "./pages/OrderDetails";
 
 import RequireAuth from "./components/RequireAuth";
 import Layout from "./components/Layout";
@@ -43,6 +45,8 @@ const App = () => (
             <Route path="/about" element={<Layout><About /></Layout>} />
             <Route path="/cart" element={<Layout><Cart /></Layout>} />
             <Route path="/orders" element={<RequireAuth><Layout><Orders /></Layout></RequireAuth>} />
+            <Route path="/orders/all" element={<RequireAuth><AllOrders /></RequireAuth>} />
+            <Route path="/orders/:orderId" element={<RequireAuth><OrderDetails /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><Layout><AccountSettings /></Layout></RequireAuth>} />
             <Route path="/payment-success" element={<Layout><PaymentSuccess /></Layout>} />
             <Route path="/admin" element={<RequireAuth><Layout><AdminDashboard /></Layout></RequireAuth>} />
