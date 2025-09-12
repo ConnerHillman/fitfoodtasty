@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
@@ -396,257 +395,238 @@ const Reports = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="kitchen" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="kitchen" className="flex items-center gap-2">
-            <ChefHat className="h-4 w-4" />
-            Kitchen Preparation
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="flex items-center gap-2">
-            <Package2 className="h-4 w-4" />
-            Order Preparation
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Kitchen Preparation Tab */}
-        <TabsContent value="kitchen" className="space-y-4">
-          {/* Main Production Report */}
-          <CompactReportCard
-            title="Item Production Report"
-            description="Order quantities and export options"
-            icon={Calculator}
-            variant="primary"
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">Production Summary</div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowFullReport(!showFullReport)}
-                  >
-                    <FileText className="h-4 w-4 mr-1" />
-                    {showFullReport ? 'Collapse' : 'Expand'}
-                  </Button>
-                  
-                  <Dialog open={showExportOptions} onOpenChange={setShowExportOptions}>
-                    <DialogTrigger asChild>
-                      <Button size="sm">
-                        <Download className="h-4 w-4 mr-1" />
-                        Export
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Export Kitchen Report</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-2">
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start"
-                          onClick={() => {
-                            generateKitchenReport('xlsx');
-                            setShowExportOptions(false);
-                          }}
-                        >
-                          <FileSpreadsheet className="h-4 w-4 mr-2" />
-                          Export as Excel (.XLSX)
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start"
-                          onClick={() => {
-                            generateKitchenReport('csv');
-                            setShowExportOptions(false);
-                          }}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Export as CSV
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start"
-                          onClick={() => {
-                            generateKitchenReport('print');
-                            setShowExportOptions(false);
-                          }}
-                        >
-                          <Printer className="h-4 w-4 mr-2" />
-                          Print Report
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-              
-              {/* Compact Production List */}
-              <div className="space-y-1">
-                {getItemProduction().slice(0, showFullReport ? undefined : 5).map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-background rounded border text-sm">
-                    <span className="font-medium">{item.name}</span>
-                    <Badge variant="secondary" className="text-xs">{item.quantity} units</Badge>
-                  </div>
-                ))}
-                {!showFullReport && getItemProduction().length > 5 && (
-                  <div className="text-center py-2">
-                    <Button variant="ghost" size="sm" onClick={() => setShowFullReport(true)}>
-                      +{getItemProduction().length - 5} more items
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CompactReportCard>
-
-          {/* Quick Actions Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <CompactReportCard
-              title="Ingredients"
-              description={`${ingredients.length} ingredients`}
-              icon={Clipboard}
-            >
-              <Button variant="outline" size="sm" className="w-full">
-                <Calculator className="h-4 w-4 mr-1" />
-                Calculate
-              </Button>
-            </CompactReportCard>
-
-            <CompactReportCard
-              title="Recipes"
-              description={`${meals.length} recipes`}
-              icon={List}
-            >
-              <Button variant="outline" size="sm" className="w-full">
-                View All
-              </Button>
-            </CompactReportCard>
-
-            <CompactReportCard
-              title="Inventory"
-              description="Track usage"
-              icon={Package2}
-            >
-              <Button variant="outline" size="sm" className="w-full">
-                View Report
-              </Button>
-            </CompactReportCard>
-
-            <CompactReportCard
-              title="Menu Items"
-              description={`${meals.length} active`}
-              icon={ChefHat}
-            >
-              <Button variant="outline" size="sm" className="w-full">
-                Manage
-              </Button>
-            </CompactReportCard>
-          </div>
-        </TabsContent>
-
-        {/* Order Preparation Tab */}
-        <TabsContent value="orders" className="space-y-4">
-          {/* Orders Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CompactReportCard
-              title="Individual Orders"
-              description={`${orders.length} orders for selected period`}
-              icon={FileText}
-              variant="primary"
-            >
-              <div className="space-y-2">
-                {orders.slice(0, 3).map((order, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-background rounded border text-sm">
-                    <div>
-                      <span className="font-medium">#{order.id.slice(-6)}</span>
-                      <span className="text-muted-foreground ml-2">{order.order_items?.length || 0} items</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">£{order.total_amount}</span>
-                      <Badge variant={order.status === 'confirmed' ? 'default' : 'secondary'} className="text-xs">
-                        {order.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                {orders.length > 3 && (
-                  <div className="text-center py-1">
-                    <span className="text-xs text-muted-foreground">+{orders.length - 3} more orders</span>
-                  </div>
-                )}
-                <Button variant="outline" size="sm" className="w-full">
-                  <FileText className="h-4 w-4 mr-1" />
-                  View All Orders
-                </Button>
-              </div>
-            </CompactReportCard>
-
-            <CompactReportCard
-              title="Package Orders"
-              description={`${packageOrders.length} package orders`}
-              icon={Package2}
-            >
-              <div className="space-y-2">
-                {packageOrders.length > 0 ? (
-                  <>
-                    {packageOrders.slice(0, 3).map((order, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
-                        <span className="font-medium">#{order.id.slice(-6)}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">£{order.total_amount}</span>
-                          <Badge variant="outline" className="text-xs">{order.status}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                    {packageOrders.length > 3 && (
-                      <div className="text-center py-1">
-                        <span className="text-xs text-muted-foreground">+{packageOrders.length - 3} more</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground">
-                    <Package2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-xs">No package orders</p>
-                  </div>
-                )}
-              </div>
-            </CompactReportCard>
-          </div>
-
-          {/* Printing & Labels */}
-          <CompactReportCard
-            title="Printing & Labels"
-            description="Quick actions for order fulfillment"
-            icon={Printer}
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <Button variant="outline" size="sm">
-                <Printer className="h-4 w-4 mr-1" />
-                Packing Slips
-              </Button>
-              <Button variant="outline" size="sm">
-                <Package2 className="h-4 w-4 mr-1" />
-                Package Slips
-              </Button>
+      {/* Main Production Report */}
+      <CompactReportCard
+        title="Item Production Report"
+        description="Order quantities and export options"
+        icon={Calculator}
+        variant="primary"
+      >
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">Production Summary</div>
+            <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setShowLabelReport(true)}
+                onClick={() => setShowFullReport(!showFullReport)}
               >
-                <Tags className="h-4 w-4 mr-1" />
-                Item Labels
+                <FileText className="h-4 w-4 mr-1" />
+                {showFullReport ? 'Collapse' : 'Expand'}
               </Button>
-              <Button variant="outline" size="sm">
-                <MapPin className="h-4 w-4 mr-1" />
-                Order Labels
-              </Button>
+              
+              <Dialog open={showExportOptions} onOpenChange={setShowExportOptions}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Export Kitchen Report</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        generateKitchenReport('xlsx');
+                        setShowExportOptions(false);
+                      }}
+                    >
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Export as Excel (.XLSX)
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        generateKitchenReport('csv');
+                        setShowExportOptions(false);
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Export as CSV
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        generateKitchenReport('print');
+                        setShowExportOptions(false);
+                      }}
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print Report
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
-          </CompactReportCard>
-        </TabsContent>
-      </Tabs>
+          </div>
+          
+          {/* Compact Production List */}
+          <div className="space-y-1">
+            {getItemProduction().slice(0, showFullReport ? undefined : 5).map((item, index) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                <span className="font-medium">{item.name}</span>
+                <Badge variant="secondary" className="text-xs">{item.quantity} units</Badge>
+              </div>
+            ))}
+            {!showFullReport && getItemProduction().length > 5 && (
+              <div className="text-center py-2">
+                <Button variant="ghost" size="sm" onClick={() => setShowFullReport(true)}>
+                  +{getItemProduction().length - 5} more items
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </CompactReportCard>
 
+      {/* Orders Overview Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CompactReportCard
+          title="Individual Orders"
+          description={`${orders.length} orders for selected period`}
+          icon={FileText}
+        >
+          <div className="space-y-2">
+            {orders.slice(0, 3).map((order, index) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                <div>
+                  <span className="font-medium">#{order.id.slice(-6)}</span>
+                  <span className="text-muted-foreground ml-2">{order.order_items?.length || 0} items</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">£{order.total_amount}</span>
+                  <Badge variant={order.status === 'confirmed' ? 'default' : 'secondary'} className="text-xs">
+                    {order.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+            {orders.length > 3 && (
+              <div className="text-center py-1">
+                <span className="text-xs text-muted-foreground">+{orders.length - 3} more orders</span>
+              </div>
+            )}
+            <Button variant="outline" size="sm" className="w-full">
+              <FileText className="h-4 w-4 mr-1" />
+              View All Orders
+            </Button>
+          </div>
+        </CompactReportCard>
+
+        <CompactReportCard
+          title="Package Orders"
+          description={`${packageOrders.length} package orders`}
+          icon={Package2}
+        >
+          <div className="space-y-2">
+            {packageOrders.length > 0 ? (
+              <>
+                {packageOrders.slice(0, 3).map((order, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
+                    <span className="font-medium">#{order.id.slice(-6)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">£{order.total_amount}</span>
+                      <Badge variant="outline" className="text-xs">{order.status}</Badge>
+                    </div>
+                  </div>
+                ))}
+                {packageOrders.length > 3 && (
+                  <div className="text-center py-1">
+                    <span className="text-xs text-muted-foreground">+{packageOrders.length - 3} more</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <Package2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-xs">No package orders</p>
+              </div>
+            )}
+          </div>
+        </CompactReportCard>
+      </div>
+
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <CompactReportCard
+          title="Ingredients"
+          description={`${ingredients.length} ingredients`}
+          icon={Clipboard}
+        >
+          <Button variant="outline" size="sm" className="w-full">
+            <Calculator className="h-4 w-4 mr-1" />
+            Calculate
+          </Button>
+        </CompactReportCard>
+
+        <CompactReportCard
+          title="Recipes"
+          description={`${meals.length} recipes`}
+          icon={List}
+        >
+          <Button variant="outline" size="sm" className="w-full">
+            View All
+          </Button>
+        </CompactReportCard>
+
+        <CompactReportCard
+          title="Inventory"
+          description="Track usage"
+          icon={Package2}
+        >
+          <Button variant="outline" size="sm" className="w-full">
+            View Report
+          </Button>
+        </CompactReportCard>
+
+        <CompactReportCard
+          title="Menu Items"
+          description={`${meals.length} active`}
+          icon={ChefHat}
+        >
+          <Button variant="outline" size="sm" className="w-full">
+            Manage
+          </Button>
+        </CompactReportCard>
+      </div>
+
+      {/* Printing & Labels */}
+      <CompactReportCard
+        title="Printing & Labels"
+        description="Quick actions for order fulfillment"
+        icon={Printer}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <Button variant="outline" size="sm">
+            <Printer className="h-4 w-4 mr-1" />
+            Packing Slips
+          </Button>
+          <Button variant="outline" size="sm">
+            <Package2 className="h-4 w-4 mr-1" />
+            Package Slips
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowLabelReport(true)}
+          >
+            <Tags className="h-4 w-4 mr-1" />
+            Item Labels
+          </Button>
+          <Button variant="outline" size="sm">
+            <MapPin className="h-4 w-4 mr-1" />
+            Order Labels
+          </Button>
+        </div>
+      </CompactReportCard>
+
+      {/* Data Import & Management */}
       <CompactReportCard
         title="Data Import & Management"
         description="Import meals, ingredients, and recipe data"
