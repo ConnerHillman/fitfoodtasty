@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { useAbandonedCart } from '@/hooks/useAbandonedCart';
 
 export interface CartItem {
   id: string;
@@ -45,6 +47,19 @@ export const useCart = () => {
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const { user } = useAuth();
+
+  // Initialize abandoned cart tracking
+  const { trackCartRecovery } = useAbandonedCart({
+    cartItems: items.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity
+    })),
+    total: getTotalPrice(),
+    customerEmail: user?.email
+  });
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -62,6 +77,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
+
+  // Helper function for total price (needed for abandoned cart hook)
+  function getTotalPrice() {
+    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }
 
   const addToCart = (meal: Omit<CartItem, 'quantity'>) => {
     setItems(prevItems => {
@@ -104,15 +124,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearCart = () => {
+    // Track cart recovery when clearing (likely after successful order)
+    if (items.length > 0) {
+      trackCartRecovery();
+    }
     setItems([]);
   };
 
   const getTotalItems = () => {
     return items.reduce((total, item) => total + item.quantity, 0);
-  };
-
-  const getTotalPrice = () => {
-    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
   return (
@@ -125,7 +145,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateQuantity,
         clearCart,
         getTotalItems,
-        getTotalPrice,
+        getTotalPrice: () => getTotalPrice(),
       }}
     >
       {children}
