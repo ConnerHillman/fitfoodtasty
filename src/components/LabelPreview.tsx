@@ -87,7 +87,7 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
       {data.allergens && (
         <div className="text-[6px] leading-tight">
           <span className="font-semibold text-foreground">Allergens:</span>{' '}
-          <span className="font-bold text-destructive underline">{data.allergens}</span>
+          <span className="font-bold text-foreground">{data.allergens}</span>
         </div>
       )}
     </div>
