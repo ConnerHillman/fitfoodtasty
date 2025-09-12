@@ -66,17 +66,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="ingredients">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ingredients Database</CardTitle>
-              <CardDescription>
-                Manage your ingredient database with nutritional information per 100g
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <IngredientsManager />
-            </CardContent>
-          </Card>
+          <IngredientsManager />
         </TabsContent>
 
         <TabsContent value="meals">
@@ -84,59 +74,19 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <CardTitle>Categories Manager</CardTitle>
-              <CardDescription>
-                Create and manage meal categories to organize your menu
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CategoriesManager />
-            </CardContent>
-          </Card>
+          <CategoriesManager />
         </TabsContent>
 
         <TabsContent value="packages">
-          <Card>
-            <CardHeader>
-              <CardTitle>Package Manager</CardTitle>
-              <CardDescription>
-                Create and manage meal packages with pricing and promotional images
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PackagesManager />
-            </CardContent>
-          </Card>
+          <PackagesManager />
         </TabsContent>
 
         <TabsContent value="import">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Importer</CardTitle>
-              <CardDescription>
-                Import meals, ingredients, and meal recipes (links) from GoPrep data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataImporter />
-            </CardContent>
-          </Card>
+          <DataImporter />
         </TabsContent>
 
         <TabsContent value="referrals">
-          <Card>
-            <CardHeader>
-              <CardTitle>Referral System Configuration</CardTitle>
-              <CardDescription>
-                Manage all aspects of your referral program - discounts, credits, limits, and more
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ReferralSettingsAdmin />
-            </CardContent>
-          </Card>
+          <ReferralSettingsAdmin />
         </TabsContent>
       </Tabs>
     </div>

@@ -318,7 +318,19 @@ const DataImporter = () => {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-8">
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Data Importer</h2>
+              <p className="text-muted-foreground">Import meals, ingredients, and recipes from GoPrep data</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Meals Import */}
       <Card>
         <CardHeader>
@@ -475,6 +487,7 @@ Bang Bang Chicken (BIG)	Chicken Breast	200	g
           <li>Finally import meal recipes (links ingredients to meals for accurate nutrition)</li>
         </ol>
         <p className="mt-2"><strong>Note:</strong> Each import replaces existing data in that category.</p>
+      </div>
       </div>
     </div>
   );
