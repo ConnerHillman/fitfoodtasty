@@ -253,36 +253,38 @@ const IngredientsManager = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold">Ingredients Database</h2>
-          
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search ingredients..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-[300px]"
-            />
-          </div>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Ingredient
-            </Button>
-          </DialogTrigger>
+    <div className="space-y-8">
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Ingredients Database</h2>
+              <p className="text-muted-foreground">Manage nutritional data for all ingredients</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search ingredients..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-[300px] bg-background/80 backdrop-blur-sm"
+                />
+              </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Ingredient
+                  </Button>
+                </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-xl font-semibold">
                 {editingIngredient ? "Edit Ingredient" : "Add New Ingredient"}
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
@@ -440,22 +442,25 @@ const IngredientsManager = () => {
                 )}
               </div>
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className="bg-primary hover:bg-primary/90">
                   {editingIngredient ? "Update" : "Create"} Ingredient
                 </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden border-0 shadow-sm">
         <CardContent className="p-0">
-          <div className="p-6 border-b">
+          <div className="p-6 border-b bg-muted/30">
             <div className="flex justify-between items-center text-sm text-muted-foreground">
               <span>Showing {(filteredIngredients.length > 0 || searchQuery) ? filteredIngredients.length : ingredients.length} of {ingredients.length} ingredients</span>
               {searchQuery && (

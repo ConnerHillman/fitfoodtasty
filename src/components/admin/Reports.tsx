@@ -314,31 +314,29 @@ const Reports = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <ChefHat className="h-6 w-6 text-primary" />
-              Kitchen Reports
-            </h2>
-            <p className="text-muted-foreground">Production planning and order management</p>
+    <div className="space-y-8">
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Kitchen Reports</h2>
+              <p className="text-muted-foreground">Production planning and order management</p>
+            </div>
           </div>
         </div>
-        
-        {/* Date Range Selector */}
-        <Card className="p-4 mb-6">
+      </div>
+      {/* Date Range Selector */}
+      <Card className="border-0 shadow-sm bg-muted/30 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h3 className="font-semibold">Date Range:</h3>
               <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="px-4 py-2">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d, yyyy')}
-                  </Button>
-                </DialogTrigger>
+                 <DialogTrigger asChild>
+                   <Button variant="outline" className="px-4 py-2 bg-background/80 backdrop-blur-sm">
+                     <CalendarIcon className="h-4 w-4 mr-2" />
+                     {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d, yyyy')}
+                   </Button>
+                 </DialogTrigger>
                 <DialogContent className="max-w-4xl">
                   <DialogHeader>
                     <DialogTitle>Choose Date Range</DialogTitle>
@@ -401,8 +399,6 @@ const Reports = () => {
             </div>
           </div>
         </Card>
-
-      </div>
 
       <Tabs defaultValue="kitchen" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">

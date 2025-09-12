@@ -260,28 +260,34 @@ const ReferralSettingsAdmin = () => {
   }
 
   return (
-    <Tabs defaultValue="settings" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="settings" className="flex items-center space-x-2">
-          <Settings className="h-4 w-4" />
-          <span>Settings</span>
-        </TabsTrigger>
-        <TabsTrigger value="reports" className="flex items-center space-x-2">
-          <BarChart3 className="h-4 w-4" />
-          <span>Reports</span>
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="settings">
-        <div className="space-y-6">
-          <div className="flex items-center space-x-2">
-            <Settings className="h-6 w-6" />
-            <h2 className="text-2xl font-bold">Referral System Settings</h2>
-            <Badge variant={referralSystemActive ? "default" : "secondary"}>
+    <div className="space-y-8">
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Referral System</h2>
+              <p className="text-muted-foreground">Configure and monitor your referral program</p>
+            </div>
+            <Badge variant={referralSystemActive ? "default" : "secondary"} className="text-sm">
               {referralSystemActive ? "Active" : "Inactive"}
             </Badge>
           </div>
+        </div>
+      </div>
 
+      <Tabs defaultValue="settings" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="settings" className="flex items-center space-x-2">
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center space-x-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>Reports</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="settings">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* System Status */}
             <Card>
@@ -434,8 +440,8 @@ const ReferralSettingsAdmin = () => {
               </CardContent>
             </Card>
 
-            <div className="flex justify-end">
-              <Button type="submit" disabled={saving}>
+            <div className="flex justify-end pt-4 border-t">
+              <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -447,8 +453,7 @@ const ReferralSettingsAdmin = () => {
               </Button>
             </div>
           </form>
-        </div>
-      </TabsContent>
+        </TabsContent>
 
       <TabsContent value="reports">
         <div className="space-y-6">
@@ -581,7 +586,8 @@ const ReferralSettingsAdmin = () => {
           </Card>
         </div>
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
   );
 };
 

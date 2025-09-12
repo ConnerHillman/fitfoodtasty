@@ -281,24 +281,26 @@ const PackagesManager = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Package Management</h2>
-          <p className="text-muted-foreground">Manage meal packages and pricing</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus size={16} className="mr-2" />
-              Add Package
-            </Button>
-          </DialogTrigger>
+    <div className="space-y-8">
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Package Management</h2>
+              <p className="text-muted-foreground">Create and manage meal packages with pricing</p>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
+                  <Plus size={16} className="mr-2" />
+                  Add Package
+                </Button>
+              </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingPackage ? "Edit Package" : "Add New Package"}</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">{editingPackage ? "Edit Package" : "Add New Package"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Package Name</Label>
                 <Input
@@ -369,11 +371,11 @@ const PackagesManager = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isUploading}>
+                <Button type="submit" disabled={isUploading} className="bg-primary hover:bg-primary/90">
                   {isUploading ? (
                     <>
                       <Upload size={16} className="mr-2 animate-spin" />
@@ -389,9 +391,12 @@ const PackagesManager = () => {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Packages ({packages.length})</CardTitle>
+        </div>
+      </div>
+
+      <Card className="overflow-hidden border-0 shadow-sm">
+        <CardHeader className="bg-muted/30 border-b">
+          <CardTitle className="text-lg">Packages ({packages.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
