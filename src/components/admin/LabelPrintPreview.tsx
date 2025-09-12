@@ -32,14 +32,15 @@ const SingleLabel: React.FC<{
   useByDate: string;
 }> = ({ mealName, calories, protein, fat, carbs, ingredients, allergens, useByDate }) => (
   <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
-    width: '96mm',    // Updated to match the correct specifications
-    height: '50.8mm', // Updated to match the correct specifications
+    width: '96mm',
+    height: '50.8mm',
     boxSizing: 'border-box',
     padding: '6px',
     display: 'flex',
     flexDirection: 'column',
     fontSize: '6px',
-    lineHeight: '1.2'
+    lineHeight: '1.2',
+    justifyContent: 'space-between'
   }}>
     {/* Header Section */}
     <div className="flex flex-col items-center">
@@ -69,7 +70,7 @@ const SingleLabel: React.FC<{
     </div>
 
     {/* Main Content */}
-    <div className="flex-1 space-y-1.5">
+    <div className="flex-1 space-y-1.5 min-h-0">
       {/* Use By Date - Most Important */}
       <div className="bg-muted/50 rounded px-2 py-1">
         <div className="font-bold text-foreground leading-tight" style={{ fontSize: '7px' }}>
@@ -103,7 +104,7 @@ const SingleLabel: React.FC<{
     </div>
 
     {/* Footer */}
-    <div className="border-t border-border/30 pt-1 mt-2">
+    <div className="border-t border-border/30 pt-1 mt-auto">
       <div className="text-center font-medium text-primary leading-tight" style={{ fontSize: '6px' }}>
         www.fitfoodtasty.co.uk
       </div>
