@@ -308,28 +308,30 @@ const Marketing = () => {
     </Card>
   );
 
-  const MailchimpSection = () => (
+  const FlodeskSection = () => (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5" />
-          Mailchimp Integration
+          Flodesk Integration
         </CardTitle>
         <CardDescription>
-          Connect your Mailchimp account for email marketing
+          Connect your Flodesk account for email marketing and automation
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="mailchimp-api">Mailchimp API Key</Label>
-            <Input id="mailchimp-api" type="password" placeholder="Enter your API key" />
+            <Label htmlFor="flodesk-api">Flodesk API Key</Label>
+            <Input id="flodesk-api" type="password" placeholder="Enter your Flodesk API key" />
+            <div className="text-xs text-muted-foreground">
+              Find your API key in Flodesk Settings → Integrations → API
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="mailchimp-list">Default List ID</Label>
-            <Input id="mailchimp-list" placeholder="List ID" />
+          <Button>Connect Flodesk</Button>
+          <div className="text-sm text-muted-foreground">
+            Status: Not connected
           </div>
-          <Button>Connect Mailchimp</Button>
         </div>
       </CardContent>
     </Card>
@@ -345,7 +347,7 @@ const Marketing = () => {
       case "upsales": return <UpsalesSection />;
       case "abandoned-carts": return <AbandonedCartsSection />;
       case "customer-survey": return <CustomerSurveySection />;
-      case "mailchimp": return <MailchimpSection />;
+      case "flodesk": return <FlodeskSection />;
       default: return <LeadsSection />;
     }
   };
@@ -420,11 +422,11 @@ const Marketing = () => {
               <span>Survey</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="mailchimp" 
+              value="flodesk" 
               className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-xs font-medium"
             >
               <Mail className="h-3 w-3" />
-              <span>Mailchimp</span>
+              <span>Flodesk</span>
             </TabsTrigger>
           </TabsList>
         </div>
