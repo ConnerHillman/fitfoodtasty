@@ -6,6 +6,7 @@ import MealCard from "./MealCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import CategoryTag from "./CategoryTag";
 
 // Title-case labels for display only
 const toTitleCase = (str: string) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1));
@@ -131,16 +132,20 @@ const MealsGrid = () => {
   return (
     <div className="space-y-6">
       {/* Category Filter */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {displayCategories.map((category) => (
-          <Button
+          <button
             key={category.value}
-            variant={selectedCategory === category.value ? "default" : "outline"}
-            size="sm"
             onClick={() => setSelectedCategory(category.value)}
+            className="transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-full"
           >
-            {category.label}
-          </Button>
+            <CategoryTag 
+              category={category.value === "all" ? "All Categories" : category.value} 
+              size="md" 
+              variant={selectedCategory === category.value ? "bold" : "outline"}
+              className={selectedCategory === category.value ? "" : "hover:shadow-lg"}
+            />
+          </button>
         ))}
       </div>
 

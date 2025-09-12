@@ -11,6 +11,7 @@ import { Plus, Edit, Trash2, Search, Palette, ArrowUp, ArrowDown, Users, ChefHat
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import CategoryTag from "../CategoryTag";
 
 interface Meal {
   id: string;
@@ -301,9 +302,11 @@ const CategoriesManager = () => {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            <div 
-              className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-              style={{ backgroundColor: category.color }}
+            <CategoryTag 
+              category={category.name} 
+              size="sm" 
+              variant="bold" 
+              className="shadow-md"
             />
             <div>
               <CardTitle className="text-lg font-semibold capitalize">
@@ -448,13 +451,14 @@ const CategoriesManager = () => {
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     className="w-12 h-10 p-1 rounded border"
                   />
-                  <div className="flex items-center space-x-2 flex-1">
-                    <div 
-                      className="w-4 h-4 rounded-full border"
-                      style={{ backgroundColor: formData.color }}
+                  <div className="flex items-center space-x-3 flex-1">
+                    <CategoryTag 
+                      category={formData.name || 'Category Preview'} 
+                      size="sm" 
+                      variant="bold"
                     />
-                    <span className="text-sm font-medium capitalize">
-                      {formData.name || 'Category Preview'}
+                    <span className="text-sm text-muted-foreground">
+                      Live Preview
                     </span>
                   </div>
                 </div>

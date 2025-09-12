@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Category Design Tokens */
+:root {
+  /* Luxury category gradient backgrounds */
+  --category-breakfast: linear-gradient(135deg, #ff6b35 0%, #ff8f3d 100%);
+  --category-lunch: linear-gradient(135deg, #4a90e2 0%, #5ba3f5 100%);
+  --category-dinner: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  --category-snack: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  --category-default: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+  
+  /* Category text colors for contrast */
+  --category-text-light: rgba(255, 255, 255, 0.95);
+  --category-text-dark: rgba(0, 0, 0, 0.8);
+  
+  /* Category shadow and glow effects */
+  --category-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --category-glow: 0 0 20px rgba(255, 255, 255, 0.2);
+  --category-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

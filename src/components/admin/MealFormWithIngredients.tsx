@@ -251,16 +251,16 @@ const MealFormWithIngredients = ({
                       <SelectTrigger className="h-12 border-2 focus:border-primary/50">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent className="bg-background/95 backdrop-blur-sm border-primary/20">
-                        {categories.map(category => <SelectItem key={category.id} value={category.name}>
-                            <div className="flex items-center gap-3">
-                              <div className="w-4 h-4 rounded-full shadow-md" style={{
-                            backgroundColor: category.color
-                          }} />
-                              <span className="font-medium">{category.name}</span>
-                            </div>
-                          </SelectItem>)}
-                      </SelectContent>
+                       <SelectContent className="bg-background/95 backdrop-blur-sm border-primary/20 z-50">
+                         {categories.map(category => <SelectItem key={category.id} value={category.name}>
+                             <div className="flex items-center gap-3 p-1">
+                               <div className="w-6 h-6 rounded-full shadow-lg border-2 border-white/50 bg-gradient-to-br from-white/20 to-transparent backdrop-blur-sm" style={{
+                             background: `linear-gradient(135deg, ${category.color}00 0%, ${category.color} 100%)`
+                           }} />
+                               <span className="font-semibold text-sm tracking-wide capitalize">{category.name}</span>
+                             </div>
+                           </SelectItem>)}
+                       </SelectContent>
                     </Select>
                   </div>
 

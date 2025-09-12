@@ -6,6 +6,7 @@ import { Printer, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import CategoryTag from "./CategoryTag";
 
 interface Allergen {
   id: string;
@@ -113,15 +114,6 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
     setShowIngredients(!showIngredients);
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'breakfast': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'lunch': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'dinner': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'snack': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   const printMealLabel = async () => {
     try {
@@ -439,6 +431,12 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
        )}
       
        <CardHeader className="pb-2 text-center relative z-20">
+         <div className="flex items-center justify-between mb-3">
+           <CategoryTag category={meal.category} size="sm" variant="bold" />
+           <Badge className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-lg px-3 py-1 shadow-lg">
+             £{meal.price.toFixed(2)}
+           </Badge>
+         </div>
          <CardTitle className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent leading-tight">{meal.name}</CardTitle>
          <CardDescription className="mt-1 text-sm text-gray-600 leading-relaxed">
            {meal.description}
