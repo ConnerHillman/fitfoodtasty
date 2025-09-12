@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import IngredientsManager from "@/components/admin/IngredientsManager";
@@ -11,7 +11,16 @@ import Reports from "@/components/admin/Reports";
 import AllOrders from "@/pages/AllOrders";
 import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp, ListOrdered } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
+import { useSearchParams } from "react-router-dom";
 const AdminDashboard = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') || 'dashboard') as string;
+  const [tab, setTab] = useState<string>(initialTab);
+  useEffect(() => {
+    const t = (searchParams.get('tab') || 'dashboard') as string;
+    setTab(t);
+  }, [searchParams]);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center space-x-4">
@@ -22,7 +31,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="dashboard" className="space-y-8">
+      <Tabs value={tab} onValueChange={(v) => { setTab(v); setSearchParams({ tab: v }); }} className="space-y-8">
         <div className="relative bg-gradient-to-r from-background via-background/95 to-background backdrop-blur-sm border border-border/50 rounded-xl p-2 shadow-lg">
           <TabsList className="grid w-full grid-cols-9 bg-transparent gap-1 p-0 h-auto">
             <TabsTrigger 
