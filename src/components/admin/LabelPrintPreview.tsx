@@ -186,10 +186,13 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
               display: grid !important;
               grid-template-columns: repeat(2, 96mm) !important;
               grid-template-rows: repeat(5, 50.8mm) !important;
-              gap: 5mm !important;
+              column-gap: 5mm !important;
+              row-gap: 5mm !important;
               width: 210mm !important;
               height: 297mm !important;
               box-sizing: border-box !important;
+              align-content: start !important;
+              justify-content: start !important;
             }
           }
           
@@ -203,18 +206,22 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             display: grid;
             grid-template-columns: repeat(2, 96mm);
             grid-template-rows: repeat(5, 50.8mm);
-            gap: 5mm;
+            column-gap: 5mm;
+            row-gap: 5mm;
             padding: 11.5mm 6.5mm;
             box-sizing: border-box;
             align-content: start;
+            justify-content: start;
           }
 
-          /* Force label root to be flex column and footer at bottom */
+          /* Force exact label dimensions and positioning */
           .print-page > div > div {
-            height: 50.8mm;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            width: 96mm !important;
+            height: 50.8mm !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
           }
           .print-page > div > div > div:last-child {
             margin-top: auto;
