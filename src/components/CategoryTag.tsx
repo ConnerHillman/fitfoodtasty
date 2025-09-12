@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface CategoryTagProps {
-  category: string;
+  category: string | null | undefined;
   size?: "sm" | "md" | "lg";
   variant?: "subtle" | "bold" | "outline";
   className?: string;
@@ -14,8 +14,16 @@ const CategoryTag = ({
   variant = "bold",
   className 
 }: CategoryTagProps) => {
+  // Handle null/undefined category gracefully
+  if (!category) {
+    return (
+      <Badge className="bg-gray-200 text-gray-600 px-2 py-1 text-xs font-medium rounded-full">
+        Uncategorized
+      </Badge>
+    );
+  }
   const getCategoryStyles = (categoryName: string) => {
-    const normalizedCategory = categoryName.toLowerCase();
+    const normalizedCategory = (categoryName || '').toLowerCase();
     
     switch (normalizedCategory) {
       case 'breakfast':
@@ -92,6 +100,7 @@ const CategoryTag = ({
   };
 
   const formatDisplayName = (name: string) => {
+    if (!name) return 'Uncategorized';
     // Handle special cases
     if (name === '(lowcal)') return 'Low Cal';
     if (name === 'all meals (regular size)') return 'Regular';
