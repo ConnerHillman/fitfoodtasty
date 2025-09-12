@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Calendar, BarChart3, Settings, ChefHat, Package, Info } from 'lucide-react';
+import { ShoppingCart, Calendar, BarChart3, Settings, ChefHat, Package, Info, Shield } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
 interface LayoutProps {
@@ -74,12 +74,12 @@ const Layout = ({ children }: LayoutProps) => {
                 </Button>
               )}
               <Button 
-                variant={isBusinessRoute ? "outline" : "default"}
-                size="sm"
-                asChild
+                asChild 
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold px-4 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                <Link to={isBusinessRoute ? "/" : "/business"}>
-                  {isBusinessRoute ? "Customer View" : "Business Dashboard"}
+                <Link to={isBusinessRoute ? "/" : "/admin"} className="flex items-center space-x-2">
+                  <Shield className="h-4 w-4" />
+                  <span>{isBusinessRoute ? "Customer View" : "ADMIN"}</span>
                 </Link>
               </Button>
             </div>
