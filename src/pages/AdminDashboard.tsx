@@ -5,7 +5,8 @@ import IngredientsManager from "@/components/admin/IngredientsManager";
 import MealsManager from "@/components/admin/MealsManager";
 import CategoriesManager from "@/components/admin/CategoriesManager";
 import PackagesManager from "@/components/admin/PackagesManager";
-import { ChefHat, Package, ShoppingBag, Upload, Tag } from "lucide-react";
+import ReferralSettingsAdmin from "@/components/admin/ReferralSettingsAdmin";
+import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
 const AdminDashboard = () => {
   return (
@@ -19,7 +20,7 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="ingredients" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="ingredients" className="flex items-center space-x-2">
             <Package className="h-4 w-4" />
             <span>Ingredients</span>
@@ -39,6 +40,10 @@ const AdminDashboard = () => {
           <TabsTrigger value="import" className="flex items-center space-x-2">
             <Upload className="h-4 w-4" />
             <span>Import</span>
+          </TabsTrigger>
+          <TabsTrigger value="referrals" className="flex items-center space-x-2">
+            <Gift className="h-4 w-4" />
+            <span>Referrals</span>
           </TabsTrigger>
         </TabsList>
 
@@ -98,6 +103,20 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <DataImporter />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="referrals">
+          <Card>
+            <CardHeader>
+              <CardTitle>Referral System Configuration</CardTitle>
+              <CardDescription>
+                Manage all aspects of your referral program - discounts, credits, limits, and more
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ReferralSettingsAdmin />
             </CardContent>
           </Card>
         </TabsContent>

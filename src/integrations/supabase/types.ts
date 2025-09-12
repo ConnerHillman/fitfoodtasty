@@ -646,6 +646,33 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_name: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_name: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_name?: string
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referral_transactions: {
         Row: {
           created_at: string
