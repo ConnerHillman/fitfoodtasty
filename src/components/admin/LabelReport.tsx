@@ -21,6 +21,8 @@ import { LabelPreview } from '@/components/LabelPreview';
 import { LabelPrintPreview } from '@/components/admin/LabelPrintPreview';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface MealProduction {
   mealId: string;
@@ -49,6 +51,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   const generateLabelsForDate = async () => {
     if (!selectedDate) {
@@ -220,47 +223,54 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
     setIsGeneratingPDF(true);
     try {
-      console.log('Generating labels for meals:', mealProduction);
-      
-      // Call the edge function for server-side label generation
-      const response = await supabase.functions.invoke('generate-labels-pdf', {
-        body: {
-          mealProduction: mealProduction,
-          useByDate: formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
-        }
-      });
+      // Ensure the offscreen renderer is in the DOM
+      await new Promise((r) => requestAnimationFrame(r));
 
-      if (response.error) {
-        throw response.error;
+      const container = pdfRef.current;
+      if (!container) throw new Error('PDF renderer not available');
+
+      // Wait for images (logo) to load inside the renderer
+      const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) return resolve();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+        )
+      );
+
+      const pages = Array.from(container.querySelectorAll('.print-page')) as HTMLElement[];
+      if (pages.length === 0) throw new Error('No pages to export');
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      for (let i = 0; i < pages.length; i++) {
+        const el = pages[i];
+        const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/png');
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
       }
 
-      // The edge function returns HTML optimized for EU30009BM labels
-      const htmlContent = response.data;
-      
-      // Create a blob and download it
-      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-      const url = window.URL.createObjectURL(htmlBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `EU30009BM_Labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
+      const fileName = `EU30009BM_Labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.pdf`;
+      pdf.save(fileName);
+
       const totalLabels = mealProduction.reduce((sum, meal) => sum + meal.quantity, 0);
       const totalPages = Math.ceil(totalLabels / 10);
-      
+
       toast({
-        title: "Labels Generated Successfully! 🎉",
-        description: `Downloaded ${totalLabels} labels across ${totalPages} A4 pages. Open the HTML file and print directly for EU30009BM labels.`,
+        title: 'PDF Ready to Print',
+        description: `Exported ${totalLabels} labels across ${totalPages} A4 pages.`,
       });
     } catch (error) {
       console.error('Error generating labels:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate labels. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to generate labels. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsGeneratingPDF(false);
@@ -412,6 +422,19 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Offscreen PDF renderer (uses exact label generator design) */}
+        <div
+          ref={pdfRef}
+          style={{ position: 'absolute', left: '-10000px', top: 0, visibility: 'hidden' }}
+        >
+          {mealProduction.length > 0 && (
+            <LabelPrintPreview
+              mealProduction={mealProduction}
+              useByDate={formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')}
+            />
+          )}
         </div>
 
         {/* Label Print Preview Dialog */}
