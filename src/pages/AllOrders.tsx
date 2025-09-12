@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   RefreshCw
 } from 'lucide-react';
+import type { DateRange } from 'react-day-picker';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -41,8 +42,7 @@ const AllOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -135,8 +135,8 @@ const AllOrders: React.FC = () => {
       (order.customer_email || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const orderDate = new Date(order.created_at);
-    const matchesDateRange = (!startDate || orderDate >= startDate) && 
-                             (!endDate || orderDate <= endDate);
+    const matchesDateRange = (!dateRange?.from || orderDate >= dateRange.from) && 
+                             (!dateRange?.to || orderDate <= dateRange.to);
     
     return matchesSearch && matchesDateRange;
   });
@@ -185,7 +185,7 @@ const AllOrders: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Search</label>
                 <div className="relative">
@@ -199,51 +199,34 @@ const AllOrders: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Start Date</label>
+                <label className="text-sm font-medium">Date Range</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
+                        !dateRange?.from && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "PPP") : <span>Pick start date</span>}
+                      {dateRange?.from ? (
+                        dateRange.to ? (
+                          `${format(dateRange.from, "MMM d")} - ${format(dateRange.to, "MMM d, yyyy")}`
+                        ) : (
+                          format(dateRange.from, "PPP")
+                        )
+                      ) : (
+                        <span>Pick date range</span>
+                      )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">End Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "PPP") : <span>Pick end date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
                       initialFocus
                       className="p-3 pointer-events-auto"
                     />
