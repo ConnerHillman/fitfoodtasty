@@ -25,43 +25,44 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
     width: '99.1mm',
     height: '38.1mm',
     boxSizing: 'border-box',
-    padding: '6px',
+    padding: '4px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    fontSize: '6px',
+    lineHeight: '1.1'
   }}>
     {/* Header Section */}
     <div className="flex flex-col items-center">
       {/* Logo */}
-      <div className="mb-1.5">
+      <div className="mb-1">
         <img 
           src={logoImage} 
           alt="Fit Food Tasty" 
-          className="h-8 w-auto object-contain"
+          className="h-6 w-auto object-contain"
         />
       </div>
       
       {/* Meal Name */}
-      <h1 className="text-center font-bold text-[14px] text-foreground leading-tight mb-1.5">
+      <h1 className="text-center font-bold text-foreground leading-none mb-1" style={{ fontSize: '11px' }}>
         {data.mealName}
       </h1>
       
       {/* Separator */}
-      <div className="w-8 h-px bg-primary/30 mb-1.5"></div>
+      <div className="w-6 h-px bg-primary/30 mb-1"></div>
     </div>
 
     {/* Nutrition Section */}
-    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-2 py-1.5 mb-1.5">
-      <div className="text-center text-[8px] font-bold text-primary leading-tight">
+    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-1.5 py-1 mb-1">
+      <div className="text-center font-bold text-primary leading-none" style={{ fontSize: '7px' }}>
         {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
       </div>
     </div>
 
     {/* Main Content */}
-    <div className="flex-1 space-y-1">
+    <div className="flex-1 space-y-0.5">
       {/* Use By Date - Most Important */}
-      <div className="bg-muted/50 rounded-sm px-1.5 py-0.5">
-        <div className="text-[7px] font-bold text-foreground">
+      <div className="bg-muted/50 rounded px-1 py-0.5">
+        <div className="font-bold text-foreground leading-none" style={{ fontSize: '6px' }}>
           USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
             weekday: 'short',
             day: '2-digit',
@@ -72,19 +73,19 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
       </div>
 
       {/* Storage Instructions */}
-      <div className="text-[6px] text-muted-foreground leading-tight">
+      <div className="text-muted-foreground leading-tight" style={{ fontSize: '5px' }}>
         {data.storageInstructions}
       </div>
 
       {/* Ingredients */}
-      <div className="text-[6px] leading-tight">
+      <div className="leading-tight" style={{ fontSize: '5px' }}>
         <span className="font-semibold text-foreground">Ingredients:</span>{' '}
         <span className="text-muted-foreground">{data.ingredients || 'Not specified'}</span>
       </div>
 
       {/* Allergens */}
       {data.allergens && (
-        <div className="text-[6px] leading-tight">
+        <div className="leading-tight" style={{ fontSize: '5px' }}>
           <span className="font-semibold text-foreground">Allergens:</span>{' '}
           <span className="font-bold text-foreground">{data.allergens}</span>
         </div>
@@ -92,8 +93,8 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
     </div>
 
     {/* Footer */}
-    <div className="border-t border-border/30 pt-1 mt-1">
-      <div className="text-center text-[6px] font-medium text-primary">
+    <div className="border-t border-border/30 pt-0.5 mt-1">
+      <div className="text-center font-medium text-primary leading-none" style={{ fontSize: '5px' }}>
         www.fitfoodtasty.co.uk
       </div>
     </div>
