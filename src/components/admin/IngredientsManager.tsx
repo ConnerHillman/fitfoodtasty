@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,7 @@ const IngredientsManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  const scrollPositionRef = useRef<number>(0);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -188,12 +189,25 @@ const IngredientsManager = () => {
     }
 
     toast({ title: "Success", description: `Ingredient ${editingIngredient ? 'updated' : 'created'} successfully` });
+    
+    // Store current scroll position before closing dialog
+    scrollPositionRef.current = window.scrollY;
+    
     setIsDialogOpen(false);
     resetForm();
+    
+    // Restore scroll position after the dialog closes and data refreshes
+    setTimeout(() => {
+      window.scrollTo(0, scrollPositionRef.current);
+    }, 100);
+    
     fetchIngredients();
   };
 
   const handleEdit = (ingredient: Ingredient) => {
+    // Store current scroll position before opening dialog
+    scrollPositionRef.current = window.scrollY;
+    
     setEditingIngredient(ingredient);
     setFormData({
       name: ingredient.name,
@@ -271,7 +285,15 @@ const IngredientsManager = () => {
                   className="pl-10 w-[300px] bg-background/80 backdrop-blur-sm"
                 />
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                if (!open) {
+                  // Restore scroll position when dialog is closed via escape or backdrop
+                  setTimeout(() => {
+                    window.scrollTo(0, scrollPositionRef.current);
+                  }, 100);
+                }
+                setIsDialogOpen(open);
+              }}>
                 <DialogTrigger asChild>
                   <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
                     <Plus className="h-4 w-4 mr-2" />
@@ -443,7 +465,12 @@ const IngredientsManager = () => {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => {
+                  setTimeout(() => {
+                    window.scrollTo(0, scrollPositionRef.current);
+                  }, 100);
+                  setIsDialogOpen(false);
+                }}>
                   Cancel
                 </Button>
                 <Button type="submit" className="bg-primary hover:bg-primary/90">
