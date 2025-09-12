@@ -206,10 +206,10 @@ const OrderDetails: React.FC = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
             <p className="text-muted-foreground mb-4">The requested order could not be found.</p>
-            <Link to="/admin">
+            <Link to="/admin?tab=orders">
               <Button>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                Back to Orders
               </Button>
             </Link>
           </div>
@@ -224,10 +224,10 @@ const OrderDetails: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/admin">
+            <Link to="/admin?tab=orders">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                Back to Orders
               </Button>
             </Link>
             <div>
