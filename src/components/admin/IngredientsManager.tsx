@@ -189,19 +189,21 @@ const IngredientsManager = () => {
     }
 
     toast({ title: "Success", description: `Ingredient ${editingIngredient ? 'updated' : 'created'} successfully` });
-    
-    // Store current scroll position before closing dialog
+
+    // Remember current scroll before any UI updates
     scrollPositionRef.current = window.scrollY;
-    
+
+    // Refresh data first so the table doesn't remount after we restore scroll
+    await fetchIngredients();
+
+    // Close dialog and reset form
     setIsDialogOpen(false);
     resetForm();
-    
-    // Restore scroll position after the dialog closes and data refreshes
-    setTimeout(() => {
-      window.scrollTo(0, scrollPositionRef.current);
-    }, 100);
-    
-    fetchIngredients();
+
+    // Restore scroll on next frames to avoid layout thrash
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollPositionRef.current });
+    });
   };
 
   const handleEdit = (ingredient: Ingredient) => {
@@ -300,7 +302,16 @@ const IngredientsManager = () => {
                     Add Ingredient
                   </Button>
                 </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent 
+            className="max-w-2xl"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+              requestAnimationFrame(() => {
+                window.scrollTo({ top: scrollPositionRef.current });
+              });
+            }}
+          >
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold">
                 {editingIngredient ? "Edit Ingredient" : "Add New Ingredient"}
