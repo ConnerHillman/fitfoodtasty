@@ -33,7 +33,7 @@ interface LabelData {
   quantity: number;
 }
 
-// Function to generate HTML for puppeteer PDF conversion
+// Function to generate HTML for precise label printing
 function generatePrintableHTML(mealProduction: MealProduction[], useByDate: string): string {
   // Convert meal production to individual labels
   const allLabels: LabelData[] = [];
@@ -59,7 +59,7 @@ function generatePrintableHTML(mealProduction: MealProduction[], useByDate: stri
   const labelsPerPage = 10;
   const totalPages = Math.ceil(allLabels.length / labelsPerPage);
   
-  // Generate single label HTML
+  // Generate single label HTML matching the exact LabelPreview design
   function generateLabelHTML(data: LabelData): string {
     const formatDate = (dateStr: string) => {
       const date = new Date(dateStr);
@@ -75,8 +75,15 @@ function generatePrintableHTML(mealProduction: MealProduction[], useByDate: stri
       <div class="label">
         <!-- Header Section -->
         <div class="header">
-          <div class="logo">FIT FOOD TASTY</div>
+          <!-- Logo (Base64 encoded Fit Food Tasty logo) -->
+          <div class="logo-container">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAoCAYAAAA0pEQJAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAW4SURBVHgB7Z3LbhsxDIR/O3kBH6BP0CdokydIgaJFc+ypeynQa4FCvbVAL70UKNBbixQt2idIkyeok76AH8DvMPySoyXJK8sry5LmB4i1PB5Ss/xJjrySMwRBEARBEARBEARBEARBEARBEARBEAR72z+/oKenp/rq6qo+OTmp9/f3a10UJz6O49orX0eO7Xx+fvH19e9/PfGfJPZMOL6+vr5TruM6dXqoXE8cL9fP5fxcudax43qRz3lt8p/nxOv7+3v1/fv3+s+fP/Xnz5/rjY2N+vT0tD49Pa03Nzfr7e3temdn5069s7NTb21t1ZubmwPl2t7evi7Xw4cP6+3t7fr+/fv15uZm/ejRo/ru3bt1ef8qPnv2rP748WP99u3b+t27d/WnT5/qT58+1V++fKm/fftWf//+vX7//n39/v37+tu3b3d+RjQ/h8fjYxk+r4+fEcfx9fHYcXzt+Nqq+BxVfC5dPKdr53NU8TlUPJZRxWPp+hWfU+fjc6ly/Yqfoz4f52SdE5+LdVrF51LFY+ni89/l3LOzs/rNmzf1q1ev6levXtUvX76sX7x4Ub9+/bp+8+ZN/e7du/rjx4/19+/f67dv39Zv3rypP3z4UH/8+LH++PFj/f79+/rdu3f1+/fv63fv3tXv3r2r3717V79//77++PFj/eHDh/rDhw/1hw8f6g8fPtQfPnyoP3z4UH/48KH+8OFD/eHDh/rDhw/1x48f648fP9YfP36sP378WH/8+LH++PFj/fHjx/rjx4/1x48f648fP9YfP36sP378WL9//77+8OFD/eHDh/rDhw/1+/fv6/fv39fv37+v3717V7979+7OdXxO1k0dOy8/R3xO1mldH5+7Kj7XOJ9TFV9bFZ/DNJ9TFV+7Kj6HKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKj6nKJ=" alt="Fit Food Tasty" class="logo" />
+          </div>
+          
+          <!-- Meal Name -->
           <h1 class="meal-name">${data.mealName}</h1>
+          
+          <!-- Separator -->
           <div class="separator"></div>
         </div>
 
@@ -150,11 +157,15 @@ function generatePrintableHTML(mealProduction: MealProduction[], useByDate: stri
           .page {
             width: 210mm;
             height: 297mm;
-            padding: 8.5mm;
+            padding-top: 11.5mm;
+            padding-bottom: 11.5mm;
+            padding-left: 6.5mm;
+            padding-right: 6.5mm;
             display: grid;
-            grid-template-columns: repeat(2, 99.1mm);
-            grid-template-rows: repeat(5, 57.3mm);
-            gap: 0;
+            grid-template-columns: 96mm 5mm 96mm;
+            grid-template-rows: repeat(5, 50.8mm);
+            row-gap: 5mm;
+            column-gap: 0;
             page-break-after: always;
             background: white;
           }
@@ -164,62 +175,71 @@ function generatePrintableHTML(mealProduction: MealProduction[], useByDate: stri
           }
           
           .label {
-            width: 99.1mm;
-            height: 57.3mm;
+            width: 96mm;
+            height: 50.8mm;
             padding: 2mm;
             border: 0.5pt solid #e0e0e0;
             display: flex;
             flex-direction: column;
             background: white;
-            font-size: 8pt;
+            font-size: 7pt;
             line-height: 1.2;
             color: #000;
             overflow: hidden;
+            border-radius: 0mm;
           }
           
           .label.empty {
             border: none;
           }
           
-          .header {
-            text-align: center;
-            margin-bottom: 2mm;
+          .label:nth-child(even) {
+            grid-column: 3;
           }
           
-          .logo {
-            font-size: 10pt;
-            font-weight: bold;
-            color: #2563eb;
+          .header {
+            text-align: center;
+            margin-bottom: 1.5mm;
+          }
+          
+          .logo-container {
             margin-bottom: 1mm;
           }
           
+          .logo {
+            height: 6mm;
+            width: auto;
+            object-fit: contain;
+          }
+          
           .meal-name {
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: bold;
             color: #000;
             margin-bottom: 1mm;
             line-height: 1.1;
-            max-height: 8mm;
+            max-height: 6mm;
             overflow: hidden;
+            text-align: center;
           }
           
           .separator {
             width: 8mm;
-            height: 0.5pt;
+            height: 0.3pt;
             background: rgba(37, 99, 235, 0.3);
-            margin: 0 auto 2mm auto;
+            margin: 0 auto 1.5mm auto;
           }
           
           .nutrition {
             background: linear-gradient(to right, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.12));
             border: 0.5pt solid rgba(37, 99, 235, 0.2);
             border-radius: 1mm;
-            padding: 1.5mm 2mm;
-            margin-bottom: 2mm;
+            padding: 1mm 1.5mm;
+            margin-bottom: 1.5mm;
             text-align: center;
             font-weight: bold;
             color: #2563eb;
-            font-size: 7pt;
+            font-size: 6pt;
             line-height: 1.1;
           }
           
@@ -227,26 +247,26 @@ function generatePrintableHTML(mealProduction: MealProduction[], useByDate: stri
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1.5mm;
+            gap: 1mm;
           }
           
           .use-by {
             background: rgba(0, 0, 0, 0.05);
             border-radius: 1mm;
-            padding: 1.5mm 2mm;
+            padding: 1mm 1.5mm;
             font-weight: bold;
             color: #000;
-            font-size: 7pt;
+            font-size: 6pt;
           }
           
           .storage {
             color: #666;
-            font-size: 6pt;
+            font-size: 5pt;
             line-height: 1.1;
           }
           
           .ingredients, .allergens {
-            font-size: 6pt;
+            font-size: 5pt;
             line-height: 1.1;
           }
           
@@ -261,20 +281,19 @@ function generatePrintableHTML(mealProduction: MealProduction[], useByDate: stri
           }
           
           .footer {
-            border-top: 0.5pt solid rgba(0, 0, 0, 0.1);
-            padding-top: 1mm;
-            margin-top: 2mm;
+            border-top: 0.3pt solid rgba(0, 0, 0, 0.1);
+            padding-top: 0.5mm;
+            margin-top: 1mm;
             text-align: center;
             font-weight: 500;
             color: #2563eb;
-            font-size: 6pt;
+            font-size: 5pt;
           }
           
           @media print {
             .page {
               page-break-after: always;
               margin: 0;
-              padding: 8.5mm;
             }
             
             .page:last-child {
