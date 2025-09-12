@@ -146,9 +146,9 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
         </div>
 
         {/* Info buttons */}
-        <div className="flex gap-2 mb-3">
+        <div className="mb-3">
           {isMobile ? (
-            <>
+            <div className="flex flex-col items-center gap-2">
               {/* Ingredients dialog (mobile) */}
               <Dialog>
                 <DialogTrigger asChild>
@@ -156,7 +156,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
                     variant="outline" 
                     size="sm" 
                     onClick={handleIngredientsClick}
-                    className="flex-1 h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
+                    className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[11px] font-medium rounded-lg flex items-center justify-center"
                   >
                     <Info className="w-3 h-3 mr-1" />
                     INGREDIENTS
@@ -205,7 +205,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1 h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
+                      className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[11px] font-medium rounded-lg flex items-center justify-center"
                     >
                       <Info className="w-3 h-3 mr-1" />
                       NUTRITION
@@ -254,7 +254,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
                   </DialogContent>
                 </Dialog>
               )}
-            </>
+            </div>
           ) : (
             <>
               {/* Ingredients popover (desktop) */}
