@@ -54,12 +54,34 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
             key={pkg.id} 
             className="group relative overflow-hidden rounded-xl border-2 border-muted hover:border-emerald-300 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-1 bg-white/50 backdrop-blur-sm"
           >
+            {/* Small background image */}
+            {pkg.image_url && (
+              <div className="absolute top-0 right-0 w-16 h-16 opacity-10 group-hover:opacity-20 transition-opacity duration-300">
+                <img 
+                  src={pkg.image_url} 
+                  alt=""
+                  className="w-full h-full object-cover rounded-bl-xl"
+                />
+              </div>
+            )}
+            
             {/* Compact header with title and price */}
-            <div className="p-4 pb-3">
+            <div className="p-4 pb-3 relative">
               <div className="flex items-start justify-between mb-2">
-                <h3 className="font-bold text-lg text-foreground group-hover:text-emerald-700 transition-colors">
-                  {pkg.name}
-                </h3>
+                <div className="flex items-center gap-3">
+                  {pkg.image_url && (
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-muted/50 border">
+                      <img 
+                        src={pkg.image_url} 
+                        alt={pkg.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <h3 className="font-bold text-lg text-foreground group-hover:text-emerald-700 transition-colors">
+                    {pkg.name}
+                  </h3>
+                </div>
                 <div className="text-right">
                   <div className="text-xl font-bold text-emerald-600">
                     £{pkg.price.toFixed(2)}
@@ -71,7 +93,7 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
               </div>
               
               {pkg.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3 ml-11">
                   {pkg.description}
                 </p>
               )}
