@@ -223,47 +223,101 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
     setIsGeneratingPDF(true);
     try {
-      // Ensure the offscreen renderer is in the DOM
-      await new Promise((r) => requestAnimationFrame(r));
-
+      console.log('Starting PDF generation for meals:', mealProduction.length);
+      
+      // Ensure the offscreen renderer is in the DOM and visible for rendering
       const container = pdfRef.current;
-      if (!container) throw new Error('PDF renderer not available');
+      if (!container) {
+        console.error('PDF renderer not available');
+        throw new Error('PDF renderer not available');
+      }
 
-      // Wait for images (logo) to load inside the renderer
+      console.log('Container found, checking content...');
+      
+      // Make the container temporarily visible for proper rendering
+      container.style.position = 'fixed';
+      container.style.left = '0';
+      container.style.top = '0';
+      container.style.visibility = 'visible';
+      container.style.zIndex = '-9999';
+      
+      // Wait for next render cycle
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Wait for images (logo) to load
       const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
+      console.log('Found images:', images.length);
+      
       await Promise.all(
         images.map(
           (img) =>
             new Promise<void>((resolve) => {
-              if (img.complete) return resolve();
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
+              if (img.complete) {
+                console.log('Image already loaded:', img.src.substring(0, 50) + '...');
+                return resolve();
+              }
+              img.onload = () => {
+                console.log('Image loaded successfully');
+                resolve();
+              };
+              img.onerror = () => {
+                console.log('Image failed to load');
+                resolve();
+              };
             })
         )
       );
 
       const pages = Array.from(container.querySelectorAll('.print-page')) as HTMLElement[];
-      if (pages.length === 0) throw new Error('No pages to export');
+      console.log('Found pages:', pages.length);
+      
+      if (pages.length === 0) {
+        console.error('No pages found in container');
+        console.log('Container HTML:', container.innerHTML.substring(0, 500));
+        throw new Error('No pages to export');
+      }
 
       const pdf = new jsPDF('p', 'mm', 'a4');
 
       for (let i = 0; i < pages.length; i++) {
         const el = pages[i];
-        const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        console.log(`Capturing page ${i + 1}/${pages.length}`);
+        
+        const canvas = await html2canvas(el, { 
+          scale: 2, 
+          useCORS: true, 
+          backgroundColor: '#ffffff',
+          logging: true,
+          allowTaint: true,
+          height: el.offsetHeight,
+          width: el.offsetWidth
+        });
+        
+        console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
+        
         const imgData = canvas.toDataURL('image/png');
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        
+        // Scale to fit A4 (210x297mm)
+        const imgWidth = 210;
+        const imgHeight = 297;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       }
 
-      const fileName = `EU30009BM_Labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.pdf`;
+      // Hide the container again
+      container.style.position = 'absolute';
+      container.style.left = '-10000px';
+      container.style.visibility = 'hidden';
+
+      const fileName = `Meal_Labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.pdf`;
       pdf.save(fileName);
 
       const totalLabels = mealProduction.reduce((sum, meal) => sum + meal.quantity, 0);
       const totalPages = Math.ceil(totalLabels / 10);
 
       toast({
-        title: 'PDF Ready to Print',
-        description: `Exported ${totalLabels} labels across ${totalPages} A4 pages.`,
+        title: 'PDF Generated Successfully! 🎉',
+        description: `Downloaded ${totalLabels} labels across ${totalPages} A4 pages. Ready to print!`,
       });
     } catch (error) {
       console.error('Error generating labels:', error);
