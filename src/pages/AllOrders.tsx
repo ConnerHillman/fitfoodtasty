@@ -163,12 +163,8 @@ const AllOrders: React.FC = () => {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-            <Button onClick={fetchAllOrders} size="sm" variant="outline">
+          <div className="flex items-center justify-end">
+            <Button onClick={fetchAllOrders} size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
