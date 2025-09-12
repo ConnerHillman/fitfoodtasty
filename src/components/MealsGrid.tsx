@@ -44,7 +44,7 @@ const MealsGrid = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("regular");
   const { toast } = useToast();
   const { addToCart } = useCart();
 
@@ -94,18 +94,22 @@ const MealsGrid = () => {
     }
   };
 
-  const filteredMeals = selectedCategory === "all" 
+  const filteredMeals = selectedCategory === "regular" 
     ? meals 
-    : meals.filter(meal => meal.category === selectedCategory);
+    : selectedCategory === "all"
+      ? meals
+      : meals.filter(meal => meal.category === selectedCategory);
 
-  // Create display categories including "All Meals"
+  // Create display categories with custom order
+  const categoryMap = new Map(categories.map(cat => [cat.name, { value: cat.name, label: toTitleCase(cat.name || '') }]));
   const displayCategories = [
+    { value: "regular", label: "Regular" },
+    ...(categoryMap.get("massive meals") ? [categoryMap.get("massive meals")] : []),
+    ...(categoryMap.get("lowcal") ? [categoryMap.get("lowcal")] : []),
     { value: "all", label: "All Meals" },
-    ...categories.map(cat => {
-      const raw = cat.name || '';
-      return { value: raw, label: toTitleCase(raw) };
-    })
-  ];
+    // Add any remaining categories not specifically ordered
+    ...Array.from(categoryMap.values()).filter(cat => !["massive meals", "lowcal"].includes(cat.value))
+  ].filter(Boolean);
 
   const handleAddToCart = (meal: Meal) => {
     addToCart(meal);
