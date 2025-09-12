@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Download, Save, Plus, Trash2 } from 'lucide-react';
+import { Printer, Download, Save, Plus, Trash2, Edit3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LabelPreview } from './LabelPreview';
+import { LabelEditor } from './LabelEditor';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -59,6 +60,7 @@ export const LabelGenerator: React.FC = () => {
   const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
   const [showSavedMeals, setShowSavedMeals] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -197,6 +199,23 @@ export const LabelGenerator: React.FC = () => {
   const handlePrint = () => {
     window.print();
   };
+
+  const handleSaveFromEditor = (updatedData: LabelData) => {
+    setLabelData(updatedData);
+    setIsEditMode(false);
+  };
+
+  if (isEditMode) {
+    return (
+      <div className="container mx-auto py-8">
+        <LabelEditor 
+          data={labelData}
+          onSave={handleSaveFromEditor}
+          onClose={() => setIsEditMode(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -366,7 +385,18 @@ export const LabelGenerator: React.FC = () => {
         {/* Preview Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Preview</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Preview
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditMode(true)}
+                disabled={!labelData.mealName}
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Edit Mode
+              </Button>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg p-4 bg-white">
