@@ -27,6 +27,8 @@ interface Ingredient {
   carbs_per_100g: number;
   fat_per_100g: number;
   fiber_per_100g: number;
+  sugar_per_100g: number;
+  sodium_per_100g: number;
   default_unit: string;
   allergens?: Allergen[];
 }
@@ -47,6 +49,8 @@ const IngredientsManager = () => {
     carbs_per_100g: "",
     fat_per_100g: "",
     fiber_per_100g: "",
+    sugar_per_100g: "",
+    sodium_per_100g: "",
     default_unit: "g"
   });
   const { toast } = useToast();
@@ -125,6 +129,8 @@ const IngredientsManager = () => {
       carbs_per_100g: parseFloat(formData.carbs_per_100g) || 0,
       fat_per_100g: parseFloat(formData.fat_per_100g) || 0,
       fiber_per_100g: parseFloat(formData.fiber_per_100g) || 0,
+      sugar_per_100g: parseFloat(formData.sugar_per_100g) || 0,
+      sodium_per_100g: parseFloat(formData.sodium_per_100g) || 0,
       default_unit: formData.default_unit
     };
 
@@ -192,6 +198,8 @@ const IngredientsManager = () => {
       carbs_per_100g: ingredient.carbs_per_100g.toString(),
       fat_per_100g: ingredient.fat_per_100g.toString(),
       fiber_per_100g: ingredient.fiber_per_100g.toString(),
+      sugar_per_100g: ingredient.sugar_per_100g?.toString() || "0",
+      sodium_per_100g: ingredient.sodium_per_100g?.toString() || "0",
       default_unit: ingredient.default_unit || "g"
     });
     setSelectedAllergens(ingredient.allergens?.map(a => a.id) || []);
@@ -221,6 +229,8 @@ const IngredientsManager = () => {
       carbs_per_100g: "",
       fat_per_100g: "",
       fiber_per_100g: "",
+      sugar_per_100g: "",
+      sodium_per_100g: "",
       default_unit: "g"
     });
     setSelectedAllergens([]);
@@ -353,6 +363,29 @@ const IngredientsManager = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sugar">Sugar per 100g</Label>
+                  <Input
+                    id="sugar"
+                    type="number"
+                    step="0.01"
+                    value={formData.sugar_per_100g}
+                    onChange={(e) => setFormData({ ...formData, sugar_per_100g: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sodium">Sodium per 100g</Label>
+                  <Input
+                    id="sodium"
+                    type="number"
+                    step="0.01"
+                    value={formData.sodium_per_100g}
+                    onChange={(e) => setFormData({ ...formData, sodium_per_100g: e.target.value })}
+                  />
+                </div>
+              </div>
+
               {/* Allergens Section */}
               <div className="space-y-3">
                 <Label>Allergens</Label>
@@ -417,6 +450,7 @@ const IngredientsManager = () => {
                 <TableHead>Calories</TableHead>
                 <TableHead>Protein</TableHead>
                 <TableHead>Carbs</TableHead>
+                <TableHead>Sugar</TableHead>
                 <TableHead>Fat</TableHead>
                 <TableHead>Allergens</TableHead>
                 <TableHead>Unit</TableHead>
@@ -437,6 +471,7 @@ const IngredientsManager = () => {
                   <TableCell>{ingredient.calories_per_100g}kcal</TableCell>
                   <TableCell>{ingredient.protein_per_100g}g</TableCell>
                   <TableCell>{ingredient.carbs_per_100g}g</TableCell>
+                  <TableCell>{ingredient.sugar_per_100g || 0}g</TableCell>
                   <TableCell>{ingredient.fat_per_100g}g</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">

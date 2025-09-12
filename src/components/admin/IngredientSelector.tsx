@@ -225,22 +225,26 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-4 gap-4 text-center">
+               <div className="grid grid-cols-5 gap-3 text-center">
               <div>
-                <div className="text-2xl font-bold text-primary">{Math.round(nutrition.calories)}</div>
-                <div className="text-sm text-muted-foreground">Calories</div>
+                <div className="text-xl font-bold text-primary">{Math.round(nutrition.calories)}</div>
+                <div className="text-xs text-muted-foreground">Calories</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-blue-600">{nutrition.protein.toFixed(1)}g</div>
-                <div className="text-sm text-muted-foreground">Protein</div>
+                <div className="text-xl font-bold text-blue-600">{nutrition.protein.toFixed(1)}g</div>
+                <div className="text-xs text-muted-foreground">Protein</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{nutrition.carbs.toFixed(1)}g</div>
-                <div className="text-sm text-muted-foreground">Carbs</div>
+                <div className="text-xl font-bold text-green-600">{nutrition.carbs.toFixed(1)}g</div>
+                <div className="text-xs text-muted-foreground">Carbs</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-yellow-600">{nutrition.fat.toFixed(1)}g</div>
-                <div className="text-sm text-muted-foreground">Fat</div>
+                <div className="text-xl font-bold text-orange-600">{nutrition.sugar.toFixed(1)}g</div>
+                <div className="text-xs text-muted-foreground">Sugar</div>
+              </div>
+              <div>
+                <div className="text-xl font-bold text-yellow-600">{nutrition.fat.toFixed(1)}g</div>
+                <div className="text-xs text-muted-foreground">Fat</div>
               </div>
             </div>
           </CardContent>
@@ -262,6 +266,7 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
                   <TableHead>Calories</TableHead>
                   <TableHead>Protein</TableHead>
                   <TableHead>Carbs</TableHead>
+                  <TableHead>Sugar</TableHead>
                   <TableHead>Fat</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
@@ -287,6 +292,7 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
                       <TableCell>{Math.round(si.ingredient.calories_per_100g * factor)} kcal</TableCell>
                       <TableCell>{(si.ingredient.protein_per_100g * factor).toFixed(1)}g</TableCell>
                       <TableCell>{(si.ingredient.carbs_per_100g * factor).toFixed(1)}g</TableCell>
+                      <TableCell>{((si.ingredient.sugar_per_100g || 0) * factor).toFixed(1)}g</TableCell>
                       <TableCell>{(si.ingredient.fat_per_100g * factor).toFixed(1)}g</TableCell>
                       <TableCell>
                         <Button

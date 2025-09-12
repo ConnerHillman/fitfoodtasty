@@ -31,6 +31,8 @@ interface Meal {
   total_carbs: number;
   total_fat: number;
   total_fiber: number;
+  total_sugar: number;
+  total_sodium: number;
   total_weight?: number;
   image_url?: string;
   created_at: string;
