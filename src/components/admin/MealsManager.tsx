@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -45,6 +45,7 @@ const MealsManager = () => {
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isNewMealFormOpen, setIsNewMealFormOpen] = useState(false);
@@ -661,6 +662,37 @@ const MealsManager = () => {
                 <SelectItem value="inactive" className="rounded-lg">Inactive Only</SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-white/50 rounded-xl p-1 shadow-sm">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={`h-10 w-10 p-0 rounded-lg transition-all duration-200 ${
+                  viewMode === 'grid' 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'hover:bg-white/80'
+                }`}
+                title="Grid View"
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className={`h-10 w-10 p-0 rounded-lg transition-all duration-200 ${
+                  viewMode === 'list' 
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'hover:bg-white/80'
+                }`}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-white/30 rounded-lg px-3 py-2">
               <span className="font-medium text-primary">{filteredMeals.length}</span>
               <span>of {meals.length} meals</span>
@@ -669,7 +701,7 @@ const MealsManager = () => {
         </div>
       </div>
 
-      {/* Modern Meals Grid */}
+      {/* Modern Meals Display */}
       <div className="space-y-6">
         {filteredMeals.length === 0 ? (
           <div className="glass-card rounded-2xl p-12 text-center animate-bounce-subtle">
@@ -697,7 +729,8 @@ const MealsManager = () => {
               </Button>
             )}
           </div>
-        ) : (
+        ) : viewMode === 'grid' ? (
+          /* Grid View */
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredMeals.map((meal, index) => (
               <div
@@ -851,6 +884,171 @@ const MealsManager = () => {
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete Meal
                   </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* List View */
+          <div className="space-y-4">
+            {filteredMeals.map((meal, index) => (
+              <div
+                key={meal.id}
+                className="group glass-card rounded-2xl overflow-hidden hover-lift hover-glow animate-fade-in"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <div className="flex gap-6 p-6">
+                  {/* Meal Image */}
+                  <div className="relative w-32 h-32 flex-shrink-0">
+                    <div className="w-full h-full rounded-xl overflow-hidden">
+                      {(meal as any).image_url ? (
+                        <img
+                          src={(meal as any).image_url}
+                          alt={meal.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center rounded-xl">
+                          <ImageIcon className="h-8 w-8 text-primary/60" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Status Badge */}
+                    <div className="absolute -top-2 -right-2">
+                      <Badge
+                        className={meal.is_active 
+                          ? "status-active shadow-lg" 
+                          : "status-inactive"}
+                      >
+                        {meal.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Meal Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-xl mb-1 truncate">{meal.name}</h3>
+                        {meal.description && (
+                          <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
+                            {meal.description}
+                          </p>
+                        )}
+                        {meal.category && (
+                          <CategoryTag 
+                            category={meal.category}
+                            size="sm"
+                            variant="bold"
+                            className="shadow-sm"
+                          />
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-4">
+                        <span className="font-bold text-2xl text-primary">£{meal.price.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Nutrition Info Row */}
+                    <div className="flex items-center gap-6 mb-4 p-3 bg-muted/30 rounded-xl">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-primary">{Math.round(meal.total_calories)}</div>
+                        <div className="text-xs text-muted-foreground">calories</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-green-600">{(meal.total_protein || 0).toFixed(0)}g</div>
+                        <div className="text-xs text-muted-foreground">protein</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-sm font-medium">{(meal.total_carbs || 0).toFixed(0)}g</div>
+                        <div className="text-xs text-muted-foreground">carbs</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-sm font-medium">{(meal.total_fat || 0).toFixed(0)}g</div>
+                        <div className="text-xs text-muted-foreground">fat</div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => printMealLabel(meal)}
+                        className="hover-glow"
+                        title="Print Label"
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Print
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBuildMeal(meal.id)}
+                        className="hover-glow"
+                        title="Build/Edit Ingredients"
+                      >
+                        <Calculator className="h-4 w-4 mr-2" />
+                        Build
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(meal)}
+                        className="hover-glow"
+                        title="Edit Meal"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleActive(meal)}
+                        className={`${meal.is_active 
+                          ? "text-green-600 hover:text-green-700 border-green-200 hover:bg-green-50" 
+                          : "text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"}`}
+                        title="Toggle Status"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        {meal.is_active ? 'Active' : 'Inactive'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(meal.id)}
+                        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 ml-auto"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </Button>
+                      
+                      {/* Order Controls */}
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => moveMeal(meal.id, 'up')}
+                          disabled={index === 0}
+                          className="h-8 w-8 p-0"
+                          title="Move Up"
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => moveMeal(meal.id, 'down')}
+                          disabled={index === filteredMeals.length - 1}
+                          className="h-8 w-8 p-0"
+                          title="Move Down"
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
