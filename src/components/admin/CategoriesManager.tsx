@@ -395,40 +395,29 @@ const CategoriesManager = () => {
 
   return (
     <div className="space-y-8">
-      {/* Modern header with gradient */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-white">
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                <Target className="h-6 w-6 text-white" />
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Categories Manager</h2>
+              <p className="text-muted-foreground">Create and manage meal categories to organize your menu</p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
+                <span className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-muted-foreground/60"></div>
+                  {categories.length} categories
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  {categories.filter(c => c.is_active).length} active
+                </span>
               </div>
-              <h2 className="text-4xl font-bold tracking-tight">Categories Manager</h2>
             </div>
-            <p className="text-white/90 text-lg">
-              Organize your menu items into structured categories
-            </p>
-            <div className="flex items-center gap-4 text-sm text-white/80">
-              <span className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded-full bg-white/60"></div>
-                {filteredCategories.length} categories
-              </span>
-              <span className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded-full bg-green-400"></div>
-                {filteredCategories.filter(c => c.is_active).length} active
-              </span>
             </div>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button
-                  onClick={resetForm}
-                  className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 hover-glow shadow-lg"
-                  size="lg"
-                >
-                  <Plus className="mr-2 h-5 w-5" />
+                <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Category
                 </Button>
               </DialogTrigger>
