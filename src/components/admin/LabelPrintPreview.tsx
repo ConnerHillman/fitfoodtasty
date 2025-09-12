@@ -48,18 +48,16 @@ const SingleLabel: React.FC<{
       <div className="mb-2">
         <img 
           src={logoImage} 
-          alt="Fit Food Tasty" 
+          alt="Fit Food Tasty logo"
           className="h-8 w-auto object-contain"
         />
       </div>
-      
       {/* Meal Name */}
       <h1 className="text-center font-bold text-foreground leading-tight mb-2" style={{ fontSize: '14px' }}>
         {mealName}
       </h1>
-      
       {/* Separator */}
-      <div className="w-8 h-px bg-primary/30 mb-2"></div>
+      <div className="w-8 h-px bg-primary/30 mb-2" aria-hidden="true"></div>
     </div>
 
     {/* Nutrition Section */}
@@ -85,7 +83,7 @@ const SingleLabel: React.FC<{
 
       {/* Storage Instructions */}
       <div className="text-muted-foreground leading-tight" style={{ fontSize: '6px' }}>
-        Store in a refrigerator below 5°c. Heat in a microwave for 3-4 minutes or until piping hot.
+        Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.
       </div>
 
       {/* Ingredients */}
@@ -146,15 +144,20 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
     <div className="print-preview bg-gray-100 p-4">
       <style dangerouslySetInnerHTML={{
         __html: `
+          @page {
+            size: A4 portrait;
+            margin: 0;
+          }
           @media print {
-            * {
+            html, body {
+              width: 210mm;
+              height: 297mm;
               margin: 0 !important;
               padding: 0 !important;
-              box-shadow: none !important;
+              background: white !important;
             }
-            body {
-              margin: 0 !important;
-              padding: 0 !important;
+            * {
+              box-shadow: none !important;
             }
             .print-preview {
               margin: 0 !important;
@@ -170,7 +173,6 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             .print-page {
               margin: 0 !important;
               padding: 11.5mm 6.5mm !important;
-              box-shadow: none !important;
               background: white !important;
               display: grid !important;
               grid-template-columns: repeat(2, 96mm) !important;
@@ -195,6 +197,18 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             gap: 5mm;
             padding: 11.5mm 6.5mm;
             box-sizing: border-box;
+            align-content: start;
+          }
+
+          /* Force label root to be flex column and footer at bottom */
+          .print-page > div > div {
+            height: 50.8mm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+          }
+          .print-page > div > div > div:last-child {
+            margin-top: auto;
           }
         `
       }} />
@@ -211,7 +225,8 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
       </div>
 
       {pages.map(({ pageLabels, pageIndex }) => (
-        <div key={pageIndex} className={`print-page ${pageIndex < pages.length - 1 ? 'page-break' : ''}`}>
+        <div key={pageIndex} className={`print-page ${pageIndex < pages.length - 1 ? 'page-break' : ''}`} role="region" aria-label={`Label page ${pageIndex + 1}`}>
+
           {pageLabels.map(({ meal }, labelIndex) => (
             <div key={`${meal?.mealId || 'empty'}-${labelIndex}`}>
               {meal ? (
@@ -230,14 +245,15 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
                   width: '96mm', 
                   height: '50.8mm',
                   border: '1px dashed #ccc', 
-                  opacity: 0.3,
+                  opacity: 0.25,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#999',
-                  fontSize: '10px'
+                  fontSize: '10px',
+                  position: 'relative'
                 }}>
-                  Empty
+                  <div style={{position:'absolute', left:'6px', right:'6px', bottom:'6px', borderTop:'1px dashed #ccc', paddingTop: '4px', textAlign:'center'}}>Empty</div>
                 </div>
               )}
             </div>
