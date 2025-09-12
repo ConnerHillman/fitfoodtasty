@@ -412,8 +412,6 @@ const CategoriesManager = () => {
                 </span>
               </div>
             </div>
-            </div>
-          </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
