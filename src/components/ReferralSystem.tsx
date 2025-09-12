@@ -45,6 +45,29 @@ const ReferralSystem = () => {
         if (codeData) {
           setReferralCode(codeData.code);
           setNewCode(codeData.code);
+        } else {
+          // If no referral code exists, create one
+          const { error: insertError } = await supabase
+            .from('referral_codes')
+            .insert({
+              user_id: user.id,
+              code: user.email.split('@')[0].toUpperCase() + Math.floor(Math.random() * 100)
+            });
+
+          if (!insertError) {
+            // Refetch after creating
+            const { data: newCodeData } = await supabase
+              .from('referral_codes')
+              .select('code')
+              .eq('user_id', user.id)
+              .eq('is_active', true)
+              .single();
+
+            if (newCodeData) {
+              setReferralCode(newCodeData.code);
+              setNewCode(newCodeData.code);
+            }
+          }
         }
 
         // Get user credits
