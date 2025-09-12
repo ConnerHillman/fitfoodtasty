@@ -51,6 +51,13 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-6xl mx-auto">
         {packages.map((pkg) => (
           <div key={pkg.id} className="group text-center">
+            {/* Package name above image */}
+            <div className="mb-3">
+              <h3 className="text-lg font-bold text-foreground mb-1">
+                {pkg.name}
+              </h3>
+            </div>
+            
             {/* Full image button */}
             <button
               onClick={() => onSelect(pkg)}
