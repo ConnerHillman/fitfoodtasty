@@ -196,5 +196,6 @@ async function generateEmailContent(cart: AbandonedCart, emailType: string) {
     console.error("Error generating email content:", error);
     return null;
   }
+}
 
 serve(handler);
