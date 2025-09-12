@@ -187,7 +187,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
               grid-template-columns: repeat(2, 96mm) !important;
               grid-template-rows: repeat(5, 50.8mm) !important;
               column-gap: 5mm !important;
-              row-gap: 4.95mm !important; /* slight fudge to avoid rounding cut-off on some printers */
+              row-gap: 4.8mm !important; /* print-only fudge to prevent bottom cut-off */
               width: 210mm !important;
               height: 297mm !important;
               box-sizing: border-box !important;
