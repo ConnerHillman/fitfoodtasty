@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Upload, Image, Settings, ChevronUp, ChevronDown } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Edit, Trash2, Upload, Image, Settings, ChevronUp, ChevronDown, BarChart3, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import PackageAnalytics from "./PackageAnalytics";
 
 interface Package {
   id: string;
@@ -287,7 +289,7 @@ const PackagesManager = () => {
           <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-2">Package Management</h2>
-              <p className="text-muted-foreground">Create and manage meal packages with pricing</p>
+              <p className="text-muted-foreground">Create and manage meal packages with pricing and analytics</p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
@@ -394,7 +396,20 @@ const PackagesManager = () => {
         </div>
       </div>
 
-      <Card className="overflow-hidden border-0 shadow-sm">
+      <Tabs defaultValue="management" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsTrigger value="management" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Package Management
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Analytics & Insights
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="management" className="space-y-6">
+          <Card className="overflow-hidden border-0 shadow-sm">
         <CardHeader className="bg-muted/30 border-b">
           <CardTitle className="text-lg">Packages ({packages.length})</CardTitle>
         </CardHeader>
@@ -563,6 +578,22 @@ const PackagesManager = () => {
           </div>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Package Analytics & Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PackageAnalytics />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
