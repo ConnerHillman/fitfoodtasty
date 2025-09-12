@@ -98,7 +98,7 @@ const MealsGrid = () => {
   const getCategoryFilter = (buttonValue: string) => {
     switch (buttonValue) {
       case "regular":
-        return "all meals (regular size)";
+        return "regular";
       case "massive meals":
         return "massive meals";
       case "lowcal":
