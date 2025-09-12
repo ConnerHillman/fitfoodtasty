@@ -591,7 +591,7 @@ const MealsManager = () => {
                 className="bg-primary hover:bg-primary/90"
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Full Editor
+                Create Meal
               </Button>
             </div>
           </div>
