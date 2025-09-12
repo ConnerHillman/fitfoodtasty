@@ -251,16 +251,16 @@ const AllOrders: React.FC = () => {
                       <Package className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <div className="font-bold text-lg">
-                        {order.customer_name || 'Customer'}
+                      <div className="flex flex-wrap items-center gap-2 font-bold text-lg">
+                        <span>{order.customer_name || 'Customer'}</span>
+                        <span className="text-sm text-muted-foreground font-normal">
+                          #{order.id.slice(-8)} • {order.customer_email}
+                        </span>
                         {order.type === 'package' && (
-                          <Badge variant="outline" className="ml-2 text-xs">
+                          <Badge variant="outline" className="text-xs">
                             Package
                           </Badge>
                         )}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        #{order.id.slice(-8)} • {order.customer_email}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {order.type === 'package' 
