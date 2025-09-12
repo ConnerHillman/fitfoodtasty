@@ -21,62 +21,82 @@ interface LabelPreviewProps {
 }
 
 const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
-  <div className="w-full h-full p-2 text-xs leading-tight" style={{
+  <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
     width: '99.1mm',
     height: '38.1mm',
-    border: '1px solid #e5e7eb',
+    border: '1px solid hsl(var(--border))',
     boxSizing: 'border-box',
-    fontFamily: 'Arial, sans-serif'
+    padding: '6px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between'
   }}>
-    {/* Header with Logo */}
-    <div className="flex justify-center mb-1">
-      <img 
-        src={logoImage} 
-        alt="Fit Food Tasty" 
-        className="w-10 h-6 object-contain"
-      />
-    </div>
-
-    {/* Meal Name */}
-    <div className="text-center font-bold text-[10px] mb-1">
-      {data.mealName}
-    </div>
-
-    {/* Nutrition Info */}
-    <div className="text-center text-[8px] mb-1">
-      <strong>Calories {data.calories} Protein {data.protein} Fat {data.fat} Carbs {data.carbs}</strong>
-    </div>
-
-    {/* Storage Instructions */}
-    <div className="text-[6px] mb-1">
-      {data.storageInstructions}
-    </div>
-
-    {/* Use By Date */}
-    <div className="text-[6px] font-bold mb-1">
-      Use By: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
-        weekday: 'short',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }) : 'Fri, 19/09/2025'}
-    </div>
-
-    {/* Ingredients */}
-    <div className="text-[6px] mb-1">
-      <strong>Ingredients:</strong> {data.ingredients || 'Not specified'}
-    </div>
-
-    {/* Allergens */}
-    {data.allergens && (
-      <div className="text-[6px] mb-1">
-        <strong>Allergens:</strong> <u>{data.allergens}</u>
+    {/* Header Section */}
+    <div className="flex flex-col items-center">
+      {/* Logo */}
+      <div className="mb-1">
+        <img 
+          src={logoImage} 
+          alt="Fit Food Tasty" 
+          className="h-4 w-auto object-contain"
+        />
       </div>
-    )}
+      
+      {/* Meal Name */}
+      <h1 className="text-center font-bold text-[11px] text-foreground leading-tight mb-1.5">
+        {data.mealName}
+      </h1>
+      
+      {/* Separator */}
+      <div className="w-8 h-px bg-primary/30 mb-1.5"></div>
+    </div>
 
-    {/* Website */}
-    <div className="text-center text-[6px] font-bold">
-      www.fitfoodtasty.co.uk
+    {/* Nutrition Section */}
+    <div className="bg-primary/5 rounded-sm px-2 py-1 mb-1.5">
+      <div className="text-center text-[8px] font-semibold text-primary leading-tight">
+        {data.calories}cal • {data.protein}g protein • {data.fat}g fat • {data.carbs}g carbs
+      </div>
+    </div>
+
+    {/* Main Content */}
+    <div className="flex-1 space-y-1">
+      {/* Use By Date - Most Important */}
+      <div className="bg-muted/50 rounded-sm px-1.5 py-0.5">
+        <div className="text-[7px] font-bold text-foreground">
+          USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }) : 'Fri, 19/09/2025'}
+        </div>
+      </div>
+
+      {/* Storage Instructions */}
+      <div className="text-[6px] text-muted-foreground leading-tight">
+        {data.storageInstructions}
+      </div>
+
+      {/* Ingredients */}
+      <div className="text-[6px] leading-tight">
+        <span className="font-semibold text-foreground">Ingredients:</span>{' '}
+        <span className="text-muted-foreground">{data.ingredients || 'Not specified'}</span>
+      </div>
+
+      {/* Allergens */}
+      {data.allergens && (
+        <div className="text-[6px] leading-tight">
+          <span className="font-semibold text-foreground">Allergens:</span>{' '}
+          <span className="font-bold text-destructive underline">{data.allergens}</span>
+        </div>
+      )}
+    </div>
+
+    {/* Footer */}
+    <div className="border-t border-border/30 pt-1 mt-1">
+      <div className="text-center text-[6px] font-medium text-primary">
+        www.fitfoodtasty.co.uk
+      </div>
     </div>
   </div>
 );
