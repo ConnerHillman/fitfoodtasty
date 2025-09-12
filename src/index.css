@@ -8,7 +8,6 @@
   --category-breakfast: linear-gradient(135deg, #ff6b35 0%, #ff8f3d 100%);
   --category-lunch: linear-gradient(135deg, #4a90e2 0%, #5ba3f5 100%);
   --category-dinner: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-  --category-snack: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   --category-default: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
   
   /* Category text colors for contrast */

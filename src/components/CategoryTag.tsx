@@ -47,13 +47,6 @@ const CategoryTag = ({
           text: 'text-white',
           glow: 'hover:shadow-purple-500/40'
         };
-      case 'snack':
-        return {
-          gradient: 'bg-gradient-to-r from-emerald-500 to-green-500',
-          shadow: 'shadow-emerald-500/25',
-          text: 'text-white',
-          glow: 'hover:shadow-emerald-500/40'
-        };
       case 'all meals (regular size)':
         return {
           gradient: 'bg-gradient-to-r from-orange-500 to-amber-500',
