@@ -64,8 +64,8 @@ const LuxuryCategorySelector = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 max-w-6xl mx-auto px-4">
         {categories.map((category) => {
           const isSelected = selectedCategory === category.value;
-          const gradient = getCategoryGradient(category.value);
-          const shadow = getCategoryShadow(category.value);
+          const gradient = 'from-emerald-400 via-green-500 to-emerald-600'; // Use green for all
+          const shadow = 'shadow-emerald-500/30 hover:shadow-emerald-500/50'; // Use green shadow for all
           
           return (
             <button
