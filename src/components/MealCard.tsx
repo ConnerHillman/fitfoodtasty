@@ -35,7 +35,6 @@ interface Meal {
   total_fiber: number;
   total_sugar: number;
   total_salt: number;
-  total_sodium: number;
   total_weight?: number;
   image_url?: string;
   allergens?: Allergen[];

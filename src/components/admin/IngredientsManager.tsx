@@ -30,7 +30,6 @@ interface Ingredient {
   fiber_per_100g: number;
   sugar_per_100g: number;
   salt_per_100g: number;
-  sodium_per_100g: number;
   default_unit: string;
   allergens?: Allergen[];
 }
@@ -54,7 +53,6 @@ const IngredientsManager = () => {
     fiber_per_100g: "",
     sugar_per_100g: "",
     salt_per_100g: "",
-    sodium_per_100g: "",
     default_unit: "g"
   });
   const { toast } = useToast();
@@ -138,7 +136,6 @@ const IngredientsManager = () => {
       fiber_per_100g: parseFloat(formData.fiber_per_100g) || 0,
       sugar_per_100g: parseFloat(formData.sugar_per_100g) || 0,
       salt_per_100g: parseFloat(formData.salt_per_100g) || 0,
-      sodium_per_100g: parseFloat(formData.sodium_per_100g) || 0,
       default_unit: formData.default_unit
     };
 
@@ -209,7 +206,6 @@ const IngredientsManager = () => {
       fiber_per_100g: ingredient.fiber_per_100g.toString(),
       sugar_per_100g: ingredient.sugar_per_100g?.toString() || "0",
       salt_per_100g: ingredient.salt_per_100g?.toString() || "0",
-      sodium_per_100g: ingredient.sodium_per_100g?.toString() || "0",
       default_unit: ingredient.default_unit || "g"
     });
     setSelectedAllergens(ingredient.allergens?.map(a => a.id) || []);
@@ -242,7 +238,6 @@ const IngredientsManager = () => {
       fiber_per_100g: "",
       sugar_per_100g: "",
       salt_per_100g: "",
-      sodium_per_100g: "",
       default_unit: "g"
     });
     setSelectedAllergens([]);
@@ -398,7 +393,7 @@ const IngredientsManager = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="salt">Salt per 100g</Label>
                   <Input
@@ -407,16 +402,6 @@ const IngredientsManager = () => {
                     step="0.01"
                     value={formData.salt_per_100g}
                     onChange={(e) => setFormData({ ...formData, salt_per_100g: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sodium">Sodium per 100g</Label>
-                  <Input
-                    id="sodium"
-                    type="number"
-                    step="0.01"
-                    value={formData.sodium_per_100g}
-                    onChange={(e) => setFormData({ ...formData, sodium_per_100g: e.target.value })}
                   />
                 </div>
               </div>

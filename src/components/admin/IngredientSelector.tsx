@@ -21,7 +21,6 @@ interface Ingredient {
   fiber_per_100g: number;
   sugar_per_100g: number;
   salt_per_100g: number;
-  sodium_per_100g: number;
   default_unit: string;
 }
 
@@ -45,7 +44,6 @@ interface IngredientSelectorProps {
     fiber: number;
     sugar: number;
     salt: number;
-    sodium: number;
     weight: number;
   }) => void;
 }
@@ -92,7 +90,6 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
     let totalFiber = 0;
     let totalSugar = 0;
     let totalSalt = 0;
-    let totalSodium = 0;
     let totalWeight = 0;
 
     selectedIngredients.forEach((si) => {
@@ -105,7 +102,6 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
       totalFiber += (si.ingredient.fiber_per_100g || 0) * factor;
       totalSugar += (si.ingredient.sugar_per_100g || 0) * factor;
       totalSalt += (si.ingredient.salt_per_100g || 0) * factor;
-      totalSodium += (si.ingredient.sodium_per_100g || 0) * factor;
       totalWeight += si.quantity;
     });
 
@@ -118,7 +114,6 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
       fiber: totalFiber,
       sugar: totalSugar,
       salt: totalSalt,
-      sodium: totalSodium,
       weight: totalWeight
     });
   };
@@ -169,7 +164,6 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
     fiber: 0,
     sugar: 0,
     salt: 0,
-    sodium: 0,
     weight: 0
   };
 
@@ -183,7 +177,6 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
     nutrition.fiber += (si.ingredient.fiber_per_100g || 0) * factor;
     nutrition.sugar += (si.ingredient.sugar_per_100g || 0) * factor;
     nutrition.salt += (si.ingredient.salt_per_100g || 0) * factor;
-    nutrition.sodium += (si.ingredient.sodium_per_100g || 0) * factor;
     nutrition.weight += si.quantity;
   });
 

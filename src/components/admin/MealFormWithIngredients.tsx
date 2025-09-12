@@ -22,7 +22,6 @@ interface Ingredient {
   fiber_per_100g: number;
   sugar_per_100g: number;
   salt_per_100g: number;
-  sodium_per_100g: number;
   default_unit: string;
 }
 interface Category {
@@ -64,7 +63,6 @@ const MealFormWithIngredients = ({
     fiber: 0,
     sugar: 0,
     salt: 0,
-    sodium: 0,
     weight: 0
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,7 +155,6 @@ const MealFormWithIngredients = ({
         total_fiber: nutrition.fiber,
         total_sugar: nutrition.sugar,
         total_salt: nutrition.salt,
-        total_sodium: nutrition.sodium,
         total_weight: nutrition.weight
       };
       const {
