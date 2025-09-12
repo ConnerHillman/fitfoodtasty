@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ReferralSettingsAdmin from "@/components/admin/ReferralSettingsAdmin";
 import { 
   Users, 
   Percent, 
@@ -92,35 +93,7 @@ const Marketing = () => {
   );
 
   const ReferralsSection = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Gift className="h-5 w-5" />
-          Referral Program
-        </CardTitle>
-        <CardDescription>
-          Manage customer referral rewards
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch id="referral-enabled" />
-            <Label htmlFor="referral-enabled">Enable Referral Program</Label>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="referral-reward">Referral Reward ($)</Label>
-              <Input id="referral-reward" type="number" placeholder="10" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="referee-reward">Referee Reward ($)</Label>
-              <Input id="referee-reward" type="number" placeholder="5" />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <ReferralSettingsAdmin />
   );
 
   const CouponsSection = () => (
