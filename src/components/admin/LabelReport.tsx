@@ -219,38 +219,43 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
     setIsGeneratingPDF(true);
     try {
-      console.log('Generating PDF for meals:', mealProduction);
+      console.log('Generating labels for meals:', mealProduction);
       
-      // Call the edge function for server-side PDF generation
-      const { data, error } = await supabase.functions.invoke('generate-labels-pdf', {
+      // Call the edge function for server-side label generation
+      const response = await supabase.functions.invoke('generate-labels-pdf', {
         body: {
           mealProduction: mealProduction,
           useByDate: formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
         }
       });
 
-      if (error) {
-        throw error;
+      if (response.error) {
+        throw response.error;
       }
 
-      // The edge function returns HTML for now
+      // The edge function returns HTML optimized for EU30009BM labels
+      const htmlContent = response.data;
+      
       // Create a blob and download it
-      const htmlBlob = new Blob([data], { type: 'text/html' });
+      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
       const url = window.URL.createObjectURL(htmlBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.html`;
+      link.download = `EU30009BM_Labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.html`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
+      const totalLabels = mealProduction.reduce((sum, meal) => sum + meal.quantity, 0);
+      const totalPages = Math.ceil(totalLabels / 10);
+      
       toast({
-        title: "Labels Generated",
-        description: `HTML file downloaded. You can print this file directly from your browser for perfect label formatting.`,
+        title: "Labels Generated Successfully! 🎉",
+        description: `Downloaded ${totalLabels} labels across ${totalPages} A4 pages. Open the HTML file and print directly for EU30009BM labels.`,
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error generating labels:', error);
       toast({
         title: "Error",
         description: "Failed to generate labels. Please try again.",
