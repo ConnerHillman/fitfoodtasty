@@ -45,10 +45,11 @@ interface MealCardProps {
   onAddToCart?: (meal: Meal) => void;
   showNutrition?: boolean;
   showPrintButton?: boolean;
+  showCategoryTag?: boolean;
   isNew?: boolean;
 }
 
-const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = false, isNew = false }: MealCardProps) => {
+const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = false, showCategoryTag = true, isNew = false }: MealCardProps) => {
   const { toast } = useToast();
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -447,7 +448,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
       
        <CardHeader className="pb-2 text-center relative z-20">
          <div className="flex items-center justify-between mb-3">
-           <CategoryTag category={meal.category} size="sm" variant="bold" />
+           {showCategoryTag && <CategoryTag category={meal.category} size="sm" variant="bold" />}
            <Badge className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-lg px-3 py-1 shadow-lg">
              £{meal.price.toFixed(2)}
            </Badge>

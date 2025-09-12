@@ -175,6 +175,7 @@ const MealsGrid = () => {
                 meal={meal}
                 onAddToCart={handleAddToCart}
                 showNutrition={true}
+                showCategoryTag={false}
                 isNew={isNew}
               />
             );
