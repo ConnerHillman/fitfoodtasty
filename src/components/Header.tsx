@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Star, ChevronDown, User, LogOut, Settings } from "lucide-react";
+import { Star, ChevronDown, User, LogOut, Settings, Shield } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 const Header = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
       {/* Promo Banner */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-sm font-medium">
@@ -76,9 +78,22 @@ const Header = () => {
             {/* User Actions */}
             {user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600 hidden md:block">
-                  Welcome back!
-                </span>
+                {!roleLoading && isAdmin() && (
+                  <Button 
+                    asChild 
+                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold px-4 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  >
+                    <Link to="/admin" className="flex items-center space-x-2">
+                      <Shield className="h-4 w-4" />
+                      <span>ADMIN</span>
+                    </Link>
+                  </Button>
+                )}
+                {!isAdmin() && (
+                  <span className="text-sm text-gray-600 hidden md:block">
+                    Welcome back!
+                  </span>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center space-x-2">
