@@ -18,8 +18,10 @@ interface Ingredient {
   protein_per_100g: number;
   carbs_per_100g: number;
   fat_per_100g: number;
+  saturated_fat_per_100g: number;
   fiber_per_100g: number;
   sugar_per_100g: number;
+  salt_per_100g: number;
   sodium_per_100g: number;
   default_unit: string;
 }
@@ -58,8 +60,10 @@ const MealFormWithIngredients = ({
     protein: 0,
     carbs: 0,
     fat: 0,
+    saturated_fat: 0,
     fiber: 0,
     sugar: 0,
+    salt: 0,
     sodium: 0,
     weight: 0
   });
@@ -149,8 +153,10 @@ const MealFormWithIngredients = ({
         total_protein: nutrition.protein,
         total_carbs: nutrition.carbs,
         total_fat: nutrition.fat,
+        total_saturated_fat: nutrition.saturated_fat,
         total_fiber: nutrition.fiber,
         total_sugar: nutrition.sugar,
+        total_salt: nutrition.salt,
         total_sodium: nutrition.sodium,
         total_weight: nutrition.weight
       };

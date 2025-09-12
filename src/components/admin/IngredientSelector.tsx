@@ -74,7 +74,12 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
     if (error) {
       toast({ title: "Error", description: "Failed to fetch ingredients", variant: "destructive" });
     } else {
-      setIngredients(data || []);
+      const mappedData = (data || []).map(ingredient => ({
+        ...ingredient,
+        saturated_fat_per_100g: ingredient.saturated_fat_per_100g || 0,
+        salt_per_100g: ingredient.salt_per_100g || 0
+      }));
+      setIngredients(mappedData);
     }
   };
 

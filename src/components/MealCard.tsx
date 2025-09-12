@@ -31,8 +31,10 @@ interface Meal {
   total_protein: number;
   total_carbs: number;
   total_fat: number;
+  total_saturated_fat: number;
   total_fiber: number;
   total_sugar: number;
+  total_salt: number;
   total_sodium: number;
   total_weight?: number;
   image_url?: string;
@@ -320,6 +322,14 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
                   <span><strong>${(meal.total_protein || 0).toFixed(1)}g</strong></span>
                 </div>
                 <div class="nutrition-item">
+                  <span>Fat:</span>
+                  <span><strong>${(meal.total_fat || 0).toFixed(1)}g</strong></span>
+                </div>
+                <div class="nutrition-item">
+                  <span>of which saturates:</span>
+                  <span><strong>${(meal.total_saturated_fat || 0).toFixed(1)}g</strong></span>
+                </div>
+                <div class="nutrition-item">
                   <span>Carbohydrates:</span>
                   <span><strong>${(meal.total_carbs || 0).toFixed(1)}g</strong></span>
                 </div>
@@ -327,16 +337,16 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
                   <span>of which sugars:</span>
                   <span><strong>${(meal.total_sugar || 0).toFixed(1)}g</strong></span>
                 </div>
-                <div class="nutrition-item">
-                  <span>Fat:</span>
-                  <span><strong>${(meal.total_fat || 0).toFixed(1)}g</strong></span>
-                </div>
                 ${meal.total_fiber > 0 ? `
                 <div class="nutrition-item">
                   <span>Fibre:</span>
                   <span><strong>${(meal.total_fiber || 0).toFixed(1)}g</strong></span>
                 </div>
                 ` : ''}
+                <div class="nutrition-item">
+                  <span>Salt:</span>
+                  <span><strong>${(meal.total_salt || 0).toFixed(1)}g</strong></span>
+                </div>
               </div>
               <div class="weight">Approx weight: ${(meal.total_weight || 0).toFixed(0)}g</div>
             </div>
@@ -494,23 +504,31 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, showPrintButton = f
                   <span className="font-bold text-green-700">{meal.total_protein?.toFixed(1) || '0'}g</span>
                 </div>
                 <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
+                  <span className="text-gray-600 font-medium">Fat</span>
+                  <span className="font-bold text-green-700">{meal.total_fat?.toFixed(1) || '0'}g</span>
+                </div>
+                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
+                  <span className="text-gray-600 font-medium text-xs">Saturates</span>
+                  <span className="font-bold text-green-700">{meal.total_saturated_fat?.toFixed(1) || '0'}g</span>
+                </div>
+                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
                   <span className="text-gray-600 font-medium">Carbs</span>
                   <span className="font-bold text-green-700">{meal.total_carbs?.toFixed(1) || '0'}g</span>
                 </div>
                 <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
-                  <span className="text-gray-600 font-medium">Sugar</span>
+                  <span className="text-gray-600 font-medium text-xs">Sugars</span>
                   <span className="font-bold text-green-700">{meal.total_sugar?.toFixed(1) || '0'}g</span>
                 </div>
-                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
-                  <span className="text-gray-600 font-medium">Fat</span>
-                  <span className="font-bold text-green-700">{meal.total_fat?.toFixed(1) || '0'}g</span>
-                </div>
                 {meal.total_fiber > 0 && (
-                  <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1 col-span-2">
+                  <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
                     <span className="text-gray-600 font-medium">Fiber</span>
                     <span className="font-bold text-green-700">{meal.total_fiber?.toFixed(1)}g</span>
                   </div>
                 )}
+                <div className="flex justify-between bg-white/60 rounded-lg px-2 py-1">
+                  <span className="text-gray-600 font-medium">Salt</span>
+                  <span className="font-bold text-green-700">{meal.total_salt?.toFixed(1) || '0'}g</span>
+                </div>
               </div>
             </div>
             

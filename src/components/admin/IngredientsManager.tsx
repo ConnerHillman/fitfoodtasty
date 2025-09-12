@@ -89,6 +89,8 @@ const IngredientsManager = () => {
     } else {
       const ingredientsWithAllergens = data?.map(ingredient => ({
         ...ingredient,
+        saturated_fat_per_100g: ingredient.saturated_fat_per_100g || 0,
+        salt_per_100g: ingredient.salt_per_100g || 0,
         allergens: ingredient.ingredient_allergens?.map((ia: any) => ia.allergens) || []
       })) || [];
       setIngredients(ingredientsWithAllergens);

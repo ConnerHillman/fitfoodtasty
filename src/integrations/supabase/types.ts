@@ -119,6 +119,8 @@ export type Database = {
           id: string
           name: string
           protein_per_100g: number
+          salt_per_100g: number | null
+          saturated_fat_per_100g: number | null
           sodium_per_100g: number | null
           sugar_per_100g: number | null
           updated_at: string
@@ -134,6 +136,8 @@ export type Database = {
           id?: string
           name: string
           protein_per_100g?: number
+          salt_per_100g?: number | null
+          saturated_fat_per_100g?: number | null
           sodium_per_100g?: number | null
           sugar_per_100g?: number | null
           updated_at?: string
@@ -149,6 +153,8 @@ export type Database = {
           id?: string
           name?: string
           protein_per_100g?: number
+          salt_per_100g?: number | null
+          saturated_fat_per_100g?: number | null
           sodium_per_100g?: number | null
           sugar_per_100g?: number | null
           updated_at?: string
@@ -249,6 +255,8 @@ export type Database = {
           total_fat: number | null
           total_fiber: number | null
           total_protein: number | null
+          total_salt: number | null
+          total_saturated_fat: number | null
           total_sodium: number | null
           total_sugar: number | null
           total_weight: number | null
@@ -269,6 +277,8 @@ export type Database = {
           total_fat?: number | null
           total_fiber?: number | null
           total_protein?: number | null
+          total_salt?: number | null
+          total_saturated_fat?: number | null
           total_sodium?: number | null
           total_sugar?: number | null
           total_weight?: number | null
@@ -289,6 +299,8 @@ export type Database = {
           total_fat?: number | null
           total_fiber?: number | null
           total_protein?: number | null
+          total_salt?: number | null
+          total_saturated_fat?: number | null
           total_sodium?: number | null
           total_sugar?: number | null
           total_weight?: number | null
