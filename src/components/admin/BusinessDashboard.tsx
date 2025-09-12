@@ -454,25 +454,13 @@ const BusinessDashboard = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="space-y-6">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Business Dashboard</h1>
-          <p className="text-muted-foreground text-lg">Today's overview and recent activity</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Business Dashboard</h2>
+          <p className="text-muted-foreground">Today's overview and recent activity</p>
         </div>
         <div className="flex space-x-3">
-          <Link to="/reports">
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              Reports
-            </Button>
-          </Link>
-          <Link to="/admin">
-            <Button variant="default">
-              <ChefHat className="h-4 w-4 mr-2" />
-              Admin Panel
-            </Button>
-          </Link>
           <Button variant="outline" size="sm" onClick={fetchDashboardData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -765,6 +753,18 @@ const BusinessDashboard = () => {
             <Button className="w-full justify-start" variant="outline">
               <Package className="h-4 w-4 mr-2" />
               Generate Kitchen Report
+            </Button>
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={() => {
+                // This will trigger a tab change in the parent admin dashboard
+                const reportsTab = document.querySelector('[value="reports"]') as HTMLElement;
+                if (reportsTab) reportsTab.click();
+              }}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              View Reports
             </Button>
             <Button className="w-full justify-start" variant="outline" onClick={printDeliveryLabels}>
               <Printer className="h-4 w-4 mr-2" />

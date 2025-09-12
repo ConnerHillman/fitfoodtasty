@@ -6,7 +6,9 @@ import MealsManager from "@/components/admin/MealsManager";
 import CategoriesManager from "@/components/admin/CategoriesManager";
 import PackagesManager from "@/components/admin/PackagesManager";
 import ReferralSettingsAdmin from "@/components/admin/ReferralSettingsAdmin";
-import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift } from "lucide-react";
+import BusinessDashboard from "@/components/admin/BusinessDashboard";
+import Reports from "@/components/admin/Reports";
+import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
 const AdminDashboard = () => {
   return (
@@ -19,8 +21,16 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="ingredients" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+      <Tabs defaultValue="dashboard" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="dashboard" className="flex items-center space-x-2">
+            <TrendingUp className="h-4 w-4" />
+            <span>Dashboard</span>
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center space-x-2">
+            <FileText className="h-4 w-4" />
+            <span>Reports</span>
+          </TabsTrigger>
           <TabsTrigger value="ingredients" className="flex items-center space-x-2">
             <Package className="h-4 w-4" />
             <span>Ingredients</span>
@@ -46,6 +56,14 @@ const AdminDashboard = () => {
             <span>Referrals</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard">
+          <BusinessDashboard />
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Reports />
+        </TabsContent>
 
         <TabsContent value="ingredients">
           <Card>

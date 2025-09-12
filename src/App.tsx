@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
-import BusinessDashboard from "./pages/BusinessDashboard";
 import BusinessSettings from "./pages/BusinessSettings";
 import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
@@ -14,7 +13,7 @@ import About from "./pages/About";
 import Packages from "./pages/Packages";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
-import Reports from "./pages/Reports";
+
 import RequireAuth from "./components/RequireAuth";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
@@ -46,11 +45,8 @@ const App = () => (
             <Route path="/account" element={<RequireAuth><Layout><AccountSettings /></Layout></RequireAuth>} />
             <Route path="/payment-success" element={<Layout><PaymentSuccess /></Layout>} />
             <Route path="/admin" element={<RequireAuth><Layout><AdminDashboard /></Layout></RequireAuth>} />
-            <Route path="/business" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />
             <Route path="/business/settings" element={<RequireAuth><Layout><BusinessSettings /></Layout></RequireAuth>} />
-            <Route path="/reports" element={<RequireAuth><Layout><Reports /></Layout></RequireAuth>} />
             <Route path="/referral-reports" element={<RequireAuth><Layout><ReferralReports /></Layout></RequireAuth>} />
-            <Route path="/business/*" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

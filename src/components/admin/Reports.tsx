@@ -305,7 +305,7 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="space-y-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -314,16 +314,16 @@ const Reports = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <ChefHat className="h-8 w-8 text-primary" />
+            <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-3">
+              <ChefHat className="h-6 w-6 text-primary" />
               Kitchen Reports
-            </h1>
-            <p className="text-muted-foreground text-lg">Production planning and order management</p>
+            </h2>
+            <p className="text-muted-foreground">Production planning and order management</p>
           </div>
         </div>
         
@@ -385,7 +385,7 @@ const Reports = () => {
               </Dialog>
             </div>
             <div className="flex gap-2">
-              {quickDateOptions.map((option, index) => (
+              {quickDateOptions.slice(0, 3).map((option, index) => (
                 <Button
                   key={index}
                   variant="ghost"
