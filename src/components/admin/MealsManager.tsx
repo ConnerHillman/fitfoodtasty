@@ -586,7 +586,7 @@ const MealsManager = () => {
             <Button
               onClick={() => {
                 resetForm();
-                setIsNewMealFormOpen(true);
+                setIsDialogOpen(true);
               }}
               className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 hover-glow shadow-lg"
               size="lg"
@@ -597,7 +597,7 @@ const MealsManager = () => {
             <Button
               onClick={() => {
                 resetForm();
-                setIsDialogOpen(true);
+                setIsNewMealFormOpen(true);
               }}
               variant="outline"
               className="bg-white text-primary hover:bg-white/90 border-white/30 shadow-lg"
