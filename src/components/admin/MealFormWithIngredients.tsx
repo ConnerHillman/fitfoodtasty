@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import IngredientSelector from "./IngredientSelector";
 import { Upload, Image, DollarSign, ChefHat, Sparkles, Target } from "lucide-react";
-
 interface Ingredient {
   id: string;
   name: string;
@@ -24,13 +23,11 @@ interface Ingredient {
   sodium_per_100g: number;
   default_unit: string;
 }
-
 interface Category {
   id: string;
   name: string;
   color: string;
 }
-
 interface SelectedIngredient {
   id: string;
   ingredient_id: string;
@@ -38,13 +35,14 @@ interface SelectedIngredient {
   unit: string;
   ingredient: Ingredient;
 }
-
 interface MealFormWithIngredientsProps {
   onSuccess: () => void;
   onCancel: () => void;
 }
-
-const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredientsProps) => {
+const MealFormWithIngredients = ({
+  onSuccess,
+  onCancel
+}: MealFormWithIngredientsProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -66,75 +64,81 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
     weight: 0
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchCategories();
   }, []);
-
   const fetchCategories = async () => {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("id, name, color")
-      .eq("is_active", true)
-      .order("sort_order");
-
+    const {
+      data,
+      error
+    } = await supabase.from("categories").select("id, name, color").eq("is_active", true).order("sort_order");
     if (error) {
-      toast({ title: "Error", description: "Failed to fetch categories", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to fetch categories",
+        variant: "destructive"
+      });
     } else {
       setCategories(data || []);
       if (data && data.length > 0 && !formData.category) {
-        setFormData(prev => ({ ...prev, category: data[0].name }));
+        setFormData(prev => ({
+          ...prev,
+          category: data[0].name
+        }));
       }
     }
   };
-
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      toast({ title: "Error", description: "Meal name is required", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Meal name is required",
+        variant: "destructive"
+      });
       return;
     }
-
     if (selectedIngredients.length === 0) {
-      toast({ title: "Error", description: "Please add at least one ingredient", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Please add at least one ingredient",
+        variant: "destructive"
+      });
       return;
     }
-
     setIsSubmitting(true);
-    
     try {
       let imageUrl = formData.image_url;
-      
       if (imageFile) {
         try {
           const fileExt = imageFile.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('meal-images')
-            .upload(fileName, imageFile);
-          
+          const {
+            data: uploadData,
+            error: uploadError
+          } = await supabase.storage.from('meal-images').upload(fileName, imageFile);
           if (uploadError) {
             throw uploadError;
           }
-          
-          const { data: { publicUrl } } = supabase.storage
-            .from('meal-images')
-            .getPublicUrl(fileName);
-          
+          const {
+            data: {
+              publicUrl
+            }
+          } = supabase.storage.from('meal-images').getPublicUrl(fileName);
           imageUrl = publicUrl;
         } catch (error) {
           console.error("Error uploading image:", error);
           toast({
             title: "Error",
             description: "Failed to upload image",
-            variant: "destructive",
+            variant: "destructive"
           });
           setIsSubmitting(false);
           return;
         }
       }
-
       const mealData = {
         name: formData.name,
         description: formData.description,
@@ -150,65 +154,65 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
         total_sodium: nutrition.sodium,
         total_weight: nutrition.weight
       };
-
-      const { data: mealResult, error: mealError } = await supabase
-        .from("meals")
-        .insert([mealData])
-        .select()
-        .single();
-
+      const {
+        data: mealResult,
+        error: mealError
+      } = await supabase.from("meals").insert([mealData]).select().single();
       if (mealError) throw mealError;
-
       const mealIngredientsData = selectedIngredients.map(si => ({
         meal_id: mealResult.id,
         ingredient_id: si.ingredient_id,
         quantity: si.quantity,
         unit: si.unit
       }));
-
-      const { error: ingredientsError } = await supabase
-        .from("meal_ingredients")
-        .insert(mealIngredientsData);
-
+      const {
+        error: ingredientsError
+      } = await supabase.from("meal_ingredients").insert(mealIngredientsData);
       if (ingredientsError) throw ingredientsError;
-
-      toast({ 
-        title: "Success", 
-        description: "Meal created successfully with ingredients" 
+      toast({
+        title: "Success",
+        description: "Meal created successfully with ingredients"
       });
-      
       onSuccess();
     } catch (error: any) {
       console.error("Error creating meal:", error);
-      toast({ 
-        title: "Error", 
-        description: error.message || "Failed to create meal", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create meal",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const nutritionStats = [
-    { label: "Calories", value: nutrition.calories, unit: "kcal", icon: "🔥" },
-    { label: "Protein", value: nutrition.protein, unit: "g", icon: "💪" },
-    { label: "Carbs", value: nutrition.carbs, unit: "g", icon: "🌾" },
-    { label: "Fat", value: nutrition.fat, unit: "g", icon: "🥑" },
-  ];
-
-  return (
-    <div className="relative max-w-5xl mx-auto">
+  const nutritionStats = [{
+    label: "Calories",
+    value: nutrition.calories,
+    unit: "kcal",
+    icon: "🔥"
+  }, {
+    label: "Protein",
+    value: nutrition.protein,
+    unit: "g",
+    icon: "💪"
+  }, {
+    label: "Carbs",
+    value: nutrition.carbs,
+    unit: "g",
+    icon: "🌾"
+  }, {
+    label: "Fat",
+    value: nutrition.fat,
+    unit: "g",
+    icon: "🥑"
+  }];
+  return <div className="relative max-w-5xl mx-auto">
       {/* Elegant Header */}
       <div className="text-center mb-8 animate-fade-in">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="p-3 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 backdrop-blur-sm border border-primary/20">
-            <ChefHat className="h-6 w-6 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Create Premium Meal
-          </h1>
-          <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+          
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Create a New Meal</h1>
+          
         </div>
         <p className="text-muted-foreground">Craft a nutritious masterpiece with precise ingredient control</p>
       </div>
@@ -231,35 +235,31 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
                     Meal Name 
                     <Badge variant="destructive" className="text-xs">Required</Badge>
                   </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., Mediterranean Grilled Chicken Bowl"
-                    className="h-12 text-lg border-2 focus:border-primary/50 transition-all duration-200"
-                    required
-                  />
+                  <Input id="name" value={formData.name} onChange={e => setFormData({
+                  ...formData,
+                  name: e.target.value
+                })} placeholder="e.g., Mediterranean Grilled Chicken Bowl" className="h-12 text-lg border-2 focus:border-primary/50 transition-all duration-200" required />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <Label htmlFor="category" className="text-base font-semibold">Category</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                    <Select value={formData.category} onValueChange={value => setFormData({
+                    ...formData,
+                    category: value
+                  })}>
                       <SelectTrigger className="h-12 border-2 focus:border-primary/50">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent className="bg-background/95 backdrop-blur-sm border-primary/20">
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
+                        {categories.map(category => <SelectItem key={category.id} value={category.name}>
                             <div className="flex items-center gap-3">
-                              <div 
-                                className="w-4 h-4 rounded-full shadow-md" 
-                                style={{ backgroundColor: category.color }}
-                              />
+                              <div className="w-4 h-4 rounded-full shadow-md" style={{
+                            backgroundColor: category.color
+                          }} />
                               <span className="font-medium">{category.name}</span>
                             </div>
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -269,28 +269,19 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
                       <DollarSign className="h-4 w-4" />
                       Price (£)
                     </Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      placeholder="12.99"
-                      className="h-12 border-2 focus:border-primary/50"
-                    />
+                    <Input id="price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
+                    ...formData,
+                    price: e.target.value
+                  })} placeholder="12.99" className="h-12 border-2 focus:border-primary/50" />
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <Label htmlFor="description" className="text-base font-semibold">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe the flavors, cooking method, and what makes this meal special..."
-                    rows={4}
-                    className="border-2 focus:border-primary/50 resize-none"
-                  />
+                  <Textarea id="description" value={formData.description} onChange={e => setFormData({
+                  ...formData,
+                  description: e.target.value
+                })} placeholder="Describe the flavors, cooking method, and what makes this meal special..." rows={4} className="border-2 focus:border-primary/50 resize-none" />
                 </div>
 
                 <div className="space-y-3">
@@ -299,19 +290,11 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
                     Meal Image
                   </Label>
                   <div className="border-2 border-dashed border-primary/30 rounded-lg p-6 hover:border-primary/50 transition-colors duration-200">
-                    <Input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                      className="border-0 bg-transparent p-0 h-auto file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                    />
-                    {imageFile && (
-                      <div className="mt-4 flex items-center gap-2 text-sm text-primary">
+                    <Input id="image" type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="border-0 bg-transparent p-0 h-auto file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90" />
+                    {imageFile && <div className="mt-4 flex items-center gap-2 text-sm text-primary">
                         <Upload className="h-4 w-4" />
                         {imageFile.name}
-                      </div>
-                    )}
+                      </div>}
                   </div>
                 </div>
               </div>
@@ -324,19 +307,13 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
               <CardTitle className="flex items-center gap-2 text-xl">
                 <ChefHat className="h-5 w-5 text-primary" />
                 Ingredients & Nutrition
-                {selectedIngredients.length > 0 && (
-                  <Badge className="bg-primary/20 text-primary border-primary/30">
+                {selectedIngredients.length > 0 && <Badge className="bg-primary/20 text-primary border-primary/30">
                     {selectedIngredients.length} ingredient{selectedIngredients.length !== 1 ? 's' : ''}
-                  </Badge>
-                )}
+                  </Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
-              <IngredientSelector
-                selectedIngredients={selectedIngredients}
-                onIngredientsChange={setSelectedIngredients}
-                onNutritionChange={setNutrition}
-              />
+              <IngredientSelector selectedIngredients={selectedIngredients} onIngredientsChange={setSelectedIngredients} onNutritionChange={setNutrition} />
             </CardContent>
           </Card>
         </div>
@@ -356,18 +333,17 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-2 gap-4">
-                  {nutritionStats.map((stat, index) => (
-                    <div key={stat.label} className="text-center p-4 rounded-lg bg-gradient-to-br from-muted/50 to-muted/30 border border-muted animate-fade-in hover-scale" style={{ animationDelay: `${index * 100}ms` }}>
+                  {nutritionStats.map((stat, index) => <div key={stat.label} className="text-center p-4 rounded-lg bg-gradient-to-br from-muted/50 to-muted/30 border border-muted animate-fade-in hover-scale" style={{
+                  animationDelay: `${index * 100}ms`
+                }}>
                       <div className="text-2xl mb-1">{stat.icon}</div>
                       <div className="text-2xl font-bold text-primary">{Math.round(stat.value)}</div>
                       <div className="text-xs text-muted-foreground">{stat.unit}</div>
                       <div className="text-sm font-medium mt-1">{stat.label}</div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
 
-                {nutrition.weight > 0 && (
-                  <>
+                {nutrition.weight > 0 && <>
                     <Separator className="my-4" />
                     <div className="text-center p-3 bg-primary/10 rounded-lg">
                       <div className="text-lg font-semibold text-primary">
@@ -375,37 +351,23 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
                       </div>
                       <div className="text-sm text-muted-foreground">Total Weight</div>
                     </div>
-                  </>
-                )}
+                  </>}
               </CardContent>
             </Card>
 
             {/* Action Buttons */}
             <div className="space-y-4">
-              <Button 
-                onClick={handleSubmit} 
-                disabled={isSubmitting || !formData.name.trim() || selectedIngredients.length === 0}
-                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
+              <Button onClick={handleSubmit} disabled={isSubmitting || !formData.name.trim() || selectedIngredients.length === 0} className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                {isSubmitting ? <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     Creating Masterpiece...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
+                  </div> : <div className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5" />
                     Create Premium Meal
-                  </div>
-                )}
+                  </div>}
               </Button>
               
-              <Button 
-                variant="outline" 
-                onClick={onCancel} 
-                disabled={isSubmitting}
-                className="w-full h-12 border-2 hover:bg-muted/50"
-              >
+              <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="w-full h-12 border-2 hover:bg-muted/50">
                 Cancel
               </Button>
             </div>
@@ -420,25 +382,18 @@ const MealFormWithIngredients = ({ onSuccess, onCancel }: MealFormWithIngredient
                   </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500 ease-out"
-                    style={{ 
-                      width: `${((formData.name ? 1 : 0) + (selectedIngredients.length > 0 ? 1 : 0)) / 2 * 100}%` 
-                    }}
-                  />
+                  <div className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500 ease-out" style={{
+                  width: `${((formData.name ? 1 : 0) + (selectedIngredients.length > 0 ? 1 : 0)) / 2 * 100}%`
+                }} />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {!formData.name ? "Add meal name" : 
-                   selectedIngredients.length === 0 ? "Add ingredients" : 
-                   "Ready to create! ✨"}
+                  {!formData.name ? "Add meal name" : selectedIngredients.length === 0 ? "Add ingredients" : "Ready to create! ✨"}
                 </div>
               </div>
             </Card>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default MealFormWithIngredients;
