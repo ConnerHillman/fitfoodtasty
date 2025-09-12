@@ -14,6 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_cart_emails: {
+        Row: {
+          abandoned_cart_id: string
+          clicked_at: string | null
+          created_at: string
+          email_content: string
+          email_subject: string
+          email_type: string
+          id: string
+          opened_at: string | null
+          sent_at: string
+        }
+        Insert: {
+          abandoned_cart_id: string
+          clicked_at?: string | null
+          created_at?: string
+          email_content: string
+          email_subject: string
+          email_type: string
+          id?: string
+          opened_at?: string | null
+          sent_at?: string
+        }
+        Update: {
+          abandoned_cart_id?: string
+          clicked_at?: string | null
+          created_at?: string
+          email_content?: string
+          email_subject?: string
+          email_type?: string
+          id?: string
+          opened_at?: string | null
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_cart_emails_abandoned_cart_id_fkey"
+            columns: ["abandoned_cart_id"]
+            isOneToOne: false
+            referencedRelation: "abandoned_carts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      abandoned_cart_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_name: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_name: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_name?: string
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      abandoned_carts: {
+        Row: {
+          abandoned_at: string
+          cart_items: Json
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          id: string
+          recovered_at: string | null
+          recovery_order_id: string | null
+          session_id: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          abandoned_at?: string
+          cart_items: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          recovered_at?: string | null
+          recovery_order_id?: string | null
+          session_id?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          abandoned_at?: string
+          cart_items?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          recovered_at?: string | null
+          recovery_order_id?: string | null
+          session_id?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       allergens: {
         Row: {
           created_at: string
