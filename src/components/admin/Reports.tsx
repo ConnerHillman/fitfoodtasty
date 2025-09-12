@@ -280,24 +280,24 @@ const Reports = () => {
     return ingredients.map(ing => ({ name: ing.name, quantity: 0 }));
   };
 
-  const ReportCard = ({ title, description, icon: Icon, children, variant = "default" }) => (
-    <Card className={`transition-all duration-200 hover:shadow-lg ${
+  const CompactReportCard = ({ title, description, icon: Icon, children, variant = "default", className = "" }) => (
+    <Card className={`transition-all duration-200 hover:shadow-md ${
       variant === "primary" ? "border-primary bg-primary/5" : ""
-    }`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${
+    } ${className}`}>
+      <CardHeader className="pb-2">
+        <div className="flex items-start gap-2">
+          <div className={`p-1.5 rounded-md ${
             variant === "primary" ? "bg-primary text-primary-foreground" : "bg-muted"
           }`}>
-            <Icon className="h-5 w-5" />
+            <Icon className="h-4 w-4" />
           </div>
-          <div>
-            <CardTitle className="text-lg">{title}</CardTitle>
-            <CardDescription className="text-sm">{description}</CardDescription>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base leading-tight">{title}</CardTitle>
+            <CardDescription className="text-xs mt-0.5">{description}</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {children}
       </CardContent>
     </Card>
@@ -314,93 +314,87 @@ const Reports = () => {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
-        <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Kitchen Reports</h2>
-              <p className="text-muted-foreground">Production planning and order management</p>
-            </div>
+    <div className="space-y-6">
+      {/* Compact Header with Date Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border">
+        <div>
+          <h2 className="text-xl font-bold">Kitchen Reports</h2>
+          <p className="text-sm text-muted-foreground">Production planning and order management</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="bg-background/80">
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Choose Date Range</DialogTitle>
+              </DialogHeader>
+              <div className="flex gap-6">
+                <div className="space-y-2">
+                  {quickDateOptions.map((option, index) => (
+                    <Button
+                      key={index}
+                      variant="ghost"
+                      className="w-full justify-start text-sm"
+                      onClick={() => {
+                        const newRange = option.value();
+                        setDateRange(newRange);
+                        setShowDatePicker(false);
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex gap-4">
+                  <div>
+                    <p className="text-sm font-medium mb-2">From</p>
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.from}
+                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, from: startOfDay(date) }))}
+                      className="pointer-events-auto"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-2">To</p>
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.to}
+                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, to: endOfDay(date) }))}
+                      className="pointer-events-auto"
+                    />
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <div className="flex gap-1">
+            {quickDateOptions.slice(0, 3).map((option, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                size="sm"
+                className="text-xs px-2"
+                onClick={() => {
+                  const newRange = option.value();
+                  setDateRange(newRange);
+                }}
+              >
+                {option.label}
+              </Button>
+            ))}
           </div>
         </div>
       </div>
-      {/* Date Range Selector */}
-      <Card className="border-0 shadow-sm bg-muted/30 p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h3 className="font-semibold">Date Range:</h3>
-              <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-                 <DialogTrigger asChild>
-                   <Button variant="outline" className="px-4 py-2 bg-background/80 backdrop-blur-sm">
-                     <CalendarIcon className="h-4 w-4 mr-2" />
-                     {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d, yyyy')}
-                   </Button>
-                 </DialogTrigger>
-                <DialogContent className="max-w-4xl">
-                  <DialogHeader>
-                    <DialogTitle>Choose Date Range</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex gap-6">
-                    <div className="space-y-2">
-                      {quickDateOptions.map((option, index) => (
-                        <Button
-                          key={index}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            const newRange = option.value();
-                            setDateRange(newRange);
-                            setShowDatePicker(false);
-                          }}
-                        >
-                          {option.label}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="flex gap-4">
-                      <div>
-                        <p className="text-sm font-medium mb-2">From</p>
-                        <Calendar
-                          mode="single"
-                          selected={dateRange.from}
-                          onSelect={(date) => date && setDateRange(prev => ({ ...prev, from: startOfDay(date) }))}
-                          className="pointer-events-auto"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium mb-2">To</p>
-                        <Calendar
-                          mode="single"
-                          selected={dateRange.to}
-                          onSelect={(date) => date && setDateRange(prev => ({ ...prev, to: endOfDay(date) }))}
-                          className="pointer-events-auto"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <div className="flex gap-2">
-              {quickDateOptions.slice(0, 3).map((option, index) => (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const newRange = option.value();
-                    setDateRange(newRange);
-                  }}
-                >
-                  {option.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </Card>
 
-      <Tabs defaultValue="kitchen" className="space-y-6">
+      <Tabs defaultValue="kitchen" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="kitchen" className="flex items-center gap-2">
             <ChefHat className="h-4 w-4" />
@@ -413,44 +407,39 @@ const Reports = () => {
         </TabsList>
 
         {/* Kitchen Preparation Tab */}
-        <TabsContent value="kitchen" className="space-y-6">
-          {/* Top Row - Featured Reports */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ReportCard
-              title="Item Production"
-              description="Summarizes the quantity of each item needed to fulfill orders"
-              icon={Calculator}
-              variant="primary"
-            >
-              <div className="space-y-3">
-                {getItemProduction().slice(0, 5).map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-background rounded-lg border">
-                    <span className="font-medium">{item.name}</span>
-                    <Badge variant="secondary">{item.quantity} units</Badge>
-                  </div>
-                ))}
+        <TabsContent value="kitchen" className="space-y-4">
+          {/* Main Production Report */}
+          <CompactReportCard
+            title="Item Production Report"
+            description="Order quantities and export options"
+            icon={Calculator}
+            variant="primary"
+          >
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">Production Summary</div>
                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
-                    className="flex-1" 
+                    size="sm"
                     onClick={() => setShowFullReport(!showFullReport)}
                   >
-                    <FileText className="h-4 w-4 mr-2" />
-                    {showFullReport ? 'Hide' : 'View'} Full Report
+                    <FileText className="h-4 w-4 mr-1" />
+                    {showFullReport ? 'Collapse' : 'Expand'}
                   </Button>
                   
                   <Dialog open={showExportOptions} onOpenChange={setShowExportOptions}>
                     <DialogTrigger asChild>
-                      <Button>
-                        <Download className="h-4 w-4 mr-2" />
-                        Generate Report
+                      <Button size="sm">
+                        <Download className="h-4 w-4 mr-1" />
+                        Export
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle>Export Kitchen Report</DialogTitle>
                       </DialogHeader>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <Button 
                           variant="outline" 
                           className="w-full justify-start"
@@ -488,234 +477,178 @@ const Reports = () => {
                     </DialogContent>
                   </Dialog>
                 </div>
-                
-                {showFullReport && (
-                  <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
-                    <div className="grid grid-cols-5 gap-2 p-2 bg-muted rounded text-xs font-medium">
-                      <span>Orders</span>
-                      <span>Size</span>
-                      <span>Title</span>
-                      <span>Variations</span>
-                      <span>Special Instructions</span>
-                    </div>
-                    {getItemProduction().map((item, index) => (
-                      <div key={index} className="grid grid-cols-5 gap-2 p-2 border rounded text-xs">
-                        <span className="font-medium">{item.quantity}</span>
-                        <span>-</span>
-                        <span>{item.name}</span>
-                        <span>-</span>
-                        <span className="text-muted-foreground">
-                          {item.specialInstructions.length > 0 ? item.specialInstructions.join('; ') : '-'}
-                        </span>
-                      </div>
-                    ))}
+              </div>
+              
+              {/* Compact Production List */}
+              <div className="space-y-1">
+                {getItemProduction().slice(0, showFullReport ? undefined : 5).map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                    <span className="font-medium">{item.name}</span>
+                    <Badge variant="secondary" className="text-xs">{item.quantity} units</Badge>
+                  </div>
+                ))}
+                {!showFullReport && getItemProduction().length > 5 && (
+                  <div className="text-center py-2">
+                    <Button variant="ghost" size="sm" onClick={() => setShowFullReport(true)}>
+                      +{getItemProduction().length - 5} more items
+                    </Button>
                   </div>
                 )}
               </div>
-            </ReportCard>
+            </div>
+          </CompactReportCard>
 
-            <ReportCard
-              title="Ingredients Production"
-              description="Summarizes the quantity of each ingredient needed to fulfill orders"
+          {/* Quick Actions Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <CompactReportCard
+              title="Ingredients"
+              description={`${ingredients.length} ingredients`}
               icon={Clipboard}
             >
-              <div className="space-y-3">
-                {ingredients.slice(0, 5).map((ingredient, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="font-medium">{ingredient.name}</span>
-                    <Badge variant="outline">Calculate needed</Badge>
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full mt-3">
-                  <Calculator className="h-4 w-4 mr-2" />
-                  Calculate Requirements
-                </Button>
-              </div>
-            </ReportCard>
-          </div>
+              <Button variant="outline" size="sm" className="w-full">
+                <Calculator className="h-4 w-4 mr-1" />
+                Calculate
+              </Button>
+            </CompactReportCard>
 
-          {/* Second Row - Additional Reports */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <ReportCard
-              title="Item Ingredient Recipes"
-              description="Displays the specific ingredients needed for each item"
+            <CompactReportCard
+              title="Recipes"
+              description={`${meals.length} recipes`}
               icon={List}
             >
-              <div className="text-center py-6">
-                <List className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">
-                  {meals.length} recipes available
-                </p>
-                <Button variant="outline" size="sm">
-                  View Recipes
-                </Button>
-              </div>
-            </ReportCard>
+              <Button variant="outline" size="sm" className="w-full">
+                View All
+              </Button>
+            </CompactReportCard>
 
-            <ReportCard
-              title="Production Inventory"
-              description="Ingredients & supply production report broken down by menu items"
+            <CompactReportCard
+              title="Inventory"
+              description="Track usage"
               icon={Package2}
             >
-              <div className="text-center py-6">
-                <Package2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">
-                  Track ingredient usage
-                </p>
-                <Button variant="outline" size="sm">
-                  View Inventory
-                </Button>
-              </div>
-            </ReportCard>
+              <Button variant="outline" size="sm" className="w-full">
+                View Report
+              </Button>
+            </CompactReportCard>
 
-            <ReportCard
-              title="Items"
-              description="List of all items on your menu"
+            <CompactReportCard
+              title="Menu Items"
+              description={`${meals.length} active`}
               icon={ChefHat}
             >
-              <div className="text-center py-6">
-                <ChefHat className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">
-                  {meals.length} active meals
-                </p>
-                <Button variant="outline" size="sm">
-                  View Menu Items
-                </Button>
-              </div>
-            </ReportCard>
+              <Button variant="outline" size="sm" className="w-full">
+                Manage
+              </Button>
+            </CompactReportCard>
           </div>
         </TabsContent>
 
         {/* Order Preparation Tab */}
-        <TabsContent value="orders" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ReportCard
-              title="Order Item Summary"
-              description="List of orders and their corresponding items"
+        <TabsContent value="orders" className="space-y-4">
+          {/* Orders Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CompactReportCard
+              title="Individual Orders"
+              description={`${orders.length} orders for selected period`}
               icon={FileText}
               variant="primary"
             >
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {orders.slice(0, 3).map((order, index) => (
-                  <div key={index} className="p-3 bg-background rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">Order #{order.id.slice(-8)}</span>
-                      <Badge variant={order.status === 'confirmed' ? 'default' : 'secondary'}>
+                  <div key={index} className="flex items-center justify-between p-2 bg-background rounded border text-sm">
+                    <div>
+                      <span className="font-medium">#{order.id.slice(-6)}</span>
+                      <span className="text-muted-foreground ml-2">{order.order_items?.length || 0} items</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">£{order.total_amount}</span>
+                      <Badge variant={order.status === 'confirmed' ? 'default' : 'secondary'} className="text-xs">
                         {order.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {order.order_items?.length || 0} items • £{order.total_amount}
-                    </p>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full mt-3">
-                  <FileText className="h-4 w-4 mr-2" />
+                {orders.length > 3 && (
+                  <div className="text-center py-1">
+                    <span className="text-xs text-muted-foreground">+{orders.length - 3} more orders</span>
+                  </div>
+                )}
+                <Button variant="outline" size="sm" className="w-full">
+                  <FileText className="h-4 w-4 mr-1" />
                   View All Orders
                 </Button>
               </div>
-            </ReportCard>
+            </CompactReportCard>
 
-            <ReportCard
-              title="Order Package Summary"
-              description="List of orders and their corresponding packages only"
+            <CompactReportCard
+              title="Package Orders"
+              description={`${packageOrders.length} package orders`}
               icon={Package2}
             >
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {packageOrders.length > 0 ? (
-                  packageOrders.slice(0, 3).map((order, index) => (
-                    <div key={index} className="p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">Package Order #{order.id.slice(-8)}</span>
-                        <Badge variant="outline">{order.status}</Badge>
+                  <>
+                    {packageOrders.slice(0, 3).map((order, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
+                        <span className="font-medium">#{order.id.slice(-6)}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">£{order.total_amount}</span>
+                          <Badge variant="outline" className="text-xs">{order.status}</Badge>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Package • £{order.total_amount}
-                      </p>
-                    </div>
-                  ))
+                    ))}
+                    {packageOrders.length > 3 && (
+                      <div className="text-center py-1">
+                        <span className="text-xs text-muted-foreground">+{packageOrders.length - 3} more</span>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="text-center py-6">
-                    <Package2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-sm text-muted-foreground">No package orders yet</p>
+                  <div className="text-center py-4 text-muted-foreground">
+                    <Package2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-xs">No package orders</p>
                   </div>
                 )}
               </div>
-            </ReportCard>
+            </CompactReportCard>
           </div>
 
-          {/* Print & Label Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <ReportCard
-              title="Packing Slips"
-              description="Order summaries designed to be printed for customers"
-              icon={Printer}
-            >
-              <div className="text-center py-4">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print Slips
-                </Button>
-              </div>
-            </ReportCard>
-
-            <ReportCard
-              title="Package Packing Slips"
-              description="Packing slips exclusively for package orders"
-              icon={Package2}
-            >
-              <div className="text-center py-4">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Package2 className="h-4 w-4 mr-2" />
-                  Print Package Slips
-                </Button>
-              </div>
-            </ReportCard>
-
-            <ReportCard
-              title="Item Labels"
-              description="Printed labels for your items to put on containers"
-              icon={Tags}
-            >
-              <div className="text-center py-4">
-                <Button variant="outline" size="sm" className="w-full">
-                  <Tags className="h-4 w-4 mr-2" />
-                  Print Item Labels
-                </Button>
-              </div>
-            </ReportCard>
-
-            <ReportCard
-              title="Order Labels"
-              description="Printed labels for your orders to put on order bags"
-              icon={MapPin}
-            >
-              <div className="text-center py-4">
-                <Button variant="outline" size="sm" className="w-full">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Print Order Labels
-                </Button>
-              </div>
-            </ReportCard>
-          </div>
+          {/* Printing & Labels */}
+          <CompactReportCard
+            title="Printing & Labels"
+            description="Quick actions for order fulfillment"
+            icon={Printer}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <Button variant="outline" size="sm">
+                <Printer className="h-4 w-4 mr-1" />
+                Packing Slips
+              </Button>
+              <Button variant="outline" size="sm">
+                <Package2 className="h-4 w-4 mr-1" />
+                Package Slips
+              </Button>
+              <Button variant="outline" size="sm">
+                <Tags className="h-4 w-4 mr-1" />
+                Item Labels
+              </Button>
+              <Button variant="outline" size="sm">
+                <MapPin className="h-4 w-4 mr-1" />
+                Order Labels
+              </Button>
+            </div>
+          </CompactReportCard>
         </TabsContent>
       </Tabs>
 
-      {/* Data Import Section */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Data Import & Management
-          </CardTitle>
-          <CardDescription>
-            Import meals, ingredients, and recipe data to populate your kitchen reports
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataImporter />
-        </CardContent>
-      </Card>
+      {/* Data Import Section - Compact */}
+      <CompactReportCard
+        title="Data Import & Management"
+        description="Import meals, ingredients, and recipe data"
+        icon={Upload}
+      >
+        <DataImporter />
+      </CompactReportCard>
     </div>
   );
 };
