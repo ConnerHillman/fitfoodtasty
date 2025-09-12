@@ -161,15 +161,45 @@ export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = f
       <style dangerouslySetInnerHTML={{
         __html: `
           @media print {
-            .print-container {
-              margin: 0;
-              padding: 0;
+            * {
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
             }
+            
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            
+            .print-container {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 210mm !important;
+              height: 297mm !important;
+            }
+            
             .page-break {
               page-break-after: always;
+              margin: 0 !important;
+              padding: 8.5mm !important;
+              width: 210mm !important;
+              height: 297mm !important;
+              box-sizing: border-box !important;
             }
+            
             .page-break:last-child {
               page-break-after: auto;
+            }
+            
+            /* Hide everything except the print container */
+            body > *:not(.print-container) {
+              display: none !important;
+            }
+            
+            /* Ensure only labels are visible */
+            .container, .card, .button, .input, .form, nav, header, footer {
+              display: none !important;
             }
           }
         `

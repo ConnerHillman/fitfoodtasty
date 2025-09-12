@@ -407,8 +407,8 @@ export const LabelGenerator: React.FC = () => {
       </div>
 
       {/* Hidden Print Area */}
-      <div className="hidden print:block">
-        <div ref={printRef}>
+      <div className="hidden print:block fixed inset-0 bg-white z-50">
+        <div ref={printRef} className="w-full h-full">
           <LabelPreview data={labelData} />
         </div>
       </div>
@@ -453,6 +453,40 @@ export const LabelGenerator: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media print {
+            /* Hide all interface elements except the print area */
+            body > *:not(.hidden) {
+              display: none !important;
+            }
+            
+            /* Show only the print area */
+            .hidden.print\\:block {
+              display: block !important;
+              position: static !important;
+              inset: auto !important;
+              background: white !important;
+              z-index: auto !important;
+              width: 100% !important;
+              height: 100% !important;
+            }
+            
+            /* Ensure clean print layout */
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+            }
+            
+            /* Hide any remaining UI elements */
+            .container, .card, .button, nav, header, footer, .dialog {
+              display: none !important;
+            }
+          }
+        `
+      }} />
     </div>
   );
 };
