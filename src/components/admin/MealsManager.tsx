@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
 import MealFormWithIngredients from "./MealFormWithIngredients";
+import CategoryTag from "../CategoryTag";
 
 interface Category {
   id: string;
@@ -550,10 +551,6 @@ const MealsManager = () => {
     setEditingMeal(null);
   };
 
-  const getCategoryColor = (categoryName: string) => {
-    const category = categories.find(c => c.name === categoryName);
-    return category ? category.color : '#3b82f6';
-  };
 
   return (
     <div className="space-y-8">
@@ -772,14 +769,14 @@ const MealsManager = () => {
                         {meal.description}
                       </p>
                     )}
-                    {meal.category && (
-                      <Badge 
-                        style={{ backgroundColor: getCategoryColor(meal.category) }}
-                        className="text-white text-xs"
-                      >
-                        {meal.category}
-                      </Badge>
-                    )}
+                     {meal.category && (
+                       <CategoryTag 
+                         category={meal.category}
+                         size="sm"
+                         variant="bold"
+                         className="shadow-sm"
+                       />
+                     )}
                   </div>
 
                   {/* Nutrition Info */}
@@ -921,11 +918,11 @@ const MealsManager = () => {
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.name}>
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: category.color }}
+                        <CategoryTag 
+                          category={category.name}
+                          size="sm"
+                          variant="bold"
                         />
-                        {category.name}
                       </div>
                     </SelectItem>
                   ))}

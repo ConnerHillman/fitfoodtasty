@@ -612,18 +612,20 @@ const CategoriesManager = () => {
                 <Card className="group transition-all duration-200 hover:shadow-md">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div 
-                          className="w-4 h-4 rounded-full border"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <div>
-                          <h3 className="font-semibold capitalize">{category.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {category.description || "No description"}
-                          </p>
-                        </div>
-                      </div>
+                       <div className="flex items-center space-x-4">
+                         <CategoryTag 
+                           category={category.name}
+                           size="sm"
+                           variant="bold"
+                           className="shadow-sm"
+                         />
+                         <div>
+                           <h3 className="font-semibold capitalize">{category.name}</h3>
+                           <p className="text-sm text-muted-foreground">
+                             {category.description || "No description"}
+                           </p>
+                         </div>
+                       </div>
                       <div className="flex items-center space-x-4">
                         <Badge variant="outline" className="text-xs">
                           {getTotalMealsInCategory(category.name)} meals
