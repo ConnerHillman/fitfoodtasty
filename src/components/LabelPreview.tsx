@@ -29,14 +29,12 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
     fontFamily: 'Arial, sans-serif'
   }}>
     {/* Header with Logo */}
-    <div className="flex items-start justify-between mb-1">
-      <div className="flex items-center gap-1">
-        <img 
-          src={logoImage} 
-          alt="Fit Food Tasty" 
-          className="w-10 h-6 object-contain"
-        />
-      </div>
+    <div className="flex justify-center mb-1">
+      <img 
+        src={logoImage} 
+        alt="Fit Food Tasty" 
+        className="w-10 h-6 object-contain"
+      />
     </div>
 
     {/* Meal Name */}
