@@ -21,41 +21,67 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="dashboard" className="flex items-center space-x-2">
-            <TrendingUp className="h-4 w-4" />
-            <span>Dashboard</span>
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Reports</span>
-          </TabsTrigger>
-          <TabsTrigger value="ingredients" className="flex items-center space-x-2">
-            <Package className="h-4 w-4" />
-            <span>Ingredients</span>
-          </TabsTrigger>
-          <TabsTrigger value="meals" className="flex items-center space-x-2">
-            <ChefHat className="h-4 w-4" />
-            <span>Meals</span>
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="flex items-center space-x-2">
-            <Tag className="h-4 w-4" />
-            <span>Categories</span>
-          </TabsTrigger>
-          <TabsTrigger value="packages" className="flex items-center space-x-2">
-            <ShoppingBag className="h-4 w-4" />
-            <span>Packages</span>
-          </TabsTrigger>
-          <TabsTrigger value="import" className="flex items-center space-x-2">
-            <Upload className="h-4 w-4" />
-            <span>Import</span>
-          </TabsTrigger>
-          <TabsTrigger value="referrals" className="flex items-center space-x-2">
-            <Gift className="h-4 w-4" />
-            <span>Referrals</span>
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="dashboard" className="space-y-8">
+        <div className="relative bg-gradient-to-r from-background via-background/95 to-background backdrop-blur-sm border border-border/50 rounded-xl p-2 shadow-lg">
+          <TabsList className="grid w-full grid-cols-8 bg-transparent gap-1 p-0 h-auto">
+            <TabsTrigger 
+              value="dashboard" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="reports" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Reports</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ingredients" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <Package className="h-4 w-4" />
+              <span className="hidden sm:inline">Ingredients</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="meals" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <ChefHat className="h-4 w-4" />
+              <span className="hidden sm:inline">Meals</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="categories" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <Tag className="h-4 w-4" />
+              <span className="hidden sm:inline">Categories</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="packages" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              <span className="hidden sm:inline">Packages</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="import" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <Upload className="h-4 w-4" />
+              <span className="hidden sm:inline">Import</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="referrals" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <Gift className="h-4 w-4" />
+              <span className="hidden sm:inline">Referrals</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="dashboard">
           <BusinessDashboard />
