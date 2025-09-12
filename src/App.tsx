@@ -22,6 +22,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import AccountSettings from "./pages/AccountSettings";
+import ReferralReports from "./pages/ReferralReports";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/business" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />
             <Route path="/business/settings" element={<RequireAuth><Layout><BusinessSettings /></Layout></RequireAuth>} />
             <Route path="/reports" element={<RequireAuth><Layout><Reports /></Layout></RequireAuth>} />
+            <Route path="/referral-reports" element={<RequireAuth><Layout><ReferralReports /></Layout></RequireAuth>} />
             <Route path="/business/*" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

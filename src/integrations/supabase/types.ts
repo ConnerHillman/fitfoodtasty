@@ -351,7 +351,9 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           delivery_address: string | null
+          discount_amount: number | null
           id: string
+          referral_code_used: string | null
           status: string
           stripe_session_id: string | null
           total_amount: number
@@ -364,7 +366,9 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          discount_amount?: number | null
           id?: string
+          referral_code_used?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount: number
@@ -377,7 +381,9 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          discount_amount?: number | null
           id?: string
+          referral_code_used?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
@@ -613,6 +619,101 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_transactions: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          order_total: number
+          referee_discount_given: number
+          referee_user_id: string
+          referral_code_used: string
+          referrer_credit_earned: number
+          referrer_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          order_total?: number
+          referee_discount_given?: number
+          referee_user_id: string
+          referral_code_used: string
+          referrer_credit_earned?: number
+          referrer_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          order_total?: number
+          referee_discount_given?: number
+          referee_user_id?: string
+          referral_code_used?: string
+          referrer_credit_earned?: number
+          referrer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_credits: {
+        Row: {
+          created_at: string
+          id: string
+          total_credits: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          total_credits?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          total_credits?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -621,6 +722,10 @@ export type Database = {
       calculate_meal_nutrition: {
         Args: { meal_id_param: string }
         Returns: undefined
+      }
+      generate_referral_code: {
+        Args: { user_email: string }
+        Returns: string
       }
     }
     Enums: {
