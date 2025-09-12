@@ -38,64 +38,55 @@ const AdminDashboard = () => {
               value="dashboard" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <TrendingUp className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+              <span>Dashboard</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orders" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <ListOrdered className="h-4 w-4" />
-              <span className="hidden sm:inline">Orders</span>
+              <span>Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="reports" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Reports</span>
+              <span>Reports</span>
             </TabsTrigger>
             <TabsTrigger 
               value="ingredients" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <Package className="h-4 w-4" />
-              <span className="hidden sm:inline">Ingredients</span>
+              <span>Ingredients</span>
             </TabsTrigger>
             <TabsTrigger 
               value="meals" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <ChefHat className="h-4 w-4" />
-              <span className="hidden sm:inline">Meals</span>
+              <span>Meals</span>
             </TabsTrigger>
             <TabsTrigger 
               value="categories" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <Tag className="h-4 w-4" />
-              <span className="hidden sm:inline">Categories</span>
+              <span>Categories</span>
             </TabsTrigger>
             <TabsTrigger 
               value="packages" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <ShoppingBag className="h-4 w-4" />
-              <span className="hidden sm:inline">Packages</span>
+              <span>Packages</span>
             </TabsTrigger>
             <TabsTrigger 
               value="import" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <Upload className="h-4 w-4" />
-              <span className="hidden sm:inline">Import</span>
+              <span>Import</span>
             </TabsTrigger>
             <TabsTrigger 
               value="referrals" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
-              <Gift className="h-4 w-4" />
-              <span className="hidden sm:inline">Referrals</span>
+              <span>Referrals</span>
             </TabsTrigger>
           </TabsList>
         </div>
