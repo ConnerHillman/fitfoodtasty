@@ -26,8 +26,10 @@ interface Ingredient {
   protein_per_100g: number;
   carbs_per_100g: number;
   fat_per_100g: number;
+  saturated_fat_per_100g: number;
   fiber_per_100g: number;
   sugar_per_100g: number;
+  salt_per_100g: number;
   sodium_per_100g: number;
   default_unit: string;
   allergens?: Allergen[];
@@ -48,8 +50,10 @@ const IngredientsManager = () => {
     protein_per_100g: "",
     carbs_per_100g: "",
     fat_per_100g: "",
+    saturated_fat_per_100g: "",
     fiber_per_100g: "",
     sugar_per_100g: "",
+    salt_per_100g: "",
     sodium_per_100g: "",
     default_unit: "g"
   });
@@ -128,8 +132,10 @@ const IngredientsManager = () => {
       protein_per_100g: parseFloat(formData.protein_per_100g) || 0,
       carbs_per_100g: parseFloat(formData.carbs_per_100g) || 0,
       fat_per_100g: parseFloat(formData.fat_per_100g) || 0,
+      saturated_fat_per_100g: parseFloat(formData.saturated_fat_per_100g) || 0,
       fiber_per_100g: parseFloat(formData.fiber_per_100g) || 0,
       sugar_per_100g: parseFloat(formData.sugar_per_100g) || 0,
+      salt_per_100g: parseFloat(formData.salt_per_100g) || 0,
       sodium_per_100g: parseFloat(formData.sodium_per_100g) || 0,
       default_unit: formData.default_unit
     };
@@ -197,8 +203,10 @@ const IngredientsManager = () => {
       protein_per_100g: ingredient.protein_per_100g.toString(),
       carbs_per_100g: ingredient.carbs_per_100g.toString(),
       fat_per_100g: ingredient.fat_per_100g.toString(),
+      saturated_fat_per_100g: ingredient.saturated_fat_per_100g?.toString() || "0",
       fiber_per_100g: ingredient.fiber_per_100g.toString(),
       sugar_per_100g: ingredient.sugar_per_100g?.toString() || "0",
+      salt_per_100g: ingredient.salt_per_100g?.toString() || "0",
       sodium_per_100g: ingredient.sodium_per_100g?.toString() || "0",
       default_unit: ingredient.default_unit || "g"
     });
@@ -228,8 +236,10 @@ const IngredientsManager = () => {
       protein_per_100g: "",
       carbs_per_100g: "",
       fat_per_100g: "",
+      saturated_fat_per_100g: "",
       fiber_per_100g: "",
       sugar_per_100g: "",
+      salt_per_100g: "",
       sodium_per_100g: "",
       default_unit: "g"
     });
@@ -352,6 +362,19 @@ const IngredientsManager = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="saturated_fat">Saturated Fat per 100g</Label>
+                  <Input
+                    id="saturated_fat"
+                    type="number"
+                    step="0.01"
+                    value={formData.saturated_fat_per_100g}
+                    onChange={(e) => setFormData({ ...formData, saturated_fat_per_100g: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="fiber">Fiber per 100g</Label>
                   <Input
                     id="fiber"
@@ -361,9 +384,6 @@ const IngredientsManager = () => {
                     onChange={(e) => setFormData({ ...formData, fiber_per_100g: e.target.value })}
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="sugar">Sugar per 100g</Label>
                   <Input
@@ -372,6 +392,19 @@ const IngredientsManager = () => {
                     step="0.01"
                     value={formData.sugar_per_100g}
                     onChange={(e) => setFormData({ ...formData, sugar_per_100g: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="salt">Salt per 100g</Label>
+                  <Input
+                    id="salt"
+                    type="number"
+                    step="0.01"
+                    value={formData.salt_per_100g}
+                    onChange={(e) => setFormData({ ...formData, salt_per_100g: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">

@@ -17,8 +17,10 @@ interface Ingredient {
   protein_per_100g: number;
   carbs_per_100g: number;
   fat_per_100g: number;
+  saturated_fat_per_100g: number;
   fiber_per_100g: number;
   sugar_per_100g: number;
+  salt_per_100g: number;
   sodium_per_100g: number;
   default_unit: string;
 }
@@ -39,8 +41,10 @@ interface IngredientSelectorProps {
     protein: number;
     carbs: number;
     fat: number;
+    saturated_fat: number;
     fiber: number;
     sugar: number;
+    salt: number;
     sodium: number;
     weight: number;
   }) => void;
@@ -79,8 +83,10 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
     let totalProtein = 0;
     let totalCarbs = 0;
     let totalFat = 0;
+    let totalSaturatedFat = 0;
     let totalFiber = 0;
     let totalSugar = 0;
+    let totalSalt = 0;
     let totalSodium = 0;
     let totalWeight = 0;
 
@@ -90,8 +96,10 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
       totalProtein += si.ingredient.protein_per_100g * factor;
       totalCarbs += si.ingredient.carbs_per_100g * factor;
       totalFat += si.ingredient.fat_per_100g * factor;
+      totalSaturatedFat += (si.ingredient.saturated_fat_per_100g || 0) * factor;
       totalFiber += (si.ingredient.fiber_per_100g || 0) * factor;
       totalSugar += (si.ingredient.sugar_per_100g || 0) * factor;
+      totalSalt += (si.ingredient.salt_per_100g || 0) * factor;
       totalSodium += (si.ingredient.sodium_per_100g || 0) * factor;
       totalWeight += si.quantity;
     });
@@ -101,8 +109,10 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
       protein: totalProtein,
       carbs: totalCarbs,
       fat: totalFat,
+      saturated_fat: totalSaturatedFat,
       fiber: totalFiber,
       sugar: totalSugar,
+      salt: totalSalt,
       sodium: totalSodium,
       weight: totalWeight
     });
@@ -150,8 +160,10 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
     protein: 0,
     carbs: 0,
     fat: 0,
+    saturated_fat: 0,
     fiber: 0,
     sugar: 0,
+    salt: 0,
     sodium: 0,
     weight: 0
   };
@@ -162,8 +174,10 @@ const IngredientSelector = ({ selectedIngredients, onIngredientsChange, onNutrit
     nutrition.protein += si.ingredient.protein_per_100g * factor;
     nutrition.carbs += si.ingredient.carbs_per_100g * factor;
     nutrition.fat += si.ingredient.fat_per_100g * factor;
+    nutrition.saturated_fat += (si.ingredient.saturated_fat_per_100g || 0) * factor;
     nutrition.fiber += (si.ingredient.fiber_per_100g || 0) * factor;
     nutrition.sugar += (si.ingredient.sugar_per_100g || 0) * factor;
+    nutrition.salt += (si.ingredient.salt_per_100g || 0) * factor;
     nutrition.sodium += (si.ingredient.sodium_per_100g || 0) * factor;
     nutrition.weight += si.quantity;
   });
