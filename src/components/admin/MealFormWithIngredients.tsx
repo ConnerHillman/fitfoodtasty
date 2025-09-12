@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import IngredientSelector from "./IngredientSelector";
-import { Upload, Image, DollarSign, ChefHat, Sparkles, Target } from "lucide-react";
+import { Upload, Image, DollarSign, ChefHat, Target } from "lucide-react";
 interface Ingredient {
   id: string;
   name: string;
@@ -188,27 +188,12 @@ const MealFormWithIngredients = ({
       setIsSubmitting(false);
     }
   };
-  const nutritionStats = [{
-    label: "Calories",
-    value: nutrition.calories,
-    unit: "kcal",
-    icon: "🔥"
-  }, {
-    label: "Protein",
-    value: nutrition.protein,
-    unit: "g",
-    icon: "💪"
-  }, {
-    label: "Carbs",
-    value: nutrition.carbs,
-    unit: "g",
-    icon: "🌾"
-  }, {
-    label: "Fat",
-    value: nutrition.fat,
-    unit: "g",
-    icon: "🥑"
-  }];
+  const nutritionStats = [
+    { label: "Calories", value: nutrition.calories, unit: "kcal" },
+    { label: "Protein", value: nutrition.protein, unit: "g" },
+    { label: "Carbs", value: nutrition.carbs, unit: "g" },
+    { label: "Fat", value: nutrition.fat, unit: "g" },
+  ];
   return <div className="relative max-w-5xl mx-auto">
       {/* Elegant Header */}
       <div className="text-center mb-8 animate-fade-in">
@@ -327,23 +312,21 @@ const MealFormWithIngredients = ({
             {/* Nutrition Summary */}
             <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/30 animate-fade-in">
               <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <div className="p-2 rounded-full bg-primary/20">
-                    🍽️
-                  </div>
-                  Nutrition Facts
-                </CardTitle>
+                <CardTitle className="text-lg">Nutrition Facts</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-2 gap-4">
-                  {nutritionStats.map((stat, index) => <div key={stat.label} className="text-center p-4 rounded-lg bg-gradient-to-br from-muted/50 to-muted/30 border border-muted animate-fade-in hover-scale" style={{
-                  animationDelay: `${index * 100}ms`
-                }}>
-                      <div className="text-2xl mb-1">{stat.icon}</div>
+                  {nutritionStats.map((stat, index) => (
+                    <div
+                      key={stat.label}
+                      className="text-center p-4 rounded-lg bg-gradient-to-br from-muted/50 to-muted/30 border border-muted animate-fade-in hover-scale"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
                       <div className="text-2xl font-bold text-primary">{Math.round(stat.value)}</div>
                       <div className="text-xs text-muted-foreground">{stat.unit}</div>
                       <div className="text-sm font-medium mt-1">{stat.label}</div>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
 
                 {nutrition.weight > 0 && <>
@@ -360,14 +343,21 @@ const MealFormWithIngredients = ({
 
             {/* Action Buttons */}
             <div className="space-y-4">
-              <Button onClick={handleSubmit} disabled={isSubmitting || !formData.name.trim() || selectedIngredients.length === 0} className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-                {isSubmitting ? <div className="flex items-center gap-2">
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !formData.name.trim() || selectedIngredients.length === 0}
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Creating Masterpiece...
-                  </div> : <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5" />
-                    Create Premium Meal
-                  </div>}
+                    Creating meal...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    Create Meal
+                  </div>
+                )}
               </Button>
               
               <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="w-full h-12 border-2 hover:bg-muted/50">
@@ -389,9 +379,9 @@ const MealFormWithIngredients = ({
                   width: `${((formData.name ? 1 : 0) + (selectedIngredients.length > 0 ? 1 : 0)) / 2 * 100}%`
                 }} />
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {!formData.name ? "Add meal name" : selectedIngredients.length === 0 ? "Add ingredients" : "Ready to create! ✨"}
-                </div>
+                  <div className="text-xs text-muted-foreground">
+                    {!formData.name ? "Add meal name" : selectedIngredients.length === 0 ? "Add ingredients" : "Ready to create!"}
+                  </div>
               </div>
             </Card>
           </div>
