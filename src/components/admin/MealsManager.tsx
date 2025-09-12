@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, Sparkles, Heart, Zap, Star, ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -564,20 +564,20 @@ const MealsManager = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                <Sparkles className="h-6 w-6 text-white" />
+                <Calculator className="h-6 w-6 text-white" />
               </div>
               <h2 className="text-4xl font-bold tracking-tight">Meals Manager</h2>
             </div>
             <p className="text-white/90 text-lg">
-              Create and manage your delicious meal offerings with style ✨
+              Create and manage your meal offerings with professional precision
             </p>
             <div className="flex items-center gap-4 text-sm text-white/80">
               <span className="flex items-center gap-1">
-                <Star className="h-4 w-4" />
+                <div className="h-2 w-2 rounded-full bg-white/60"></div>
                 {filteredMeals.length} meals total
               </span>
               <span className="flex items-center gap-1">
-                <Heart className="h-4 w-4" />
+                <div className="h-2 w-2 rounded-full bg-green-400"></div>
                 {filteredMeals.filter(m => m.is_active).length} active
               </span>
             </div>
@@ -591,7 +591,7 @@ const MealsManager = () => {
               className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 hover-glow shadow-lg"
               size="lg"
             >
-              <Zap className="mr-2 h-5 w-5" />
+              <Plus className="mr-2 h-5 w-5" />
               Quick Create
             </Button>
             <Button
@@ -603,7 +603,7 @@ const MealsManager = () => {
               className="bg-white text-primary hover:bg-white/90 border-white/30 shadow-lg"
               size="lg"
             >
-              <Plus className="mr-2 h-5 w-5" />
+              <Edit className="mr-2 h-5 w-5" />
               Full Editor
             </Button>
           </div>
@@ -618,7 +618,7 @@ const MealsManager = () => {
               <Search className="h-5 w-5 text-muted-foreground" />
             </div>
             <Input
-              placeholder="Search meals by name, description, or category... 🔍"
+              placeholder="Search meals by name, description, or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 h-12 text-lg border-0 bg-white/50 focus:bg-white/80 transition-all duration-300 rounded-xl shadow-sm"
@@ -878,7 +878,7 @@ const MealsManager = () => {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe this delicious meal..."
+                placeholder="Describe this meal..."
                 rows={3}
               />
             </div>
