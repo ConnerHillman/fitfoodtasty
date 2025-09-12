@@ -34,13 +34,8 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
         <img 
           src={logoImage} 
           alt="Fit Food Tasty" 
-          className="w-8 h-8 object-contain"
+          className="w-10 h-6 object-contain"
         />
-        <div className="text-[6px] font-bold text-green-600">
-          <div>FIT</div>
-          <div>FOOD</div>
-          <div>TASTY</div>
-        </div>
       </div>
     </div>
 
