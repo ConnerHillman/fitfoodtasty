@@ -187,7 +187,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
               grid-template-columns: repeat(2, 96mm) !important;
               grid-template-rows: repeat(5, 50.8mm) !important;
               column-gap: 5mm !important;
-              row-gap: 5mm !important;
+              row-gap: 4.95mm !important; /* slight fudge to avoid rounding cut-off on some printers */
               width: 210mm !important;
               height: 297mm !important;
               box-sizing: border-box !important;
@@ -283,6 +283,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
           <li>• Use A4 paper (210mm × 297mm)</li>
           <li>• Set printer to 100% scale (no fit to page)</li>
           <li>• Disable margins or set to minimum</li>
+          <li>• Disable browser headers and footers in the print dialog</li>
           <li>• Use portrait orientation</li>
           <li>• For best results, use adhesive label sheets (96mm × 50.8mm, 2×5 layout)</li>
         </ul>
