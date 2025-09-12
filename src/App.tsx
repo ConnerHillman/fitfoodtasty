@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import AccountSettings from "./pages/AccountSettings";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/about" element={<Layout><About /></Layout>} />
             <Route path="/cart" element={<Layout><Cart /></Layout>} />
             <Route path="/orders" element={<RequireAuth><Layout><Orders /></Layout></RequireAuth>} />
+            <Route path="/account" element={<RequireAuth><Layout><AccountSettings /></Layout></RequireAuth>} />
             <Route path="/payment-success" element={<Layout><PaymentSuccess /></Layout>} />
             <Route path="/admin" element={<RequireAuth><Layout><AdminDashboard /></Layout></RequireAuth>} />
             <Route path="/business" element={<RequireAuth><Layout><BusinessDashboard /></Layout></RequireAuth>} />

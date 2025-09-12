@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Star, ChevronDown, User, LogOut } from "lucide-react";
+import { Star, ChevronDown, User, LogOut, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -91,6 +91,12 @@ const Header = () => {
                       <Link to="/orders" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         My Orders
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/account" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Account Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={signOut} className="flex items-center">
