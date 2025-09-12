@@ -43,7 +43,7 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
       </div>
       
       {/* Meal Name */}
-      <h1 className="text-center font-bold text-[11px] text-foreground leading-tight mb-1.5">
+      <h1 className="text-center font-bold text-[14px] text-foreground leading-tight mb-1.5">
         {data.mealName}
       </h1>
       
