@@ -6,7 +6,7 @@ import MealCard from "./MealCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import CategoryTag from "./CategoryTag";
+import LuxuryCategorySelector from "./LuxuryCategorySelector";
 
 // Title-case labels for display only
 const toTitleCase = (str: string) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1));
@@ -133,29 +133,18 @@ const MealsGrid = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Category Filter */}
-      <div className="flex flex-wrap gap-3">
-        {displayCategories.map((category) => (
-          <button
-            key={category.value}
-            onClick={() => setSelectedCategory(category.value)}
-            className="transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-full"
-          >
-            <CategoryTag 
-              category={category.value === "all" ? "All Categories" : category.value} 
-              size="md" 
-              variant={selectedCategory === category.value ? "bold" : "outline"}
-              className={selectedCategory === category.value ? "" : "hover:shadow-lg"}
-            />
-          </button>
-        ))}
-      </div>
+    <div className="space-y-8">
+      {/* Luxury Category Selector */}
+      <LuxuryCategorySelector
+        categories={displayCategories}
+        selectedCategory={selectedCategory}
+        onCategorySelect={setSelectedCategory}
+      />
 
       {/* Meals Count */}
-      <div className="flex items-center justify-between">
-        <div className="text-muted-foreground">
-          {filteredMeals.length} meal{filteredMeals.length !== 1 ? 's' : ''} available
+      <div className="flex items-center justify-center">
+        <div className="text-muted-foreground text-lg">
+          {filteredMeals.length} premium meal{filteredMeals.length !== 1 ? 's' : ''} available
         </div>
       </div>
 
