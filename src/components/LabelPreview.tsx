@@ -24,7 +24,6 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
   <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
     width: '99.1mm',
     height: '38.1mm',
-    border: '1px solid hsl(var(--border))',
     boxSizing: 'border-box',
     padding: '6px',
     display: 'flex',
