@@ -22,6 +22,7 @@ const BusinessDashboard = () => {
   }, []);
 
   const fetchDashboardData = async () => {
+    setLoading(true);
     try {
       // Fetch regular orders
       const { data: ordersData, error: ordersError } = await supabase
@@ -412,10 +413,13 @@ const BusinessDashboard = () => {
                 onClick={fetchDashboardData}
                 variant="outline"
                 size="lg"
-                className="bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background/90"
+                disabled={loading}
+                className={`bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background/90 transition-all duration-300 ${
+                  loading ? 'animate-pulse scale-105 shadow-lg shadow-primary/20' : ''
+                }`}
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Data
+                <RefreshCw className={`h-4 w-4 mr-2 transition-transform duration-300 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? 'Refreshing...' : 'Refresh Data'}
               </Button>
               <Button
                 onClick={printDeliveryLabels}
