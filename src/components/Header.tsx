@@ -1,15 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Star, ChevronDown, User, LogOut, Settings, Shield } from "lucide-react";
+import { Star, ChevronDown, User, LogOut, Settings, Shield, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
 const Header = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
       {/* Promo Banner */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-sm font-medium">
@@ -73,8 +76,8 @@ const Header = () => {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Trust & Actions */}
-          <div className="flex items-center space-x-4">
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center space-x-4">
             {/* User Actions */}
             {user ? (
               <div className="flex items-center space-x-4">
@@ -90,7 +93,7 @@ const Header = () => {
                   </Button>
                 )}
                 {!isAdmin() && (
-                  <span className="text-sm text-gray-600 hidden md:block">
+                  <span className="text-sm text-gray-600">
                     Welcome back!
                   </span>
                 )}
@@ -98,7 +101,7 @@ const Header = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                       <User className="h-4 w-4" />
-                      <span className="hidden md:block">{user.email}</span>
+                      <span>{user.email}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -123,11 +126,11 @@ const Header = () => {
               </div>
             ) : (
               <>
-                <Link to="/auth" className="text-gray-700 hover:text-green-600 font-medium hidden md:block">
+                <Link to="/auth" className="text-gray-700 hover:text-green-600 font-medium">
                   LOGIN
                 </Link>
                 
-                <Button asChild variant="outline" className="hidden md:flex border-green-500 text-green-600 hover:bg-green-50 font-bold px-4 py-2 rounded-full transition-all duration-200">
+                <Button asChild variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 font-bold px-4 py-2 rounded-full transition-all duration-200">
                   <Link to="/auth">CREATE ACCOUNT</Link>
                 </Button>
               </>
@@ -136,6 +139,116 @@ const Header = () => {
             <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
               <Link to="/menu">ORDER NOW</Link>
             </Button>
+          </div>
+
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center space-x-2">
+            <Button asChild size="sm" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-4 py-2 rounded-full">
+              <Link to="/menu">ORDER</Link>
+            </Button>
+            
+            {/* Mobile Menu */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <nav className="flex flex-col space-y-4">
+                  <div className="flex items-center justify-between">
+                    <img 
+                      src="/lovable-uploads/a4f5ea12-e388-48b6-abc3-4e7e0ec80763.png" 
+                      alt="FIT FOOD TASTY Logo" 
+                      className="h-8 w-auto"
+                    />
+                  </div>
+                  
+                  <div className="border-t pt-4 space-y-4">
+                    <Link 
+                      to="/menu" 
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Our Menu
+                    </Link>
+                    <Link 
+                      to="/packages" 
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Meal Packages
+                    </Link>
+                    <Link 
+                      to="/about" 
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      About Us
+                    </Link>
+                  </div>
+
+                  {user ? (
+                    <div className="border-t pt-4 space-y-4">
+                      {!roleLoading && isAdmin() && (
+                        <Link 
+                          to="/admin" 
+                          className="flex items-center space-x-2 text-red-600 font-medium py-2"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Shield className="h-4 w-4" />
+                          <span>ADMIN</span>
+                        </Link>
+                      )}
+                      <Link 
+                        to="/orders" 
+                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <User className="h-4 w-4" />
+                        <span>My Orders</span>
+                      </Link>
+                      <Link 
+                        to="/account" 
+                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Settings className="h-4 w-4" />
+                        <span>Account Settings</span>
+                      </Link>
+                      <button 
+                        onClick={() => {
+                          signOut();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center space-x-2 text-gray-700 hover:text-red-600 py-2 w-full text-left"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="border-t pt-4 space-y-4">
+                      <Link 
+                        to="/auth" 
+                        className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Login
+                      </Link>
+                      <Button 
+                        asChild 
+                        variant="outline" 
+                        className="w-full border-green-500 text-green-600 hover:bg-green-50 font-bold rounded-full"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Link to="/auth">CREATE ACCOUNT</Link>
+                      </Button>
+                    </div>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
