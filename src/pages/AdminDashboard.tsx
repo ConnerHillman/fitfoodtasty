@@ -9,6 +9,7 @@ import ReferralSettingsAdmin from "@/components/admin/ReferralSettingsAdmin";
 import BusinessDashboard from "@/components/admin/BusinessDashboard";
 import Reports from "@/components/admin/Reports";
 import AllOrders from "@/pages/AllOrders";
+import Marketing from "@/components/admin/Marketing";
 import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp, ListOrdered } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
 import { useSearchParams } from "react-router-dom";
@@ -33,7 +34,7 @@ const AdminDashboard = () => {
 
       <Tabs value={tab} onValueChange={(v) => { setTab(v); setSearchParams({ tab: v }); }} className="space-y-8">
         <div className="relative bg-gradient-to-r from-background via-background/95 to-background backdrop-blur-sm border border-border/50 rounded-xl p-2 shadow-lg">
-          <TabsList className="grid w-full grid-cols-9 bg-transparent gap-1 p-0 h-auto">
+          <TabsList className="grid w-full grid-cols-10 bg-transparent gap-1 p-0 h-auto">
             <TabsTrigger 
               value="dashboard" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
@@ -83,6 +84,12 @@ const AdminDashboard = () => {
               <span>Import</span>
             </TabsTrigger>
             <TabsTrigger 
+              value="marketing" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <span>Marketing</span>
+            </TabsTrigger>
+            <TabsTrigger 
               value="referrals" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
@@ -121,6 +128,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="import">
           <DataImporter />
+        </TabsContent>
+
+        <TabsContent value="marketing">
+          <Marketing />
         </TabsContent>
 
         <TabsContent value="referrals">
