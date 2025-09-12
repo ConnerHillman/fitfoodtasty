@@ -47,8 +47,8 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
         <div className="w-12 h-1 bg-gradient-to-r from-emerald-400 to-green-500 mx-auto rounded-full mt-3" />
       </div>
       
-      {/* Mobile-first compact design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-6xl mx-auto">
+      {/* Mobile-first compact design - 2 per row on mobile */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-6xl mx-auto">
         {packages.map((pkg) => (
           <div key={pkg.id} className="group text-center">
             {/* Full image button */}
