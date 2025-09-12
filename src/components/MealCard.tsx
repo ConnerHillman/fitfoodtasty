@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -52,8 +53,6 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
-  const [showIngredients, setShowIngredients] = useState(false);
-  const [showNutritionFacts, setShowNutritionFacts] = useState(false);
 
   useEffect(() => {
     fetchMealAllergens();
@@ -110,11 +109,10 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
     }
   };
 
-  const handleIngredientsToggle = () => {
-    if (!showIngredients && ingredients.length === 0) {
+  const handleIngredientsClick = () => {
+    if (ingredients.length === 0) {
       fetchIngredients();
     }
-    setShowIngredients(!showIngredients);
   };
 
   return (
@@ -144,99 +142,112 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
           <p className="text-sm text-gray-600 line-clamp-2">{meal.description}</p>
         </div>
 
-        {/* Collapsible buttons */}
-        <div className="space-y-2 mb-3">
-          {/* Ingredients button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleIngredientsToggle}
-            className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
-          >
-            <ChevronDown className={`w-3 h-3 mr-1 transition-transform ${showIngredients ? 'rotate-180' : ''}`} />
-            INGREDIENTS
-          </Button>
+        {/* Info buttons */}
+        <div className="flex gap-2 mb-3">
+          {/* Ingredients popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleIngredientsClick}
+                className="flex-1 h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
+              >
+                <Info className="w-3 h-3 mr-1" />
+                INGREDIENTS
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-sm text-gray-900">Ingredients</h4>
+                {loadingIngredients ? (
+                  <div className="text-sm text-gray-500">Loading ingredients...</div>
+                ) : ingredients.length > 0 ? (
+                  <div className="text-sm text-gray-700 leading-relaxed">
+                    {ingredients.map((ingredient, index) => (
+                      <span key={ingredient.id}>
+                        <span className="font-medium">{ingredient.quantity}{ingredient.unit}</span> {ingredient.name}
+                        {index < ingredients.length - 1 ? ", " : "."}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">No ingredients available</div>
+                )}
+                
+                {allergens.length > 0 && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <h5 className="font-semibold text-sm text-red-700 mb-1">Allergens</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {allergens.map((allergen) => (
+                        <Badge key={allergen.id} variant="destructive" className="text-xs">
+                          {allergen.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
           
-          {/* Nutrition Facts button */}
+          {/* Nutrition popover */}
           {showNutrition && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowNutritionFacts(!showNutritionFacts)}
-              className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
-            >
-              <ChevronDown className={`w-3 h-3 mr-1 transition-transform ${showNutritionFacts ? 'rotate-180' : ''}`} />
-              NUTRITION
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
+                >
+                  <Info className="w-3 h-3 mr-1" />
+                  NUTRITION
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4">
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm text-gray-900">Nutrition Facts</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-600">Calories</span>
+                      <span className="font-semibold">{Math.round(meal.total_calories)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-600">Protein</span>
+                      <span className="font-semibold">{(meal.total_protein || 0).toFixed(1)}g</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-600">Fat</span>
+                      <span className="font-semibold">{(meal.total_fat || 0).toFixed(1)}g</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-600">Sat. Fat</span>
+                      <span className="font-semibold">{(meal.total_saturated_fat || 0).toFixed(1)}g</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-600">Carbs</span>
+                      <span className="font-semibold">{(meal.total_carbs || 0).toFixed(1)}g</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-600">Sugar</span>
+                      <span className="font-semibold">{(meal.total_sugar || 0).toFixed(1)}g</span>
+                    </div>
+                    {meal.total_fiber > 0 && (
+                      <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                        <span className="text-gray-600">Fiber</span>
+                        <span className="font-semibold">{(meal.total_fiber || 0).toFixed(1)}g</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-600">Salt</span>
+                      <span className="font-semibold">{(meal.total_salt || 0).toFixed(1)}g</span>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
-
-        {/* Collapsible content */}
-        {showIngredients && (
-          <div className="mb-3 p-2 bg-gray-50 rounded-lg border animate-fade-in">
-            {loadingIngredients ? (
-              <div className="text-xs text-gray-500">Loading ingredients...</div>
-            ) : ingredients.length > 0 ? (
-              <div className="text-xs text-gray-700">
-                {ingredients.map((ingredient, index) => (
-                  <span key={ingredient.id}>
-                    {ingredient.quantity}{ingredient.unit} {ingredient.name}
-                    {index < ingredients.length - 1 ? ", " : "."}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-gray-500">No ingredients available</div>
-            )}
-            
-            {allergens.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                <div className="text-xs font-medium text-red-600">Contains: {allergens.map(a => a.name).join(', ')}</div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {showNutritionFacts && showNutrition && (
-          <div className="mb-3 p-2 bg-gray-50 rounded-lg border animate-fade-in">
-            <div className="grid grid-cols-2 gap-1 text-xs">
-              <div className="flex justify-between">
-                <span>Calories</span>
-                <span className="font-medium">{Math.round(meal.total_calories)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Protein</span>
-                <span className="font-medium">{(meal.total_protein || 0).toFixed(1)}g</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Fat</span>
-                <span className="font-medium">{(meal.total_fat || 0).toFixed(1)}g</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Saturated Fat</span>
-                <span className="font-medium">{(meal.total_saturated_fat || 0).toFixed(1)}g</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Carbs</span>
-                <span className="font-medium">{(meal.total_carbs || 0).toFixed(1)}g</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Sugar</span>
-                <span className="font-medium">{(meal.total_sugar || 0).toFixed(1)}g</span>
-              </div>
-              {meal.total_fiber > 0 && (
-                <div className="flex justify-between">
-                  <span>Fiber</span>
-                  <span className="font-medium">{(meal.total_fiber || 0).toFixed(1)}g</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span>Salt</span>
-                <span className="font-medium">{(meal.total_salt || 0).toFixed(1)}g</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Price and Add to cart button */}
         {onAddToCart && (
