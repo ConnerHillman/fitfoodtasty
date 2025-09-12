@@ -7,10 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Download, Save, Plus, Trash2, Edit3 } from 'lucide-react';
+import { Printer, Download, Save, Plus, Trash2, Edit3, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { LabelPreview } from './LabelPreview';
 import { LabelEditor } from './LabelEditor';
+import { MealSelector } from './MealSelector';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -61,6 +62,7 @@ export const LabelGenerator: React.FC = () => {
   const [showSavedMeals, setShowSavedMeals] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showMealSelector, setShowMealSelector] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -205,6 +207,20 @@ export const LabelGenerator: React.FC = () => {
     setIsEditMode(false);
   };
 
+  const handleSelectMeal = (meal: any) => {
+    setLabelData(prev => ({
+      ...prev,
+      mealName: meal.name,
+      calories: Math.round(meal.total_calories),
+      protein: Math.round(meal.total_protein),
+      fat: Math.round(meal.total_fat),
+      carbs: Math.round(meal.total_carbs),
+      ingredients: meal.ingredients.join(', '),
+      allergens: meal.allergens.join(', ')
+    }));
+    toast.success(`Meal "${meal.name}" loaded into label generator`);
+  };
+
   if (isEditMode) {
     return (
       <div className="container mx-auto py-8 print:hidden">
@@ -233,6 +249,14 @@ export const LabelGenerator: React.FC = () => {
             <CardTitle className="flex items-center justify-between">
               Label Information
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMealSelector(true)}
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Add Meal
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -453,6 +477,13 @@ export const LabelGenerator: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Meal Selector Dialog */}
+      <MealSelector
+        isOpen={showMealSelector}
+        onClose={() => setShowMealSelector(false)}
+        onSelectMeal={handleSelectMeal}
+      />
     </div>
   );
 };
