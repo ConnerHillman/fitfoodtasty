@@ -226,7 +226,12 @@ const AllOrders: React.FC = () => {
                       mode="range"
                       selected={dateRange}
                       onSelect={setDateRange}
-                      numberOfMonths={2}
+                      numberOfMonths={1}
+                      onDayClick={(day, _modifiers, e) => {
+                        if (e.detail === 2) {
+                          setDateRange({ from: day, to: day });
+                        }
+                      }}
                       initialFocus
                       className="p-3 pointer-events-auto"
                     />
