@@ -127,12 +127,6 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
             alt={meal.name}
             className="w-full h-full object-cover"
           />
-          {/* Price badge */}
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-emerald-600 text-white font-bold text-sm px-2 py-1 shadow-lg rounded-full">
-              £{meal.price.toFixed(2)}
-            </Badge>
-          </div>
           {isNew && (
             <div className="absolute top-2 right-2">
               <Badge className="bg-green-500 text-white shadow-md animate-pulse">
@@ -157,12 +151,10 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
             variant="outline" 
             size="sm" 
             onClick={handleIngredientsToggle}
-            className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-between"
+            className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
           >
-            <div className="flex items-center">
-              <ChevronDown className={`w-3 h-3 mr-1 transition-transform ${showIngredients ? 'rotate-180' : ''}`} />
-              INGREDIENTS
-            </div>
+            <ChevronDown className={`w-3 h-3 mr-1 transition-transform ${showIngredients ? 'rotate-180' : ''}`} />
+            INGREDIENTS
           </Button>
           
           {/* Nutrition Facts button */}
@@ -171,12 +163,10 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
               variant="outline" 
               size="sm" 
               onClick={() => setShowNutritionFacts(!showNutritionFacts)}
-              className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-between"
+              className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-xs font-medium rounded-lg flex items-center justify-center"
             >
-              <div className="flex items-center">
-                <ChevronDown className={`w-3 h-3 mr-1 transition-transform ${showNutritionFacts ? 'rotate-180' : ''}`} />
-                NUTRITION FACTS
-              </div>
+              <ChevronDown className={`w-3 h-3 mr-1 transition-transform ${showNutritionFacts ? 'rotate-180' : ''}`} />
+              NUTRITION
             </Button>
           )}
         </div>
@@ -248,14 +238,19 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
           </div>
         )}
 
-        {/* Add to cart button */}
+        {/* Price and Add to cart button */}
         {onAddToCart && (
-          <Button 
-            onClick={() => onAddToCart(meal)}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg"
-          >
-            Add to Cart
-          </Button>
+          <div className="space-y-2">
+            <div className="text-center">
+              <span className="text-lg font-bold text-emerald-600">£{meal.price.toFixed(2)}</span>
+            </div>
+            <Button 
+              onClick={() => onAddToCart(meal)}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg"
+            >
+              Add to Cart
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
