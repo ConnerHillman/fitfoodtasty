@@ -42,6 +42,7 @@ interface LabelReportProps {
 export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [mealProduction, setMealProduction] = useState<MealProduction[]>([]);
+  const [uniqueOrderIds, setUniqueOrderIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [showLabelPreview, setShowLabelPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -122,9 +123,11 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       // Process meal production data
       const mealProductionMap = new Map<string, MealProduction>();
+      const allOrderIds = new Set<string>();
 
       // Process regular orders
       orders.forEach(order => {
+        allOrderIds.add(order.id); // Track unique order IDs
         order.order_items?.forEach(item => {
           const meal = meals.find(m => m.id === item.meal_id);
           if (meal) {
@@ -154,6 +157,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       // Process package orders
       packageOrders.forEach(order => {
+        allOrderIds.add(order.id); // Track unique order IDs
         order.package_meal_selections?.forEach(selection => {
           const meal = meals.find(m => m.id === selection.meal_id);
           if (meal) {
@@ -185,6 +189,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         .sort((a, b) => b.quantity - a.quantity);
 
       setMealProduction(productionData);
+      setUniqueOrderIds(allOrderIds);
 
       if (productionData.length === 0) {
         toast({
@@ -194,7 +199,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       } else {
         toast({
           title: "Labels Generated",
-          description: `Found ${productionData.length} meals requiring ${productionData.reduce((sum, meal) => sum + meal.quantity, 0)} total labels`,
+          description: `Found ${productionData.length} meals requiring ${productionData.reduce((sum, meal) => sum + meal.quantity, 0)} total labels from ${allOrderIds.size} orders`,
         });
       }
     } catch (error) {
@@ -347,9 +352,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
                     <div className="text-xs text-muted-foreground">A4 Pages</div>
                   </div>
                   <div className="text-center p-3 bg-muted/50 rounded">
-                    <div className="text-2xl font-bold text-primary">
-                      {mealProduction.reduce((sum, meal) => sum + meal.orderCount, 0)}
-                    </div>
+                    <div className="text-2xl font-bold text-primary">{uniqueOrderIds.size}</div>
                     <div className="text-xs text-muted-foreground">Total Orders</div>
                   </div>
                 </div>
