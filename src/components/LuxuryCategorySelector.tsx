@@ -51,13 +51,11 @@ const LuxuryCategorySelector = ({
   return (
     <div className={cn("w-full mb-8 md:mb-12", className)}>
       {/* Section Header */}
-      <div className="text-center mb-4 md:mb-8">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2">
-          Choose Your Category
+      <div className="text-center mb-6 md:mb-10">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+          Choose a meal size or view all meals
         </h2>
-        <p className="text-muted-foreground text-base md:text-lg">
-          Select from our curated collection of premium meals
-        </p>
+        <div className="w-16 h-1 bg-gradient-to-r from-emerald-400 to-green-500 mx-auto rounded-full mb-6" />
       </div>
 
       {/* Category Grid */}
