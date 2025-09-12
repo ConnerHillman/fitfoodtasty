@@ -1,5 +1,6 @@
 import React from 'react';
 import { format as formatDate } from 'date-fns';
+import logoImage from '@/assets/fit-food-tasty-logo.png';
 
 interface MealProduction {
   mealId: string;
@@ -19,6 +20,97 @@ interface LabelPrintPreviewProps {
   useByDate?: string;
 }
 
+// Reuse the exact same SingleLabel component from LabelPreview
+const SingleLabel: React.FC<{ 
+  mealName: string;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  ingredients: string;
+  allergens: string;
+  useByDate: string;
+}> = ({ mealName, calories, protein, fat, carbs, ingredients, allergens, useByDate }) => (
+  <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
+    width: '96mm',    // Updated to match the correct specifications
+    height: '50.8mm', // Updated to match the correct specifications
+    boxSizing: 'border-box',
+    padding: '6px',
+    display: 'flex',
+    flexDirection: 'column',
+    fontSize: '6px',
+    lineHeight: '1.2'
+  }}>
+    {/* Header Section */}
+    <div className="flex flex-col items-center">
+      {/* Logo */}
+      <div className="mb-2">
+        <img 
+          src={logoImage} 
+          alt="Fit Food Tasty" 
+          className="h-8 w-auto object-contain"
+        />
+      </div>
+      
+      {/* Meal Name */}
+      <h1 className="text-center font-bold text-foreground leading-tight mb-2" style={{ fontSize: '14px' }}>
+        {mealName}
+      </h1>
+      
+      {/* Separator */}
+      <div className="w-8 h-px bg-primary/30 mb-2"></div>
+    </div>
+
+    {/* Nutrition Section */}
+    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-2 py-1.5 mb-2">
+      <div className="text-center font-bold text-primary leading-tight" style={{ fontSize: '8px' }}>
+        {calories} Calories • {protein}g Protein • {fat}g Fat • {carbs}g Carbs
+      </div>
+    </div>
+
+    {/* Main Content */}
+    <div className="flex-1 space-y-1.5">
+      {/* Use By Date - Most Important */}
+      <div className="bg-muted/50 rounded px-2 py-1">
+        <div className="font-bold text-foreground leading-tight" style={{ fontSize: '7px' }}>
+          USE BY: {useByDate ? new Date(useByDate).toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }) : 'Fri, 19/09/2025'}
+        </div>
+      </div>
+
+      {/* Storage Instructions */}
+      <div className="text-muted-foreground leading-tight" style={{ fontSize: '6px' }}>
+        Store in a refrigerator below 5°c. Heat in a microwave for 3-4 minutes or until piping hot.
+      </div>
+
+      {/* Ingredients */}
+      <div className="leading-tight" style={{ fontSize: '6px' }}>
+        <span className="font-semibold text-foreground">Ingredients:</span>{' '}
+        <span className="text-muted-foreground">{ingredients || 'Not specified'}</span>
+      </div>
+
+      {/* Allergens */}
+      {allergens && (
+        <div className="leading-tight" style={{ fontSize: '6px' }}>
+          <span className="font-semibold text-foreground">Allergens:</span>{' '}
+          <span className="font-bold text-foreground">{allergens}</span>
+        </div>
+      )}
+    </div>
+
+    {/* Footer */}
+    <div className="border-t border-border/30 pt-1 mt-2">
+      <div className="text-center font-medium text-primary leading-tight" style={{ fontSize: '6px' }}>
+        www.fitfoodtasty.co.uk
+      </div>
+    </div>
+  </div>
+);
+
 export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({ 
   mealProduction, 
   useByDate = formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
@@ -31,7 +123,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
     }
   });
 
-  // Calculate pages (10 labels per page)
+  // Calculate pages (10 labels per page - 2 across × 5 down)
   const labelsPerPage = 10;
   const totalPages = Math.ceil(allLabels.length / labelsPerPage);
   
@@ -39,7 +131,14 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
   for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
     const startIndex = pageIndex * labelsPerPage;
     const endIndex = Math.min(startIndex + labelsPerPage, allLabels.length);
-    pages.push(allLabels.slice(startIndex, endIndex));
+    const pageLabels = allLabels.slice(startIndex, endIndex);
+    
+    // Fill remaining slots with empty divs to maintain grid structure
+    while (pageLabels.length < labelsPerPage) {
+      pageLabels.push({ meal: null, labelIndex: 0 } as any);
+    }
+
+    pages.push({ pageLabels, pageIndex });
   }
 
   return (
@@ -75,106 +174,12 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             box-sizing: border-box;
           }
           
-          .label {
-            width: 96mm;
-            height: 50.8mm;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-            padding: 2mm;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            font-family: 'Arial', sans-serif;
-            position: relative;
-          }
-          
-          .label-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1mm;
-          }
-          
-          .logo {
-            width: 12mm;
-            height: 12mm;
-            background: #4CAF50;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 3mm;
-          }
-          
-          .use-by {
-            background: #ff4444;
-            color: white;
-            padding: 0.5mm 1mm;
-            border-radius: 1mm;
-            font-size: 2.5mm;
-            font-weight: bold;
-          }
-          
-          .meal-name {
-            font-size: 4mm;
-            font-weight: bold;
-            color: #333;
-            margin: 0.5mm 0;
-            line-height: 1.1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-          }
-          
-          .nutrition-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5mm;
-            margin: 1mm 0;
-          }
-          
-          .nutrition-item {
-            text-align: center;
-            font-size: 2mm;
-          }
-          
-          .nutrition-value {
-            font-weight: bold;
-            color: #4CAF50;
-            display: block;
-          }
-          
-          .nutrition-label {
-            color: #666;
-            font-size: 1.8mm;
-          }
-          
-          .storage-heating {
-            font-size: 2mm;
-            color: #666;
-            margin: 1mm 0;
-            line-height: 1.2;
-            flex-grow: 1;
-          }
-          
-          .ingredients-allergens {
-            font-size: 1.8mm;
-            color: #333;
-            border-top: 0.5px solid #ddd;
-            padding-top: 0.5mm;
-            margin-top: auto;
-          }
-          
-          .ingredients {
-            margin-bottom: 0.5mm;
-          }
-          
-          .allergens {
-            font-weight: bold;
+          @media print {
+            .print-page {
+              margin: 0 !important;
+              padding: 11.5mm 6.5mm !important;
+              box-shadow: none !important;
+            }
           }
         `
       }} />
@@ -182,7 +187,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
       <div className="no-print mb-4 p-4 bg-white rounded border">
         <h3 className="text-lg font-semibold mb-2">Print Preview</h3>
         <p className="text-sm text-gray-600 mb-2">
-          This preview shows exactly how your labels will appear when printed on A4 paper.
+          This preview shows exactly how your labels will appear when printed on A4 paper using your label generator design.
         </p>
         <div className="text-sm text-gray-500">
           <span className="font-medium">Total Labels:</span> {allLabels.length} • 
@@ -191,67 +196,36 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
         </div>
       </div>
 
-      {pages.map((pageLabels, pageIndex) => (
+      {pages.map(({ pageLabels, pageIndex }) => (
         <div key={pageIndex} className={`print-page ${pageIndex < pages.length - 1 ? 'page-break' : ''}`}>
           {pageLabels.map(({ meal }, labelIndex) => (
-            <div key={`${meal.mealId}-${labelIndex}`} className="label">
-              <div className="label-header">
-                <div className="logo">FF</div>
-                <div className="use-by">USE BY {useByDate}</div>
-              </div>
-              
-              <div className="meal-name">{meal.mealName}</div>
-              
-              <div className="nutrition-grid">
-                <div className="nutrition-item">
-                  <span className="nutrition-value">{meal.totalCalories}</span>
-                  <div className="nutrition-label">KCAL</div>
+            <div key={`${meal?.mealId || 'empty'}-${labelIndex}`}>
+              {meal ? (
+                <SingleLabel
+                  mealName={meal.mealName}
+                  calories={meal.totalCalories}
+                  protein={meal.totalProtein}
+                  fat={meal.totalFat}
+                  carbs={meal.totalCarbs}
+                  ingredients={meal.ingredients}
+                  allergens={meal.allergens}
+                  useByDate={useByDate}
+                />
+              ) : (
+                <div style={{ 
+                  width: '96mm', 
+                  height: '50.8mm',
+                  border: '1px dashed #ccc', 
+                  opacity: 0.3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#999',
+                  fontSize: '10px'
+                }}>
+                  Empty
                 </div>
-                <div className="nutrition-item">
-                  <span className="nutrition-value">{meal.totalProtein}g</span>
-                  <div className="nutrition-label">PROTEIN</div>
-                </div>
-                <div className="nutrition-item">
-                  <span className="nutrition-value">{meal.totalFat}g</span>
-                  <div className="nutrition-label">FAT</div>
-                </div>
-                <div className="nutrition-item">
-                  <span className="nutrition-value">{meal.totalCarbs}g</span>
-                  <div className="nutrition-label">CARBS</div>
-                </div>
-              </div>
-              
-              <div className="storage-heating">
-                <div>Store in a refrigerator below 5°C</div>
-                <div>Pierce film and heat for 3-4 minutes until piping hot</div>
-              </div>
-              
-              <div className="ingredients-allergens">
-                <div className="ingredients">
-                  <strong>Ingredients:</strong> {meal.ingredients}
-                </div>
-                {meal.allergens && (
-                  <div className="allergens">
-                    <strong>Allergens:</strong> {meal.allergens}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-          
-          {/* Fill empty slots if needed */}
-          {Array.from({ length: labelsPerPage - pageLabels.length }).map((_, emptyIndex) => (
-            <div key={`empty-${emptyIndex}`} className="label" style={{ border: '1px dashed #ccc', opacity: 0.3 }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                height: '100%', 
-                color: '#999',
-                fontSize: '3mm'
-              }}>
-                Empty
-              </div>
+              )}
             </div>
           ))}
         </div>
