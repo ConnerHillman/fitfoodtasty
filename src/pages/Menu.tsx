@@ -78,9 +78,10 @@ const Menu = () => {
       )}
 
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Fresh Meal Menu</h1>
-          <p className="text-muted-foreground text-lg">Choose from our selection of nutritious, chef-prepared meals</p>
+        <div className="text-center md:text-left">
+          <h1 className="font-playfair text-6xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-green-800 via-emerald-700 to-green-900 bg-clip-text text-transparent tracking-wider mb-4 drop-shadow-sm">
+            MENU
+          </h1>
         </div>
         
         {/* Create Account CTA - Only show for non-authenticated users */}
