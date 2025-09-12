@@ -152,25 +152,21 @@ const AllOrders: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* Back Button */}
-      <div className="flex items-center">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
+        </Button>
+        <Button onClick={fetchAllOrders} size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
         </Button>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-end">
-            <Button onClick={fetchAllOrders} size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>
