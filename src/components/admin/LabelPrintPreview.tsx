@@ -146,6 +146,15 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
       <style dangerouslySetInnerHTML={{
         __html: `
           @media print {
+            * {
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+            }
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
             .print-preview {
               margin: 0 !important;
               padding: 0 !important;
@@ -156,6 +165,19 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             }
             .no-print {
               display: none !important;
+            }
+            .print-page {
+              margin: 0 !important;
+              padding: 11.5mm 6.5mm !important;
+              box-shadow: none !important;
+              background: white !important;
+              display: grid !important;
+              grid-template-columns: repeat(2, 96mm) !important;
+              grid-template-rows: repeat(5, 50.8mm) !important;
+              gap: 5mm !important;
+              width: 210mm !important;
+              height: 297mm !important;
+              box-sizing: border-box !important;
             }
           }
           
@@ -173,26 +195,17 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             padding: 11.5mm 6.5mm;
             box-sizing: border-box;
           }
-          
-          @media print {
-            .print-page {
-              margin: 0 !important;
-              padding: 11.5mm 6.5mm !important;
-              box-shadow: none !important;
-            }
-          }
         `
       }} />
       
       <div className="no-print mb-4 p-4 bg-white rounded border">
-        <h3 className="text-lg font-semibold mb-2">Print Preview</h3>
+        <h3 className="text-lg font-semibold mb-2">Label Layout Preview</h3>
         <p className="text-sm text-gray-600 mb-2">
-          This preview shows exactly how your labels will appear when printed on A4 paper using your label generator design.
+          Preview shows exactly how labels will print on A4 paper (96mm × 50.8mm, 2×5 layout).
         </p>
         <div className="text-sm text-gray-500">
           <span className="font-medium">Total Labels:</span> {allLabels.length} • 
-          <span className="font-medium ml-2">Pages:</span> {totalPages} • 
-          <span className="font-medium ml-2">Layout:</span> 2 across × 5 down per page
+          <span className="font-medium ml-2">Pages:</span> {totalPages}
         </div>
       </div>
 
