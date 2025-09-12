@@ -17,6 +17,7 @@ const profileSchema = z.object({
   phone: z.string().optional(),
   delivery_address: z.string().optional(),
   city: z.string().optional(),
+  county: z.string().optional(),
   postal_code: z.string().optional(),
 });
 
@@ -58,6 +59,7 @@ const AccountSettings = () => {
           setValue('phone', data.phone || '');
           setValue('delivery_address', data.delivery_address || '');
           setValue('city', data.city || '');
+          setValue('county', data.county || '');
           setValue('postal_code', data.postal_code || '');
         }
       } catch (error) {
@@ -82,6 +84,7 @@ const AccountSettings = () => {
           phone: data.phone || null,
           delivery_address: data.delivery_address || null,
           city: data.city || null,
+          county: data.county || null,
           postal_code: data.postal_code || null,
         })
         .eq('user_id', user.id);
@@ -163,7 +166,7 @@ const AccountSettings = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
                   <Input
@@ -173,6 +176,18 @@ const AccountSettings = () => {
                   />
                   {errors.city && (
                     <p className="text-sm text-destructive">{errors.city.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="county">County</Label>
+                  <Input
+                    id="county"
+                    {...register("county")}
+                    placeholder="Enter your county"
+                  />
+                  {errors.county && (
+                    <p className="text-sm text-destructive">{errors.county.message}</p>
                   )}
                 </div>
 

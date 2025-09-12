@@ -577,6 +577,7 @@ export type Database = {
       profiles: {
         Row: {
           city: string | null
+          county: string | null
           created_at: string
           delivery_address: string | null
           full_name: string
@@ -588,6 +589,7 @@ export type Database = {
         }
         Insert: {
           city?: string | null
+          county?: string | null
           created_at?: string
           delivery_address?: string | null
           full_name: string
@@ -599,6 +601,7 @@ export type Database = {
         }
         Update: {
           city?: string | null
+          county?: string | null
           created_at?: string
           delivery_address?: string | null
           full_name?: string
