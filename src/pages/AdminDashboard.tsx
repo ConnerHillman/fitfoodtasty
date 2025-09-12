@@ -8,7 +8,8 @@ import PackagesManager from "@/components/admin/PackagesManager";
 import ReferralSettingsAdmin from "@/components/admin/ReferralSettingsAdmin";
 import BusinessDashboard from "@/components/admin/BusinessDashboard";
 import Reports from "@/components/admin/Reports";
-import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp } from "lucide-react";
+import AllOrders from "@/pages/AllOrders";
+import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp, ListOrdered } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
 const AdminDashboard = () => {
   return (
@@ -23,13 +24,20 @@ const AdminDashboard = () => {
 
       <Tabs defaultValue="dashboard" className="space-y-8">
         <div className="relative bg-gradient-to-r from-background via-background/95 to-background backdrop-blur-sm border border-border/50 rounded-xl p-2 shadow-lg">
-          <TabsList className="grid w-full grid-cols-8 bg-transparent gap-1 p-0 h-auto">
+          <TabsList className="grid w-full grid-cols-9 bg-transparent gap-1 p-0 h-auto">
             <TabsTrigger 
               value="dashboard" 
               className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
             >
               <TrendingUp className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="orders" 
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+            >
+              <ListOrdered className="h-4 w-4" />
+              <span className="hidden sm:inline">Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="reports" 
@@ -85,6 +93,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="dashboard">
           <BusinessDashboard />
+        </TabsContent>
+
+        <TabsContent value="orders">
+          <AllOrders />
         </TabsContent>
 
         <TabsContent value="reports">
