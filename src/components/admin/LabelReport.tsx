@@ -18,6 +18,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LabelPreview } from '@/components/LabelPreview';
+import { LabelPrintPreview } from '@/components/admin/LabelPrintPreview';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -413,38 +414,27 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
           </Card>
         </div>
 
-        {/* Label Preview Dialog */}
+        {/* Label Print Preview Dialog */}
         {showLabelPreview && mealProduction.length > 0 && (
           <Dialog open={showLabelPreview} onOpenChange={setShowLabelPreview}>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Label Preview</DialogTitle>
+                <DialogTitle className="flex items-center justify-between">
+                  <span>Print Preview - Label Layout</span>
+                  <Button
+                    onClick={() => window.print()}
+                    size="sm"
+                    className="ml-4"
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print
+                  </Button>
+                </DialogTitle>
               </DialogHeader>
-              <div className="space-y-6">
-                {mealProduction.map((meal) => (
-                  <div key={meal.mealId} className="border rounded-lg p-4">
-                    <h4 className="font-medium mb-2">{meal.mealName} - {meal.quantity} labels</h4>
-                    <div className="border rounded p-2 bg-white" style={{ transform: 'scale(0.5)', transformOrigin: 'top left' }}>
-                      <LabelPreview
-                        data={{
-                          mealName: meal.mealName,
-                          calories: meal.totalCalories,
-                          protein: meal.totalProtein,
-                          fat: meal.totalFat,
-                          carbs: meal.totalCarbs,
-                          ingredients: meal.ingredients,
-                          allergens: meal.allergens,
-                          useByDate: formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-                          storageInstructions: 'Store in a refrigerator below 5°c. Heat in a microwave for 3-4 minutes or until piping hot.',
-                          heatingInstructions: 'Pierce film and heat for 3-4 minutes or until piping hot.',
-                          quantity: 1
-                        }}
-                        showSingle={true}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <LabelPrintPreview 
+                mealProduction={mealProduction}
+                useByDate={formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')}
+              />
             </DialogContent>
           </Dialog>
         )}
