@@ -207,7 +207,7 @@ export const LabelGenerator: React.FC = () => {
 
   if (isEditMode) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 print:hidden">
         <LabelEditor 
           data={labelData}
           onSave={handleSaveFromEditor}
@@ -218,7 +218,7 @@ export const LabelGenerator: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto py-8 space-y-8 print:hidden">
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-primary">Label Generator</h1>
         <p className="text-muted-foreground">
@@ -453,40 +453,6 @@ export const LabelGenerator: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @media print {
-            /* Hide all interface elements except the print area */
-            body > *:not(.hidden) {
-              display: none !important;
-            }
-            
-            /* Show only the print area */
-            .hidden.print\\:block {
-              display: block !important;
-              position: static !important;
-              inset: auto !important;
-              background: white !important;
-              z-index: auto !important;
-              width: 100% !important;
-              height: 100% !important;
-            }
-            
-            /* Ensure clean print layout */
-            body {
-              margin: 0 !important;
-              padding: 0 !important;
-              background: white !important;
-            }
-            
-            /* Hide any remaining UI elements */
-            .container, .card, .button, nav, header, footer, .dialog {
-              display: none !important;
-            }
-          }
-        `
-      }} />
     </div>
   );
 };

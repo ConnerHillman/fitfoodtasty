@@ -192,15 +192,6 @@ export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = f
               page-break-after: auto;
             }
             
-            /* Hide everything except the print container */
-            body > *:not(.print-container) {
-              display: none !important;
-            }
-            
-            /* Ensure only labels are visible */
-            .container, .card, .button, .input, .form, nav, header, footer {
-              display: none !important;
-            }
           }
         `
       }} />
