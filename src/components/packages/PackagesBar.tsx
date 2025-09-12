@@ -50,33 +50,32 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
       {/* Mobile-first compact design */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-6xl mx-auto">
         {packages.map((pkg) => (
-          <div 
+          <button
             key={pkg.id} 
-            className="group relative overflow-hidden rounded-xl border-2 border-muted hover:border-emerald-300 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-1 bg-white/50 backdrop-blur-sm"
+            onClick={() => onSelect(pkg)}
+            className="group relative overflow-hidden rounded-xl border-2 border-muted hover:border-emerald-300 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-1 bg-white/50 backdrop-blur-sm cursor-pointer w-full text-left"
+            aria-label={`Choose ${pkg.name} package for £${pkg.price.toFixed(2)}`}
           >
             {/* Central image taking most space */}
             <div className="p-4 pb-3 relative">
               {pkg.image_url ? (
-                <div className="w-full h-20 mb-3 rounded-lg overflow-hidden bg-muted/30">
+                <div className="w-full h-24 mb-3 rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center">
                   <img 
                     src={pkg.image_url} 
                     alt={pkg.name}
-                    className="w-full h-full object-cover"
+                    className="max-w-full max-h-full object-contain"
                   />
                 </div>
               ) : (
-                <div className="w-full h-20 mb-3 rounded-lg bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center">
-                  <Package className="w-8 h-8 text-emerald-600" />
+                <div className="w-full h-24 mb-3 rounded-lg bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center">
+                  <Package className="w-10 h-10 text-emerald-600" />
                 </div>
               )}
               
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-right">
+              <div className="flex items-center justify-center mb-2">
+                <div className="text-center">
                   <div className="text-xl font-bold text-emerald-600">
                     £{pkg.price.toFixed(2)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {pkg.meal_count} meals
                   </div>
                 </div>
               </div>
@@ -87,19 +86,17 @@ const PackagesBar = ({ onSelect }: PackagesBarProps) => {
                 </p>
               )}
               
-              <Button 
-                onClick={() => onSelect(pkg)} 
-                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-medium py-2 rounded-lg transition-all duration-200 group-hover:shadow-md"
-                aria-label={`Choose ${pkg.name}`}
-              >
-                <Package className="w-4 h-4 mr-2" />
-                Choose Package
-              </Button>
+              {/* Small choose package indicator */}
+              <div className="flex justify-center">
+                <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded-md group-hover:bg-emerald-100 transition-colors">
+                  Choose Package
+                </span>
+              </div>
             </div>
             
             {/* Subtle gradient overlay on hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-          </div>
+          </button>
         ))}
       </div>
     </section>
