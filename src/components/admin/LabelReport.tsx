@@ -495,19 +495,19 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         {showLabelPreview && mealProduction.length > 0 && (
           <Dialog open={showLabelPreview} onOpenChange={setShowLabelPreview}>
             <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center justify-between">
-                  <span>Print Preview - Label Layout</span>
-                  <Button
-                    onClick={() => window.print()}
-                    size="sm"
-                    className="ml-4"
-                  >
-                    <Printer className="h-4 w-4 mr-2" />
-                    Print
-                  </Button>
-                </DialogTitle>
-              </DialogHeader>
+            <DialogHeader className="no-print">
+              <DialogTitle className="flex items-center justify-between">
+                <span>Print Preview - Label Layout</span>
+                <Button
+                  onClick={() => window.print()}
+                  size="sm"
+                  className="ml-4"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
               <LabelPrintPreview 
                 mealProduction={mealProduction}
                 useByDate={formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')}
