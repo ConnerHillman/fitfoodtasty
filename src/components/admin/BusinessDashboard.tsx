@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer, PlusCircle, Eye, TrendingDown, Activity, FileText } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer, PlusCircle, Eye, TrendingDown, Activity, FileText, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -14,7 +14,7 @@ const BusinessDashboard = () => {
   const [meals, setMeals] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [menuViews, setMenuViews] = useState(0); // No tracking implemented yet
+  const [menuViews, setMenuViews] = useState(0);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -287,72 +287,6 @@ const BusinessDashboard = () => {
     });
   };
 
-  const createTestOrders = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({ title: 'Not signed in', description: 'Please login to create test orders.', variant: 'destructive' });
-        return;
-      }
-
-      const { data: meals, error: mealsError } = await supabase
-        .from('meals')
-        .select('id, name, price')
-        .limit(3);
-      if (mealsError) throw mealsError;
-      if (!meals || meals.length === 0) {
-        toast({ title: 'No meals found', description: 'Create at least one meal first.', variant: 'destructive' });
-        return;
-      }
-
-      const baseCustomer = {
-        customer_email: user.email || 'test@example.com',
-        customer_name: (user.user_metadata as any)?.full_name || 'Test Customer',
-        delivery_address: (user.user_metadata as any)?.delivery_address || '123 Test Street, Testville',
-      };
-
-      const ordersToCreate = [
-        { status: 'confirmed', items: [ { meal: meals[0], qty: 2 } ] },
-        { status: 'preparing', items: [ { meal: meals[0], qty: 1 }, { meal: meals[1] || meals[0], qty: 3 } ] },
-      ];
-
-      for (const o of ordersToCreate) {
-        const total = o.items.reduce((sum, it) => sum + (Number(it.meal.price || 9) * it.qty), 0);
-        const { data: orderRow, error: orderErr } = await supabase
-          .from('orders')
-          .insert({
-            user_id: user.id,
-            total_amount: Number(total.toFixed(2)),
-            currency: 'gbp',
-            status: o.status,
-            stripe_session_id: null,
-            ...baseCustomer,
-          })
-          .select('id')
-          .single();
-        if (orderErr) throw orderErr;
-
-        const items = o.items.map(it => ({
-          order_id: orderRow.id,
-          meal_id: it.meal.id,
-          meal_name: it.meal.name,
-          quantity: it.qty,
-          unit_price: Number(it.meal.price || 9),
-          total_price: Number((Number(it.meal.price || 9) * it.qty).toFixed(2)),
-        }));
-
-        const { error: itemErr } = await supabase.from('order_items').insert(items);
-        if (itemErr) throw itemErr;
-      }
-
-      toast({ title: 'Test orders created', description: 'Added a couple of orders. Refreshing list...' });
-      fetchDashboardData();
-    } catch (err: any) {
-      console.error(err);
-      toast({ title: 'Failed to create test orders', description: err.message || 'Unknown error', variant: 'destructive' });
-    }
-  };
-
   // Calculate comprehensive stats
   const allOrders = [...orders, ...packageOrders];
   const today = new Date().toDateString();
@@ -440,6 +374,7 @@ const BusinessDashboard = () => {
       time: new Date(order.created_at),
       status: order.status
     }));
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'secondary';
@@ -454,207 +389,230 @@ const BusinessDashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Business Dashboard</h2>
-          <p className="text-muted-foreground">Today's overview and recent activity</p>
-        </div>
-        <div className="flex space-x-3">
-          <Button variant="outline" size="sm" onClick={fetchDashboardData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
-
-      {/* Top Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <Card className="bg-blue-500 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-100">Sales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">£{todayStats.revenue.toFixed(2)}</div>
-            <p className="text-xs text-blue-100 mt-1">
-              <TrendingDown className="inline h-3 w-3 mr-1" />
-              -11% Compared to £{(todayStats.revenue * 1.11).toFixed(2)} last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{todayStats.orders}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              <TrendingDown className="inline h-3 w-3 mr-1 text-red-500" />
-              -17% Compared to {Math.floor(todayStats.orders * 1.17)} last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Menu Views</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{menuViews}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              <TrendingDown className="inline h-3 w-3 mr-1 text-red-500" />
-              -23% Compared to {Math.floor(menuViews * 1.23)} last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">New Customers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{todayStats.newCustomers}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              <TrendingDown className="inline h-3 w-3 mr-1 text-red-500" />
-              -33% Compared to {Math.floor(todayStats.newCustomers * 1.33)} last month
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Secondary Stats Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <Card className="bg-orange-400 text-white lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-orange-100">CUSTOMERS</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-4xl font-bold">{todayStats.totalCustomers}</div>
-                <div className="text-orange-100 text-sm">TOTAL</div>
+    <div className="space-y-8">
+      {/* Modern header with gradient */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-white">
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <BarChart3 className="h-6 w-6 text-white" />
               </div>
-              <div>
-                <div className="text-4xl font-bold">{todayStats.activeCustomers}</div>
-                <div className="text-orange-100 text-sm">ACTIVE</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold">{todayStats.leads}</div>
-                <div className="text-orange-100 text-sm">LEADS</div>
-              </div>
+              <h2 className="text-4xl font-bold tracking-tight">Business Dashboard</h2>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-white/90 text-lg">
+              Real-time insights and performance analytics
+            </p>
+            <div className="flex items-center gap-4 text-sm text-white/80">
+              <span className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-white/60"></div>
+                {todayStats.orders} orders today
+              </span>
+              <span className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                £{todayStats.revenue.toFixed(2)} revenue
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              onClick={fetchDashboardData}
+              className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 hover-glow shadow-lg"
+              size="lg"
+            >
+              <RefreshCw className="mr-2 h-5 w-5" />
+              Refresh Data
+            </Button>
+            <Button
+              onClick={printDeliveryLabels}
+              variant="outline"
+              className="bg-white text-primary hover:bg-white/90 border-white/30 shadow-lg"
+              size="lg"
+            >
+              <Printer className="mr-2 h-5 w-5" />
+              Print Labels
+            </Button>
+          </div>
+        </div>
+      </div>
 
-        <Card className="bg-red-400 text-white lg:col-span-2">
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-blue-50/30 animate-scale-in">
+          <CardHeader className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-b border-blue-500/20 pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+              <DollarSign className="h-4 w-4" />
+              Today's Revenue
+            </CardTitle>
+          </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <div className="text-3xl font-bold">£{(todayStats.revenue / todayStats.orders || 0).toFixed(2)}</div>
-                <div className="text-red-100 text-sm">AVERAGE SALE</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">£{(todayStats.revenue / (todayStats.orders * 2) || 0).toFixed(2)}</div>
-                <div className="text-red-100 text-sm">AVERAGE ITEM SALE</div>
-              </div>
-            </div>
+            <div className="text-3xl font-bold text-blue-600">£{todayStats.revenue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="inline h-3 w-3 mr-1 text-green-500" />
+              Average order: £{todayStats.avgOrder.toFixed(2)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-green-50/30 animate-scale-in">
+          <CardHeader className="bg-gradient-to-r from-green-500/10 to-green-600/10 border-b border-green-500/20 pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-green-700">
+              <Package className="h-4 w-4" />
+              Orders Today
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="text-3xl font-bold text-green-600">{todayStats.orders}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              <Activity className="inline h-3 w-3 mr-1 text-blue-500" />
+              {todayStats.customers} customers served
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-purple-50/30 animate-scale-in">
+          <CardHeader className="bg-gradient-to-r from-purple-500/10 to-purple-600/10 border-b border-purple-500/20 pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-purple-700">
+              <Users className="h-4 w-4" />
+              Customer Growth
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="text-3xl font-bold text-purple-600">{todayStats.newCustomers}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              <Target className="inline h-3 w-3 mr-1 text-purple-500" />
+              {todayStats.totalCustomers} total customers
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-orange-50/30 animate-scale-in">
+          <CardHeader className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-b border-orange-500/20 pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-orange-700">
+              <Eye className="h-4 w-4" />
+              Menu Views
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="text-3xl font-bold text-orange-600">{menuViews}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              <Calendar className="inline h-3 w-3 mr-1 text-orange-500" />
+              Today's page views
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts and Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      {/* Charts and Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Sales</CardTitle>
-              <div className="text-sm text-muted-foreground">
-                Compare to: Last Month
-              </div>
-            </div>
+        <Card className="lg:col-span-2 overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/30">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Sales Performance
+            </CardTitle>
+            <CardDescription>Last 7 days revenue trend</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={salesChartData}>
                 <defs>
                   <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`£${value}`, 'Sales']} />
-                <Area type="monotone" dataKey="sales" stroke="#3b82f6" fill="url(#salesGradient)" strokeWidth={3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.3} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <Tooltip 
+                  formatter={(value) => [`£${value}`, 'Sales']} 
+                  contentStyle={{
+                    background: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="sales" 
+                  stroke="hsl(var(--primary))" 
+                  fill="url(#salesGradient)" 
+                  strokeWidth={3} 
+                />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Menu Views Activity */}
-        <Card>
-          <CardHeader>
+        {/* Recent Activity */}
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/30">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
             <CardTitle className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              MENU VIEWS
+              <Activity className="h-5 w-5 text-primary" />
+              Recent Activity
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="text-right text-sm font-medium">Added</div>
-              <div className="space-y-3">
-                {recentActivity.slice(0, 5).map((activity, index) => (
-                  <div key={activity.id} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-3">
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium">{activity.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(activity.time).toLocaleDateString()}
-                        </div>
+              {recentActivity.slice(0, 6).map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    <div>
+                      <div className="font-medium text-sm">{activity.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {activity.action}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-500">✓</span>
-                      <span className="text-xs">{Math.floor(Math.random() * 3) + 1} minute</span>
-                    </div>
                   </div>
-                ))}
-              </div>
+                  <div className="text-xs text-muted-foreground">
+                    {activity.time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Bottom Tables */}
+      {/* Performance Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Selling Items */}
-        <Card>
-          <CardHeader>
-            <CardTitle>TOP SELLING ITEMS</CardTitle>
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/30">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+            <CardTitle className="flex items-center gap-2">
+              <ChefHat className="h-5 w-5 text-primary" />
+              Top Selling Items
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-3">
-              <div className="flex justify-between text-sm font-medium text-muted-foreground">
-                <span>Title</span>
-                <span>Quantity</span>
-                <span>Total</span>
+              <div className="flex justify-between text-sm font-semibold text-muted-foreground border-b pb-2">
+                <span>Item</span>
+                <span>Qty</span>
+                <span>Revenue</span>
               </div>
               {topSellingItems.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">No sales data</div>
+                <div className="text-center py-6 text-muted-foreground">
+                  <ChefHat className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No sales data available</p>
+                </div>
               ) : (
                 topSellingItems.map((item, index) => (
-                  <div key={index} className="flex justify-between text-sm">
+                  <div key={index} className="flex justify-between items-center text-sm py-2 border-b border-muted/50 last:border-0">
                     <span className="font-medium">{item.title}</span>
-                    <span>{item.quantity}</span>
-                    <span>£{item.total.toFixed(2)}</span>
+                    <span className="text-primary font-semibold">{item.quantity}</span>
+                    <span className="font-semibold">£{item.total.toFixed(2)}</span>
                   </div>
                 ))
               )}
@@ -663,25 +621,31 @@ const BusinessDashboard = () => {
         </Card>
 
         {/* Top Selling Packages */}
-        <Card>
-          <CardHeader>
-            <CardTitle>TOP SELLING PACKAGES</CardTitle>
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/30">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-primary" />
+              Top Selling Packages
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-3">
-              <div className="flex justify-between text-sm font-medium text-muted-foreground">
-                <span>Title</span>
-                <span>Quantity</span>
-                <span>Total</span>
+              <div className="flex justify-between text-sm font-semibold text-muted-foreground border-b pb-2">
+                <span>Package</span>
+                <span>Qty</span>
+                <span>Revenue</span>
               </div>
               {topSellingPackages.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">No package sales</div>
+                <div className="text-center py-6 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No package sales data</p>
+                </div>
               ) : (
                 topSellingPackages.map((pkg, index) => (
-                  <div key={index} className="flex justify-between text-sm">
+                  <div key={index} className="flex justify-between items-center text-sm py-2 border-b border-muted/50 last:border-0">
                     <span className="font-medium">{pkg.title}</span>
-                    <span>{pkg.quantity}</span>
-                    <span>£{pkg.total.toFixed(2)}</span>
+                    <span className="text-primary font-semibold">{pkg.quantity}</span>
+                    <span className="font-semibold">£{pkg.total.toFixed(2)}</span>
                   </div>
                 ))
               )}
@@ -690,29 +654,34 @@ const BusinessDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Orders */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Package className="h-5 w-5" />
-              <span>Recent Orders</span>
-            </CardTitle>
-            <CardDescription>Latest customer orders and their status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Loading orders...
-                </div>
-              ) : orders.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No orders found
-                </div>
-              ) : (
-                orders.slice(0, 4).map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+      {/* Recent Orders */}
+      <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/30">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            Recent Orders
+          </CardTitle>
+          <CardDescription>Latest customer orders and their status</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin" />
+                <p>Loading orders...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No orders found</p>
+              </div>
+            ) : (
+              orders.slice(0, 8).map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-4 rounded-lg border border-muted/50 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Package className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
                       <div className="font-medium">#{order.id.slice(-8)}</div>
                       <div className="text-sm text-muted-foreground">{order.customer_name || 'Customer'}</div>
@@ -720,71 +689,19 @@ const BusinessDashboard = () => {
                         {order.order_items.length} items • {new Date(order.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
-                    <div className="text-right space-y-1">
-                      <div className="font-medium">£{parseFloat(order.total_amount || 0).toFixed(2)}</div>
-                      <Badge variant={getStatusColor(order.status) as any} className="text-xs">
-                        {order.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
                   </div>
-                ))
-              )}
-            </div>
-            <Button variant="outline" className="w-full mt-4">
-              View All Orders
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5" />
-              <span>Quick Actions</span>
-            </CardTitle>
-            <CardDescription>Common business operations</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button className="w-full justify-start" variant="outline" onClick={createTestOrders}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Create Test Orders
-            </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Package className="h-4 w-4 mr-2" />
-              Generate Kitchen Report
-            </Button>
-            <Button 
-              className="w-full justify-start" 
-              variant="outline"
-              onClick={() => {
-                // This will trigger a tab change in the parent admin dashboard
-                const reportsTab = document.querySelector('[value="reports"]') as HTMLElement;
-                if (reportsTab) reportsTab.click();
-              }}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              View Reports
-            </Button>
-            <Button className="w-full justify-start" variant="outline" onClick={printDeliveryLabels}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print Delivery Labels
-            </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              View Analytics
-            </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Users className="h-4 w-4 mr-2" />
-              Customer Management
-            </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export Daily Report
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="text-right">
+                    <div className="font-semibold">£{order.total_amount.toFixed(2)}</div>
+                    <Badge variant={getStatusColor(order.status)} className="mt-1">
+                      {order.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

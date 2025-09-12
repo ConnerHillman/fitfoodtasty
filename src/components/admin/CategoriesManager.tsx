@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Search, Palette, ArrowUp, ArrowDown, Users, ChefHat, Grid, List, MoreVertical, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Palette, ArrowUp, ArrowDown, ChefHat, Grid, List, MoreVertical, Eye, EyeOff, Target } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -394,96 +394,123 @@ const CategoriesManager = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Categories</h2>
-          <p className="text-muted-foreground">Organize your menu items into categories</p>
-        </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="animate-fade-in">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Category
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {editingCategory ? "Edit Category" : "Create New Category"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingCategory ? "Update category details" : "Add a new category to organize your menu items"}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Category Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., breakfast, lunch, dessert"
-                  required
-                />
+    <div className="space-y-8">
+      {/* Modern header with gradient */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-white">
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <Target className="h-6 w-6 text-white" />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Describe this category..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="color">Brand Color</Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    id="color"
-                    type="color"
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-12 h-10 p-1 rounded border"
-                  />
-                  <div className="flex items-center space-x-3 flex-1">
-                    <CategoryTag 
-                      category={formData.name || 'Category Preview'} 
-                      size="sm" 
-                      variant="bold"
+              <h2 className="text-4xl font-bold tracking-tight">Categories Manager</h2>
+            </div>
+            <p className="text-white/90 text-lg">
+              Organize your menu items into structured categories
+            </p>
+            <div className="flex items-center gap-4 text-sm text-white/80">
+              <span className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-white/60"></div>
+                {filteredCategories.length} categories
+              </span>
+              <span className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-green-400"></div>
+                {filteredCategories.filter(c => c.is_active).length} active
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={resetForm}
+                  className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 hover-glow shadow-lg"
+                  size="lg"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingCategory ? "Edit Category" : "Create New Category"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingCategory ? "Update category details" : "Add a new category to organize your menu items"}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="name" className="text-base font-semibold">Category Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="e.g., breakfast, lunch, dessert"
+                      className="h-12 border-2 focus:border-primary/50"
+                      required
                     />
-                    <span className="text-sm text-muted-foreground">
-                      Live Preview
-                    </span>
                   </div>
-                </div>
-              </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label htmlFor="is_active">Active Category</Label>
-              </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="description" className="text-base font-semibold">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Describe this category..."
+                      className="border-2 focus:border-primary/50 resize-none"
+                      rows={3}
+                    />
+                  </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingCategory ? "Update" : "Create"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                  <div className="space-y-3">
+                    <Label htmlFor="color" className="text-base font-semibold">Brand Color</Label>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        id="color"
+                        type="color"
+                        value={formData.color}
+                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                        className="w-16 h-12 p-1 rounded-lg border-2"
+                      />
+                      <div className="flex items-center space-x-3 flex-1">
+                        <CategoryTag 
+                          category={formData.name || 'Category Preview'} 
+                          size="sm" 
+                          variant="bold"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Live Preview
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-muted/30 rounded-lg">
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    />
+                    <Label htmlFor="is_active" className="font-medium">Active Category</Label>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="border-2">
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="bg-gradient-to-r from-primary to-primary/80 shadow-lg">
+                      {editingCategory ? "Update" : "Create"}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
       </div>
 
       {/* Controls */}
