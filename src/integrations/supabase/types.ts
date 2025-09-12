@@ -839,6 +839,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalculate_all_meal_nutrition: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          meal_id: string
+          meal_name: string
+          new_calories: number
+          old_calories: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
