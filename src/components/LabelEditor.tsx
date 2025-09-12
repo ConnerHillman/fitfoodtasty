@@ -46,8 +46,8 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
     if (!canvasRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: mmToPx(99.1), // 99.1mm width
-      height: mmToPx(38.1), // 38.1mm height
+      width: mmToPx(99.1), // EU30009BM width
+      height: mmToPx(57.3), // EU30009BM height
       backgroundColor: '#ffffff',
       selection: true,
     });
@@ -411,7 +411,7 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
               <div className="border rounded-lg bg-white p-4 flex justify-center">
                 <div className="border border-gray-300" style={{
                   width: mmToPx(99.1),
-                  height: mmToPx(38.1)
+                  height: mmToPx(57.3)
                 }}>
                   <canvas 
                     ref={canvasRef}

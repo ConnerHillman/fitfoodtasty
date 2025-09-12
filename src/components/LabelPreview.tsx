@@ -23,46 +23,46 @@ interface LabelPreviewProps {
 const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
   <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
     width: '99.1mm',
-    height: '38.1mm',
+    height: '57.3mm', // EU30009BM specification
     boxSizing: 'border-box',
-    padding: '4px',
+    padding: '6px',
     display: 'flex',
     flexDirection: 'column',
     fontSize: '6px',
-    lineHeight: '1.1'
+    lineHeight: '1.2'
   }}>
     {/* Header Section */}
     <div className="flex flex-col items-center">
       {/* Logo */}
-      <div className="mb-1">
+      <div className="mb-2">
         <img 
           src={logoImage} 
           alt="Fit Food Tasty" 
-          className="h-6 w-auto object-contain"
+          className="h-8 w-auto object-contain"
         />
       </div>
       
       {/* Meal Name */}
-      <h1 className="text-center font-bold text-foreground leading-none mb-1" style={{ fontSize: '11px' }}>
+      <h1 className="text-center font-bold text-foreground leading-tight mb-2" style={{ fontSize: '14px' }}>
         {data.mealName}
       </h1>
       
       {/* Separator */}
-      <div className="w-6 h-px bg-primary/30 mb-1"></div>
+      <div className="w-8 h-px bg-primary/30 mb-2"></div>
     </div>
 
     {/* Nutrition Section */}
-    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-1.5 py-1 mb-1">
-      <div className="text-center font-bold text-primary leading-none" style={{ fontSize: '7px' }}>
+    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-2 py-1.5 mb-2">
+      <div className="text-center font-bold text-primary leading-tight" style={{ fontSize: '8px' }}>
         {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
       </div>
     </div>
 
     {/* Main Content */}
-    <div className="flex-1 space-y-0.5">
+    <div className="flex-1 space-y-1.5">
       {/* Use By Date - Most Important */}
-      <div className="bg-muted/50 rounded px-1 py-0.5">
-        <div className="font-bold text-foreground leading-none" style={{ fontSize: '6px' }}>
+      <div className="bg-muted/50 rounded px-2 py-1">
+        <div className="font-bold text-foreground leading-tight" style={{ fontSize: '7px' }}>
           USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
             weekday: 'short',
             day: '2-digit',
@@ -73,19 +73,19 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
       </div>
 
       {/* Storage Instructions */}
-      <div className="text-muted-foreground leading-tight" style={{ fontSize: '5px' }}>
+      <div className="text-muted-foreground leading-tight" style={{ fontSize: '6px' }}>
         {data.storageInstructions}
       </div>
 
       {/* Ingredients */}
-      <div className="leading-tight" style={{ fontSize: '5px' }}>
+      <div className="leading-tight" style={{ fontSize: '6px' }}>
         <span className="font-semibold text-foreground">Ingredients:</span>{' '}
         <span className="text-muted-foreground">{data.ingredients || 'Not specified'}</span>
       </div>
 
       {/* Allergens */}
       {data.allergens && (
-        <div className="leading-tight" style={{ fontSize: '5px' }}>
+        <div className="leading-tight" style={{ fontSize: '6px' }}>
           <span className="font-semibold text-foreground">Allergens:</span>{' '}
           <span className="font-bold text-foreground">{data.allergens}</span>
         </div>
@@ -93,8 +93,8 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
     </div>
 
     {/* Footer */}
-    <div className="border-t border-border/30 pt-0.5 mt-1">
-      <div className="text-center font-medium text-primary leading-none" style={{ fontSize: '5px' }}>
+    <div className="border-t border-border/30 pt-1 mt-2">
+      <div className="text-center font-medium text-primary leading-tight" style={{ fontSize: '6px' }}>
         www.fitfoodtasty.co.uk
       </div>
     </div>
@@ -128,7 +128,7 @@ export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = f
       pageLabels.push(
         <div key={`empty-${pageLabels.length}`} className="w-full h-full" style={{
           width: '99.1mm',
-          height: '38.1mm'
+          height: '57.3mm'
         }} />
       );
     }
@@ -138,14 +138,14 @@ export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = f
         key={pageNum}
         className="page-break"
         style={{
-          width: '210mm',
-          height: '297mm',
-          padding: '21.2mm 8.5mm',
+          width: '210mm',  // A4 width
+          height: '297mm', // A4 height
+          padding: '8.5mm', // EU30009BM margins - equal on all sides for 10-label layout
           backgroundColor: 'white',
           boxSizing: 'border-box',
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 99.1mm)',
-          gridTemplateRows: 'repeat(5, 38.1mm)',
+          gridTemplateColumns: 'repeat(2, 99.1mm)', // 2 columns
+          gridTemplateRows: 'repeat(5, 57.3mm)',    // 5 rows (EU30009BM spec)
           gap: '0',
           pageBreakAfter: pageNum < totalPages - 1 ? 'always' : 'auto'
         }}
