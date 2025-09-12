@@ -52,9 +52,9 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
     </div>
 
     {/* Nutrition Section */}
-    <div className="bg-primary/5 rounded-sm px-2 py-1 mb-1.5">
-      <div className="text-center text-[8px] font-semibold text-primary leading-tight">
-        {data.calories}cal • {data.protein}g protein • {data.fat}g fat • {data.carbs}g carbs
+    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-2 py-1.5 mb-1.5">
+      <div className="text-center text-[8px] font-bold text-primary leading-tight">
+        {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
       </div>
     </div>
 
