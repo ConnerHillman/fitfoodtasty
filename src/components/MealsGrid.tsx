@@ -94,22 +94,33 @@ const MealsGrid = () => {
     }
   };
 
-  const filteredMeals = selectedCategory === "regular" 
-    ? meals 
-    : selectedCategory === "all"
-      ? meals
-      : meals.filter(meal => meal.category === selectedCategory);
+  // Map button values to database category names
+  const getCategoryFilter = (buttonValue: string) => {
+    switch (buttonValue) {
+      case "regular":
+        return "all meals (regular size)";
+      case "massive meals":
+        return "massive meals";
+      case "lowcal":
+        return "(lowcal)";
+      case "all":
+        return null; // Show all meals
+      default:
+        return buttonValue;
+    }
+  };
 
-  // Create display categories with custom order
-  const categoryMap = new Map(categories.map(cat => [cat.name, { value: cat.name, label: toTitleCase(cat.name || '') }]));
+  const filteredMeals = selectedCategory === "all" 
+    ? meals 
+    : meals.filter(meal => meal.category === getCategoryFilter(selectedCategory));
+
+  // Create display categories in the correct order
   const displayCategories = [
     { value: "regular", label: "Regular" },
-    ...(categoryMap.get("massive meals") ? [categoryMap.get("massive meals")] : []),
-    ...(categoryMap.get("lowcal") ? [categoryMap.get("lowcal")] : []),
-    { value: "all", label: "All Meals" },
-    // Add any remaining categories not specifically ordered
-    ...Array.from(categoryMap.values()).filter(cat => !["massive meals", "lowcal"].includes(cat.value))
-  ].filter(Boolean);
+    { value: "massive meals", label: "Massive Meals" },
+    { value: "lowcal", label: "Lowcal" },
+    { value: "all", label: "All Meals" }
+  ];
 
   const handleAddToCart = (meal: Meal) => {
     addToCart(meal);
