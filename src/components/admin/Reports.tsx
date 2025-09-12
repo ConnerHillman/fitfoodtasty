@@ -27,6 +27,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DataImporter from '@/components/DataImporter';
+import { LabelReport } from '@/components/admin/LabelReport';
 import { format as formatDate, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
@@ -45,6 +46,7 @@ const Reports = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [showFullReport, setShowFullReport] = useState(false);
+  const [showLabelReport, setShowLabelReport] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -628,7 +630,11 @@ const Reports = () => {
                 <Package2 className="h-4 w-4 mr-1" />
                 Package Slips
               </Button>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowLabelReport(true)}
+              >
                 <Tags className="h-4 w-4 mr-1" />
                 Item Labels
               </Button>
@@ -641,7 +647,6 @@ const Reports = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Data Import Section - Compact */}
       <CompactReportCard
         title="Data Import & Management"
         description="Import meals, ingredients, and recipe data"
@@ -649,6 +654,12 @@ const Reports = () => {
       >
         <DataImporter />
       </CompactReportCard>
+
+      {/* Label Report Dialog */}
+      <LabelReport 
+        isOpen={showLabelReport}
+        onClose={() => setShowLabelReport(false)}
+      />
     </div>
   );
 };
