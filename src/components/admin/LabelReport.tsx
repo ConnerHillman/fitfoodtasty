@@ -20,8 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import { LabelPreview } from '@/components/LabelPreview';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface MealProduction {
   mealId: string;
@@ -216,74 +214,41 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
     setIsGeneratingPDF(true);
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      let isFirstPage = true;
-
-      for (const meal of mealProduction) {
-        if (!isFirstPage) pdf.addPage();
-        
-        // Create label data for this meal
-        const labelData = {
-          mealName: meal.mealName,
-          calories: meal.totalCalories,
-          protein: meal.totalProtein,
-          fat: meal.totalFat,
-          carbs: meal.totalCarbs,
-          ingredients: meal.ingredients,
-          allergens: meal.allergens,
-          useByDate: formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'), // 5 days from now
-          storageInstructions: 'Store in a refrigerator below 5°c. Heat in a microwave for 3-4 minutes or until piping hot.',
-          heatingInstructions: 'Pierce film and heat for 3-4 minutes or until piping hot.',
-          quantity: meal.quantity
-        };
-
-        // Create a temporary div with the label preview
-        const tempDiv = document.createElement('div');
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        tempDiv.style.top = '-9999px';
-        tempDiv.style.width = '210mm';
-        tempDiv.style.height = '297mm';
-        document.body.appendChild(tempDiv);
-
-        // Render the LabelPreview component
-        const { createRoot } = await import('react-dom/client');
-        const root = createRoot(tempDiv);
-        root.render(React.createElement(LabelPreview, { data: labelData }));
-
-        // Wait a bit for rendering
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const canvas = await html2canvas(tempDiv, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          width: 794, // A4 width in pixels at 96 DPI
-          height: 1123 // A4 height in pixels at 96 DPI
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-
-        // Cleanup
-        root.unmount();
-        document.body.removeChild(tempDiv);
-        
-        isFirstPage = false;
-      }
+      console.log('Generating PDF for meals:', mealProduction);
       
-      const fileName = `labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.pdf`;
-      pdf.save(fileName);
+      // Call the edge function for server-side PDF generation
+      const { data, error } = await supabase.functions.invoke('generate-labels-pdf', {
+        body: {
+          mealProduction: mealProduction,
+          useByDate: formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // The edge function returns HTML for now
+      // Create a blob and download it
+      const htmlBlob = new Blob([data], { type: 'text/html' });
+      const url = window.URL.createObjectURL(htmlBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
       toast({
-        title: "PDF Generated",
-        description: `Labels PDF saved as ${fileName}`,
+        title: "Labels Generated",
+        description: `HTML file downloaded. You can print this file directly from your browser for perfect label formatting.`,
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
         title: "Error",
-        description: "Failed to generate PDF",
+        description: "Failed to generate labels. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -362,7 +327,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
                       disabled={isGeneratingPDF}
                     >
                       <Download className="h-4 w-4 mr-1" />
-                      {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
+                      {isGeneratingPDF ? 'Generating...' : 'Generate Labels'}
                     </Button>
                   </div>
                 </CardTitle>
