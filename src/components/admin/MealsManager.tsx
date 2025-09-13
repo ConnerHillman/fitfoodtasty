@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3, FlaskConical, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -269,19 +269,6 @@ const MealsManager = () => {
             Manage your meal offerings, prices, and analytics
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setIsNewMealFormOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Calculator className="h-4 w-4" />
-            Build with Ingredients
-          </Button>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Quick Add Meal
-          </Button>
-        </div>
       </div>
 
       <Tabs defaultValue="management" className="w-full">
@@ -297,6 +284,25 @@ const MealsManager = () => {
         </TabsList>
 
         <TabsContent value="management" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">Meal Management</h3>
+              <p className="text-sm text-muted-foreground">Create and manage your meal offerings</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setIsNewMealFormOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Calculator className="h-4 w-4" />
+                Build with Ingredients
+              </Button>
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Quick Add Meal
+              </Button>
+            </div>
+          </div>
           {/* Search and Filters */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div className="flex items-center gap-4 flex-1 max-w-md">
@@ -616,7 +622,38 @@ const MealsManager = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="analytics">
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">Analytics & Insights</h3>
+              <p className="text-sm text-muted-foreground">Deep dive into meal performance and generate reports</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => {
+                  toast({
+                    title: "Coming Soon",
+                    description: "Ingredient analysis feature is being developed",
+                  });
+                }}
+                className="flex items-center gap-2"
+              >
+                <FlaskConical className="h-4 w-4" />
+                Analyze Ingredients
+              </Button>
+              <Button
+                onClick={() => {
+                  toast({
+                    title: "Coming Soon", 
+                    description: "Report export feature is being developed",
+                  });
+                }}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </div>
+          </div>
           <MealAnalytics />
         </TabsContent>
       </Tabs>
