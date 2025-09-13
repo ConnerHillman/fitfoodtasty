@@ -285,10 +285,15 @@ const Cart = () => {
     
     if (deliveryMethod === "delivery") {
       // For delivery, check if user has a delivery zone
-      if (!deliveryZone) return true;
+      if (!deliveryZone) {
+        console.log("No delivery zone found for mobile debugging");
+        return true;
+      }
       
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      return !deliveryZone.delivery_days.includes(dayOfWeek);
+      const isAvailable = deliveryZone.delivery_days && deliveryZone.delivery_days.includes(dayOfWeek);
+      console.log("Mobile delivery check:", { dayOfWeek, deliveryDays: deliveryZone.delivery_days, isAvailable });
+      return !isAvailable;
     } else {
       // For pickup, check collection points
       if (!selectedCollectionPoint) return true;
@@ -297,7 +302,9 @@ const Cart = () => {
       if (!selectedPoint) return true;
       
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      return !selectedPoint.collection_days.includes(dayOfWeek);
+      const isAvailable = selectedPoint.collection_days && selectedPoint.collection_days.includes(dayOfWeek);
+      console.log("Mobile pickup check:", { dayOfWeek, collectionDays: selectedPoint.collection_days, isAvailable });
+      return !isAvailable;
     }
   };
 
