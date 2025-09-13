@@ -23,6 +23,8 @@ const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // State variables
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
   const [selectedCollectionPoint, setSelectedCollectionPoint] = useState<string>("");
