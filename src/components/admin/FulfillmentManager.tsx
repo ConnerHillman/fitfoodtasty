@@ -158,6 +158,8 @@ const FulfillmentManager = () => {
           setting_type: settingType,
           setting_key: settingKey,
           setting_value: value,
+        }, {
+          onConflict: 'setting_type,setting_key'
         });
 
       if (error) throw error;
