@@ -248,14 +248,29 @@ const MealsManager = () => {
 
   const toggleActive = async (meal: Meal) => {
     const newStatus = !meal.is_active;
+    
+    // Optimistic update - immediately update the UI
+    console.log('Setting optimistic state for', meal.id, 'to', newStatus);
+    setToggleStates(prev => ({ ...prev, [meal.id]: newStatus }));
+    
     const { error } = await supabase
       .from("meals")
       .update({ is_active: newStatus })
       .eq("id", meal.id);
 
     if (error) {
+      // Revert optimistic update on error
+      console.log('Reverting optimistic state for', meal.id, 'back to', meal.is_active);
+      setToggleStates(prev => ({ ...prev, [meal.id]: meal.is_active }));
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // Remove from toggle states and refresh data
+      console.log('Removing optimistic state for', meal.id);
+      setToggleStates(prev => {
+        const newStates = { ...prev };
+        delete newStates[meal.id];
+        return newStates;
+      });
       fetchMeals();
       toast({
         title: newStatus ? "Meal activated" : "Meal deactivated",
