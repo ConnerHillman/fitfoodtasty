@@ -395,6 +395,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           price: number | null
+          shelf_life_days: number
           sort_order: number | null
           total_calories: number | null
           total_carbs: number | null
@@ -417,6 +418,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           price?: number | null
+          shelf_life_days?: number
           sort_order?: number | null
           total_calories?: number | null
           total_carbs?: number | null
@@ -439,6 +441,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           price?: number | null
+          shelf_life_days?: number
           sort_order?: number | null
           total_calories?: number | null
           total_carbs?: number | null
@@ -511,7 +514,9 @@ export type Database = {
           delivery_address: string | null
           discount_amount: number | null
           id: string
+          production_date: string | null
           referral_code_used: string | null
+          requested_delivery_date: string | null
           status: string
           stripe_session_id: string | null
           total_amount: number
@@ -526,7 +531,9 @@ export type Database = {
           delivery_address?: string | null
           discount_amount?: number | null
           id?: string
+          production_date?: string | null
           referral_code_used?: string | null
+          requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount: number
@@ -541,7 +548,9 @@ export type Database = {
           delivery_address?: string | null
           discount_amount?: number | null
           id?: string
+          production_date?: string | null
           referral_code_used?: string | null
+          requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
@@ -619,6 +628,8 @@ export type Database = {
           delivery_address: string | null
           id: string
           package_id: string | null
+          production_date: string | null
+          requested_delivery_date: string | null
           status: string
           stripe_session_id: string | null
           total_amount: number
@@ -633,6 +644,8 @@ export type Database = {
           delivery_address?: string | null
           id?: string
           package_id?: string | null
+          production_date?: string | null
+          requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount: number
@@ -647,6 +660,8 @@ export type Database = {
           delivery_address?: string | null
           id?: string
           package_id?: string | null
+          production_date?: string | null
+          requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
