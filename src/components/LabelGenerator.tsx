@@ -243,7 +243,7 @@ export const LabelGenerator: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => setShowLabelReport(true)}
-            className="ml-auto"
+            className="ml-auto bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300"
           >
             <Calendar className="w-4 h-4 mr-2" />
             Production Report
