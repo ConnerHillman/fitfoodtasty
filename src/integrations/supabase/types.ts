@@ -273,6 +273,7 @@ export type Database = {
       }
       delivery_zones: {
         Row: {
+          allow_custom_dates: boolean | null
           created_at: string
           delivery_days: string[]
           delivery_fee: number
@@ -282,10 +283,13 @@ export type Database = {
           minimum_order: number
           postcode_prefixes: string[] | null
           postcodes: string[]
+          production_day_offset: number | null
+          production_notes: string | null
           updated_at: string
           zone_name: string
         }
         Insert: {
+          allow_custom_dates?: boolean | null
           created_at?: string
           delivery_days: string[]
           delivery_fee?: number
@@ -295,10 +299,13 @@ export type Database = {
           minimum_order?: number
           postcode_prefixes?: string[] | null
           postcodes: string[]
+          production_day_offset?: number | null
+          production_notes?: string | null
           updated_at?: string
           zone_name: string
         }
         Update: {
+          allow_custom_dates?: boolean | null
           created_at?: string
           delivery_days?: string[]
           delivery_fee?: number
@@ -308,6 +315,8 @@ export type Database = {
           minimum_order?: number
           postcode_prefixes?: string[] | null
           postcodes?: string[]
+          production_day_offset?: number | null
+          production_notes?: string | null
           updated_at?: string
           zone_name?: string
         }
@@ -633,6 +642,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          actual_delivery_date: string | null
+          actual_production_date: string | null
           created_at: string
           currency: string
           customer_email: string | null
@@ -650,6 +661,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          actual_delivery_date?: string | null
+          actual_production_date?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -667,6 +680,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          actual_delivery_date?: string | null
+          actual_production_date?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -747,6 +762,8 @@ export type Database = {
       }
       package_orders: {
         Row: {
+          actual_delivery_date: string | null
+          actual_production_date: string | null
           created_at: string
           currency: string
           customer_email: string | null
@@ -763,6 +780,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          actual_delivery_date?: string | null
+          actual_production_date?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -779,6 +798,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          actual_delivery_date?: string | null
+          actual_production_date?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -1118,8 +1139,16 @@ export type Database = {
         Args: { meal_id_param: string }
         Returns: undefined
       }
+      calculate_production_date: {
+        Args: { delivery_date: string; zone_id?: string }
+        Returns: string
+      }
       generate_referral_code: {
         Args: { user_email: string }
+        Returns: string
+      }
+      get_delivery_zone_for_postcode: {
+        Args: { customer_postcode: string }
         Returns: string
       }
       has_role: {

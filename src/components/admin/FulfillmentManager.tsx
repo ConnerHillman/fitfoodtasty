@@ -701,6 +701,9 @@ const FulfillmentManager = () => {
                         delivery_fee: 4.50,
                         minimum_order: 15.00,
                         maximum_distance_km: 10,
+                        production_day_offset: 0,
+                        allow_custom_dates: false,
+                        production_notes: "Local delivery - same day production and delivery",
                         is_active: true
                       });
                       setIsDialogOpen(true);
@@ -721,6 +724,9 @@ const FulfillmentManager = () => {
                         delivery_fee: 8.00,
                         minimum_order: 25.00,
                         maximum_distance_km: null,
+                        production_day_offset: 0,
+                        allow_custom_dates: false,
+                        production_notes: "Regional delivery - same day production and delivery",
                         is_active: true
                       });
                       setIsDialogOpen(true);
@@ -741,6 +747,9 @@ const FulfillmentManager = () => {
                         delivery_fee: 12.00,
                         minimum_order: 30.00,
                         maximum_distance_km: null,
+                        production_day_offset: -2,
+                        allow_custom_dates: true,
+                        production_notes: "National shipping - cook Sunday, ship Monday, deliver Tuesday",
                         is_active: true
                       });
                       setIsDialogOpen(true);
@@ -944,6 +953,9 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
     delivery_fee: zone?.delivery_fee || 0,
     minimum_order: zone?.minimum_order || 0,
     maximum_distance_km: zone?.maximum_distance_km || null,
+    production_day_offset: zone?.production_day_offset ?? -2,
+    allow_custom_dates: zone?.allow_custom_dates ?? false,
+    production_notes: zone?.production_notes || "",
     is_active: zone?.is_active ?? true,
   });
 
@@ -973,6 +985,9 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
       delivery_fee: parseFloat(formData.delivery_fee.toString()) || 0,
       minimum_order: parseFloat(formData.minimum_order.toString()) || 0,
       maximum_distance_km: formData.maximum_distance_km ? parseFloat(formData.maximum_distance_km.toString()) : null,
+      production_day_offset: parseInt(formData.production_day_offset.toString()) || -2,
+      allow_custom_dates: formData.allow_custom_dates,
+      production_notes: formData.production_notes.trim() || null,
     };
 
     onSave(processedData);
@@ -1147,6 +1162,64 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
             onChange={(e) => setFormData(prev => ({ ...prev, maximum_distance_km: e.target.value ? parseFloat(e.target.value) : null }))}
             placeholder="Leave empty for unlimited"
           />
+        </div>
+      </div>
+
+      <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h4 className="font-medium text-blue-900">Production & Delivery Scheduling</h4>
+        <p className="text-sm text-blue-700">
+          Configure how production dates are calculated relative to delivery dates. This helps with kitchen planning and label expiry dates.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Production Day Offset</Label>
+            <div className="flex items-center space-x-2">
+              <Input
+                type="number"
+                value={formData.production_day_offset}
+                onChange={(e) => setFormData(prev => ({ ...prev, production_day_offset: parseInt(e.target.value) || -2 }))}
+                className="w-20"
+              />
+              <span className="text-sm text-muted-foreground">days before delivery</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Example: -2 means cook on Sunday for Tuesday delivery
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="allow_custom_dates"
+                checked={formData.allow_custom_dates}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allow_custom_dates: checked as boolean }))}
+              />
+              <Label htmlFor="allow_custom_dates" className="text-sm">
+                Allow custom date overrides
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Permit manual adjustment of production/delivery dates for this zone
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Production Notes (Optional)</Label>
+          <Textarea
+            value={formData.production_notes}
+            onChange={(e) => setFormData(prev => ({ ...prev, production_notes: e.target.value }))}
+            placeholder="Special kitchen instructions or notes for this delivery zone..."
+            rows={2}
+          />
+        </div>
+
+        <div className="p-3 bg-white rounded border text-sm">
+          <strong>Example for National Shipping:</strong><br />
+          Production offset: -2 days → Customer orders for Tuesday delivery, kitchen produces on Sunday<br />
+          <strong>Example for Local Delivery:</strong><br />
+          Production offset: 0 days → Customer orders for Sunday delivery, kitchen produces on Sunday
         </div>
       </div>
 
