@@ -107,6 +107,16 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       map.current!.addControl(draw.current, 'top-left');
       console.log('Draw control added to map');
 
+      // Ensure proper sizing when container becomes visible
+      try {
+        const ro = new ResizeObserver(() => {
+          map.current?.resize();
+        });
+        if (mapContainer.current) ro.observe(mapContainer.current);
+      } catch (e) {
+        console.warn('ResizeObserver not available', e);
+      }
+
       // Listen for drawing events
       map.current!.on('draw.create', handleDrawCreate);
       map.current!.on('draw.update', handleDrawUpdate);
@@ -213,6 +223,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
         setIsDrawingMode(false);
       } else {
         console.log('Switching to draw_polygon mode');
+        map.current?.resize();
         setDrawingInteractions(true);
         draw.current.changeMode('draw_polygon');
         setIsDrawingMode(true);
@@ -471,7 +482,11 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
               </div>
             </div>
             
-            <div className="h-96 w-full rounded-lg overflow-hidden border">
+            <div 
+              className="h-96 w-full rounded-lg overflow-hidden border"
+              onMouseDownCapture={(e) => e.stopPropagation()}
+              onClickCapture={(e) => e.stopPropagation()}
+            >
               <div ref={mapContainer} className="w-full h-full" />
             </div>
 
