@@ -34,6 +34,8 @@ const Cart = () => {
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [showPayment, setShowPayment] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [deliveryZone, setDeliveryZone] = useState<any>(null);
+  const [userPostcode, setUserPostcode] = useState<string>("");
 
   // Fetch collection points
   useEffect(() => {
@@ -59,6 +61,66 @@ const Cart = () => {
 
     fetchCollectionPoints();
   }, []);
+
+  // Fetch user profile and delivery zone
+  useEffect(() => {
+    const fetchUserDeliveryZone = async () => {
+      if (!user) return;
+      
+      try {
+        // Get user's postcode from profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('postal_code')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError) throw profileError;
+        
+        const postcode = profile?.postal_code || user.user_metadata?.postal_code;
+        if (!postcode) return;
+        
+        setUserPostcode(postcode);
+
+        // Find delivery zone for this postcode
+        const { data: zones, error: zonesError } = await supabase
+          .from('delivery_zones')
+          .select('*')
+          .eq('is_active', true);
+
+        if (zonesError) throw zonesError;
+
+        // Find matching zone based on postcode
+        const matchingZone = zones?.find(zone => {
+          // Check exact postcode match
+          if (zone.postcodes?.includes(postcode.toUpperCase())) {
+            return true;
+          }
+          
+          // Check prefix match
+          if (zone.postcode_prefixes?.some((prefix: string) => 
+            postcode.toUpperCase().startsWith(prefix.toUpperCase())
+          )) {
+            return true;
+          }
+          
+          return false;
+        });
+
+        if (matchingZone) {
+          setDeliveryZone(matchingZone);
+          // Update delivery fee from zone if available
+          if (matchingZone.delivery_fee) {
+            setDeliveryFee(matchingZone.delivery_fee);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch delivery zone:', error);
+      }
+    };
+
+    fetchUserDeliveryZone();
+  }, [user]);
 
   // Fetch delivery fee from settings (supports both new and legacy keys)
   useEffect(() => {
@@ -163,30 +225,45 @@ const Cart = () => {
   };
 
   const isDateDisabled = (date: Date) => {
-    if (deliveryMethod === "delivery") return false;
-    if (!selectedCollectionPoint) return true;
-    
-    const selectedPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
-    if (!selectedPoint) return true;
-    
-    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const today = new Date();
     const minDate = new Date(getMinDeliveryDate());
     
-    return date < minDate || !selectedPoint.collection_days.includes(dayOfWeek);
+    // Date must be in the future
+    if (date < minDate) return true;
+    
+    if (deliveryMethod === "delivery") {
+      // For delivery, check if user has a delivery zone
+      if (!deliveryZone) return true;
+      
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      return !deliveryZone.delivery_days.includes(dayOfWeek);
+    } else {
+      // For pickup, check collection points
+      if (!selectedCollectionPoint) return true;
+      
+      const selectedPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+      if (!selectedPoint) return true;
+      
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      return !selectedPoint.collection_days.includes(dayOfWeek);
+    }
   };
 
-  const isAvailableCollectionDay = (date: Date) => {
-    if (deliveryMethod === "delivery") return true;
-    if (!selectedCollectionPoint) return false;
-    
-    const selectedPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
-    if (!selectedPoint) return false;
-    
-    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  const isAvailableDay = (date: Date) => {
     const minDate = new Date(getMinDeliveryDate());
+    if (date < minDate) return false;
     
-    return date >= minDate && selectedPoint.collection_days.includes(dayOfWeek);
+    if (deliveryMethod === "delivery") {
+      if (!deliveryZone) return false;
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      return deliveryZone.delivery_days.includes(dayOfWeek);
+    } else {
+      if (!selectedCollectionPoint) return false;
+      const selectedPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+      if (!selectedPoint) return false;
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      return selectedPoint.collection_days.includes(dayOfWeek);
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -437,6 +514,22 @@ const Cart = () => {
                   </div>
                 )}
                 
+                {deliveryMethod === "delivery" && deliveryZone && (
+                  <div className="text-sm text-muted-foreground mb-2">
+                    <span>Available delivery days: {deliveryZone.delivery_days.map((day: string) => 
+                      day.charAt(0).toUpperCase() + day.slice(1)
+                    ).join(', ')}</span>
+                    <br />
+                    <span className="text-xs">Delivery zone: {deliveryZone.zone_name}</span>
+                  </div>
+                )}
+                
+                {deliveryMethod === "delivery" && !deliveryZone && userPostcode && (
+                  <div className="text-sm text-destructive mb-2">
+                    <span>No delivery available for postcode: {userPostcode}</span>
+                  </div>
+                )}
+                
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -471,7 +564,7 @@ const Cart = () => {
                       }}
                       disabled={isDateDisabled}
                       modifiers={{
-                        available: deliveryMethod === "pickup" ? isAvailableCollectionDay : () => false
+                        available: isAvailableDay
                       }}
                       modifiersStyles={{
                         available: { fontWeight: 'bold' }
@@ -506,10 +599,28 @@ const Cart = () => {
                     return;
                   }
 
-                  if (deliveryMethod === "pickup" && !isDateAvailable(requestedDeliveryDate)) {
+                  if (deliveryMethod === "delivery" && !deliveryZone) {
+                    toast({ 
+                      title: "Delivery not available", 
+                      description: "No delivery service available for your postcode",
+                      variant: 'destructive' 
+                    });
+                    return;
+                  }
+
+                  if (deliveryMethod === "pickup" && !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00'))) {
                     toast({ 
                       title: "Invalid collection date", 
                       description: "Please select a date that falls on an available collection day",
+                      variant: 'destructive' 
+                    });
+                    return;
+                  }
+
+                  if (deliveryMethod === "delivery" && !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00'))) {
+                    toast({ 
+                      title: "Invalid delivery date", 
+                      description: "Please select a date that falls on an available delivery day",
                       variant: 'destructive' 
                     });
                     return;
@@ -551,8 +662,10 @@ const Cart = () => {
                   }
                 }}
               >
-                {(!requestedDeliveryDate || (deliveryMethod === "pickup" && (!selectedCollectionPoint || !isDateAvailable(requestedDeliveryDate)))) ? 
-                  `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} ${!requestedDeliveryDate ? "Date" : !selectedCollectionPoint ? "Point" : "Valid Date"} to Continue` : 
+                {(!requestedDeliveryDate || 
+                  (deliveryMethod === "pickup" && (!selectedCollectionPoint || !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00')))) ||
+                  (deliveryMethod === "delivery" && (!deliveryZone || !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00'))))) ? 
+                  `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} ${!requestedDeliveryDate ? "Date" : !selectedCollectionPoint && deliveryMethod === "pickup" ? "Point" : !deliveryZone && deliveryMethod === "delivery" ? "Valid Postcode" : "Valid Date"} to Continue` : 
                   'Continue to Payment'}
               </Button>
               <Button
