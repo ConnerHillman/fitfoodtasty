@@ -652,7 +652,6 @@ const Cart = () => {
                     if (error) throw error;
                     if (data?.clientSecret) {
                       setClientSecret(data.clientSecret);
-                      setShowPayment(true);
                     } else {
                       throw new Error('No client secret returned');
                     }
@@ -678,7 +677,9 @@ const Cart = () => {
             </CardContent>
           </Card>
         </div>
-        {showPayment && clientSecret && (
+        
+        {/* Payment Form - shows directly after date selection */}
+        {requestedDeliveryDate && user && clientSecret && (
           <div className="mt-6 lg:col-span-3">
             <Elements stripe={stripePromise} options={{ clientSecret }}>
               <PaymentForm
