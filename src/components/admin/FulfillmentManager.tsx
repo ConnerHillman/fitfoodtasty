@@ -45,6 +45,10 @@ interface DeliveryZone {
   delivery_fee: number;
   minimum_order: number;
   maximum_distance_km: number | null;
+  production_day_offset?: number;
+  allow_custom_dates?: boolean;
+  production_notes?: string | null;
+  order_cutoffs?: Record<string, { cutoff_day: string; cutoff_time: string }> | any;
   is_active: boolean;
 }
 
@@ -124,7 +128,7 @@ const FulfillmentManager = () => {
         .order("zone_name", { ascending: true });
 
       if (error) throw error;
-      setDeliveryZones(data || []);
+      setDeliveryZones((data || []).map(zone => ({ ...zone, order_cutoffs: zone.order_cutoffs || {} })) as any);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -891,6 +895,7 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
     production_day_offset: zone?.production_day_offset ?? -2,
     allow_custom_dates: zone?.allow_custom_dates ?? false,
     production_notes: zone?.production_notes || "",
+    order_cutoffs: zone?.order_cutoffs || {},
     is_active: zone?.is_active ?? true,
   });
 
@@ -923,6 +928,7 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
       production_day_offset: formData.production_day_offset === '' ? -2 : parseInt(formData.production_day_offset.toString()),
       allow_custom_dates: formData.allow_custom_dates,
       production_notes: formData.production_notes.trim() || null,
+      order_cutoffs: formData.order_cutoffs || {},
     };
 
     onSave(processedData);
@@ -1105,10 +1111,66 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
         <p className="text-sm text-blue-700">
           Configure how production dates are calculated relative to delivery dates. This helps with kitchen planning and label expiry dates.
         </p>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <div>
+              <Label>Order Cut-Off Times</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Set when customers need to order by for each delivery day
+              </p>
+              {formData.delivery_days?.map((day) => (
+                <div key={day} className="space-y-2 p-3 border rounded-lg mb-3">
+                  <Label className="text-sm font-medium capitalize">{day} Delivery</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Cut-off Day</Label>
+                      <select
+                        className="w-full p-2 border rounded text-sm"
+                        value={formData.order_cutoffs?.[day]?.cutoff_day || ''}
+                        onChange={(e) => {
+                          const newCutoffs = { ...formData.order_cutoffs };
+                          if (!newCutoffs[day]) newCutoffs[day] = {};
+                          newCutoffs[day].cutoff_day = e.target.value;
+                          setFormData(prev => ({ ...prev, order_cutoffs: newCutoffs }));
+                        }}
+                      >
+                        <option value="">Select day</option>
+                        <option value="sunday">Sunday</option>
+                        <option value="monday">Monday</option>
+                        <option value="tuesday">Tuesday</option>
+                        <option value="wednesday">Wednesday</option>
+                        <option value="thursday">Thursday</option>
+                        <option value="friday">Friday</option>
+                        <option value="saturday">Saturday</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Cut-off Time</Label>
+                      <Input
+                        type="time"
+                        value={formData.order_cutoffs?.[day]?.cutoff_time || '23:59'}
+                        onChange={(e) => {
+                          const newCutoffs = { ...formData.order_cutoffs };
+                          if (!newCutoffs[day]) newCutoffs[day] = {};
+                          newCutoffs[day].cutoff_time = e.target.value;
+                          setFormData(prev => ({ ...prev, order_cutoffs: newCutoffs }));
+                        }}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  {formData.order_cutoffs?.[day]?.cutoff_day && (
+                    <p className="text-xs text-muted-foreground">
+                      For {day} delivery, customers must order by {formData.order_cutoffs[day].cutoff_time || '23:59'} on {formData.order_cutoffs[day].cutoff_day}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          
           <div className="space-y-2">
-            <Label>Production Day Offset</Label>
+            <Label>Legacy Production Day Offset (Fallback)</Label>
             <div className="flex items-center space-x-2">
               <Input
                 type="number"
@@ -1119,25 +1181,25 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
               <span className="text-sm text-muted-foreground">days before delivery</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Example: -2 means cook on Sunday for Tuesday delivery
+              Used as fallback when order cut-offs are not configured
             </p>
           </div>
+        </div>
           
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="allow_custom_dates"
-                checked={formData.allow_custom_dates}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allow_custom_dates: checked as boolean }))}
-              />
-              <Label htmlFor="allow_custom_dates" className="text-sm">
-                Allow custom date overrides
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Permit manual adjustment of production/delivery dates for this zone
-            </p>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="allow_custom_dates"
+              checked={formData.allow_custom_dates}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allow_custom_dates: checked as boolean }))}
+            />
+            <Label htmlFor="allow_custom_dates" className="text-sm">
+              Allow custom date overrides
+            </Label>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Permit manual adjustment of production/delivery dates for this zone
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -1151,10 +1213,10 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
         </div>
 
         <div className="p-3 bg-white rounded border text-sm">
-          <strong>Example for National Shipping:</strong><br />
-          Production offset: -2 days → Customer orders for Tuesday delivery, kitchen produces on Sunday<br />
-          <strong>Example for Local Delivery:</strong><br />
-          Production offset: 0 days → Customer orders for Sunday delivery, kitchen produces on Sunday
+          <strong>Order Cut-Off Examples:</strong><br />
+          • For Tuesday delivery, set cut-off as Friday 11:59 PM<br />
+          • For local delivery, cut-off can be same day or day before<br />
+          <strong>Legacy Offset:</strong> Still used when cut-offs aren't configured
         </div>
       </div>
 

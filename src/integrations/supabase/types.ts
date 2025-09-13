@@ -281,6 +281,7 @@ export type Database = {
           is_active: boolean
           maximum_distance_km: number | null
           minimum_order: number
+          order_cutoffs: Json | null
           postcode_prefixes: string[] | null
           postcodes: string[]
           production_day_offset: number | null
@@ -297,6 +298,7 @@ export type Database = {
           is_active?: boolean
           maximum_distance_km?: number | null
           minimum_order?: number
+          order_cutoffs?: Json | null
           postcode_prefixes?: string[] | null
           postcodes: string[]
           production_day_offset?: number | null
@@ -313,6 +315,7 @@ export type Database = {
           is_active?: boolean
           maximum_distance_km?: number | null
           minimum_order?: number
+          order_cutoffs?: Json | null
           postcode_prefixes?: string[] | null
           postcodes?: string[]
           production_day_offset?: number | null
@@ -1149,6 +1152,10 @@ export type Database = {
       }
       get_delivery_zone_for_postcode: {
         Args: { customer_postcode: string }
+        Returns: string
+      }
+      get_next_delivery_date: {
+        Args: { target_day?: string; zone_id: string }
         Returns: string
       }
       has_role: {
