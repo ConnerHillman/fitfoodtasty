@@ -427,7 +427,9 @@ const MealsManager = () => {
                         {meal.is_active ? (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Checkbox checked={true} />
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <Checkbox checked={true} className="h-5 w-5" />
+                              </div>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
@@ -448,6 +450,8 @@ const MealsManager = () => {
                           <Checkbox 
                             checked={false} 
                             onCheckedChange={() => toggleActive(meal)} 
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-5 w-5"
                           />
                         )}
                       </div>
@@ -579,7 +583,9 @@ const MealsManager = () => {
                         {meal.is_active ? (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Checkbox checked={true} />
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <Checkbox checked={true} className="h-5 w-5" />
+                              </div>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
@@ -600,6 +606,8 @@ const MealsManager = () => {
                           <Checkbox 
                             checked={false} 
                             onCheckedChange={() => toggleActive(meal)} 
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-5 w-5"
                           />
                         )}
                       </TableCell>
