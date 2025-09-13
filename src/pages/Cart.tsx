@@ -19,6 +19,33 @@ const Cart = () => {
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
   const [deliveryFee, setDeliveryFee] = useState(2.99);
+  const [collectionPoints, setCollectionPoints] = useState<any[]>([]);
+  const [selectedCollectionPoint, setSelectedCollectionPoint] = useState<string>("");
+
+  // Fetch collection points
+  useEffect(() => {
+    const fetchCollectionPoints = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('collection_points')
+          .select('*')
+          .eq('is_active', true)
+          .order('point_name', { ascending: true });
+        
+        if (error) throw error;
+        setCollectionPoints(data || []);
+        
+        // Auto-select first collection point if available
+        if (data && data.length > 0) {
+          setSelectedCollectionPoint(data[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch collection points:', error);
+      }
+    };
+
+    fetchCollectionPoints();
+  }, []);
 
   // Fetch delivery fee from settings (supports both new and legacy keys)
   useEffect(() => {
@@ -211,10 +238,16 @@ const Cart = () => {
                   <span>£{deliveryFee.toFixed(2)}</span>
                 </div>
               )}
+              {deliveryMethod === "pickup" && selectedCollectionPoint && (
+                <div className="flex justify-between">
+                  <span>Collection</span>
+                  <span>£{(collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0).toFixed(2)}</span>
+                </div>
+              )}
               <div className="border-t pt-4">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>£{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : 0)).toFixed(2)}</span>
+                  <span>£{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)).toFixed(2)}</span>
                 </div>
               </div>
               
@@ -254,19 +287,57 @@ const Cart = () => {
                     <SelectItem value="pickup" className="flex items-center gap-2">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        Collection - Free
+                        Collection - From £{collectionPoints.length > 0 ? Math.min(...collectionPoints.map(cp => cp.collection_fee)).toFixed(2) : '0.00'}
                       </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                {deliveryMethod === "pickup" && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                      <strong>Collection Address:</strong><br />
-                      Fit Food Tasty Kitchen<br />
-                      123 Kitchen Street<br />
-                      London, SW1A 1AA
-                    </p>
+                
+                {deliveryMethod === "pickup" && collectionPoints.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="font-semibold">Select Collection Point</Label>
+                    <Select value={selectedCollectionPoint} onValueChange={setSelectedCollectionPoint}>
+                      <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50">
+                        <SelectValue placeholder="Choose collection point" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-lg z-50">
+                        {collectionPoints.map((point) => (
+                          <SelectItem key={point.id} value={point.id}>
+                            <div>
+                              <div className="font-medium">{point.point_name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {point.city} - £{point.collection_fee.toFixed(2)}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {selectedCollectionPoint && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        {(() => {
+                          const point = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+                          return point ? (
+                            <div className="text-sm text-blue-800">
+                              <strong>Collection Address:</strong><br />
+                              {point.point_name}<br />
+                              {point.address}<br />
+                              {point.city}, {point.postcode}<br />
+                              {point.phone && <span>Phone: {point.phone}<br /></span>}
+                              <strong>Collection fee: £{point.collection_fee.toFixed(2)}</strong><br />
+                              <strong>Collection days:</strong> {point.collection_days.join(', ')}
+                              {point.special_instructions && (
+                                <div className="mt-2">
+                                  <strong>Special instructions:</strong><br />
+                                  {point.special_instructions}
+                                </div>
+                              )}
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -290,7 +361,7 @@ const Cart = () => {
               <Button
                 className="w-full"
                 size="lg"
-                disabled={!requestedDeliveryDate}
+                disabled={!requestedDeliveryDate || (deliveryMethod === "pickup" && !selectedCollectionPoint)}
                 onClick={async () => {
                   if (!requestedDeliveryDate) {
                     toast({ 
@@ -301,7 +372,19 @@ const Cart = () => {
                     return;
                   }
 
+                  if (deliveryMethod === "pickup" && !selectedCollectionPoint) {
+                    toast({ 
+                      title: "Collection point required", 
+                      description: "Please select a collection point",
+                      variant: 'destructive' 
+                    });
+                    return;
+                  }
+
                   try {
+                    const collectionPoint = deliveryMethod === "pickup" ? collectionPoints.find(cp => cp.id === selectedCollectionPoint) : null;
+                    const collectionFee = collectionPoint?.collection_fee || 0;
+
                     const { data, error } = await supabase.functions.invoke('create-payment', {
                       body: {
                         currency: 'gbp',
@@ -312,8 +395,9 @@ const Cart = () => {
                           description: i.description,
                           meal_id: i.id,
                         })),
-                        delivery_fee: deliveryMethod === "delivery" ? Math.round(deliveryFee * 100) : 0,
+                        delivery_fee: deliveryMethod === "delivery" ? Math.round(deliveryFee * 100) : Math.round(collectionFee * 100),
                         delivery_method: deliveryMethod,
+                        collection_point_id: deliveryMethod === "pickup" ? selectedCollectionPoint : null,
                         requested_delivery_date: requestedDeliveryDate,
                         production_date: calculateProductionDate(requestedDeliveryDate),
                         successPath: '/payment-success',
@@ -332,7 +416,7 @@ const Cart = () => {
                   }
                 }}
               >
-                {requestedDeliveryDate ? 'Proceed to Checkout' : `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} Date to Continue`}
+                {(!requestedDeliveryDate || (deliveryMethod === "pickup" && !selectedCollectionPoint)) ? `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} ${!requestedDeliveryDate ? "Date" : "Point"} to Continue` : 'Proceed to Checkout'}
               </Button>
               <Button
                 variant="outline"
