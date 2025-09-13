@@ -102,9 +102,9 @@ export function DateRangePicker({
     if (range.to) {
       // DayPicker provided a full range
       if (second.getTime() < first.getTime()) {
-        // Second click earlier than first: restart with earlier as new start
-        setTempDate({ from: second, to: undefined })
-        setClickCount(1)
+        // Earlier than first: reset to fresh, require new first click
+        setTempDate(undefined)
+        setClickCount(0)
         return
       }
       const finalRange: DateRange = { from: first, to: range.to }
