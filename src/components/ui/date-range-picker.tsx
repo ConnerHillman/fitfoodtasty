@@ -89,22 +89,35 @@ export function DateRangePicker({
     }
 
     // Second click
-    if (!selectedDate.to) {
+    const firstDate = tempDate?.from
+    const secondDate = selectedDate.from
+
+    if (!firstDate) {
+      // Fallback - restart
+      setTempDate({ from: secondDate, to: undefined })
+      setClickCount(1)
+      return
+    }
+
+    if (secondDate.getTime() === firstDate.getTime()) {
       // Same date clicked twice - single day selection
-      const finalDate: DateRange = { from: selectedDate.from, to: selectedDate.from }
+      const finalDate: DateRange = { from: firstDate, to: firstDate }
       setTempDate(finalDate)
       onDateChange?.(finalDate)
       setIsOpen(false)
       setClickCount(0)
-      return
+    } else if (secondDate < firstDate) {
+      // Second date is before first date - reset and start over with the earlier date
+      setTempDate({ from: secondDate, to: undefined })
+      setClickCount(1)
+    } else {
+      // Second date is after first date - create range
+      const finalRange: DateRange = { from: firstDate, to: secondDate }
+      setTempDate(finalRange)
+      onDateChange?.(finalRange)
+      setIsOpen(false)
+      setClickCount(0)
     }
-
-    // Different end date selected - full range
-    const finalRange: DateRange = { from: selectedDate.from, to: selectedDate.to }
-    setTempDate(finalRange)
-    onDateChange?.(finalRange)
-    setIsOpen(false)
-    setClickCount(0)
   }
 
   const handlePresetSelect = (preset: typeof presetRanges[0]) => {
@@ -210,7 +223,7 @@ export function DateRangePicker({
                 className="pointer-events-auto"
               />
               <div className="mt-3 pt-3 border-t text-xs text-muted-foreground text-center">
-                {clickCount === 0 ? "Click a date to start selection" : "Click another date to complete range (or same date for single day)"}
+                {clickCount === 0 ? "Click a date to start selection" : "Click a later date to complete range, or an earlier date to restart"}
               </div>
             </div>
           </div>
