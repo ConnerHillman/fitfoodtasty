@@ -104,6 +104,14 @@ serve(async (req) => {
       payment_intent_data: {
         description: requested_delivery_date ? deliveryInfo : undefined,
       },
+      custom_fields: requested_delivery_date ? [
+        {
+          key: 'fulfillment_date',
+          label: { type: 'custom', custom: delivery_method === 'pickup' ? 'Collection date' : 'Delivery date' },
+          type: 'text',
+          text: { default_value: formattedDeliveryDate, maximum_length: 120 },
+        },
+      ] : undefined,
       metadata: {
         delivery_method: delivery_method || '',
         collection_point_id: collection_point_id || '',
