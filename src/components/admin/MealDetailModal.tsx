@@ -65,10 +65,17 @@ interface MealStats {
   monthlyOrders: { month: string; orders: number; revenue: number }[];
 }
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
+
 const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalProps) => {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [ingredients, setIngredients] = useState<MealIngredient[]>([]);
   const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState<MealStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState<'none' | 'basic' | 'nutrition' | 'ingredients'>('none');
@@ -84,8 +91,24 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
     if (mealId && isOpen) {
       fetchMealDetails();
       fetchAvailableIngredients();
+      fetchCategories();
     }
   }, [mealId, isOpen]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name, color")
+        .eq("is_active", true)
+        .order("sort_order");
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const fetchAvailableIngredients = async () => {
     try {
@@ -526,7 +549,25 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
                   <div>
                     <Label>Category</Label>
                     <div className="mt-1">
-                      <CategoryTag category={meal.category} />
+                      {editMode === 'basic' ? (
+                        <Select 
+                          value={editData.category || ''} 
+                          onValueChange={(value) => setEditData({...editData, category: value})}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border shadow-lg z-50">
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.name}>
+                                {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <CategoryTag category={meal.category} />
+                      )}
                     </div>
                   </div>
                   <div>
