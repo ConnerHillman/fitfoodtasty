@@ -8,11 +8,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
 import MealFormWithIngredients from "./MealFormWithIngredients";
+import MealAnalytics from "./MealAnalytics";
 import CategoryTag from "../CategoryTag";
 
 interface Category {
@@ -554,48 +556,341 @@ const MealsManager = () => {
 
 
   return (
-    <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
-        <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Meals Manager</h2>
-              <p className="text-muted-foreground">Create and manage your meal offerings with professional precision</p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
-                <span className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-muted-foreground/60"></div>
-                  {filteredMeals.length} meals total
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  {filteredMeals.filter(m => m.is_active).length} active
-                </span>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Meals Management</h2>
+          <p className="text-muted-foreground">
+            Manage your meal offerings, prices, and analytics
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setIsNewMealFormOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Calculator className="h-4 w-4" />
+            Build with Ingredients
+          </Button>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Quick Add Meal
+          </Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="management" className="w-full">
+        <TabsList>
+          <TabsTrigger value="management" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Management
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Analytics & Insights
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="management" className="space-y-6">
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex items-center gap-4 flex-1 max-w-md">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search meals..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setIsDialogOpen(true);
-                }}
-                variant="outline"
-                size="lg"
-                className="bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background/90"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Quick Create
-              </Button>
-              <Button
-                onClick={() => setIsNewMealFormOpen(true)}
-                size="lg"
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Create Meal
-              </Button>
+            <div className="flex items-center gap-2">
+              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex border rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Meals Display */}
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredMeals.map((meal) => (
+                <Card key={meal.id} className="overflow-hidden">
+                  <div className="relative h-48">
+                    {meal.image_url ? (
+                      <img
+                        src={meal.image_url}
+                        alt={meal.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Badge
+                      variant={meal.is_active ? "default" : "secondary"}
+                      className="absolute top-2 right-2"
+                    >
+                      {meal.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between">
+                        <h3 className="font-semibold line-clamp-1">{meal.name}</h3>
+                        <span className="font-bold text-primary">£{meal.price?.toFixed(2)}</span>
+                      </div>
+                      {meal.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{meal.description}</p>
+                      )}
+                      <CategoryTag category={meal.category} />
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <span>Cal: {Math.round(meal.total_calories)}</span>
+                        <span>Protein: {meal.total_protein?.toFixed(1)}g</span>
+                        <span>Carbs: {meal.total_carbs?.toFixed(1)}g</span>
+                        <span>Fat: {meal.total_fat?.toFixed(1)}g</span>
+                      </div>
+                      <div className="flex items-center gap-1 pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => printMealLabel(meal)}
+                          className="flex-1"
+                        >
+                          <Printer className="h-3 w-3 mr-1" />
+                          Print
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleBuildMeal(meal.id)}
+                          className="flex-1"
+                        >
+                          <Calculator className="h-3 w-3 mr-1" />
+                          Build
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(meal)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toggleActive(meal)}
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(meal.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Image</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Nutrition</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredMeals.map((meal) => (
+                    <TableRow key={meal.id}>
+                      <TableCell>
+                        {meal.image_url ? (
+                          <img
+                            src={meal.image_url}
+                            alt={meal.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{meal.name}</div>
+                          {meal.description && (
+                            <div className="text-sm text-muted-foreground line-clamp-1">
+                              {meal.description}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <CategoryTag category={meal.category} />
+                      </TableCell>
+                      <TableCell className="font-medium">£{meal.price?.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="text-xs space-y-1">
+                          <div>Cal: {Math.round(meal.total_calories)}</div>
+                          <div>P: {meal.total_protein?.toFixed(1)}g C: {meal.total_carbs?.toFixed(1)}g F: {meal.total_fat?.toFixed(1)}g</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={meal.is_active ? "default" : "secondary"}>
+                          {meal.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => printMealLabel(meal)}
+                          >
+                            <Printer className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleBuildMeal(meal.id)}
+                          >
+                            <Calculator className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(meal)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => toggleActive(meal)}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(meal.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {/* Quick Add Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>{editingMeal ? "Edit Meal" : "Add New Meal"}</DialogTitle>
+                <DialogDescription>
+                  {editingMeal ? "Update the meal details below." : "Create a new meal by filling out the form below."}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      placeholder="Meal name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price">Price (£)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Meal description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isUploading}>
+                    {isUploading ? "Saving..." : editingMeal ? "Update Meal" : "Add Meal"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
       </div>
 
       {/* Modern Search and Filter Controls */}
@@ -1183,7 +1478,33 @@ const MealsManager = () => {
             />
           )}
         </DialogContent>
-      </Dialog>
+        </Dialog>
+
+        <MealFormWithIngredients
+          isOpen={isNewMealFormOpen}
+          onClose={() => setIsNewMealFormOpen(false)}
+          categories={categories}
+          onSuccess={() => {
+            setIsNewMealFormOpen(false);
+            fetchMeals();
+          }}
+        />
+
+        <MealBuilder
+          isOpen={isBuilderOpen}
+          onClose={() => setIsBuilderOpen(false)}
+          mealId={selectedMealId}
+          onSave={() => {
+            setIsBuilderOpen(false);
+            fetchMeals();
+          }}
+        />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <MealAnalytics />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
