@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import IngredientSelector from "./IngredientSelector";
-import { Upload, Image, DollarSign, ChefHat, Target } from "lucide-react";
+import { Upload, Image, DollarSign, ChefHat, Target, Clock } from "lucide-react";
 interface Ingredient {
   id: string;
   name: string;
@@ -51,7 +51,8 @@ const MealFormWithIngredients = ({
     description: "",
     category: "lunch",
     price: "",
-    image_url: ""
+    image_url: "",
+    shelf_life_days: 5
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
@@ -148,6 +149,7 @@ const MealFormWithIngredients = ({
         category: formData.category,
         price: parseFloat(formData.price) || 0,
         image_url: imageUrl,
+        shelf_life_days: formData.shelf_life_days,
         total_calories: nutrition.calories,
         total_protein: nutrition.protein,
         total_carbs: nutrition.carbs,
@@ -265,6 +267,27 @@ const MealFormWithIngredients = ({
                       ...formData,
                       price: e.target.value
                     })} placeholder="12.99" className="h-12 border-2 focus:border-primary/50" />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor="shelf_life" className="text-base font-semibold flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Shelf Life (days)
+                      </Label>
+                      <Input 
+                        id="shelf_life" 
+                        type="number" 
+                        min="1" 
+                        max="30" 
+                        value={formData.shelf_life_days} 
+                        onChange={e => setFormData({
+                          ...formData,
+                          shelf_life_days: parseInt(e.target.value) || 5
+                        })} 
+                        placeholder="5" 
+                        className="h-12 border-2 focus:border-primary/50" 
+                      />
+                      <p className="text-sm text-muted-foreground">How many days this meal stays fresh after production</p>
                     </div>
                   </div>
 

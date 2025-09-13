@@ -65,7 +65,8 @@ const MealsManager = () => {
     description: "",
     category: "lunch",
     price: "",
-    image_url: ""
+    image_url: "",
+    shelf_life_days: 5
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -216,7 +217,8 @@ const MealsManager = () => {
       description: meal.description || "",
       category: meal.category || "lunch",
       price: meal.price?.toString() || "",
-      image_url: (meal as any).image_url || ""
+      image_url: (meal as any).image_url || "",
+      shelf_life_days: (meal as any).shelf_life_days || 5
     });
     setImageFile(null);
     setIsDialogOpen(true);
@@ -283,12 +285,13 @@ const MealsManager = () => {
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      description: "",
-      category: "lunch",
-      price: "",
-      image_url: ""
-    });
+    name: "",
+    description: "",
+    category: "lunch",
+    price: "",
+    image_url: "",
+    shelf_life_days: 5
+  });
     setImageFile(null);
     setEditingMeal(null);
   };
@@ -734,6 +737,20 @@ const MealsManager = () => {
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       required
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="shelf_life">Shelf Life (days)</Label>
+                    <Input
+                      id="shelf_life"
+                      type="number"
+                      min="1"
+                      max="30"
+                      placeholder="5"
+                      value={formData.shelf_life_days}
+                      onChange={(e) => setFormData({ ...formData, shelf_life_days: parseInt(e.target.value) || 5 })}
+                      required
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">How many days this meal stays fresh after production</p>
                   </div>
                 </div>
                 <div>
