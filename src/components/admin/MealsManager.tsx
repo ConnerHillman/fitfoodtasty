@@ -613,13 +613,22 @@ const MealsManager = () => {
             />
           )}
 
-          {isBuilderOpen && selectedMealId && (
-            <MealBuilder
-              mealId={selectedMealId}
-              onClose={() => setIsBuilderOpen(false)}
-              onNutritionUpdate={() => fetchMeals()}
-            />
-          )}
+          {/* Builder Dialog */}
+          <Dialog open={isBuilderOpen && !!selectedMealId} onOpenChange={setIsBuilderOpen}>
+            <DialogContent className="max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Build Meal Nutrition</DialogTitle>
+                <DialogDescription>Adjust ingredients and quantities to update nutrition in real time.</DialogDescription>
+              </DialogHeader>
+              {selectedMealId && (
+                <MealBuilder
+                  mealId={selectedMealId}
+                  onClose={() => setIsBuilderOpen(false)}
+                  onNutritionUpdate={() => fetchMeals()}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
