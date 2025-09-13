@@ -190,7 +190,7 @@ const FulfillmentManager = () => {
 
   const handleSaveDeliveryZone = async (data: any) => {
     try {
-      if (editingItem) {
+      if (editingItem && editingItem.id) {
         const { error } = await supabase
           .from("delivery_zones")
           .update(data)
@@ -222,7 +222,7 @@ const FulfillmentManager = () => {
 
   const handleSaveCollectionPoint = async (data: any) => {
     try {
-      if (editingItem) {
+      if (editingItem && editingItem.id) {
         const { error } = await supabase
           .from("collection_points")
           .update(data)
@@ -884,7 +884,6 @@ const FulfillmentManager = () => {
               deliveryZones={deliveryZones} 
               onZoneCreated={(zoneData) => {
                 setEditingItem({ 
-                  id: '', 
                   minimum_order: 0, 
                   maximum_distance_km: null,
                   postcode_prefixes: [],
