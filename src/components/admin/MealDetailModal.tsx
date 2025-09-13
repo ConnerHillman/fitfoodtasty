@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Save, X, ShoppingCart, DollarSign, Calendar, Users, TrendingUp, Calculator, ChefHat } from "lucide-react";
+import { Edit, Save, X, ShoppingCart, DollarSign, Calendar, Users, TrendingUp, Calculator, ChefHat, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CategoryTag from "../CategoryTag";
@@ -37,18 +38,22 @@ interface Meal {
   created_at: string;
 }
 
+interface Ingredient {
+  id: string;
+  name: string;
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+  fiber_per_100g: number;
+  default_unit: string;
+}
+
 interface MealIngredient {
   id: string;
   quantity: number;
   unit: string;
-  ingredient: {
-    id: string;
-    name: string;
-    calories_per_100g: number;
-    protein_per_100g: number;
-    carbs_per_100g: number;
-    fat_per_100g: number;
-  };
+  ingredient: Ingredient;
 }
 
 interface MealStats {
@@ -63,17 +68,38 @@ interface MealStats {
 const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalProps) => {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [ingredients, setIngredients] = useState<MealIngredient[]>([]);
+  const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([]);
   const [stats, setStats] = useState<MealStats | null>(null);
   const [loading, setLoading] = useState(false);
-  const [editMode, setEditMode] = useState<'none' | 'basic' | 'nutrition'>('none');
+  const [editMode, setEditMode] = useState<'none' | 'basic' | 'nutrition' | 'ingredients'>('none');
   const [editData, setEditData] = useState<any>({});
+  const [newIngredient, setNewIngredient] = useState({
+    ingredient_id: '',
+    quantity: '',
+    unit: 'g'
+  });
   const { toast } = useToast();
 
   useEffect(() => {
     if (mealId && isOpen) {
       fetchMealDetails();
+      fetchAvailableIngredients();
     }
   }, [mealId, isOpen]);
+
+  const fetchAvailableIngredients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("ingredients")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setAvailableIngredients(data || []);
+    } catch (error) {
+      console.error("Error fetching ingredients:", error);
+    }
+  };
 
   const fetchMealDetails = async () => {
     if (!mealId) return;
@@ -186,6 +212,58 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
     }
   };
 
+  const recalculateNutrition = async () => {
+    if (!meal) return;
+
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+    let totalFiber = 0;
+    let totalWeight = 0;
+
+    ingredients.forEach((ing) => {
+      const factor = ing.quantity / 100; // Convert to per 100g
+      totalCalories += ing.ingredient.calories_per_100g * factor;
+      totalProtein += ing.ingredient.protein_per_100g * factor;
+      totalCarbs += ing.ingredient.carbs_per_100g * factor;
+      totalFat += ing.ingredient.fat_per_100g * factor;
+      totalFiber += (ing.ingredient.fiber_per_100g || 0) * factor;
+      totalWeight += ing.quantity;
+    });
+
+    try {
+      const { error } = await supabase
+        .from("meals")
+        .update({
+          total_calories: totalCalories,
+          total_protein: totalProtein,
+          total_carbs: totalCarbs,
+          total_fat: totalFat,
+          total_fiber: totalFiber,
+          total_weight: totalWeight,
+        })
+        .eq("id", meal.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setMeal({
+        ...meal,
+        total_calories: totalCalories,
+        total_protein: totalProtein,
+        total_carbs: totalCarbs,
+        total_fat: totalFat,
+        total_fiber: totalFiber,
+        total_weight: totalWeight,
+      });
+
+      onUpdate();
+    } catch (error) {
+      console.error("Error updating nutrition:", error);
+    }
+  };
+
   const handleSaveBasic = async () => {
     if (!meal) return;
 
@@ -242,6 +320,94 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
       toast({
         title: "Success",
         description: "Nutrition updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddIngredient = async () => {
+    if (!meal || !newIngredient.ingredient_id || !newIngredient.quantity) {
+      toast({
+        title: "Error",
+        description: "Please select an ingredient and enter quantity",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("meal_ingredients")
+        .insert([{
+          meal_id: meal.id,
+          ingredient_id: newIngredient.ingredient_id,
+          quantity: parseFloat(newIngredient.quantity),
+          unit: newIngredient.unit
+        }]);
+
+      if (error) throw error;
+
+      setNewIngredient({ ingredient_id: '', quantity: '', unit: 'g' });
+      await fetchMealDetails(); // Refresh data
+      await recalculateNutrition();
+      
+      toast({
+        title: "Success",
+        description: "Ingredient added successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateIngredientQuantity = async (ingredientId: string, newQuantity: number) => {
+    try {
+      const { error } = await supabase
+        .from("meal_ingredients")
+        .update({ quantity: newQuantity })
+        .eq("id", ingredientId);
+
+      if (error) throw error;
+
+      // Update local state
+      setIngredients(ingredients.map(ing => 
+        ing.id === ingredientId ? { ...ing, quantity: newQuantity } : ing
+      ));
+
+      await recalculateNutrition();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveIngredient = async (ingredientId: string) => {
+    try {
+      const { error } = await supabase
+        .from("meal_ingredients")
+        .delete()
+        .eq("id", ingredientId);
+
+      if (error) throw error;
+
+      setIngredients(ingredients.filter(ing => ing.id !== ingredientId));
+      await recalculateNutrition();
+      
+      toast({
+        title: "Success",
+        description: "Ingredient removed successfully",
       });
     } catch (error: any) {
       toast({
@@ -509,10 +675,65 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
 
           <TabsContent value="ingredients" className="space-y-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Ingredients List</CardTitle>
+                {editMode !== 'ingredients' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditMode('ingredients')}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditMode('none')}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Done
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
+                {editMode === 'ingredients' && (
+                  <div className="grid grid-cols-4 gap-4 p-4 bg-muted rounded-lg mb-4">
+                    <div className="col-span-2">
+                      <Label>Add Ingredient</Label>
+                      <Select value={newIngredient.ingredient_id} onValueChange={(value) => setNewIngredient({...newIngredient, ingredient_id: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select ingredient" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableIngredients.map((ingredient) => (
+                            <SelectItem key={ingredient.id} value={ingredient.id}>
+                              {ingredient.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Quantity</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={newIngredient.quantity}
+                        onChange={(e) => setNewIngredient({...newIngredient, quantity: e.target.value})}
+                        placeholder="Amount"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button onClick={handleAddIngredient} className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {ingredients.length > 0 ? (
                   <Table>
                     <TableHeader>
@@ -523,6 +744,7 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
                         <TableHead>Protein</TableHead>
                         <TableHead>Carbs</TableHead>
                         <TableHead>Fat</TableHead>
+                        {editMode === 'ingredients' && <TableHead>Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -531,11 +753,34 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
                         return (
                           <TableRow key={ing.id}>
                             <TableCell className="font-medium">{ing.ingredient.name}</TableCell>
-                            <TableCell>{ing.quantity}{ing.unit}</TableCell>
+                            <TableCell>
+                              {editMode === 'ingredients' ? (
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  value={ing.quantity}
+                                  onChange={(e) => handleUpdateIngredientQuantity(ing.id, parseFloat(e.target.value) || 0)}
+                                  className="w-20"
+                                />
+                              ) : (
+                                `${ing.quantity}${ing.unit}`
+                              )}
+                            </TableCell>
                             <TableCell>{Math.round(ing.ingredient.calories_per_100g * factor)}</TableCell>
                             <TableCell>{(ing.ingredient.protein_per_100g * factor).toFixed(1)}g</TableCell>
                             <TableCell>{(ing.ingredient.carbs_per_100g * factor).toFixed(1)}g</TableCell>
                             <TableCell>{(ing.ingredient.fat_per_100g * factor).toFixed(1)}g</TableCell>
+                            {editMode === 'ingredients' && (
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleRemoveIngredient(ing.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            )}
                           </TableRow>
                         );
                       })}
