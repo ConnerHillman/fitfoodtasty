@@ -37,6 +37,7 @@ const Cart = () => {
   const [deliveryZone, setDeliveryZone] = useState<any>(null);
   const [userPostcode, setUserPostcode] = useState<string>("");
   const [manualPostcode, setManualPostcode] = useState<string>("");
+  const [postcodeChecked, setPostcodeChecked] = useState<boolean>(false);
 
   // Fetch collection points
   useEffect(() => {
@@ -68,9 +69,12 @@ const Cart = () => {
     if (!postcode) return;
     
     try {
-      // Clean and format the postcode consistently
-      const cleanPostcode = postcode.toUpperCase().replace(/\s+/g, '');
-      console.log('Checking delivery for postcode:', cleanPostcode);
+      // Clean and format the postcode consistently (remove all non-alphanumerics, uppercase)
+      const cleanPostcode = postcode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      // Extract outward code (e.g., TA6 from TA65LT)
+      const outcodeMatch = cleanPostcode.match(/^[A-Z]{1,2}\d[A-Z\d]?/);
+      const outcode = outcodeMatch ? outcodeMatch[0] : cleanPostcode;
+      console.log('Checking delivery for postcode:', cleanPostcode, 'outcode:', outcode);
       
       // Find delivery zone for this postcode
       const { data: zones, error: zonesError } = await supabase
@@ -83,21 +87,19 @@ const Cart = () => {
 
       // Find matching zone based on postcode
       const matchingZone = zones?.find(zone => {
-        // Check exact postcode match (with and without spaces)
+        // Check exact postcode match (with normalization)
         if (zone.postcodes?.some((zonePostcode: string) => 
-          zonePostcode.toUpperCase().replace(/\s+/g, '') === cleanPostcode
+          zonePostcode.toUpperCase().replace(/[^A-Z0-9]/g, '') === cleanPostcode
         )) {
           console.log('Exact postcode match found:', zone.zone_name);
           return true;
         }
         
-        // Check prefix match
+        // Check prefix match against either cleaned full postcode or outcode
         if (zone.postcode_prefixes?.some((prefix: string) => {
-          const cleanPrefix = prefix.toUpperCase().replace(/\s+/g, '');
-          const matches = cleanPostcode.startsWith(cleanPrefix);
-          if (matches) {
-            console.log('Prefix match found:', prefix, 'for zone:', zone.zone_name);
-          }
+          const cleanPrefix = prefix.toUpperCase().replace(/[^A-Z0-9]/g, '');
+          const matches = cleanPostcode.startsWith(cleanPrefix) || outcode.startsWith(cleanPrefix);
+          if (matches) console.log('Prefix match found:', cleanPrefix, 'for zone:', zone.zone_name);
           return matches;
         })) {
           return true;
@@ -109,16 +111,16 @@ const Cart = () => {
       if (matchingZone) {
         console.log('Found matching zone:', matchingZone.zone_name);
         setDeliveryZone(matchingZone);
-        // Update delivery fee from zone if available
-        if (matchingZone.delivery_fee) {
-          setDeliveryFee(matchingZone.delivery_fee);
-        }
+        setPostcodeChecked(true);
+        if (matchingZone.delivery_fee) setDeliveryFee(matchingZone.delivery_fee);
       } else {
-        console.log('No matching zone found for postcode:', cleanPostcode);
+        console.log('No matching zone found for postcode:', cleanPostcode, 'outcode:', outcode);
         setDeliveryZone(null);
+        setPostcodeChecked(true);
       }
     } catch (error) {
       console.error('Failed to fetch delivery zone:', error);
+      setPostcodeChecked(true);
     }
   };
 
@@ -154,6 +156,7 @@ const Cart = () => {
   // Handle manual postcode input
   const handlePostcodeChange = async (postcode: string) => {
     setManualPostcode(postcode);
+    setPostcodeChecked(false);
     if (postcode.length >= 4) { // Basic UK postcode length check
       await fetchDeliveryZoneByPostcode(postcode);
     }
@@ -510,7 +513,7 @@ const Cart = () => {
                     onChange={(e) => handlePostcodeChange(e.target.value)}
                     className="uppercase"
                   />
-                  {manualPostcode && !deliveryZone && (
+                  {manualPostcode && postcodeChecked && !deliveryZone && (
                     <p className="text-sm text-destructive">No delivery available for this postcode</p>
                   )}
                 </div>
