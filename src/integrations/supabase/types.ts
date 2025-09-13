@@ -377,6 +377,7 @@ export type Database = {
         Row: {
           created_at: string
           day_of_week: string
+          default_cutoff_day: string | null
           default_cutoff_time: string
           default_production_lead_days: number
           default_production_same_day: boolean
@@ -387,6 +388,7 @@ export type Database = {
         Insert: {
           created_at?: string
           day_of_week: string
+          default_cutoff_day?: string | null
           default_cutoff_time?: string
           default_production_lead_days?: number
           default_production_same_day?: boolean
@@ -397,6 +399,7 @@ export type Database = {
         Update: {
           created_at?: string
           day_of_week?: string
+          default_cutoff_day?: string | null
           default_cutoff_time?: string
           default_production_lead_days?: number
           default_production_same_day?: boolean
