@@ -21,7 +21,11 @@ import {
   Eye,
   Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  Clock,
+  Package,
+  Utensils,
+  Star
 } from "lucide-react";
 import { format } from "date-fns";
 import { subDays, startOfDay, endOfDay } from "date-fns";
@@ -453,99 +457,126 @@ const CustomersManager = () => {
         </CardContent>
       </Card>
 
-      {/* Customer List */}
+      {/* Customer Grid */}
       <Card>
         <CardHeader>
           <CardTitle>Customers ({filteredCustomers.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Orders</TableHead>
-                <TableHead>Total Spent</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Last Order</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          {filteredCustomers.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">No customers found</h3>
+              <p>No customers match your current search criteria.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCustomers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{customer.full_name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Joined {format(new Date(customer.created_at), "MMM dd, yyyy")}
+                <div
+                  key={customer.id}
+                  onClick={() => {}}
+                  className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card via-card/95 to-card/90 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] cursor-pointer"
+                >
+                  {/* Premium badge for high-value customers */}
+                  {getCustomerValue(customer) === "high" && (
+                    <div className="absolute top-3 right-3">
+                      <Badge variant="default" className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-medium">
+                        <Star className="h-3 w-3 mr-1" />
+                        VIP
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Customer Header */}
+                  <div className="space-y-3">
+                    <CustomerLink
+                      customerId={customer.user_id}
+                      customerName={customer.full_name}
+                      variant="ghost"
+                      className="text-xl font-bold text-foreground hover:text-primary transition-colors duration-200 p-0 h-auto justify-start w-full"
+                    />
+                    
+                    <div className="text-sm text-muted-foreground">
+                      Customer since {format(new Date(customer.created_at), "MMM yyyy")}
+                    </div>
+                  </div>
+
+                  {/* Customer Stats */}
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 rounded-lg bg-muted/30">
+                      <div className="text-lg font-bold text-primary">
+                        {customer.total_orders}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Total Orders
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {customer.phone && (
-                        <div className="flex items-center text-sm">
-                          <Phone className="h-3 w-3 mr-1" />
-                          {customer.phone}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{customer.city}</div>
-                      {customer.postal_code && (
-                        <div className="text-muted-foreground">{customer.postal_code}</div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{customer.total_orders} total</div>
-                      <div className="text-muted-foreground">
-                        {customer.order_count} meals, {customer.package_order_count} packages
+                    <div className="text-center p-3 rounded-lg bg-muted/30">
+                      <div className="text-lg font-bold text-green-600">
+                        {formatCurrency(customer.total_spent)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Total Spent
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{formatCurrency(customer.total_spent)}</div>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+
+                  {/* Customer Details */}
+                  <div className="mt-4 space-y-2">
+                    {customer.phone && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Phone className="h-3 w-3" />
+                        <span>{customer.phone}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      <span>{customer.city || 'No city'}, {customer.postal_code || 'No postcode'}</span>
+                    </div>
+
+                    {customer.last_order_date && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>Last order {format(new Date(customer.last_order_date), "MMM dd, yyyy")}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Customer Value Badge */}
+                  <div className="mt-4 flex items-center justify-between">
                     <Badge variant={
                       getCustomerValue(customer) === "high" ? "default" :
                       getCustomerValue(customer) === "medium" ? "secondary" : "outline"
-                    }>
-                      {getCustomerValue(customer) === "high" ? "High" :
-                       getCustomerValue(customer) === "medium" ? "Medium" : "Low"}
+                    } className="text-xs">
+                      {getCustomerValue(customer) === "high" ? "High Value" :
+                       getCustomerValue(customer) === "medium" ? "Regular" : "New Customer"}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {customer.last_order_date 
-                        ? format(new Date(customer.last_order_date), "MMM dd, yyyy")
-                        : "Never"
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <CustomerLink
-                      customerId={customer.user_id}
-                      customerName="View Details"
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
 
-          {filteredCustomers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No customers found matching your criteria.
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Utensils className="h-3 w-3" />
+                        <span>{customer.order_count}</span>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2">
+                        <Package className="h-3 w-3" />
+                        <span>{customer.package_order_count}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hover Effect Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  
+                  {/* Click indicator */}
+                  <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="flex items-center gap-1 text-xs text-primary font-medium">
+                      <span>View Details</span>
+                      <Eye className="h-3 w-3" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
