@@ -49,7 +49,6 @@ interface Meal {
 const MealAnalytics = () => {
   const [analyticsData, setAnalyticsData] = useState<MealAnalyticsData | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [selectedTimeRange, setSelectedTimeRange] = useState("30");
   const [selectedMeal, setSelectedMeal] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isLoading, setIsLoading] = useState(true);
@@ -63,7 +62,7 @@ const MealAnalytics = () => {
     if (meals.length > 0) {
       fetchAnalytics();
     }
-  }, [selectedTimeRange, selectedMeal, dateRange, meals]);
+  }, [selectedMeal, dateRange, meals]);
 
   const fetchMeals = async () => {
     try {
@@ -90,7 +89,7 @@ const MealAnalytics = () => {
       let startDate: Date;
       let endDate: Date;
 
-      // Use custom date range if provided, otherwise use time range
+      // Use custom date range if provided, otherwise default to last 30 days
       if (dateRange?.from && dateRange?.to) {
         startDate = startOfDay(dateRange.from);
         endDate = endOfDay(dateRange.to);
@@ -98,8 +97,8 @@ const MealAnalytics = () => {
         startDate = startOfDay(dateRange.from);
         endDate = endOfDay(new Date());
       } else {
-        const days = parseInt(selectedTimeRange);
-        startDate = startOfDay(subDays(new Date(), days));
+        // Default to last 30 days
+        startDate = startOfDay(subDays(new Date(), 29));
         endDate = endOfDay(new Date());
       }
 
@@ -349,17 +348,6 @@ const MealAnalytics = () => {
       <div className="space-y-4">
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
           <div className="flex gap-4 items-center">
-            <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select time range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-              </SelectContent>
-            </Select>
-
             <Select value={selectedMeal} onValueChange={setSelectedMeal}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Select meal" />
@@ -376,30 +364,19 @@ const MealAnalytics = () => {
           </div>
         </div>
         
-        {/* Custom Date Range Picker Row */}
+        {/* Enhanced Date Range Picker */}
         <div className="flex items-center gap-4 justify-between">
           <div className="flex items-center gap-4">
             <DateRangePicker
               date={dateRange}
               onDateChange={setDateRange}
-              placeholder="Custom date range (overrides time range)"
+              placeholder="Select date range for analytics"
               className="w-auto"
             />
-            {dateRange && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDateRange(undefined)}
-                className="flex items-center gap-2"
-              >
-                <X className="h-4 w-4" />
-                Clear custom range
-              </Button>
-            )}
           </div>
           {dateRange && (
             <div className="text-sm text-muted-foreground">
-              Using custom date range
+              Custom date range active
             </div>
           )}
         </div>
