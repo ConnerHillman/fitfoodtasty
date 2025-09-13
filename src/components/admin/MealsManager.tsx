@@ -47,6 +47,7 @@ const MealsManager = () => {
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -71,7 +72,7 @@ const MealsManager = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [meals, statusFilter, searchQuery]);
+  }, [meals, statusFilter, searchQuery, categoryFilter]);
 
   const fetchMeals = async () => {
     const { data, error } = await supabase
@@ -108,6 +109,11 @@ const MealsManager = () => {
       filtered = filtered.filter(meal => meal.is_active);
     } else if (statusFilter === 'inactive') {
       filtered = filtered.filter(meal => !meal.is_active);
+    }
+    
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(meal => meal.category === categoryFilter);
     }
     
     // Apply search filter
@@ -313,6 +319,19 @@ const MealsManager = () => {
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <div className="flex border rounded-lg p-1">
