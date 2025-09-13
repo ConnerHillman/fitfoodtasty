@@ -20,6 +20,9 @@ interface DeliveryZone {
   delivery_fee: number;
   minimum_order: number;
   maximum_distance_km: number | null;
+  production_day_offset?: number;
+  allow_custom_dates?: boolean;
+  production_notes?: string | null;
   is_active: boolean;
 }
 
@@ -144,8 +147,14 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
         onZoneCreated({
           zone_name: `Zone ${new Date().toLocaleTimeString()}`,
           postcodes: postcodes,
+          postcode_prefixes: [],
           delivery_fee: 5.99,
           delivery_days: ['monday', 'wednesday', 'friday'],
+          minimum_order: 30,
+          maximum_distance_km: null,
+          production_day_offset: 0,
+          allow_custom_dates: false,
+          production_notes: null,
           is_active: true
         });
       } else {
@@ -159,8 +168,14 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
           onZoneCreated({
             zone_name: `Zone ${new Date().toLocaleTimeString()}`,
             postcodes: [],
+            postcode_prefixes: [],
             delivery_fee: 5.99,
             delivery_days: ['monday', 'wednesday', 'friday'],
+            minimum_order: 30,
+            maximum_distance_km: null,
+            production_day_offset: 0,
+            allow_custom_dates: false,
+            production_notes: null,
             is_active: true
           });
         }
