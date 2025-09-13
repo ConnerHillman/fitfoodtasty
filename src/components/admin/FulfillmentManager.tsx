@@ -27,12 +27,22 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import WeeklyScheduleManager from "./WeeklyScheduleManager";
 
 interface FulfillmentSetting {
   id: string;
   setting_type: string;
   setting_key: string;
   setting_value: any;
+  is_active: boolean;
+}
+
+interface GlobalSchedule {
+  id: string;
+  day_of_week: string;
+  default_cutoff_time: string;
+  default_production_lead_days: number;
+  default_production_same_day: boolean;
   is_active: boolean;
 }
 
@@ -67,11 +77,16 @@ interface CollectionPoint {
   collection_fee: number;
   maximum_capacity: number;
   special_instructions: string | null;
+  order_cutoffs?: any;
+  production_lead_days?: number;
+  production_same_day?: boolean;
+  production_notes?: string;
   is_active: boolean;
 }
 
 const FulfillmentManager = () => {
   const [settings, setSettings] = useState<FulfillmentSetting[]>([]);
+  const [globalSchedule, setGlobalSchedule] = useState<GlobalSchedule[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,12 +111,23 @@ const FulfillmentManager = () => {
 
   const fetchAllData = async () => {
     setLoading(true);
-    await Promise.all([
-      fetchSettings(),
-      fetchDeliveryZones(),
-      fetchCollectionPoints()
-    ]);
-    setLoading(false);
+    try {
+      await Promise.all([
+        fetchSettings(),
+        fetchGlobalSchedule(),
+        fetchDeliveryZones(),
+        fetchCollectionPoints()
+      ]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load fulfillment data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchSettings = async () => {
@@ -117,6 +143,25 @@ const FulfillmentManager = () => {
       toast({
         title: "Error",
         description: "Failed to fetch fulfillment settings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchGlobalSchedule = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('global_fulfillment_schedule')
+        .select('*')
+        .eq('is_active', true)
+        .order('day_of_week');
+      
+      if (error) throw error;
+      setGlobalSchedule(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch global schedule",
         variant: "destructive",
       });
     }
@@ -310,6 +355,10 @@ const FulfillmentManager = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Weekly Schedule
+          </TabsTrigger>
           <TabsTrigger value="zones" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             Delivery Zones
@@ -324,45 +373,14 @@ const FulfillmentManager = () => {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="schedule" className="space-y-6">
+          <WeeklyScheduleManager 
+            globalSchedule={globalSchedule}
+            onScheduleUpdate={fetchGlobalSchedule}
+          />
+        </TabsContent>
+
         <TabsContent value="general" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Timer className="h-5 w-5" />
-                Order Timing
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Delivery Lead Time (hours)</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="168"
-                    defaultValue={getSetting("timing", "delivery_lead_time_hours") || 48}
-                    onBlur={(e) => updateSetting("timing", "delivery_lead_time_hours", parseInt(e.target.value) || 48)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Minimum hours before delivery that customers must place their order
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Collection Lead Time (hours)</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="168"
-                    defaultValue={getSetting("timing", "collection_lead_time_hours") || 24}
-                    onBlur={(e) => updateSetting("timing", "collection_lead_time_hours", parseInt(e.target.value) || 24)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Minimum hours before collection that customers must place their order
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>

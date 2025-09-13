@@ -229,9 +229,13 @@ export type Database = {
           is_active: boolean
           maximum_capacity: number | null
           opening_hours: Json | null
+          order_cutoffs: Json | null
           phone: string | null
           point_name: string
           postcode: string
+          production_lead_days: number | null
+          production_notes: string | null
+          production_same_day: boolean | null
           special_instructions: string | null
           updated_at: string
         }
@@ -246,9 +250,13 @@ export type Database = {
           is_active?: boolean
           maximum_capacity?: number | null
           opening_hours?: Json | null
+          order_cutoffs?: Json | null
           phone?: string | null
           point_name: string
           postcode: string
+          production_lead_days?: number | null
+          production_notes?: string | null
+          production_same_day?: boolean | null
           special_instructions?: string | null
           updated_at?: string
         }
@@ -263,9 +271,13 @@ export type Database = {
           is_active?: boolean
           maximum_capacity?: number | null
           opening_hours?: Json | null
+          order_cutoffs?: Json | null
           phone?: string | null
           point_name?: string
           postcode?: string
+          production_lead_days?: number | null
+          production_notes?: string | null
+          production_same_day?: boolean | null
           special_instructions?: string | null
           updated_at?: string
         }
@@ -357,6 +369,39 @@ export type Database = {
           setting_key?: string
           setting_type?: string
           setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      global_fulfillment_schedule: {
+        Row: {
+          created_at: string
+          day_of_week: string
+          default_cutoff_time: string
+          default_production_lead_days: number
+          default_production_same_day: boolean
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: string
+          default_cutoff_time?: string
+          default_production_lead_days?: number
+          default_production_same_day?: boolean
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string
+          default_cutoff_time?: string
+          default_production_lead_days?: number
+          default_production_same_day?: boolean
+          id?: string
+          is_active?: boolean
           updated_at?: string
         }
         Relationships: []
