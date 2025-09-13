@@ -10,6 +10,7 @@ import { TrendingUp, TrendingDown, Package, DollarSign, Eye, ShoppingCart, Users
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import * as React from "react";
 
 interface MealAnalyticsData {
   totalOrders: number;
@@ -51,8 +52,12 @@ const MealAnalytics = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selectedMeal, setSelectedMeal] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [sortBy, setSortBy] = useState<'revenue' | 'orders'>('revenue');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  const mealsPerPage = 10;
 
   useEffect(() => {
     fetchMeals();
@@ -63,6 +68,11 @@ const MealAnalytics = () => {
       fetchAnalytics();
     }
   }, [selectedMeal, dateRange, meals]);
+
+  // Reset pagination when sorting changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy]);
 
   const fetchMeals = async () => {
     try {
@@ -237,8 +247,8 @@ const MealAnalytics = () => {
       });
 
       const popularMeals = Array.from(mealStats.values())
-        .sort((a, b) => b.orders - a.orders)
-        .slice(0, 10);
+        .filter(meal => meal.orders > 0 || meal.revenue > 0) // Only include meals with activity
+        .sort((a, b) => b.revenue - a.revenue); // Default sort by revenue
 
       // Process revenue by day
       const revenueByDay = new Map<string, { revenue: number; orders: number }>();
@@ -397,7 +407,7 @@ const MealAnalytics = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -455,6 +465,19 @@ const MealAnalytics = () => {
                 <p className="text-xs text-muted-foreground">Views to Orders</p>
               </div>
               <Users className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Active Meals</p>
+                <p className="text-2xl font-bold">{analyticsData?.popularMeals.length || 0}</p>
+                <p className="text-xs text-muted-foreground">With activity</p>
+              </div>
+              <Package className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -516,33 +539,138 @@ const MealAnalytics = () => {
         </Card>
       </div>
 
-      {/* Popular Meals */}
+      {/* All Meals Performance */}
       <Card>
         <CardHeader>
-          <CardTitle>Popular Meals</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Meal Performance</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={sortBy === 'revenue' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('revenue')}
+              >
+                <DollarSign className="h-4 w-4 mr-1" />
+                Revenue
+              </Button>
+              <Button
+                variant={sortBy === 'orders' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('orders')}
+              >
+                <ShoppingCart className="h-4 w-4 mr-1" />
+                Orders
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {analyticsData?.popularMeals.slice(0, 10).map((meal, index) => (
-              <div key={meal.name} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Badge variant="secondary">#{index + 1}</Badge>
-                  <div>
-                    <p className="font-medium">{meal.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {meal.orders} orders • {meal.views} views
-                    </p>
+          {analyticsData?.popularMeals && analyticsData.popularMeals.length > 0 ? (
+            <>
+              <div className="space-y-4">
+                {analyticsData.popularMeals
+                  .sort((a, b) => sortBy === 'revenue' ? b.revenue - a.revenue : b.orders - a.orders)
+                  .slice((currentPage - 1) * mealsPerPage, currentPage * mealsPerPage)
+                  .map((meal, index) => {
+                    const globalIndex = (currentPage - 1) * mealsPerPage + index + 1;
+                    return (
+                      <div key={meal.name} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="secondary">#{globalIndex}</Badge>
+                          <div>
+                            <p className="font-medium">{meal.name}</p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <ShoppingCart className="h-3 w-3" />
+                                {meal.orders} orders
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="h-3 w-3" />
+                                {formatCurrency(meal.revenue)}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                {meal.views} views
+                              </span>
+                              {meal.views > 0 && (
+                                <span className="text-xs">
+                                  ({((meal.orders / meal.views) * 100).toFixed(1)}% conversion)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-primary">
+                            {sortBy === 'revenue' ? formatCurrency(meal.revenue) : `${meal.orders} orders`}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {sortBy === 'revenue' ? `${meal.orders} orders` : formatCurrency(meal.revenue)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Pagination */}
+              {analyticsData.popularMeals.length > mealsPerPage && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {((currentPage - 1) * mealsPerPage) + 1}-{Math.min(currentPage * mealsPerPage, analyticsData.popularMeals.length)} of {analyticsData.popularMeals.length} meals
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from(
+                        { length: Math.ceil(analyticsData.popularMeals.length / mealsPerPage) },
+                        (_, i) => i + 1
+                      )
+                        .filter(page => {
+                          const totalPages = Math.ceil(analyticsData.popularMeals.length / mealsPerPage);
+                          return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+                        })
+                        .map((page, index, filteredPages) => (
+                          <React.Fragment key={page}>
+                            {index > 0 && filteredPages[index - 1] < page - 1 && (
+                              <span className="px-2 text-sm text-muted-foreground">...</span>
+                            )}
+                            <Button
+                              variant={currentPage === page ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {page}
+                            </Button>
+                          </React.Fragment>
+                        ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(analyticsData.popularMeals.length / mealsPerPage), prev + 1))}
+                      disabled={currentPage === Math.ceil(analyticsData.popularMeals.length / mealsPerPage)}
+                    >
+                      Next
+                    </Button>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold">{formatCurrency(meal.revenue)}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {meal.views > 0 ? ((meal.orders / meal.views) * 100).toFixed(1) : 0}% conversion
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No meal activity found for the selected period</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
