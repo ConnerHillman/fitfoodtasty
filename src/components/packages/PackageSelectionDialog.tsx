@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MealPackage } from "./PackagesBar";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,7 +11,6 @@ import { Minus, Plus, CheckCircle2, ShoppingCart, Search, ChevronDown, ChevronUp
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
-import { useNavigate } from "react-router-dom";
 
 interface Allergen {
   id: string;
@@ -53,6 +53,7 @@ const CategoryColors: Record<string, string> = {
 };
 
 const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
+  const navigate = useNavigate();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,7 +64,6 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
   const [expandedIngredients, setExpandedIngredients] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const { addPackageToCart } = useCart();
-  const navigate = useNavigate();
 
   const filteredMeals = useMemo(
     () => meals.filter(meal => 
@@ -274,40 +274,12 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
       return;
     }
 
-    const summary = Object.entries(selected)
-      .map(([id, qty]) => {
-        const meal = meals.find((m) => m.id === id);
-        return `${qty} x ${meal?.name ?? "Meal"}`;
-      })
-      .join(" | ");
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: {
-          currency: 'gbp',
-          items: [
-            {
-              name: `${pkg.meal_count} Meal Package`,
-              amount: Math.round(pkg.price * 100),
-              quantity: 1,
-              description: summary,
-            },
-          ],
-          delivery_fee: 299,
-          successPath: '/payment-success',
-          cancelPath: '/menu'
-        }
-      });
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (err: any) {
-      console.error(err);
-      toast({ title: 'Checkout error', description: err.message || 'Unable to start checkout', variant: 'destructive' });
-    }
+    // Add package to cart first
+    await handleAddToCart();
+    
+    // Navigate to cart page for collection/delivery options
+    navigate('/cart');
+    onOpenChange(false);
   };
 
   return (
