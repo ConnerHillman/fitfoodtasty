@@ -123,8 +123,11 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       map.current!.on('draw.delete', handleDrawDelete);
       map.current!.on('draw.modechange', (e: any) => {
         console.log('Draw mode changed:', e.mode);
+        setDrawingInteractions(e.mode === 'draw_polygon');
+        setIsDrawingMode(e.mode === 'draw_polygon');
       });
       
+      setDrawingInteractions(false);
       addDeliveryZonesToMap();
     });
   };
@@ -169,6 +172,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       draw.current.changeMode('simple_select');
     }
     setIsDrawingMode(false);
+    setDrawingInteractions(false);
   };
 
   const handleDrawUpdate = (e: any) => {
@@ -179,6 +183,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
   const handleDrawDelete = () => {
     setSelectedArea(null);
     setIsDrawingMode(false);
+    setDrawingInteractions(false);
   };
 
   // Only disable interactions when actively drawing
@@ -204,6 +209,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       if (isDrawingMode) {
         console.log('Switching to simple_select mode');
         draw.current.changeMode('simple_select');
+        setDrawingInteractions(false);
         setIsDrawingMode(false);
       } else {
         console.log('Switching to draw_polygon mode');
@@ -466,11 +472,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
               </div>
             </div>
             
-            <div 
-              className="h-96 w-full rounded-lg overflow-hidden border"
-              onMouseDownCapture={(e) => e.stopPropagation()}
-              onClickCapture={(e) => e.stopPropagation()}
-            >
+            <div className="h-96 w-full rounded-lg overflow-hidden border">
               <div ref={mapContainer} className="w-full h-full" />
             </div>
 
