@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Calendar, Clock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Calendar, Clock, Truck, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ const Cart = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
 
   // Calculate minimum delivery date (tomorrow)
   const getMinDeliveryDate = () => {
@@ -156,14 +158,16 @@ const Cart = () => {
                 <span>Subtotal</span>
                 <span>£{getTotalPrice().toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>£2.99</span>
-              </div>
+              {deliveryMethod === "delivery" && (
+                <div className="flex justify-between">
+                  <span>Delivery</span>
+                  <span>£2.99</span>
+                </div>
+              )}
               <div className="border-t pt-4">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>£{(getTotalPrice() + 2.99).toFixed(2)}</span>
+                  <span>£{(getTotalPrice() + (deliveryMethod === "delivery" ? 2.99 : 0)).toFixed(2)}</span>
                 </div>
               </div>
               
@@ -186,11 +190,45 @@ const Cart = () => {
                 </div>
               )}
               
+              {/* Delivery Method Selection */}
+              <div className="space-y-3 border-t pt-4">
+                <Label className="font-semibold">Delivery Method</Label>
+                <Select value={deliveryMethod} onValueChange={(value: "delivery" | "pickup") => setDeliveryMethod(value)}>
+                  <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50">
+                    <SelectValue placeholder="Choose delivery method" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    <SelectItem value="delivery" className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4" />
+                        Delivery - £2.99
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="pickup" className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Collection - Free
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {deliveryMethod === "pickup" && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Collection Address:</strong><br />
+                      Fit Food Tasty Kitchen<br />
+                      123 Kitchen Street<br />
+                      London, SW1A 1AA
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Delivery Date Selection */}
               <div className="space-y-3 border-t pt-4">
                 <Label htmlFor="delivery-date" className="flex items-center gap-2 font-semibold">
                   <Calendar className="h-4 w-4" />
-                  Requested Delivery Date
+                  {deliveryMethod === "delivery" ? "Requested Delivery Date" : "Requested Collection Date"}
                 </Label>
                 <Input
                   id="delivery-date"
@@ -209,8 +247,8 @@ const Cart = () => {
                 onClick={async () => {
                   if (!requestedDeliveryDate) {
                     toast({ 
-                      title: 'Delivery date required', 
-                      description: 'Please select your preferred delivery date',
+                      title: `${deliveryMethod === "delivery" ? "Delivery" : "Collection"} date required`, 
+                      description: `Please select your preferred ${deliveryMethod === "delivery" ? "delivery" : "collection"} date`,
                       variant: 'destructive' 
                     });
                     return;
@@ -227,7 +265,8 @@ const Cart = () => {
                           description: i.description,
                           meal_id: i.id,
                         })),
-                        delivery_fee: 299,
+                        delivery_fee: deliveryMethod === "delivery" ? 299 : 0,
+                        delivery_method: deliveryMethod,
                         requested_delivery_date: requestedDeliveryDate,
                         production_date: calculateProductionDate(requestedDeliveryDate),
                         successPath: '/payment-success',
@@ -246,7 +285,7 @@ const Cart = () => {
                   }
                 }}
               >
-                {requestedDeliveryDate ? 'Proceed to Checkout' : 'Select Delivery Date to Continue'}
+                {requestedDeliveryDate ? 'Proceed to Checkout' : `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} Date to Continue`}
               </Button>
               <Button
                 variant="outline"
