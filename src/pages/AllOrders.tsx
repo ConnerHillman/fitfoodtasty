@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import CustomerLink from "@/components/admin/CustomerLink";
+import OrderLink from "@/components/admin/OrderLink";
 
 interface Order {
   id: string;
@@ -260,7 +261,9 @@ const AllOrders: React.FC = () => {
                           className="font-bold text-lg"
                         />
                         <span className="text-sm text-muted-foreground font-normal">
-                          #{order.id.slice(-8)} • {order.customer_email}
+                          <OrderLink orderId={order.id} className="text-muted-foreground hover:text-foreground">
+                            #{order.id.slice(-8)}
+                          </OrderLink> • {order.customer_email}
                         </span>
                         {order.type === 'package' && (
                           <Badge variant="outline" className="text-xs">

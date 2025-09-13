@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { addDays, subDays, startOfDay, endOfDay } from "date-fns";
 import CustomerLink from "@/components/admin/CustomerLink";
+import OrderLink from "@/components/admin/OrderLink";
 
 const BusinessDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -720,7 +721,9 @@ const BusinessDashboard = () => {
                         {order.type === 'package' && <Badge variant="outline" className="ml-2 text-xs">Package</Badge>}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        #{order.id.slice(-8)}
+                        <OrderLink orderId={order.id} className="text-muted-foreground hover:text-foreground">
+                          #{order.id.slice(-8)}
+                        </OrderLink>
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {order.type === 'package' 

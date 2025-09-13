@@ -26,6 +26,7 @@ import {
   Star
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
+import OrderLink from "./OrderLink";
 
 interface CustomerProfile {
   id: string;
@@ -495,7 +496,9 @@ const CustomerDetailModal = () => {
                       {orders.slice(0, 5).map((order) => (
                         <TableRow key={order.id}>
                           <TableCell className="font-mono text-sm">
-                            {order.id.slice(0, 8)}...
+                            <OrderLink orderId={order.id}>
+                              {order.id.slice(0, 8)}...
+                            </OrderLink>
                           </TableCell>
                           <TableCell>
                             {format(new Date(order.created_at), "MMM dd, yyyy")}
@@ -545,7 +548,9 @@ const CustomerDetailModal = () => {
                       {orders.map((order) => (
                         <TableRow key={order.id}>
                           <TableCell className="font-mono text-sm">
-                            {order.id.slice(0, 8)}...
+                            <OrderLink orderId={order.id}>
+                              {order.id.slice(0, 8)}...
+                            </OrderLink>
                           </TableCell>
                           <TableCell>
                             {format(new Date(order.created_at), "MMM dd, yyyy HH:mm")}
