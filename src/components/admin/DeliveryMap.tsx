@@ -224,19 +224,22 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
   };
 
   const getPostcodesInPolygon = async (coordinates: number[][]): Promise<string[]> => {
-    // Simple implementation: check existing postcodes if they fall within the polygon
-    const postcodes: string[] = [];
-    
-    for (const zone of deliveryZones) {
-      for (const postcode of zone.postcodes) {
-        const coords = await geocodePostcode(postcode);
-        if (coords && isPointInPolygon(coords, coordinates)) {
-          postcodes.push(postcode);
-        }
+    try {
+      const { data, error } = await supabase.functions.invoke('find-postcodes-in-polygon', {
+        body: { coordinates }
+      });
+      
+      if (error) {
+        console.error('Error finding postcodes:', error);
+        throw error;
       }
+      
+      console.log('Postcodes found in polygon:', data?.count || 0);
+      return data?.postcodes || [];
+    } catch (error) {
+      console.error('Failed to find postcodes in polygon:', error);
+      return [];
     }
-    
-    return postcodes;
   };
 
   const isPointInPolygon = (point: [number, number], polygon: number[][]): boolean => {
