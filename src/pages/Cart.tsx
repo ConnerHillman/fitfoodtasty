@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,25 @@ const Cart = () => {
   const { toast } = useToast();
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
+  const [deliveryFee, setDeliveryFee] = useState(2.99);
+
+  // Fetch delivery fee from settings
+  useEffect(() => {
+    const fetchDeliveryFee = async () => {
+      const { data, error } = await supabase
+        .from('fulfillment_settings')
+        .select('setting_value')
+        .eq('setting_type', 'fees')
+        .eq('setting_key', 'delivery_fee')
+        .single();
+
+      if (data && !error) {
+        setDeliveryFee(parseFloat(String(data.setting_value)) || 2.99);
+      }
+    };
+
+    fetchDeliveryFee();
+  }, []);
 
   // Calculate minimum delivery date (tomorrow)
   const getMinDeliveryDate = () => {
@@ -161,13 +180,13 @@ const Cart = () => {
               {deliveryMethod === "delivery" && (
                 <div className="flex justify-between">
                   <span>Delivery</span>
-                  <span>£2.99</span>
+                  <span>£{deliveryFee.toFixed(2)}</span>
                 </div>
               )}
               <div className="border-t pt-4">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>£{(getTotalPrice() + (deliveryMethod === "delivery" ? 2.99 : 0)).toFixed(2)}</span>
+                  <span>£{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : 0)).toFixed(2)}</span>
                 </div>
               </div>
               
@@ -201,7 +220,7 @@ const Cart = () => {
                     <SelectItem value="delivery" className="flex items-center gap-2">
                       <div className="flex items-center gap-2">
                         <Truck className="h-4 w-4" />
-                        Delivery - £2.99
+                        Delivery - £{deliveryFee.toFixed(2)}
                       </div>
                     </SelectItem>
                     <SelectItem value="pickup" className="flex items-center gap-2">
@@ -265,7 +284,7 @@ const Cart = () => {
                           description: i.description,
                           meal_id: i.id,
                         })),
-                        delivery_fee: deliveryMethod === "delivery" ? 299 : 0,
+                        delivery_fee: deliveryMethod === "delivery" ? Math.round(deliveryFee * 100) : 0,
                         delivery_method: deliveryMethod,
                         requested_delivery_date: requestedDeliveryDate,
                         production_date: calculateProductionDate(requestedDeliveryDate),
