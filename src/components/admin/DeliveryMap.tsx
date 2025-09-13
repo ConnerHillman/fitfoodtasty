@@ -273,35 +273,77 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
     return inside;
   };
 
+  // Cache for geocoded postcodes to avoid repeated API calls
+  const geocodeCache = useRef<Map<string, [number, number] | null>>(new Map());
+
   const addDeliveryZonesToMap = async () => {
     if (!map.current) return;
 
-    // Add markers for each delivery zone's postcodes
+    // Batch all unique postcodes to reduce API calls
+    const uniquePostcodes = new Set<string>();
+    const zonesToProcess: Array<{zone: DeliveryZone, postcode: string, isPrefix: boolean}> = [];
+
     for (const zone of deliveryZones) {
       if (!zone.is_active) continue;
 
-      // Process exact postcodes
+      // Collect exact postcodes
       for (const postcode of zone.postcodes) {
-        try {
-          const coordinates = await geocodePostcode(postcode);
-          if (coordinates) {
-            addZoneMarker(coordinates, zone, postcode);
-          }
-        } catch (error) {
-          console.warn(`Failed to geocode postcode: ${postcode}`, error);
-        }
+        uniquePostcodes.add(postcode);
+        zonesToProcess.push({ zone, postcode, isPrefix: false });
       }
 
-      // Process postcode prefixes (show approximate center)
+      // Collect postcode prefixes
       for (const prefix of zone.postcode_prefixes || []) {
-        try {
-          const coordinates = await geocodePostcode(prefix);
-          if (coordinates) {
-            addZoneMarker(coordinates, zone, `${prefix}*`, true);
+        uniquePostcodes.add(prefix);
+        zonesToProcess.push({ zone, postcode: `${prefix}*`, isPrefix: true });
+      }
+    }
+
+    // Limit to reasonable number to avoid hitting rate limits
+    const maxPostcodes = 50;
+    const postcodesToGeocode = Array.from(uniquePostcodes).slice(0, maxPostcodes);
+    
+    if (uniquePostcodes.size > maxPostcodes) {
+      console.warn(`Limiting geocoding to ${maxPostcodes} postcodes out of ${uniquePostcodes.size} to avoid rate limits`);
+    }
+
+    // Geocode in small batches with delays
+    const batchSize = 5;
+    const delay = 200; // ms between batches
+
+    for (let i = 0; i < postcodesToGeocode.length; i += batchSize) {
+      const batch = postcodesToGeocode.slice(i, i + batchSize);
+      
+      await Promise.allSettled(
+        batch.map(async (postcode) => {
+          // Check cache first
+          if (geocodeCache.current.has(postcode)) {
+            return;
           }
-        } catch (error) {
-          console.warn(`Failed to geocode postcode prefix: ${prefix}`, error);
-        }
+
+          try {
+            const coordinates = await geocodePostcode(postcode);
+            geocodeCache.current.set(postcode, coordinates);
+          } catch (error) {
+            geocodeCache.current.set(postcode, null);
+            console.warn(`Failed to geocode postcode: ${postcode}`);
+          }
+        })
+      );
+
+      // Add delay between batches to avoid rate limiting
+      if (i + batchSize < postcodesToGeocode.length) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    // Now add markers using cached coordinates
+    for (const { zone, postcode, isPrefix } of zonesToProcess) {
+      const cleanPostcode = postcode.replace('*', '');
+      const coordinates = geocodeCache.current.get(cleanPostcode);
+      
+      if (coordinates) {
+        addZoneMarker(coordinates, zone, postcode, isPrefix);
       }
     }
   };
@@ -309,10 +351,15 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
   const geocodePostcode = async (postcode: string): Promise<[number, number] | null> => {
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(postcode)}.json?country=GB&types=postcode&access_token=${mapboxToken}`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(postcode)}.json?country=GB&types=postcode&access_token=${mapboxToken}`,
+        {
+          signal: AbortSignal.timeout(5000) // 5 second timeout
+        }
       );
       
-      if (!response.ok) throw new Error('Geocoding failed');
+      if (!response.ok) {
+        throw new Error(`Geocoding failed: ${response.status}`);
+      }
       
       const data = await response.json();
       
@@ -322,7 +369,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       
       return null;
     } catch (error) {
-      console.error('Geocoding error:', error);
+      // Don't log individual geocoding errors to reduce console spam
       return null;
     }
   };
