@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
@@ -335,6 +336,74 @@ const FulfillmentManager = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Delivery Method
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Label>Choose your delivery system:</Label>
+                <RadioGroup
+                  value={getSetting("general", "delivery_method") || "zones"}
+                  onValueChange={(value) => updateSetting("general", "delivery_method", value)}
+                  className="grid grid-cols-1 gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="zones" id="zones" />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="zones" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Postcode Zones (Recommended)
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Define specific postcodes and areas where you deliver
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="radius" id="radius" />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="radius" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Delivery Radius
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Deliver within a set distance from your kitchen
+                      </p>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={getSetting("general", "delivery_method") === "radius" ? "" : "opacity-50"}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Radius Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Maximum Delivery Radius (km)</Label>
+                  <Input
+                    type="number"
+                    disabled={getSetting("general", "delivery_method") !== "radius"}
+                    defaultValue={getSetting("general", "max_delivery_radius_km")?.value || 25}
+                    onBlur={(e) => {
+                      if (getSetting("general", "delivery_method") === "radius") {
+                        updateSetting("general", "max_delivery_radius_km", { value: parseFloat(e.target.value) || 25 });
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={getSetting("general", "delivery_method") !== "radius" ? "" : "opacity-50"}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Timer className="h-5 w-5" />
                 Delivery Time Slots
               </CardTitle>
@@ -344,27 +413,31 @@ const FulfillmentManager = () => {
                 <Checkbox
                   id="enable-time-slots"
                   checked={getSetting("general", "time_slots_enabled") !== false}
+                  disabled={getSetting("general", "delivery_method") === "radius"}
                   onCheckedChange={(checked) => {
-                    updateSetting("general", "time_slots_enabled", checked);
+                    if (getSetting("general", "delivery_method") !== "radius") {
+                      updateSetting("general", "time_slots_enabled", checked);
+                    }
                   }}
                 />
                 <Label htmlFor="enable-time-slots" className="text-sm font-medium">
                   Enable delivery time slots
                 </Label>
               </div>
-              <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${getSetting("general", "time_slots_enabled") === false ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${getSetting("general", "time_slots_enabled") === false || getSetting("general", "delivery_method") === "radius" ? 'opacity-50 pointer-events-none' : ''}`}>
                 {["morning", "afternoon", "evening"].map((slot) => {
                   const slots = getSetting("general", "delivery_slots");
                   const timeSlotsEnabled = getSetting("general", "time_slots_enabled") !== false;
+                  const methodEnabled = getSetting("general", "delivery_method") !== "radius";
                   return (
                     <div key={slot} className="space-y-2">
                       <Label className="capitalize">{slot}</Label>
                       <Input
                         defaultValue={slots?.[slot] || ""}
                         placeholder="09:00-12:00"
-                        disabled={!timeSlotsEnabled}
+                        disabled={!timeSlotsEnabled || !methodEnabled}
                         onBlur={(e) => {
-                          if (timeSlotsEnabled) {
+                          if (timeSlotsEnabled && methodEnabled) {
                             const newSlots = { ...slots, [slot]: e.target.value };
                             updateSetting("general", "delivery_slots", newSlots);
                           }
@@ -373,26 +446,6 @@ const FulfillmentManager = () => {
                     </div>
                   );
                 })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Other Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Maximum Delivery Radius (km)</Label>
-                  <Input
-                    type="number"
-                    defaultValue={getSetting("general", "max_delivery_radius_km")?.value || 25}
-                    onBlur={(e) => {
-                      updateSetting("general", "max_delivery_radius_km", { value: parseFloat(e.target.value) || 25 });
-                    }}
-                  />
-                </div>
               </div>
             </CardContent>
           </Card>
