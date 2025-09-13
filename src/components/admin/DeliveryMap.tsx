@@ -149,6 +149,13 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
         }
       }
     }
+
+    // Exit drawing mode and re-enable map interactions
+    if (draw.current) {
+      draw.current.changeMode('simple_select');
+    }
+    setIsDrawingMode(false);
+    setDrawingInteractions(false);
   };
 
   const handleDrawUpdate = (e: any) => {
@@ -158,6 +165,31 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
 
   const handleDrawDelete = () => {
     setSelectedArea(null);
+    setIsDrawingMode(false);
+    setDrawingInteractions(false);
+  };
+
+  // Enable/disable map interactions while drawing
+  const setDrawingInteractions = (enableDrawing: boolean) => {
+    if (!map.current) return;
+    const m = map.current;
+    if (enableDrawing) {
+      m.dragPan.disable();
+      m.boxZoom.disable();
+      m.doubleClickZoom.disable();
+      m.keyboard.disable();
+      m.touchZoomRotate.disable();
+      m.getCanvas().style.cursor = 'crosshair';
+      m.getCanvas().style.touchAction = 'none';
+    } else {
+      m.dragPan.enable();
+      m.boxZoom.enable();
+      m.doubleClickZoom.enable();
+      m.keyboard.enable();
+      m.touchZoomRotate.enable();
+      m.getCanvas().style.cursor = '';
+      m.getCanvas().style.touchAction = '';
+    }
   };
 
   const toggleDrawingMode = () => {
@@ -168,12 +200,14 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       if (isDrawingMode) {
         console.log('Switching to simple_select mode');
         draw.current.changeMode('simple_select');
+        setDrawingInteractions(false);
+        setIsDrawingMode(false);
       } else {
         console.log('Switching to draw_polygon mode');
         draw.current.changeMode('draw_polygon');
+        setDrawingInteractions(true);
+        setIsDrawingMode(true);
       }
-      setIsDrawingMode(!isDrawingMode);
-      console.log('Drawing mode toggled to:', !isDrawingMode);
     } else {
       console.error('Draw instance is null!');
     }
