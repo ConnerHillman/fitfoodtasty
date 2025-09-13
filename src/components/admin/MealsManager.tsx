@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
 import MealFormWithIngredients from "./MealFormWithIngredients";
 import MealAnalytics from "./MealAnalytics";
+import MealDetailModal from "./MealDetailModal";
 import CategoryTag from "../CategoryTag";
 
 interface Category {
@@ -55,6 +56,7 @@ const MealsManager = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isNewMealFormOpen, setIsNewMealFormOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -219,6 +221,11 @@ const MealsManager = () => {
     setIsDialogOpen(true);
   };
 
+  const handleViewMeal = (mealId: string) => {
+    setSelectedMealId(mealId);
+    setIsDetailModalOpen(true);
+  };
+
   const handleBuildMeal = (mealId: string) => {
     setSelectedMealId(mealId);
     setIsBuilderOpen(true);
@@ -377,7 +384,7 @@ const MealsManager = () => {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredMeals.map((meal) => (
-                <Card key={meal.id} className="overflow-hidden">
+                <Card key={meal.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleViewMeal(meal.id)}>
                   <div className="relative h-48">
                     {meal.image_url ? (
                       <img
@@ -534,7 +541,7 @@ const MealsManager = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredMeals.map((meal) => (
-                    <TableRow key={meal.id}>
+                    <TableRow key={meal.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewMeal(meal.id)}>
                       <TableCell>
                         {meal.image_url ? (
                           <img
@@ -804,6 +811,17 @@ const MealsManager = () => {
           <MealAnalytics />
         </TabsContent>
       </Tabs>
+
+      {/* Meal Detail Modal */}
+      <MealDetailModal
+        mealId={selectedMealId}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedMealId(null);
+        }}
+        onUpdate={fetchMeals}
+      />
     </div>
   );
 };
