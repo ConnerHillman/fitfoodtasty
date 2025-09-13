@@ -329,7 +329,7 @@ const MealsManager = () => {
                   <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.name}>
-                      {category.name}
+                      {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
