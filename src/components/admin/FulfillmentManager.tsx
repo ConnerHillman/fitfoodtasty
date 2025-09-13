@@ -22,7 +22,7 @@ import {
   PoundSterling,
   Map,
   Store,
-  TimerIcon
+  Timer
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -329,7 +329,7 @@ const FulfillmentManager = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TimerIcon className="h-5 w-5" />
+                <Timer className="h-5 w-5" />
                 Delivery Time Slots
               </CardTitle>
             </CardHeader>
