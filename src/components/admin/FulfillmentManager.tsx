@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import DeliveryMap from "./DeliveryMap";
 
 interface FulfillmentSetting {
   id: string;
@@ -302,7 +303,7 @@ const FulfillmentManager = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             General
@@ -322,6 +323,10 @@ const FulfillmentManager = () => {
           <TabsTrigger value="fees" className="flex items-center gap-2">
             <PoundSterling className="h-4 w-4" />
             Fees & Limits
+          </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            Map View
           </TabsTrigger>
         </TabsList>
 
@@ -724,6 +729,10 @@ const FulfillmentManager = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="map" className="space-y-6">
+          <DeliveryMap deliveryZones={deliveryZones} />
         </TabsContent>
       </Tabs>
     </div>
