@@ -95,6 +95,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       // Initialize Mapbox Draw after map loads
       draw.current = new MapboxDraw({
         displayControlsDefault: false,
+        boxSelect: false,
         controls: {
           polygon: true,
           trash: true
@@ -110,6 +111,12 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       map.current!.on('draw.create', handleDrawCreate);
       map.current!.on('draw.update', handleDrawUpdate);
       map.current!.on('draw.delete', handleDrawDelete);
+      map.current!.on('draw.modechange', (e: any) => {
+        console.log('Draw mode changed:', e.mode);
+      });
+      map.current!.on('click', () => {
+        console.log('Map clicked');
+      });
       
       addDeliveryZonesToMap();
     });
@@ -176,6 +183,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
     if (enableDrawing) {
       m.dragPan.disable();
       m.boxZoom.disable();
+      m.scrollZoom.disable();
       m.doubleClickZoom.disable();
       m.keyboard.disable();
       m.touchZoomRotate.disable();
@@ -184,6 +192,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
     } else {
       m.dragPan.enable();
       m.boxZoom.enable();
+      m.scrollZoom.enable();
       m.doubleClickZoom.enable();
       m.keyboard.enable();
       m.touchZoomRotate.enable();
@@ -204,8 +213,8 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
         setIsDrawingMode(false);
       } else {
         console.log('Switching to draw_polygon mode');
-        draw.current.changeMode('draw_polygon');
         setDrawingInteractions(true);
+        draw.current.changeMode('draw_polygon');
         setIsDrawingMode(true);
       }
     } else {
