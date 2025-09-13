@@ -22,10 +22,11 @@ interface GlobalSchedule {
 
 interface WeeklyScheduleManagerProps {
   globalSchedule: GlobalSchedule[];
+  deliveryZones?: any[];
   onScheduleUpdate: () => void;
 }
 
-const WeeklyScheduleManager = ({ globalSchedule, onScheduleUpdate }: WeeklyScheduleManagerProps) => {
+const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleUpdate }: WeeklyScheduleManagerProps) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
 
@@ -118,14 +119,73 @@ const WeeklyScheduleManager = ({ globalSchedule, onScheduleUpdate }: WeeklySched
     }
   };
 
+  const syncFromDeliveryZones = async () => {
+    setSaving(true);
+    try {
+      // Find the most common cutoff settings from delivery zones
+      const zoneCutoffs: { [key: string]: { day: string; time: string; count: number } } = {};
+      
+      deliveryZones.forEach((zone: any) => {
+        if (zone.order_cutoffs) {
+          Object.entries(zone.order_cutoffs).forEach(([deliveryDay, cutoff]: [string, any]) => {
+            if (cutoff.cutoff_day && cutoff.cutoff_time) {
+              const key = deliveryDay;
+              if (!zoneCutoffs[key] || zoneCutoffs[key].count < 1) {
+                zoneCutoffs[key] = {
+                  day: cutoff.cutoff_day,
+                  time: cutoff.cutoff_time + ':00', // Ensure seconds
+                  count: 1
+                };
+              }
+            }
+          });
+        }
+      });
+
+      // Update global schedule with zone settings
+      for (const [deliveryDay, cutoff] of Object.entries(zoneCutoffs)) {
+        await updateSchedule(deliveryDay, 'default_cutoff_day', cutoff.day);
+        await updateSchedule(deliveryDay, 'default_cutoff_time', cutoff.time);
+      }
+
+      toast({
+        title: "Success",
+        description: `Synced cutoff settings from ${Object.keys(zoneCutoffs).length} delivery zones`,
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Weekly Schedule Defaults
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Weekly Schedule Defaults
+              </CardTitle>
+            </div>
+            {deliveryZones.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={syncFromDeliveryZones}
+                disabled={saving}
+              >
+                Sync from Delivery Zones
+              </Button>
+            )}
+          </div>
           <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
             <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-700 dark:text-blue-300">

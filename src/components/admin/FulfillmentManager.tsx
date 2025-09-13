@@ -376,6 +376,7 @@ const FulfillmentManager = () => {
         <TabsContent value="schedule" className="space-y-6">
           <WeeklyScheduleManager 
             globalSchedule={globalSchedule}
+            deliveryZones={deliveryZones}
             onScheduleUpdate={fetchGlobalSchedule}
           />
         </TabsContent>
