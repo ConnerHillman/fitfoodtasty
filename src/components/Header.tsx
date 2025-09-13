@@ -1,17 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Star, ChevronDown, User, LogOut, Settings, Shield, Menu, X } from "lucide-react";
+import { Star, ChevronDown, User, LogOut, Settings, Shield, Menu, X, ShoppingCart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
+
 const Header = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
       {/* Promo Banner */}
@@ -78,6 +81,19 @@ const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Cart Button */}
+            <Button variant="outline" size="sm" asChild className="relative">
+              <Link to="/cart" className="flex items-center space-x-2">
+                <ShoppingCart className="h-4 w-4" />
+                <span>Cart</span>
+                {getTotalItems() > 0 && (
+                  <Badge className="bg-green-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center">
+                    {getTotalItems()}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
+            
             {/* User Actions */}
             {user ? (
               <div className="flex items-center space-x-4">
@@ -143,6 +159,18 @@ const Header = () => {
 
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center space-x-2">
+            {/* Mobile Cart Button */}
+            <Button variant="outline" size="sm" asChild className="relative">
+              <Link to="/cart" className="flex items-center space-x-1">
+                <ShoppingCart className="h-4 w-4" />
+                {getTotalItems() > 0 && (
+                  <Badge className="bg-green-600 text-white text-xs rounded-full min-w-[1rem] h-4 flex items-center justify-center">
+                    {getTotalItems()}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
+            
             <Button asChild size="sm" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-4 py-2 rounded-full">
               <Link to="/menu">ORDER</Link>
             </Button>
