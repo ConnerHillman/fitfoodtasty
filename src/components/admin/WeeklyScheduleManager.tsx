@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, ChefHat, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +14,7 @@ interface GlobalSchedule {
   id: string;
   day_of_week: string;
   default_cutoff_time: string;
+  default_cutoff_day?: string;
   default_production_lead_days: number;
   default_production_same_day: boolean;
   is_active: boolean;
@@ -31,11 +33,22 @@ const WeeklyScheduleManager = ({ globalSchedule, onScheduleUpdate }: WeeklySched
     'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
   ];
 
+  const dayLabels = {
+    monday: 'Monday',
+    tuesday: 'Tuesday', 
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday'
+  };
+
   const getScheduleForDay = (day: string) => {
     return globalSchedule.find(s => s.day_of_week === day) || {
       id: '',
       day_of_week: day,
       default_cutoff_time: '23:59',
+      default_cutoff_day: day, // Default to same day
       default_production_lead_days: 2,
       default_production_same_day: false,
       is_active: true
@@ -89,17 +102,19 @@ const WeeklyScheduleManager = ({ globalSchedule, onScheduleUpdate }: WeeklySched
 
   const getProductionPreview = (day: string) => {
     const schedule = getScheduleForDay(day);
-    const dayIndex = daysOfWeek.indexOf(day);
-    const today = new Date();
-    const targetDay = new Date(today);
-    targetDay.setDate(today.getDate() + (dayIndex - today.getDay() + 7) % 7);
+    const cutoffDay = schedule.default_cutoff_day || day;
+    const cutoffTime = formatTimeForInput(schedule.default_cutoff_time);
     
     if (schedule.default_production_same_day) {
-      return `Production: Same day as delivery`;
+      return `Orders close: ${dayLabels[cutoffDay as keyof typeof dayLabels]} ${cutoffTime} • Production: Same day as delivery`;
     } else {
+      const dayIndex = daysOfWeek.indexOf(day);
+      const today = new Date();
+      const targetDay = new Date(today);
+      targetDay.setDate(today.getDate() + (dayIndex - today.getDay() + 7) % 7);
       const productionDay = new Date(targetDay);
       productionDay.setDate(targetDay.getDate() - schedule.default_production_lead_days);
-      return `Production: ${productionDay.toLocaleDateString('en-GB', { weekday: 'long' })}`;
+      return `Orders close: ${dayLabels[cutoffDay as keyof typeof dayLabels]} ${cutoffTime} • Production: ${productionDay.toLocaleDateString('en-GB', { weekday: 'long' })}`;
     }
   };
 
@@ -146,12 +161,36 @@ const WeeklyScheduleManager = ({ globalSchedule, onScheduleUpdate }: WeeklySched
                           <Clock className="h-4 w-4" />
                           Customer Order Cutoff
                         </Label>
-                        <Input
-                          type="time"
-                          value={formatTimeForInput(schedule.default_cutoff_time)}
-                          onChange={(e) => updateSchedule(day, 'default_cutoff_time', e.target.value + ':00')}
-                          disabled={saving}
-                        />
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Cutoff Day</Label>
+                            <Select
+                              value={schedule.default_cutoff_day || day}
+                              onValueChange={(value) => updateSchedule(day, 'default_cutoff_day', value)}
+                              disabled={saving}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {daysOfWeek.map((d) => (
+                                  <SelectItem key={d} value={d}>
+                                    {dayLabels[d as keyof typeof dayLabels]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Cutoff Time</Label>
+                            <Input
+                              type="time"
+                              value={formatTimeForInput(schedule.default_cutoff_time)}
+                              onChange={(e) => updateSchedule(day, 'default_cutoff_time', e.target.value + ':00')}
+                              disabled={saving}
+                            />
+                          </div>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           Latest time customers can order for {day} delivery
                         </p>
@@ -191,10 +230,7 @@ const WeeklyScheduleManager = ({ globalSchedule, onScheduleUpdate }: WeeklySched
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Preview</Label>
                         <div className="p-3 bg-muted rounded-md">
-                          <p className="text-sm font-medium">
-                            Cutoff: {schedule.default_cutoff_time.slice(0, 5)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground leading-relaxed">
                             {getProductionPreview(day)}
                           </p>
                         </div>
