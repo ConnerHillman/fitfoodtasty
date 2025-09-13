@@ -13,7 +13,8 @@ import CustomersManager from "@/components/admin/CustomersManager";
 import CustomerDetailModal from "@/components/admin/CustomerDetailModal";
 import Marketing from "@/components/admin/Marketing";
 import FulfillmentManager from "@/components/admin/FulfillmentManager";
-import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp, ListOrdered, Users, Tags, Truck, Home, Target } from "lucide-react";
+import UserManager from "@/components/admin/UserManager";
+import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp, ListOrdered, Users, Tags, Truck, Home, Target, UserCog } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
 import { LabelGenerator as LabelGeneratorComponent } from "@/components/LabelGenerator";
 import { useSearchParams } from "react-router-dom";
@@ -155,6 +156,14 @@ const AdminDashboard = () => {
                   <Upload className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                   <span className="text-sm font-bold">Import</span>
                 </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="users" 
+                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                >
+                  <UserCog className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
+                  <span className="text-sm font-bold">User Management</span>
+                </TabsTrigger>
               </TabsList>
             </div>
           </div>
@@ -205,6 +214,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="fulfillment">
             <FulfillmentManager />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UserManager />
           </TabsContent>
         </Tabs>
         
