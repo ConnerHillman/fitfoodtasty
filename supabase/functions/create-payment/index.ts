@@ -88,16 +88,21 @@ serve(async (req) => {
       ? `Collection Date: ${formattedDeliveryDate}`
       : `Delivery Date: ${formattedDeliveryDate}`;
 
+    console.log('Debug delivery info:', {
+      requested_delivery_date,
+      delivery_method,
+      formattedDeliveryDate,
+      deliveryInfo
+    });
+
     const session = await stripe.checkout.sessions.create({
       customer_email: email, // if undefined, Checkout collects email
       line_items,
       mode: "payment",
       success_url: `${origin}${successPath}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}${cancelPath}`,
-      custom_text: {
-        submit: {
-          message: requested_delivery_date ? deliveryInfo : undefined
-        }
+      payment_intent_data: {
+        description: requested_delivery_date ? deliveryInfo : undefined,
       },
       metadata: {
         delivery_method: delivery_method || '',
