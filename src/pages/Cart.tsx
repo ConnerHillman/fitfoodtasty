@@ -519,7 +519,7 @@ const Cart = () => {
                     const collectionPoint = deliveryMethod === "pickup" ? collectionPoints.find(cp => cp.id === selectedCollectionPoint) : null;
                     const collectionFee = collectionPoint?.collection_fee || 0;
 
-                    const { data, error } = await supabase.functions.invoke('create-payment', {
+                    const { data, error } = await supabase.functions.invoke('create-payment-intent', {
                       body: {
                         currency: 'gbp',
                         items: items.map(i => ({
@@ -534,15 +534,16 @@ const Cart = () => {
                         collection_point_id: deliveryMethod === "pickup" ? selectedCollectionPoint : null,
                         requested_delivery_date: requestedDeliveryDate,
                         production_date: calculateProductionDate(requestedDeliveryDate),
-                        successPath: '/payment-success',
-                        cancelPath: '/cart'
+                        customer_email: user?.email,
+                        customer_name: (user as any)?.user_metadata?.full_name,
                       }
                     });
                     if (error) throw error;
-                    if (data?.url) {
-                      window.open(data.url, '_blank');
+                    if (data?.clientSecret) {
+                      setClientSecret(data.clientSecret);
+                      setShowPayment(true);
                     } else {
-                      throw new Error('No checkout URL returned');
+                      throw new Error('No client secret returned');
                     }
                   } catch (err: any) {
                     console.error(err);
@@ -552,7 +553,7 @@ const Cart = () => {
               >
                 {(!requestedDeliveryDate || (deliveryMethod === "pickup" && (!selectedCollectionPoint || !isDateAvailable(requestedDeliveryDate)))) ? 
                   `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} ${!requestedDeliveryDate ? "Date" : !selectedCollectionPoint ? "Point" : "Valid Date"} to Continue` : 
-                  'Proceed to Checkout'}
+                  'Continue to Payment'}
               </Button>
               <Button
                 variant="outline"
@@ -564,6 +565,18 @@ const Cart = () => {
             </CardContent>
           </Card>
         </div>
+        {showPayment && clientSecret && (
+          <div className="mt-6 lg:col-span-3">
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <PaymentForm
+                clientSecret={clientSecret}
+                totalAmount={Math.round((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0))) * 100)}
+                deliveryMethod={deliveryMethod}
+                requestedDeliveryDate={requestedDeliveryDate}
+              />
+            </Elements>
+          </div>
+        )}
       </div>
     </div>
   );
