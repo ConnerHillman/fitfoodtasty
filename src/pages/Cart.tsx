@@ -209,9 +209,6 @@ const Cart = () => {
                     <p className="text-sm">
                       <strong>Production Date:</strong> {calculateProductionDate(requestedDeliveryDate)}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Based on shortest shelf life in your cart
-                    </p>
                   </div>
                 )}
               </div>
