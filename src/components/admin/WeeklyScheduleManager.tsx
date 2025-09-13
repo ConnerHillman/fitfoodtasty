@@ -162,28 +162,30 @@ const WeeklyScheduleManager = ({ globalSchedule, onScheduleUpdate }: WeeklySched
                           <ChefHat className="h-4 w-4" />
                           Kitchen Production
                         </Label>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={schedule.default_production_same_day}
-                            onCheckedChange={(checked) => updateSchedule(day, 'default_production_same_day', checked)}
-                            disabled={saving}
-                          />
-                          <Label className="text-sm">Same day production</Label>
-                        </div>
-                        {!schedule.default_production_same_day && (
-                          <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">Lead time (days)</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              max="7"
-                              value={schedule.default_production_lead_days}
-                              onChange={(e) => updateSchedule(day, 'default_production_lead_days', parseInt(e.target.value))}
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={schedule.default_production_same_day}
+                              onCheckedChange={(checked) => updateSchedule(day, 'default_production_same_day', checked)}
                               disabled={saving}
-                              className="w-20"
                             />
+                            <Label className="text-sm">Same day production</Label>
                           </div>
-                        )}
+                          {!schedule.default_production_same_day && (
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">Lead time (days)</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max="7"
+                                value={schedule.default_production_lead_days}
+                                onChange={(e) => updateSchedule(day, 'default_production_lead_days', parseInt(e.target.value))}
+                                disabled={saving}
+                                className="w-20"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <div className="space-y-2">
