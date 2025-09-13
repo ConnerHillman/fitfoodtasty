@@ -45,7 +45,9 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
   }, []);
 
   useEffect(() => {
+    console.log('Mapbox token received:', !!mapboxToken);
     if (mapboxToken && mapContainer.current && !map.current) {
+      console.log('Initializing map...');
       initializeMap();
     }
   }, [mapboxToken]);
@@ -87,24 +89,28 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Initialize Mapbox Draw
-    draw.current = new MapboxDraw({
-      displayControlsDefault: false,
-      controls: {
-        polygon: true,
-        trash: true
-      },
-      defaultMode: 'simple_select'
-    });
-    
-    map.current.addControl(draw.current, 'top-left');
-
-    // Listen for drawing events
-    map.current.on('draw.create', handleDrawCreate);
-    map.current.on('draw.update', handleDrawUpdate);
-    map.current.on('draw.delete', handleDrawDelete);
-
     map.current.on('load', () => {
+      console.log('Map loaded, initializing draw controls...');
+      
+      // Initialize Mapbox Draw after map loads
+      draw.current = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+          polygon: true,
+          trash: true
+        },
+        defaultMode: 'simple_select'
+      });
+      
+      console.log('Draw instance created:', draw.current);
+      map.current!.addControl(draw.current, 'top-left');
+      console.log('Draw control added to map');
+
+      // Listen for drawing events
+      map.current!.on('draw.create', handleDrawCreate);
+      map.current!.on('draw.update', handleDrawUpdate);
+      map.current!.on('draw.delete', handleDrawDelete);
+      
       addDeliveryZonesToMap();
     });
   };
@@ -155,13 +161,21 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
   };
 
   const toggleDrawingMode = () => {
+    console.log('Toggle drawing mode called, current mode:', isDrawingMode);
+    console.log('Draw instance:', draw.current);
+    
     if (draw.current) {
       if (isDrawingMode) {
+        console.log('Switching to simple_select mode');
         draw.current.changeMode('simple_select');
       } else {
+        console.log('Switching to draw_polygon mode');
         draw.current.changeMode('draw_polygon');
       }
       setIsDrawingMode(!isDrawingMode);
+      console.log('Drawing mode toggled to:', !isDrawingMode);
+    } else {
+      console.error('Draw instance is null!');
     }
   };
 
