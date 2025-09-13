@@ -28,6 +28,8 @@ serve(async (req) => {
       items = [],
       currency = "gbp",
       delivery_fee,
+      delivery_method,
+      collection_point_id,
       successPath = "/payment-success",
       cancelPath = "/cart",
       email,
@@ -72,13 +74,34 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://aicpnaomarzgborltdkt.supabase.co";
 
+    // Format the delivery date for display
+    const formattedDeliveryDate = requested_delivery_date 
+      ? new Date(requested_delivery_date + 'T12:00:00').toLocaleDateString('en-GB', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : '';
+
+    const deliveryInfo = delivery_method === 'pickup' 
+      ? `Collection Date: ${formattedDeliveryDate}`
+      : `Delivery Date: ${formattedDeliveryDate}`;
+
     const session = await stripe.checkout.sessions.create({
       customer_email: email, // if undefined, Checkout collects email
       line_items,
       mode: "payment",
       success_url: `${origin}${successPath}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}${cancelPath}`,
+      custom_text: {
+        submit: {
+          message: requested_delivery_date ? deliveryInfo : undefined
+        }
+      },
       metadata: {
+        delivery_method: delivery_method || '',
+        collection_point_id: collection_point_id || '',
         requested_delivery_date: requested_delivery_date || '',
         production_date: production_date || '',
         items: JSON.stringify(items.map(item => ({
