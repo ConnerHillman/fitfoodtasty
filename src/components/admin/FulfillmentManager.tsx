@@ -305,15 +305,7 @@ const FulfillmentManager = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="general" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            General
-          </TabsTrigger>
-          <TabsTrigger value="delivery-days" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Delivery Days
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="zones" className="flex items-center gap-2">
             <Map className="h-4 w-4" />
             Delivery Zones
@@ -322,9 +314,9 @@ const FulfillmentManager = () => {
             <Store className="h-4 w-4" />
             Collection Points
           </TabsTrigger>
-          <TabsTrigger value="fees" className="flex items-center gap-2">
-            <PoundSterling className="h-4 w-4" />
-            Fees & Limits
+          <TabsTrigger value="general" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Settings
           </TabsTrigger>
           <TabsTrigger value="map" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
@@ -336,72 +328,43 @@ const FulfillmentManager = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Delivery Method
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Label>Choose your delivery system:</Label>
-                <RadioGroup
-                  value={getSetting("general", "delivery_method") || "zones"}
-                  onValueChange={(value) => updateSetting("general", "delivery_method", value)}
-                  className="grid grid-cols-1 gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="zones" id="zones" />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="zones" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Postcode Zones (Recommended)
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Define specific postcodes and areas where you deliver
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="radius" id="radius" />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="radius" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Delivery Radius
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Deliver within a set distance from your kitchen
-                      </p>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={getSetting("general", "delivery_method") === "radius" ? "" : "opacity-50"}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Radius Settings
+                <Timer className="h-5 w-5" />
+                Order Timing
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Maximum Delivery Radius (km)</Label>
+                  <Label>Delivery Lead Time (hours)</Label>
                   <Input
                     type="number"
-                    disabled={getSetting("general", "delivery_method") !== "radius"}
-                    defaultValue={getSetting("general", "max_delivery_radius_km")?.value || 25}
-                    onBlur={(e) => {
-                      if (getSetting("general", "delivery_method") === "radius") {
-                        updateSetting("general", "max_delivery_radius_km", { value: parseFloat(e.target.value) || 25 });
-                      }
-                    }}
+                    min="1"
+                    max="168"
+                    defaultValue={getSetting("timing", "delivery_lead_time_hours") || 48}
+                    onBlur={(e) => updateSetting("timing", "delivery_lead_time_hours", parseInt(e.target.value) || 48)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Minimum hours before delivery that customers must place their order
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Collection Lead Time (hours)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="168"
+                    defaultValue={getSetting("timing", "collection_lead_time_hours") || 24}
+                    onBlur={(e) => updateSetting("timing", "collection_lead_time_hours", parseInt(e.target.value) || 24)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Minimum hours before collection that customers must place their order
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className={getSetting("general", "delivery_method") !== "radius" ? "" : "opacity-50"}>
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Timer className="h-5 w-5" />
@@ -413,31 +376,25 @@ const FulfillmentManager = () => {
                 <Checkbox
                   id="enable-time-slots"
                   checked={getSetting("general", "time_slots_enabled") !== false}
-                  disabled={getSetting("general", "delivery_method") === "radius"}
-                  onCheckedChange={(checked) => {
-                    if (getSetting("general", "delivery_method") !== "radius") {
-                      updateSetting("general", "time_slots_enabled", checked);
-                    }
-                  }}
+                  onCheckedChange={(checked) => updateSetting("general", "time_slots_enabled", checked)}
                 />
                 <Label htmlFor="enable-time-slots" className="text-sm font-medium">
                   Enable delivery time slots
                 </Label>
               </div>
-              <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${getSetting("general", "time_slots_enabled") === false || getSetting("general", "delivery_method") === "radius" ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${getSetting("general", "time_slots_enabled") === false ? 'opacity-50 pointer-events-none' : ''}`}>
                 {["morning", "afternoon", "evening"].map((slot) => {
                   const slots = getSetting("general", "delivery_slots");
                   const timeSlotsEnabled = getSetting("general", "time_slots_enabled") !== false;
-                  const methodEnabled = getSetting("general", "delivery_method") !== "radius";
                   return (
                     <div key={slot} className="space-y-2">
                       <Label className="capitalize">{slot}</Label>
                       <Input
                         defaultValue={slots?.[slot] || ""}
                         placeholder="09:00-12:00"
-                        disabled={!timeSlotsEnabled || !methodEnabled}
+                        disabled={!timeSlotsEnabled}
                         onBlur={(e) => {
-                          if (timeSlotsEnabled && methodEnabled) {
+                          if (timeSlotsEnabled) {
                             const newSlots = { ...slots, [slot]: e.target.value };
                             updateSetting("general", "delivery_slots", newSlots);
                           }
