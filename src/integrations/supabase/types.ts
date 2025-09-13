@@ -280,6 +280,7 @@ export type Database = {
           is_active: boolean
           maximum_distance_km: number | null
           minimum_order: number
+          postcode_prefixes: string[] | null
           postcodes: string[]
           updated_at: string
           zone_name: string
@@ -292,6 +293,7 @@ export type Database = {
           is_active?: boolean
           maximum_distance_km?: number | null
           minimum_order?: number
+          postcode_prefixes?: string[] | null
           postcodes: string[]
           updated_at?: string
           zone_name: string
@@ -304,6 +306,7 @@ export type Database = {
           is_active?: boolean
           maximum_distance_km?: number | null
           minimum_order?: number
+          postcode_prefixes?: string[] | null
           postcodes?: string[]
           updated_at?: string
           zone_name?: string

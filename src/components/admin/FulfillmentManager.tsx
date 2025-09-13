@@ -39,6 +39,7 @@ interface DeliveryZone {
   id: string;
   zone_name: string;
   postcodes: string[];
+  postcode_prefixes?: string[];
   delivery_days: string[];
   delivery_fee: number;
   minimum_order: number;
@@ -489,16 +490,36 @@ const FulfillmentManager = () => {
                     <TableRow key={zone.id}>
                       <TableCell className="font-medium">{zone.zone_name}</TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {zone.postcodes.slice(0, 3).map((postcode, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {postcode}
-                            </Badge>
-                          ))}
-                          {zone.postcodes.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{zone.postcodes.length - 3} more
-                            </Badge>
+                        <div className="space-y-1">
+                          {zone.postcodes.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              <span className="text-xs text-muted-foreground">Exact:</span>
+                              {zone.postcodes.slice(0, 2).map((postcode, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {postcode}
+                                </Badge>
+                              ))}
+                              {zone.postcodes.length > 2 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{zone.postcodes.length - 2} more
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                          {zone.postcode_prefixes && zone.postcode_prefixes.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              <span className="text-xs text-muted-foreground">Prefixes:</span>
+                              {zone.postcode_prefixes.slice(0, 3).map((prefix, index) => (
+                                <Badge key={index} variant="default" className="text-xs">
+                                  {prefix}*
+                                </Badge>
+                              ))}
+                              {zone.postcode_prefixes.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{zone.postcode_prefixes.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
                           )}
                         </div>
                       </TableCell>
@@ -714,6 +735,7 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
   const [formData, setFormData] = useState({
     zone_name: zone?.zone_name || "",
     postcodes: zone?.postcodes?.join(", ") || "",
+    postcode_prefixes: zone?.postcode_prefixes?.join(", ") || "",
     delivery_days: zone?.delivery_days || [],
     delivery_fee: zone?.delivery_fee || 0,
     minimum_order: zone?.minimum_order || 0,
@@ -730,6 +752,7 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
     onSave({
       ...formData,
       postcodes: formData.postcodes.split(",").map(p => p.trim()).filter(p => p),
+      postcode_prefixes: formData.postcode_prefixes.split(",").map(p => p.trim().toUpperCase()).filter(p => p),
       delivery_fee: parseFloat(formData.delivery_fee.toString()),
       minimum_order: parseFloat(formData.minimum_order.toString()),
       maximum_distance_km: formData.maximum_distance_km ? parseFloat(formData.maximum_distance_km.toString()) : null,
@@ -748,13 +771,25 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
       </div>
 
       <div className="space-y-2">
-        <Label>Postcodes (comma separated)</Label>
+        <Label>Exact Postcodes (comma separated)</Label>
         <Textarea
           value={formData.postcodes}
           onChange={(e) => setFormData({...formData, postcodes: e.target.value})}
-          placeholder="SW1A, W1A, NW1"
-          required
+          placeholder="SW1A 1AA, W1A 0AX, NW1 6XE"
+          rows={2}
         />
+        <p className="text-xs text-muted-foreground">Enter complete postcodes for exact matching</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Postcode Prefixes (comma separated)</Label>
+        <Textarea
+          value={formData.postcode_prefixes}
+          onChange={(e) => setFormData({...formData, postcode_prefixes: e.target.value})}
+          placeholder="TA, SW1, W1A"
+          rows={2}
+        />
+        <p className="text-xs text-muted-foreground">Enter prefixes to match all postcodes starting with these values (e.g., "TA" matches TA1, TA2, TA65, etc.)</p>
       </div>
 
       <div className="space-y-2">
@@ -965,6 +1000,29 @@ const CollectionPointForm = ({ point, onSave, onCancel }: any) => {
       </div>
     </form>
   );
+};
+
+// Helper function to check if a postcode matches a delivery zone
+export const postcodeMatchesZone = (customerPostcode: string, zone: DeliveryZone): boolean => {
+  if (!customerPostcode) return false;
+  
+  const normalizedCustomerPostcode = customerPostcode.trim().toUpperCase();
+  
+  // Check exact postcodes
+  if (zone.postcodes.some(postcode => 
+    postcode.trim().toUpperCase() === normalizedCustomerPostcode
+  )) {
+    return true;
+  }
+  
+  // Check postcode prefixes
+  if (zone.postcode_prefixes && zone.postcode_prefixes.some(prefix => 
+    normalizedCustomerPostcode.startsWith(prefix.trim().toUpperCase())
+  )) {
+    return true;
+  }
+  
+  return false;
 };
 
 export default FulfillmentManager;
