@@ -46,6 +46,8 @@ interface DeliveryZone {
   minimum_order: number;
   maximum_distance_km: number | null;
   production_day_offset?: number;
+  production_lead_days?: number;
+  production_same_day?: boolean;
   allow_custom_dates?: boolean;
   production_notes?: string | null;
   order_cutoffs?: Record<string, { cutoff_day: string; cutoff_time: string }> | any;
@@ -904,6 +906,8 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
     minimum_order: zone?.minimum_order || 0,
     maximum_distance_km: zone?.maximum_distance_km || null,
     production_day_offset: zone?.production_day_offset ?? -2,
+    production_lead_days: zone?.production_lead_days ?? 2,
+    production_same_day: zone?.production_same_day ?? false,
     allow_custom_dates: zone?.allow_custom_dates ?? false,
     production_notes: zone?.production_notes || "",
     order_cutoffs: zone?.order_cutoffs || {},
@@ -937,6 +941,8 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
       minimum_order: parseFloat(formData.minimum_order.toString()) || 0,
       maximum_distance_km: formData.maximum_distance_km ? parseFloat(formData.maximum_distance_km.toString()) : null,
       production_day_offset: formData.production_day_offset === '' ? -2 : parseInt(formData.production_day_offset.toString()),
+      production_lead_days: parseInt(formData.production_lead_days.toString()) || 2,
+      production_same_day: formData.production_same_day,
       allow_custom_dates: formData.allow_custom_dates,
       production_notes: formData.production_notes.trim() || null,
       order_cutoffs: formData.order_cutoffs || {},
@@ -1117,17 +1123,18 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
         </div>
       </div>
 
-      <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h4 className="font-medium text-blue-900">Production & Delivery Scheduling</h4>
-        <p className="text-sm text-blue-700">
-          Configure how production dates are calculated relative to delivery dates. This helps with kitchen planning and label expiry dates.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-4">
-            <div>
-              <Label>Order Cut-Off Times</Label>
-              <p className="text-sm text-muted-foreground mb-3">
-                Set when customers need to order by for each delivery day
+      <div className="space-y-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div>
+          <h4 className="font-medium text-blue-900">Customer Order Deadlines</h4>
+          <p className="text-sm text-blue-700">
+            Set when customers must place their orders by for each delivery day
+          </p>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <Label>Order Cut-Off Times</Label>
+            <p className="text-sm text-muted-foreground mb-3">
+              Set customer order deadlines for each delivery day
               </p>
               {formData.delivery_days?.map((day) => (
                 <div key={day} className="space-y-2 p-3 border rounded-lg mb-3">
@@ -1177,9 +1184,47 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
                   )}
                 </div>
               ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-medium text-blue-900">Kitchen Production Scheduling</h4>
+          <p className="text-sm text-blue-700">
+            Configure when the kitchen should start production relative to delivery dates
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="production_lead_days">Production Lead Time (days)</Label>
+              <Input
+                id="production_lead_days"
+                type="number"
+                value={formData.production_lead_days || 2}
+                onChange={(e) => setFormData({...formData, production_lead_days: parseInt(e.target.value)})}
+                min="0"
+                max="7"
+              />
+              <p className="text-sm text-muted-foreground">
+                How many days before delivery the kitchen starts production
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="production_same_day"
+                checked={formData.production_same_day || false}
+                onChange={(e) => setFormData({...formData, production_same_day: e.target.checked})}
+                className="rounded"
+              />
+              <Label htmlFor="production_same_day">Same-day production</Label>
             </div>
           </div>
-          
+          <p className="text-sm text-muted-foreground">
+            Kitchen can cook and deliver on the same day (overrides lead time when checked)
+          </p>
+
           <div className="space-y-2">
             <Label>Legacy Production Day Offset (Fallback)</Label>
             <div className="flex items-center space-x-2">
@@ -1192,43 +1237,43 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
               <span className="text-sm text-muted-foreground">days before delivery</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Used as fallback when order cut-offs are not configured
+              Used as fallback when new production settings are not configured
             </p>
           </div>
         </div>
+      </div>
           
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="allow_custom_dates"
-              checked={formData.allow_custom_dates}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allow_custom_dates: checked as boolean }))}
-            />
-            <Label htmlFor="allow_custom_dates" className="text-sm">
-              Allow custom date overrides
-            </Label>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Permit manual adjustment of production/delivery dates for this zone
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Production Notes (Optional)</Label>
-          <Textarea
-            value={formData.production_notes}
-            onChange={(e) => setFormData(prev => ({ ...prev, production_notes: e.target.value }))}
-            placeholder="Special kitchen instructions or notes for this delivery zone..."
-            rows={2}
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="allow_custom_dates"
+            checked={formData.allow_custom_dates}
+            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allow_custom_dates: checked as boolean }))}
           />
+          <Label htmlFor="allow_custom_dates" className="text-sm">
+            Allow custom date overrides
+          </Label>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Permit manual adjustment of production/delivery dates for this zone
+        </p>
+      </div>
 
-        <div className="p-3 bg-white rounded border text-sm">
-          <strong>Order Cut-Off Examples:</strong><br />
-          • For Tuesday delivery, set cut-off as Friday 11:59 PM<br />
-          • For local delivery, cut-off can be same day or day before<br />
-          <strong>Legacy Offset:</strong> Still used when cut-offs aren't configured
-        </div>
+      <div className="space-y-2">
+        <Label>Production Notes (Optional)</Label>
+        <Textarea
+          value={formData.production_notes}
+          onChange={(e) => setFormData(prev => ({ ...prev, production_notes: e.target.value }))}
+          placeholder="Special kitchen instructions or notes for this delivery zone..."
+          rows={2}
+        />
+      </div>
+
+      <div className="p-3 bg-white rounded border text-sm">
+        <strong>Examples:</strong><br />
+        • <strong>Customer deadline:</strong> For Tuesday delivery, customers order by Friday 11:59 PM<br />
+        • <strong>Kitchen production:</strong> For Tuesday delivery, kitchen starts cooking on Sunday<br />
+        These are separate timelines that can be configured independently.
       </div>
 
       <div className="flex justify-end space-x-2 pt-4 border-t">

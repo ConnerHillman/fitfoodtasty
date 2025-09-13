@@ -285,7 +285,9 @@ export type Database = {
           postcode_prefixes: string[] | null
           postcodes: string[]
           production_day_offset: number | null
+          production_lead_days: number | null
           production_notes: string | null
+          production_same_day: boolean | null
           updated_at: string
           zone_name: string
         }
@@ -302,7 +304,9 @@ export type Database = {
           postcode_prefixes?: string[] | null
           postcodes: string[]
           production_day_offset?: number | null
+          production_lead_days?: number | null
           production_notes?: string | null
+          production_same_day?: boolean | null
           updated_at?: string
           zone_name: string
         }
@@ -319,7 +323,9 @@ export type Database = {
           postcode_prefixes?: string[] | null
           postcodes?: string[]
           production_day_offset?: number | null
+          production_lead_days?: number | null
           production_notes?: string | null
+          production_same_day?: boolean | null
           updated_at?: string
           zone_name?: string
         }
