@@ -448,10 +448,14 @@ const Cart = () => {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={requestedDeliveryDate ? new Date(requestedDeliveryDate) : undefined}
+                      selected={requestedDeliveryDate ? new Date(requestedDeliveryDate + 'T12:00:00') : undefined}
                       onSelect={(date) => {
                         if (date) {
-                          const dateString = date.toISOString().split('T')[0];
+                          // Format date as YYYY-MM-DD without timezone conversion
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const dateString = `${year}-${month}-${day}`;
                           setRequestedDeliveryDate(dateString);
                         }
                       }}
