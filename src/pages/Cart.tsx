@@ -7,10 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Calendar, Clock, Truck, MapPin } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CalendarIcon, Clock, Truck, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
@@ -147,6 +151,20 @@ const Cart = () => {
     production.setDate(production.getDate() - shortestShelfLife);
     
     return production.toISOString().split('T')[0];
+  };
+
+  const isDateDisabled = (date: Date) => {
+    if (deliveryMethod === "delivery") return false;
+    if (!selectedCollectionPoint) return true;
+    
+    const selectedPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+    if (!selectedPoint) return true;
+    
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const today = new Date();
+    const minDate = new Date(getMinDeliveryDate());
+    
+    return date < minDate || !selectedPoint.collection_days.includes(dayOfWeek);
   };
 
   const getCategoryColor = (category: string) => {
@@ -380,7 +398,7 @@ const Cart = () => {
               {/* Delivery Date Selection */}
               <div className="space-y-3 border-t pt-4">
                 <Label htmlFor="delivery-date" className="flex items-center gap-2 font-semibold">
-                  <Calendar className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4" />
                   {deliveryMethod === "delivery" ? "Delivery Date" : "Collection Date"}
                 </Label>
                 
@@ -397,31 +415,39 @@ const Cart = () => {
                   </div>
                 )}
                 
-                <Input
-                  id="delivery-date"
-                  type="date"
-                  min={getMinDeliveryDate()}
-                  value={requestedDeliveryDate}
-                  onChange={(e) => {
-                    const selectedDate = e.target.value;
-                    if (deliveryMethod === "delivery" || isDateAvailable(selectedDate)) {
-                      setRequestedDeliveryDate(selectedDate);
-                    } else {
-                      toast({
-                        title: "Invalid collection date",
-                        description: "Please select a date that falls on an available collection day",
-                        variant: "destructive"
-                      });
-                    }
-                  }}
-                  className="w-full"
-                />
-                
-                {deliveryMethod === "pickup" && requestedDeliveryDate && !isDateAvailable(requestedDeliveryDate) && (
-                  <div className="text-sm text-destructive">
-                    This date is not available for collection at the selected point
-                  </div>
-                )}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !requestedDeliveryDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {requestedDeliveryDate ? (
+                        format(new Date(requestedDeliveryDate), "PPP")
+                      ) : (
+                        <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={requestedDeliveryDate ? new Date(requestedDeliveryDate) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          const dateString = date.toISOString().split('T')[0];
+                          setRequestedDeliveryDate(dateString);
+                        }
+                      }}
+                      disabled={isDateDisabled}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <Button
