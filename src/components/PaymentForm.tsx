@@ -101,6 +101,10 @@ export default function PaymentForm({
                 },
                 fields: {
                   billingDetails: 'never'
+                },
+                wallets: {
+                  applePay: 'auto',
+                  googlePay: 'auto'
                 }
               }}
             />
