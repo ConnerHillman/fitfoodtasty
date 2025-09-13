@@ -200,17 +200,6 @@ const Cart = () => {
                   onChange={(e) => setRequestedDeliveryDate(e.target.value)}
                   className="w-full"
                 />
-                {requestedDeliveryDate && (
-                  <div className="bg-muted rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                      <Clock className="h-3 w-3" />
-                      Production Schedule
-                    </div>
-                    <p className="text-sm">
-                      <strong>Production Date:</strong> {calculateProductionDate(requestedDeliveryDate)}
-                    </p>
-                  </div>
-                )}
               </div>
 
               <Button
