@@ -31,6 +31,7 @@ import { format } from "date-fns";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import CustomerLink from "./CustomerLink";
 import AddCustomerDialog from "./AddCustomerDialog";
+import { useCustomerDetail } from "@/contexts/CustomerDetailContext";
 
 interface Customer {
   id: string;
@@ -75,6 +76,7 @@ const CustomersManager = () => {
     to: new Date(),
   });
   const { toast } = useToast();
+  const { openCustomerDetail } = useCustomerDetail();
 
   useEffect(() => {
     fetchCustomers();
@@ -474,8 +476,16 @@ const CustomersManager = () => {
               {filteredCustomers.map((customer) => (
                 <div
                   key={customer.id}
-                  onClick={() => {}}
-                  className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card via-card/95 to-card/90 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openCustomerDetail(customer.user_id || customer.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openCustomerDetail(customer.user_id || customer.id);
+                    }
+                  }}
+                  className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card via-card/95 to-card/90 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   {/* Premium badge for high-value customers */}
                   {getCustomerValue(customer) === "high" && (
