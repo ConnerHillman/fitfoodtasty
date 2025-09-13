@@ -85,6 +85,7 @@ serve(async (req) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmount,
       currency,
+      automatic_payment_methods: { enabled: true },
       description: requested_delivery_date ? deliveryInfo : undefined,
       metadata: {
         delivery_method: delivery_method || '',
