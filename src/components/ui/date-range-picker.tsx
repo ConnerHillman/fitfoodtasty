@@ -82,35 +82,29 @@ export function DateRangePicker({
     setSelectedPreset(null) // Clear preset selection when manually selecting dates
 
     if (clickCount === 0) {
-      // First click - set the start date
+      // First click - set the start date only
       setTempDate({ from: selectedDate.from, to: undefined })
       setClickCount(1)
-    } else {
-      // Second click - finalize the selection
-      let finalDate: DateRange | undefined
+      return
+    }
 
-      if (selectedDate.from.getTime() === tempDate?.from?.getTime()) {
-        // Same date clicked twice - single date selection
-        finalDate = { from: selectedDate.from, to: selectedDate.from }
-      } else {
-        // Different date - range selection
-        const startDate = tempDate?.from
-        const endDate = selectedDate.from
-        
-        if (startDate && endDate) {
-          if (startDate <= endDate) {
-            finalDate = { from: startDate, to: endDate }
-          } else {
-            finalDate = { from: endDate, to: startDate }
-          }
-        }
-      }
-
+    // Second click
+    if (!selectedDate.to) {
+      // Same date clicked twice - single day selection
+      const finalDate: DateRange = { from: selectedDate.from, to: selectedDate.from }
       setTempDate(finalDate)
       onDateChange?.(finalDate)
       setIsOpen(false)
       setClickCount(0)
+      return
     }
+
+    // Different end date selected - full range
+    const finalRange: DateRange = { from: selectedDate.from, to: selectedDate.to }
+    setTempDate(finalRange)
+    onDateChange?.(finalRange)
+    setIsOpen(false)
+    setClickCount(0)
   }
 
   const handlePresetSelect = (preset: typeof presetRanges[0]) => {
