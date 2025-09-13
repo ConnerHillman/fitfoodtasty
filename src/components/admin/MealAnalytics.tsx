@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, TrendingDown, Package, DollarSign, Eye, ShoppingCart, Users, Star } from "lucide-react";
+import { TrendingUp, TrendingDown, Package, DollarSign, Eye, ShoppingCart, Users, Star, X } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface MealAnalyticsData {
   totalOrders: number;
@@ -48,6 +51,7 @@ const MealAnalytics = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState("30");
   const [selectedMeal, setSelectedMeal] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -59,7 +63,7 @@ const MealAnalytics = () => {
     if (meals.length > 0) {
       fetchAnalytics();
     }
-  }, [selectedTimeRange, selectedMeal, meals]);
+  }, [selectedTimeRange, selectedMeal, dateRange, meals]);
 
   const fetchMeals = async () => {
     try {
@@ -83,9 +87,21 @@ const MealAnalytics = () => {
   const fetchAnalytics = async () => {
     setIsLoading(true);
     try {
-      const days = parseInt(selectedTimeRange);
-      const startDate = startOfDay(subDays(new Date(), days));
-      const endDate = endOfDay(new Date());
+      let startDate: Date;
+      let endDate: Date;
+
+      // Use custom date range if provided, otherwise use time range
+      if (dateRange?.from && dateRange?.to) {
+        startDate = startOfDay(dateRange.from);
+        endDate = endOfDay(dateRange.to);
+      } else if (dateRange?.from) {
+        startDate = startOfDay(dateRange.from);
+        endDate = endOfDay(new Date());
+      } else {
+        const days = parseInt(selectedTimeRange);
+        startDate = startOfDay(subDays(new Date(), days));
+        endDate = endOfDay(new Date());
+      }
 
       // Base query filters
       const dateFilter = `created_at.gte.${startDate.toISOString()},created_at.lte.${endDate.toISOString()}`;
@@ -127,8 +143,9 @@ const MealAnalytics = () => {
       if (viewsError) throw viewsError;
 
       // Fetch previous period data for growth calculation
-      const prevStartDate = startOfDay(subDays(startDate, days));
-      const prevEndDate = endOfDay(subDays(endDate, days));
+      const periodLength = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const prevStartDate = startOfDay(subDays(startDate, periodLength));
+      const prevEndDate = endOfDay(subDays(endDate, periodLength));
 
       const { data: prevOrdersData } = await supabase
         .from("orders")
@@ -213,8 +230,9 @@ const MealAnalytics = () => {
       // Process revenue by day
       const revenueByDay = new Map<string, { revenue: number; orders: number }>();
       
-      for (let i = 0; i < days; i++) {
-        const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
+      const chartDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      for (let i = 0; i < chartDays; i++) {
+        const date = format(subDays(endDate, i), 'yyyy-MM-dd');
         revenueByDay.set(date, { revenue: 0, orders: 0 });
       }
 
@@ -328,31 +346,63 @@ const MealAnalytics = () => {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select time range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+          <div className="flex gap-4 items-center">
+            <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select time range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+              </SelectContent>
+            </Select>
 
-        <Select value={selectedMeal} onValueChange={setSelectedMeal}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select meal" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Meals</SelectItem>
-            {meals.map((meal) => (
-              <SelectItem key={meal.id} value={meal.id}>
-                {meal.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <Select value={selectedMeal} onValueChange={setSelectedMeal}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select meal" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Meals</SelectItem>
+                {meals.map((meal) => (
+                  <SelectItem key={meal.id} value={meal.id}>
+                    {meal.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {/* Custom Date Range Picker Row */}
+        <div className="flex items-center gap-4 justify-between">
+          <div className="flex items-center gap-4">
+            <DateRangePicker
+              date={dateRange}
+              onDateChange={setDateRange}
+              placeholder="Custom date range (overrides time range)"
+              className="w-auto"
+            />
+            {dateRange && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDateRange(undefined)}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear custom range
+              </Button>
+            )}
+          </div>
+          {dateRange && (
+            <div className="text-sm text-muted-foreground">
+              Using custom date range
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards */}

@@ -9,11 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3, X } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { DateRange } from "react-day-picker";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import MealBuilder from "./MealBuilder";
 import MealFormWithIngredients from "./MealFormWithIngredients";
 import MealAnalytics from "./MealAnalytics";
@@ -50,7 +48,6 @@ const MealsManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -75,7 +72,7 @@ const MealsManager = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [meals, statusFilter, searchQuery, categoryFilter, dateRange]);
+  }, [meals, statusFilter, searchQuery, categoryFilter]);
 
   const fetchMeals = async () => {
     const { data, error } = await supabase
@@ -117,19 +114,6 @@ const MealsManager = () => {
     // Apply category filter
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(meal => meal.category === categoryFilter);
-    }
-    
-    // Apply date range filter
-    if (dateRange?.from && dateRange?.to) {
-      filtered = filtered.filter(meal => {
-        const mealDate = new Date(meal.created_at);
-        return mealDate >= dateRange.from! && mealDate <= dateRange.to!;
-      });
-    } else if (dateRange?.from) {
-      filtered = filtered.filter(meal => {
-        const mealDate = new Date(meal.created_at);
-        return mealDate >= dateRange.from!;
-      });
     }
     
     // Apply search filter
@@ -314,85 +298,60 @@ const MealsManager = () => {
 
         <TabsContent value="management" className="space-y-6">
           {/* Search and Filters */}
-          <div className="space-y-4">
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-              <div className="flex items-center gap-4 flex-1 max-w-md">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search meals..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.name}>
-                        {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex border rounded-lg p-1">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div className="flex items-center gap-4 flex-1 max-w-md">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search meals..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
-            
-            {/* Date Range Picker Row */}
-            <div className="flex items-center gap-4 justify-between">
-              <div className="flex items-center gap-4">
-                <DateRangePicker
-                  date={dateRange}
-                  onDateChange={setDateRange}
-                  placeholder="Filter by creation date range"
-                  className="w-auto"
-                />
-                {dateRange && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDateRange(undefined)}
-                    className="flex items-center gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Clear dates
-                  </Button>
-                )}
+            <div className="flex items-center gap-2">
+              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex border rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
               </div>
               <div className="text-sm text-muted-foreground">
-                Showing {filteredMeals.length} of {meals.length} meals
+                {filteredMeals.length} of {meals.length} meals
               </div>
             </div>
           </div>
