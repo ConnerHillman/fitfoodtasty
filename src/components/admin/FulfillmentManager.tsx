@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -339,18 +340,34 @@ const FulfillmentManager = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox
+                  id="enable-time-slots"
+                  checked={getSetting("general", "time_slots_enabled") !== false}
+                  onCheckedChange={(checked) => {
+                    updateSetting("general", "time_slots_enabled", checked);
+                  }}
+                />
+                <Label htmlFor="enable-time-slots" className="text-sm font-medium">
+                  Enable delivery time slots
+                </Label>
+              </div>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${getSetting("general", "time_slots_enabled") === false ? 'opacity-50 pointer-events-none' : ''}`}>
                 {["morning", "afternoon", "evening"].map((slot) => {
                   const slots = getSetting("general", "delivery_slots");
+                  const timeSlotsEnabled = getSetting("general", "time_slots_enabled") !== false;
                   return (
                     <div key={slot} className="space-y-2">
                       <Label className="capitalize">{slot}</Label>
                       <Input
                         defaultValue={slots?.[slot] || ""}
                         placeholder="09:00-12:00"
+                        disabled={!timeSlotsEnabled}
                         onBlur={(e) => {
-                          const newSlots = { ...slots, [slot]: e.target.value };
-                          updateSetting("general", "delivery_slots", newSlots);
+                          if (timeSlotsEnabled) {
+                            const newSlots = { ...slots, [slot]: e.target.value };
+                            updateSetting("general", "delivery_slots", newSlots);
+                          }
                         }}
                       />
                     </div>
