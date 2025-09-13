@@ -547,7 +547,14 @@ const FulfillmentManager = () => {
                     const typeColor = zoneType === 'local' ? 'bg-green-500' : zoneType === 'regional' ? 'bg-blue-500' : 'bg-purple-500';
                     
                     return (
-                      <TableRow key={zone.id}>
+                      <TableRow 
+                        key={zone.id} 
+                        className="cursor-pointer hover:bg-muted/50" 
+                        onClick={() => {
+                          setEditingItem(zone);
+                          setIsDialogOpen(true);
+                        }}
+                      >
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${typeColor}`}></div>
@@ -612,7 +619,8 @@ const FulfillmentManager = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setEditingItem(zone);
                                 setIsDialogOpen(true);
                               }}
@@ -622,7 +630,10 @@ const FulfillmentManager = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDelete("delivery_zones", zone.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete("delivery_zones", zone.id);
+                              }}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
