@@ -22,13 +22,11 @@ import {
   Trash2, 
   Calendar,
   PoundSterling,
-  Map,
   Store,
   Timer
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import DeliveryMap from "./DeliveryMap";
 
 interface FulfillmentSetting {
   id: string;
@@ -307,7 +305,7 @@ const FulfillmentManager = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="zones" className="flex items-center gap-2">
-            <Map className="h-4 w-4" />
+            <MapPin className="h-4 w-4" />
             Delivery Zones
           </TabsTrigger>
           <TabsTrigger value="collection" className="flex items-center gap-2">
@@ -317,10 +315,6 @@ const FulfillmentManager = () => {
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Settings
-          </TabsTrigger>
-          <TabsTrigger value="map" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Map View
           </TabsTrigger>
         </TabsList>
 
@@ -879,21 +873,6 @@ const FulfillmentManager = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="map" className="space-y-6">
-            <DeliveryMap 
-              deliveryZones={deliveryZones} 
-              onZoneCreated={(zoneData) => {
-                setEditingItem({ 
-                  minimum_order: 0, 
-                  maximum_distance_km: null,
-                  postcode_prefixes: [],
-                  ...zoneData 
-                } as DeliveryZone);
-                setIsDialogOpen(true);
-                setActiveTab("zones");
-              }}
-            />
-        </TabsContent>
       </Tabs>
     </div>
   );
