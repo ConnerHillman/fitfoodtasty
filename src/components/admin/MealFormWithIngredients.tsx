@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import IngredientSelector from "./IngredientSelector";
 import { Upload, Image, DollarSign, ChefHat, Target } from "lucide-react";
 interface Ingredient {
@@ -203,8 +203,10 @@ const MealFormWithIngredients = ({
             <div className="flex items-center justify-center gap-3 mb-2">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Create a New Meal</h1>
             </div>
-            <p className="text-muted-foreground text-sm">Craft a nutritious masterpiece with precise ingredient control</p>
           </DialogTitle>
+          <DialogDescription className="text-center">
+            <p className="text-muted-foreground text-sm">Craft a nutritious masterpiece with precise ingredient control</p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid lg:grid-cols-3 gap-8 mt-6">
