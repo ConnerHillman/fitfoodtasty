@@ -99,11 +99,12 @@ serve(async (req) => {
       customer_email: email, // if undefined, Checkout collects email
       line_items,
       mode: "payment",
+      submit_type: "book",
       success_url: `${origin}${successPath}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}${cancelPath}`,
       custom_text: requested_delivery_date ? {
         submit: {
-          message: `**${deliveryInfo}**`
+          message: deliveryInfo
         }
       } : undefined,
       metadata: {
