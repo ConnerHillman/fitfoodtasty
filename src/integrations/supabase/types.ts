@@ -744,6 +744,7 @@ export type Database = {
           county: string | null
           created_at: string
           delivery_address: string | null
+          delivery_instructions: string | null
           full_name: string
           id: string
           phone: string | null
@@ -756,6 +757,7 @@ export type Database = {
           county?: string | null
           created_at?: string
           delivery_address?: string | null
+          delivery_instructions?: string | null
           full_name: string
           id?: string
           phone?: string | null
@@ -768,6 +770,7 @@ export type Database = {
           county?: string | null
           created_at?: string
           delivery_address?: string | null
+          delivery_instructions?: string | null
           full_name?: string
           id?: string
           phone?: string | null

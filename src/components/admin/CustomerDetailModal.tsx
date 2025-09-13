@@ -35,6 +35,7 @@ interface CustomerProfile {
   full_name: string;
   phone: string;
   delivery_address: string;
+  delivery_instructions: string;
   city: string;
   postal_code: string;
   county: string;
@@ -736,6 +737,12 @@ const CustomerDetailModal = () => {
                             {customer.postal_code && `, ${customer.postal_code}`}
                             {customer.county && `\n${customer.county}`}
                           </div>
+                          {customer.delivery_instructions && (
+                            <div className="mt-2 p-2 bg-muted/30 rounded text-sm">
+                              <div className="font-medium text-muted-foreground mb-1">Delivery Instructions:</div>
+                              <div>{customer.delivery_instructions}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
