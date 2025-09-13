@@ -18,6 +18,7 @@ interface CustomerFormData {
   phone: string;
   email: string;
   delivery_address: string;
+  delivery_instructions: string;
   city: string;
   postal_code: string;
   county: string;
@@ -31,6 +32,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
     phone: '',
     email: '',
     delivery_address: '',
+    delivery_instructions: '',
     city: '',
     postal_code: '',
     county: '',
@@ -47,6 +49,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
       phone: '',
       email: '',
       delivery_address: '',
+      delivery_instructions: '',
       city: '',
       postal_code: '',
       county: '',
@@ -103,6 +106,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
             full_name: formData.full_name,
             phone: formData.phone,
             delivery_address: formData.delivery_address,
+            delivery_instructions: formData.delivery_instructions,
             city: formData.city,
             postal_code: formData.postal_code,
             county: formData.county,
@@ -135,6 +139,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
           full_name: formData.full_name,
           phone: formData.phone || null,
           delivery_address: formData.delivery_address || null,
+          delivery_instructions: formData.delivery_instructions || null,
           city: formData.city || null,
           postal_code: formData.postal_code || null,
           county: formData.county || null,
@@ -250,6 +255,17 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
                   onChange={(e) => handleInputChange('delivery_address', e.target.value)}
                   placeholder="Enter full delivery address"
                   rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="delivery_instructions">Delivery Instructions</Label>
+                <Textarea
+                  id="delivery_instructions"
+                  value={formData.delivery_instructions}
+                  onChange={(e) => handleInputChange('delivery_instructions', e.target.value)}
+                  placeholder="Special delivery instructions (e.g., gate code, building entrance, preferred delivery time)"
+                  rows={3}
                 />
               </div>
 
