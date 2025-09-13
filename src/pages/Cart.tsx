@@ -36,6 +36,7 @@ const Cart = () => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [deliveryZone, setDeliveryZone] = useState<any>(null);
   const [userPostcode, setUserPostcode] = useState<string>("");
+  const [manualPostcode, setManualPostcode] = useState<string>("");
 
   // Fetch collection points
   useEffect(() => {
@@ -62,6 +63,50 @@ const Cart = () => {
     fetchCollectionPoints();
   }, []);
 
+  // Function to fetch delivery zone by postcode
+  const fetchDeliveryZoneByPostcode = async (postcode: string) => {
+    if (!postcode) return;
+    
+    try {
+      // Find delivery zone for this postcode
+      const { data: zones, error: zonesError } = await supabase
+        .from('delivery_zones')
+        .select('*')
+        .eq('is_active', true);
+
+      if (zonesError) throw zonesError;
+
+      // Find matching zone based on postcode
+      const matchingZone = zones?.find(zone => {
+        // Check exact postcode match
+        if (zone.postcodes?.includes(postcode.toUpperCase())) {
+          return true;
+        }
+        
+        // Check prefix match
+        if (zone.postcode_prefixes?.some((prefix: string) => 
+          postcode.toUpperCase().startsWith(prefix.toUpperCase())
+        )) {
+          return true;
+        }
+        
+        return false;
+      });
+
+      if (matchingZone) {
+        setDeliveryZone(matchingZone);
+        // Update delivery fee from zone if available
+        if (matchingZone.delivery_fee) {
+          setDeliveryFee(matchingZone.delivery_fee);
+        }
+      } else {
+        setDeliveryZone(null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch delivery zone:', error);
+    }
+  };
+
   // Fetch user profile and delivery zone
   useEffect(() => {
     const fetchUserDeliveryZone = async () => {
@@ -78,49 +123,26 @@ const Cart = () => {
         if (profileError) throw profileError;
         
         const postcode = profile?.postal_code || user.user_metadata?.postal_code;
-        if (!postcode) return;
-        
-        setUserPostcode(postcode);
-
-        // Find delivery zone for this postcode
-        const { data: zones, error: zonesError } = await supabase
-          .from('delivery_zones')
-          .select('*')
-          .eq('is_active', true);
-
-        if (zonesError) throw zonesError;
-
-        // Find matching zone based on postcode
-        const matchingZone = zones?.find(zone => {
-          // Check exact postcode match
-          if (zone.postcodes?.includes(postcode.toUpperCase())) {
-            return true;
-          }
-          
-          // Check prefix match
-          if (zone.postcode_prefixes?.some((prefix: string) => 
-            postcode.toUpperCase().startsWith(prefix.toUpperCase())
-          )) {
-            return true;
-          }
-          
-          return false;
-        });
-
-        if (matchingZone) {
-          setDeliveryZone(matchingZone);
-          // Update delivery fee from zone if available
-          if (matchingZone.delivery_fee) {
-            setDeliveryFee(matchingZone.delivery_fee);
-          }
+        if (postcode) {
+          setUserPostcode(postcode);
+          setManualPostcode(postcode);
+          await fetchDeliveryZoneByPostcode(postcode);
         }
       } catch (error) {
-        console.error('Failed to fetch delivery zone:', error);
+        console.error('Failed to fetch user delivery zone:', error);
       }
     };
 
     fetchUserDeliveryZone();
   }, [user]);
+
+  // Handle manual postcode input
+  const handlePostcodeChange = async (postcode: string) => {
+    setManualPostcode(postcode);
+    if (postcode.length >= 4) { // Basic UK postcode length check
+      await fetchDeliveryZoneByPostcode(postcode);
+    }
+  };
 
   // Fetch delivery fee from settings (supports both new and legacy keys)
   useEffect(() => {
@@ -481,6 +503,23 @@ const Cart = () => {
                 </div>
               )}
               
+              {/* Postcode Input for Non-Authenticated Users */}
+              {!user && (
+                <div className="space-y-3 border-t pt-4">
+                  <Label htmlFor="postcode" className="font-semibold">Enter your postcode to check delivery availability</Label>
+                  <Input
+                    id="postcode"
+                    placeholder="Enter postcode (e.g. SW1A 1AA)"
+                    value={manualPostcode}
+                    onChange={(e) => handlePostcodeChange(e.target.value)}
+                    className="uppercase"
+                  />
+                  {manualPostcode && !deliveryZone && (
+                    <p className="text-sm text-destructive">No delivery available for this postcode</p>
+                  )}
+                </div>
+              )}
+              
               {/* Delivery Method Selection */}
               <div className="space-y-3 border-t pt-4">
                 <Label className="font-semibold">Delivery or Collection?</Label>
@@ -635,7 +674,7 @@ const Cart = () => {
                 </Popover>
               </div>
 
-              {/* Inline Payment Form appears after date selection */}
+              {/* Payment Form - Only for authenticated users */}
               {requestedDeliveryDate && user && clientSecret && (
                 <div className="mt-4">
                   <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
@@ -646,6 +685,17 @@ const Cart = () => {
                       requestedDeliveryDate={requestedDeliveryDate}
                     />
                   </Elements>
+                </div>
+              )}
+              
+              {/* Login prompt for non-authenticated users */}
+              {requestedDeliveryDate && !user && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold text-blue-800 mb-2">Ready to complete your order?</h4>
+                  <p className="text-sm text-blue-700 mb-3">Create an account or log in to proceed with payment</p>
+                  <Button asChild className="w-full">
+                    <Link to="/auth">Create Account / Log In</Link>
+                  </Button>
                 </div>
               )}
               <Button
