@@ -7,11 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Download, Save, Plus, Trash2, Edit3, BookOpen } from 'lucide-react';
+import { Printer, Download, Save, Plus, Trash2, Edit3, BookOpen, Calendar, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { LabelPreview } from './LabelPreview';
 import { LabelEditor } from './LabelEditor';
 import { MealSelector } from './MealSelector';
+import { LabelReport } from './admin/LabelReport';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -63,6 +64,7 @@ export const LabelGenerator: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showMealSelector, setShowMealSelector] = useState(false);
+  const [showLabelReport, setShowLabelReport] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -236,7 +238,17 @@ export const LabelGenerator: React.FC = () => {
   return (
     <div className="container mx-auto py-8 space-y-8 print:hidden">
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-primary">Label Generator</h1>
+        <div className="flex items-center justify-center gap-4">
+          <h1 className="text-4xl font-bold text-primary">Label Generator</h1>
+          <Button
+            variant="outline"
+            onClick={() => setShowLabelReport(true)}
+            className="ml-auto"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Production Report
+          </Button>
+        </div>
         <p className="text-muted-foreground">
           Generate professional A4 label sheets for Fit Food Tasty meals
         </p>
@@ -483,6 +495,12 @@ export const LabelGenerator: React.FC = () => {
         isOpen={showMealSelector}
         onClose={() => setShowMealSelector(false)}
         onSelectMeal={handleSelectMeal}
+      />
+
+      {/* Label Report Dialog */}
+      <LabelReport
+        isOpen={showLabelReport}
+        onClose={() => setShowLabelReport(false)}
       />
     </div>
   );
