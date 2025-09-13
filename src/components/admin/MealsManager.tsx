@@ -5,12 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3, FlaskConical, FileText, Archive, CheckCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Calculator, Search, Grid, List, BarChart3, FlaskConical, FileText, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -282,7 +284,7 @@ const MealsManager = () => {
       <Tabs defaultValue="management" className="w-full">
         <TabsList>
           <TabsTrigger value="management" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
+            <Grid className="h-4 w-4" />
             Management
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
@@ -311,6 +313,7 @@ const MealsManager = () => {
               </Button>
             </div>
           </div>
+          
           {/* Search and Filters */}
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div className="flex items-center gap-4 flex-1 max-w-md">
@@ -410,45 +413,90 @@ const MealsManager = () => {
                         <span>Carbs: {meal.total_carbs?.toFixed(1)}g</span>
                         <span>Fat: {meal.total_fat?.toFixed(1)}g</span>
                       </div>
-                      <div className="flex items-center gap-1 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleBuildMeal(meal.id)}
-                          className="flex-1"
-                        >
-                          <Calculator className="h-3 w-3 mr-1" />
-                          Build
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(meal)}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleActive(meal)}
-                          title={meal.is_active ? "Deactivate meal" : "Activate meal"}
-                          aria-label={meal.is_active ? "Deactivate meal" : "Activate meal"}
-                        >
-                          {meal.is_active ? (
-                            <Archive className="h-3 w-3" />
-                          ) : (
-                            <CheckCircle className="h-3 w-3" />
-                          )}
-                        </Button>
+                      
+                      {/* Active Status Checkbox */}
+                      <div className="flex items-center gap-2 pt-2">
+                        <label className="text-sm font-medium">Active:</label>
+                        {meal.is_active ? (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Checkbox checked={true} />
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Deactivate Meal</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to make "{meal.name}" inactive? It will be hidden from the menu.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => toggleActive(meal)}>
+                                  Deactivate
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        ) : (
+                          <Checkbox 
+                            checked={false} 
+                            onCheckedChange={() => toggleActive(meal)} 
+                          />
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-3">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="default"
+                                variant="outline"
+                                onClick={() => handleBuildMeal(meal.id)}
+                                className="flex items-center gap-2 h-10 px-3 flex-1"
+                              >
+                                <Calculator className="h-4 w-4" />
+                                <span className="text-sm">Build</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit nutrition & ingredients</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="default"
+                                variant="outline"
+                                onClick={() => handleEdit(meal)}
+                                className="h-10 px-3"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit meal details</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
                         <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </AlertDialogTrigger>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <AlertDialogTrigger asChild>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="default"
+                                    variant="outline"
+                                    className="h-10 px-3"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                              </AlertDialogTrigger>
+                              <TooltipContent>Delete item</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Meal</AlertDialogTitle>
@@ -480,7 +528,7 @@ const MealsManager = () => {
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Nutrition</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Active</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -521,48 +569,84 @@ const MealsManager = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={meal.is_active ? "default" : "secondary"}>
-                          {meal.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleBuildMeal(meal.id)}
-                          >
-                            <Calculator className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(meal)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleActive(meal)}
-                            title={meal.is_active ? "Deactivate meal" : "Activate meal"}
-                            aria-label={meal.is_active ? "Deactivate meal" : "Activate meal"}
-                          >
-                            {meal.is_active ? (
-                              <Archive className="h-3 w-3" />
-                            ) : (
-                              <CheckCircle className="h-3 w-3" />
-                            )}
-                          </Button>
+                        {meal.is_active ? (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              <Checkbox checked={true} />
                             </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Deactivate Meal</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to make "{meal.name}" inactive? It will be hidden from the menu.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => toggleActive(meal)}>
+                                  Deactivate
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        ) : (
+                          <Checkbox 
+                            checked={false} 
+                            onCheckedChange={() => toggleActive(meal)} 
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="default"
+                                  variant="outline"
+                                  onClick={() => handleBuildMeal(meal.id)}
+                                  className="h-9 px-3"
+                                >
+                                  <Calculator className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit nutrition & ingredients</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="default"
+                                  variant="outline"
+                                  onClick={() => handleEdit(meal)}
+                                  className="h-9 px-3"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit meal details</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <AlertDialog>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <AlertDialogTrigger asChild>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="default"
+                                      variant="outline"
+                                      className="h-9 px-3"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                </AlertDialogTrigger>
+                                <TooltipContent>Delete item</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Meal</AlertDialogTitle>
