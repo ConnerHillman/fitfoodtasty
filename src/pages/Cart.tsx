@@ -33,6 +33,7 @@ const Cart = () => {
   const [clientSecret, setClientSecret] = useState<string>("");
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [showPayment, setShowPayment] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Fetch collection points
   useEffect(() => {
@@ -436,7 +437,7 @@ const Cart = () => {
                   </div>
                 )}
                 
-                <Popover>
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -465,6 +466,7 @@ const Cart = () => {
                           const day = String(date.getDate()).padStart(2, '0');
                           const dateString = `${year}-${month}-${day}`;
                           setRequestedDeliveryDate(dateString);
+                          setCalendarOpen(false); // Close the popover after selection
                         }
                       }}
                       disabled={isDateDisabled}
