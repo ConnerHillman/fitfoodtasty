@@ -98,10 +98,22 @@ const MealAnalytics = () => {
         } else {
           endDate = endOfDay(dateRange.from);
         }
+        
+        console.log('Using custom date range:', {
+          from: dateRange.from,
+          to: dateRange.to,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        });
       } else {
         // Default to last 30 days
         startDate = startOfDay(subDays(new Date(), 29));
         endDate = endOfDay(new Date());
+        
+        console.log('Using default date range (last 30 days):', {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        });
       }
 
       // Base query filters
@@ -121,7 +133,7 @@ const MealAnalytics = () => {
             meal_name
           )
         `)
-        .eq("status", "completed")
+        .in("status", ["completed", "confirmed"])
         .gte("created_at", startDate.toISOString())
         .lte("created_at", endDate.toISOString());
 
@@ -151,7 +163,7 @@ const MealAnalytics = () => {
       const { data: prevOrdersData } = await supabase
         .from("orders")
         .select("total_amount")
-        .eq("status", "completed")
+        .in("status", ["completed", "confirmed"])
         .gte("created_at", prevStartDate.toISOString())
         .lte("created_at", prevEndDate.toISOString());
 
