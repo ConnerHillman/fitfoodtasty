@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3, FlaskConical, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calculator, Printer, Filter, Search, ChevronUp, ChevronDown, ImageIcon, Grid, List, BarChart3, FlaskConical, FileText, Archive, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MealBuilder from "./MealBuilder";
@@ -236,15 +236,22 @@ const MealsManager = () => {
   };
 
   const toggleActive = async (meal: Meal) => {
+    const newStatus = !meal.is_active;
     const { error } = await supabase
       .from("meals")
-      .update({ is_active: !meal.is_active })
+      .update({ is_active: newStatus })
       .eq("id", meal.id);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       fetchMeals();
+      toast({
+        title: newStatus ? "Meal activated" : "Meal deactivated",
+        description: !newStatus && statusFilter === 'active'
+          ? "It's now hidden by the Active filter. Switch to All/Inactive to view it."
+          : undefined,
+      });
     }
   };
 
@@ -423,8 +430,14 @@ const MealsManager = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => toggleActive(meal)}
+                          title={meal.is_active ? "Deactivate meal" : "Activate meal"}
+                          aria-label={meal.is_active ? "Deactivate meal" : "Activate meal"}
                         >
-                          <Eye className="h-3 w-3" />
+                          {meal.is_active ? (
+                            <Archive className="h-3 w-3" />
+                          ) : (
+                            <CheckCircle className="h-3 w-3" />
+                          )}
                         </Button>
                         <Button
                           size="sm"
@@ -514,8 +527,14 @@ const MealsManager = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => toggleActive(meal)}
+                            title={meal.is_active ? "Deactivate meal" : "Activate meal"}
+                            aria-label={meal.is_active ? "Deactivate meal" : "Activate meal"}
                           >
-                            <Eye className="h-3 w-3" />
+                            {meal.is_active ? (
+                              <Archive className="h-3 w-3" />
+                            ) : (
+                              <CheckCircle className="h-3 w-3" />
+                            )}
                           </Button>
                           <Button
                             size="sm"
