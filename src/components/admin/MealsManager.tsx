@@ -49,6 +49,7 @@ const MealsManager = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
+  const [toggleStates, setToggleStates] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -424,7 +425,7 @@ const MealsManager = () => {
                       {/* Active Status Checkbox */}
                       <div className="flex items-center gap-2 pt-2">
                         <label className="text-sm font-medium">Active:</label>
-                        {meal.is_active ? (
+                        {(toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : meal.is_active) ? (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <div onClick={(e) => e.stopPropagation()}>
@@ -448,7 +449,7 @@ const MealsManager = () => {
                           </AlertDialog>
                         ) : (
                           <Checkbox 
-                            checked={false} 
+                            checked={toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : false} 
                             onCheckedChange={() => toggleActive(meal)} 
                             onClick={(e) => e.stopPropagation()}
                             className="h-5 w-5"
@@ -580,7 +581,7 @@ const MealsManager = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {meal.is_active ? (
+                        {(toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : meal.is_active) ? (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <div onClick={(e) => e.stopPropagation()}>
@@ -604,7 +605,7 @@ const MealsManager = () => {
                           </AlertDialog>
                         ) : (
                           <Checkbox 
-                            checked={false} 
+                            checked={toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : false} 
                             onCheckedChange={() => toggleActive(meal)} 
                             onClick={(e) => e.stopPropagation()}
                             className="h-5 w-5"
