@@ -46,15 +46,34 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    const line_items = items.map((it: CheckoutItem) => {
+    const line_items = items.map((it: CheckoutItem, index: number) => {
       const unitAmount = typeof it.amount === "number" ? Math.round(it.amount) : Math.round((it.price ?? 0) * 100);
       if (!it.name || !unitAmount || unitAmount < 50) {
         throw new Error("Invalid item: name and amount/price are required; minimum 0.50");
       }
+
+      // Add delivery/collection date to the first item's description
+      let description = it.description || '';
+      if (index === 0 && requested_delivery_date) {
+        const formattedDate = new Date(requested_delivery_date + 'T12:00:00').toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        const dateInfo = delivery_method === 'pickup' 
+          ? `Collection: ${formattedDate}`
+          : `Delivery: ${formattedDate}`;
+        description = description ? `${description} | ${dateInfo}` : dateInfo;
+      }
+
       return {
         price_data: {
           currency,
-          product_data: { name: it.name, description: it.description },
+          product_data: { 
+            name: it.name, 
+            description: description 
+          },
           unit_amount: unitAmount,
         },
         quantity: it.quantity ?? 1,
@@ -101,17 +120,6 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}${successPath}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}${cancelPath}`,
-      payment_intent_data: {
-        description: requested_delivery_date ? deliveryInfo : undefined,
-      },
-      custom_fields: requested_delivery_date ? [
-        {
-          key: 'fulfillment_date',
-          label: { type: 'custom', custom: delivery_method === 'pickup' ? 'Collection date' : 'Delivery date' },
-          type: 'text',
-          text: { default_value: formattedDeliveryDate, maximum_length: 120 },
-        },
-      ] : undefined,
       metadata: {
         delivery_method: delivery_method || '',
         collection_point_id: collection_point_id || '',
