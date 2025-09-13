@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, TrendingDown, Package, Users, DollarSign, Star, RefreshCw, Calendar, Target, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { addDays, subDays } from "date-fns";
+import { addDays, subDays, startOfDay, endOfDay } from "date-fns";
 
 interface Package {
   id: string;
@@ -78,8 +78,8 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const startDate = dateRange.from;
-      const endDate = dateRange.to;
+      const startDate = startOfDay(dateRange.from);
+      const endDate = endOfDay(dateRange.to);
       
       // Calculate the number of days in the selected range
       const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
