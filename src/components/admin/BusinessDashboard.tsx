@@ -709,15 +709,18 @@ const BusinessDashboard = () => {
                       <Package className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <div className="font-medium">#{order.id.slice(-8)}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="font-bold text-lg">
                         <CustomerLink 
                           customerId={order.user_id}
                           customerName={order.customer_name || 'Customer'}
-                          variant="link"
+                          variant="ghost"
                           size="sm"
+                          className="text-lg font-bold"
                         />
                         {order.type === 'package' && <Badge variant="outline" className="ml-2 text-xs">Package</Badge>}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        #{order.id.slice(-8)}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {order.type === 'package' 

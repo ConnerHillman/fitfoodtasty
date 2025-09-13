@@ -30,7 +30,7 @@ const CustomerLink: React.FC<CustomerLinkProps> = ({
       variant={variant}
       size={size}
       onClick={handleClick}
-      className={`p-0 h-auto font-normal text-left justify-start hover:underline ${className}`}
+      className={`p-0 h-auto font-bold text-foreground text-left justify-start hover:underline hover:text-foreground ${className}`}
     >
       {customerName}
     </Button>

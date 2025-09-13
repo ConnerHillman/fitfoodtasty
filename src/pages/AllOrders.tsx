@@ -256,7 +256,7 @@ const AllOrders: React.FC = () => {
                         <CustomerLink 
                           customerId={order.user_id}
                           customerName={order.customer_name || 'Customer'}
-                          variant="link"
+                          variant="ghost"
                           className="font-bold text-lg"
                         />
                         <span className="text-sm text-muted-foreground font-normal">
