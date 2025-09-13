@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +41,16 @@ const Cart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Continue Shopping Button */}
+      <div className="mb-6">
+        <Button asChild size="lg" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+          <Link to="/menu" className="flex items-center space-x-2">
+            <ArrowLeft className="h-5 w-5" />
+            <span>CONTINUE SHOPPING</span>
+          </Link>
+        </Button>
+      </div>
+      
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-foreground mb-2">Your Cart</h1>
         <p className="text-muted-foreground text-lg">
