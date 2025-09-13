@@ -20,18 +20,46 @@ const Cart = () => {
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
   const [deliveryFee, setDeliveryFee] = useState(2.99);
 
-  // Fetch delivery fee from settings
+  // Fetch delivery fee from settings (supports both new and legacy keys)
   useEffect(() => {
     const fetchDeliveryFee = async () => {
-      const { data, error } = await supabase
-        .from('fulfillment_settings')
-        .select('setting_value')
-        .eq('setting_type', 'fees')
-        .eq('setting_key', 'delivery_fee')
-        .single();
+      try {
+        // Preferred: general/default_delivery_fee with JSON { value, currency }
+        const { data: generalRow } = await supabase
+          .from('fulfillment_settings')
+          .select('setting_value')
+          .eq('setting_type', 'general')
+          .eq('setting_key', 'default_delivery_fee')
+          .single();
 
-      if (data && !error) {
-        setDeliveryFee(parseFloat(String(data.setting_value)) || 2.99);
+        if (generalRow?.setting_value !== undefined) {
+          const possible = (generalRow as any).setting_value as any;
+          const val = typeof possible === 'object' && possible !== null && 'value' in possible
+            ? possible.value
+            : possible;
+          const num = typeof val === 'number' ? val : parseFloat(String(val));
+          if (!Number.isNaN(num)) {
+            setDeliveryFee(num);
+            return;
+          }
+        }
+
+        // Legacy fallback: fees/delivery_fee as string or number
+        const { data: legacyRow } = await supabase
+          .from('fulfillment_settings')
+          .select('setting_value')
+          .eq('setting_type', 'fees')
+          .eq('setting_key', 'delivery_fee')
+          .single();
+
+        if (legacyRow?.setting_value !== undefined) {
+          const num = typeof legacyRow.setting_value === 'number'
+            ? legacyRow.setting_value
+            : parseFloat(String(legacyRow.setting_value));
+          if (!Number.isNaN(num)) setDeliveryFee(num);
+        }
+      } catch (e) {
+        // leave default 2.99 on error
       }
     };
 
