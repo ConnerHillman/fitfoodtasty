@@ -239,7 +239,7 @@ const Cart = () => {
               
               {/* Delivery Method Selection */}
               <div className="space-y-3 border-t pt-4">
-                <Label className="font-semibold">Delivery Method</Label>
+                <Label className="font-semibold">Delivery or Collection?</Label>
                 <Select value={deliveryMethod} onValueChange={(value: "delivery" | "pickup") => setDeliveryMethod(value)}>
                   <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50">
                     <SelectValue placeholder="Choose delivery method" />
@@ -275,7 +275,7 @@ const Cart = () => {
               <div className="space-y-3 border-t pt-4">
                 <Label htmlFor="delivery-date" className="flex items-center gap-2 font-semibold">
                   <Calendar className="h-4 w-4" />
-                  {deliveryMethod === "delivery" ? "Requested Delivery Date" : "Requested Collection Date"}
+                  {deliveryMethod === "delivery" ? "Delivery Date" : "Collection Date"}
                 </Label>
                 <Input
                   id="delivery-date"
