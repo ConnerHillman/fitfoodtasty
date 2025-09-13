@@ -217,6 +217,129 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_points: {
+        Row: {
+          address: string
+          city: string
+          collection_days: string[]
+          collection_fee: number
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          maximum_capacity: number | null
+          opening_hours: Json | null
+          phone: string | null
+          point_name: string
+          postcode: string
+          special_instructions: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          collection_days: string[]
+          collection_fee?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          maximum_capacity?: number | null
+          opening_hours?: Json | null
+          phone?: string | null
+          point_name: string
+          postcode: string
+          special_instructions?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          collection_days?: string[]
+          collection_fee?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          maximum_capacity?: number | null
+          opening_hours?: Json | null
+          phone?: string | null
+          point_name?: string
+          postcode?: string
+          special_instructions?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          delivery_days: string[]
+          delivery_fee: number
+          id: string
+          is_active: boolean
+          maximum_distance_km: number | null
+          minimum_order: number
+          postcodes: string[]
+          updated_at: string
+          zone_name: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_days: string[]
+          delivery_fee?: number
+          id?: string
+          is_active?: boolean
+          maximum_distance_km?: number | null
+          minimum_order?: number
+          postcodes: string[]
+          updated_at?: string
+          zone_name: string
+        }
+        Update: {
+          created_at?: string
+          delivery_days?: string[]
+          delivery_fee?: number
+          id?: string
+          is_active?: boolean
+          maximum_distance_km?: number | null
+          minimum_order?: number
+          postcodes?: string[]
+          updated_at?: string
+          zone_name?: string
+        }
+        Relationships: []
+      }
+      fulfillment_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          setting_key: string
+          setting_type: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          setting_key: string
+          setting_type: string
+          setting_value: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          setting_key?: string
+          setting_type?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ingredient_allergens: {
         Row: {
           allergen_id: string
