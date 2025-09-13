@@ -26,6 +26,7 @@ import {
 import { format } from "date-fns";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import CustomerLink from "./CustomerLink";
+import AddCustomerDialog from "./AddCustomerDialog";
 
 interface Customer {
   id: string;
@@ -319,10 +320,13 @@ const CustomersManager = () => {
             <p className="text-muted-foreground">View and manage your customer base</p>
           </div>
         </div>
-        <Button onClick={fetchCustomers} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <AddCustomerDialog onCustomerAdded={fetchCustomers} />
+          <Button onClick={fetchCustomers} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
