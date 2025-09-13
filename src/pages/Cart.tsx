@@ -622,7 +622,7 @@ const Cart = () => {
                         available: { fontWeight: 'bold' }
                       }}
                       initialFocus
-                      className="pointer-events-auto"
+                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
