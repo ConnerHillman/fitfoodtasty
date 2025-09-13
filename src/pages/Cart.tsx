@@ -15,6 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Elements } from "@stripe/react-stripe-js";
+import { stripePromise } from "@/lib/stripe";
+import PaymentForm from "@/components/PaymentForm";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
@@ -22,9 +25,12 @@ const Cart = () => {
   const { toast } = useToast();
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
-  const [deliveryFee, setDeliveryFee] = useState(2.99);
-  const [collectionPoints, setCollectionPoints] = useState<any[]>([]);
   const [selectedCollectionPoint, setSelectedCollectionPoint] = useState<string>("");
+  const [collectionPoints, setCollectionPoints] = useState<any[]>([]);
+  const [deliveryFee, setDeliveryFee] = useState(4.5);
+  const [clientSecret, setClientSecret] = useState<string>("");
+  const [paymentIntentId, setPaymentIntentId] = useState<string>("");
+  const [showPayment, setShowPayment] = useState(false);
 
   // Fetch collection points
   useEffect(() => {
