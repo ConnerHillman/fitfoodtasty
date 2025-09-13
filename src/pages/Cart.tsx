@@ -186,10 +186,50 @@ const Cart = () => {
                 </div>
               )}
               
+              {/* Delivery Date Selection */}
+              <div className="space-y-3 border-t pt-4">
+                <Label htmlFor="delivery-date" className="flex items-center gap-2 font-semibold">
+                  <Calendar className="h-4 w-4" />
+                  Requested Delivery Date
+                </Label>
+                <Input
+                  id="delivery-date"
+                  type="date"
+                  min={getMinDeliveryDate()}
+                  value={requestedDeliveryDate}
+                  onChange={(e) => setRequestedDeliveryDate(e.target.value)}
+                  className="w-full"
+                />
+                {requestedDeliveryDate && (
+                  <div className="bg-muted rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                      <Clock className="h-3 w-3" />
+                      Production Schedule
+                    </div>
+                    <p className="text-sm">
+                      <strong>Production Date:</strong> {calculateProductionDate(requestedDeliveryDate)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Based on shortest shelf life in your cart
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <Button
                 className="w-full"
                 size="lg"
+                disabled={!requestedDeliveryDate}
                 onClick={async () => {
+                  if (!requestedDeliveryDate) {
+                    toast({ 
+                      title: 'Delivery date required', 
+                      description: 'Please select your preferred delivery date',
+                      variant: 'destructive' 
+                    });
+                    return;
+                  }
+
                   try {
                     const { data, error } = await supabase.functions.invoke('create-payment', {
                       body: {
@@ -199,8 +239,11 @@ const Cart = () => {
                           amount: Math.round(i.price * 100),
                           quantity: i.quantity,
                           description: i.description,
+                          meal_id: i.id,
                         })),
                         delivery_fee: 299,
+                        requested_delivery_date: requestedDeliveryDate,
+                        production_date: calculateProductionDate(requestedDeliveryDate),
                         successPath: '/payment-success',
                         cancelPath: '/cart'
                       }
@@ -217,13 +260,13 @@ const Cart = () => {
                   }
                 }}
               >
+                {requestedDeliveryDate ? 'Proceed to Checkout' : 'Select Delivery Date to Continue'}
               </Button>
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={clearCart}
               >
-                {requestedDeliveryDate ? 'Proceed to Checkout' : 'Select Delivery Date to Continue'}
                 Clear Cart
               </Button>
             </CardContent>
