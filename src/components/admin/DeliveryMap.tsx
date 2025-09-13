@@ -124,9 +124,6 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       map.current!.on('draw.modechange', (e: any) => {
         console.log('Draw mode changed:', e.mode);
       });
-      map.current!.on('click', () => {
-        console.log('Map clicked');
-      });
       
       addDeliveryZonesToMap();
     });
@@ -172,7 +169,6 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       draw.current.changeMode('simple_select');
     }
     setIsDrawingMode(false);
-    setDrawingInteractions(false);
   };
 
   const handleDrawUpdate = (e: any) => {
@@ -183,31 +179,20 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
   const handleDrawDelete = () => {
     setSelectedArea(null);
     setIsDrawingMode(false);
-    setDrawingInteractions(false);
   };
 
-  // Enable/disable map interactions while drawing
+  // Only disable interactions when actively drawing
   const setDrawingInteractions = (enableDrawing: boolean) => {
     if (!map.current) return;
     const m = map.current;
     if (enableDrawing) {
       m.dragPan.disable();
-      m.boxZoom.disable();
       m.scrollZoom.disable();
-      m.doubleClickZoom.disable();
-      m.keyboard.disable();
-      m.touchZoomRotate.disable();
       m.getCanvas().style.cursor = 'crosshair';
-      m.getCanvas().style.touchAction = 'none';
     } else {
       m.dragPan.enable();
-      m.boxZoom.enable();
       m.scrollZoom.enable();
-      m.doubleClickZoom.enable();
-      m.keyboard.enable();
-      m.touchZoomRotate.enable();
       m.getCanvas().style.cursor = '';
-      m.getCanvas().style.touchAction = '';
     }
   };
 
@@ -219,7 +204,6 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated 
       if (isDrawingMode) {
         console.log('Switching to simple_select mode');
         draw.current.changeMode('simple_select');
-        setDrawingInteractions(false);
         setIsDrawingMode(false);
       } else {
         console.log('Switching to draw_polygon mode');
