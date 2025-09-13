@@ -35,6 +35,7 @@ interface Meal {
   total_sugar: number;
   total_salt: number;
   total_weight?: number;
+  shelf_life_days: number;
   image_url?: string;
   created_at: string;
   sort_order: number;

@@ -249,6 +249,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
       total_carbs: 0,
       total_fat: 0,
       total_fiber: 0,
+      shelf_life_days: 5, // Default for packages
       image_url: pkg.image_url,
       packageData: {
         packageId: pkg.id,

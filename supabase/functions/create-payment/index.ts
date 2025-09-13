@@ -12,6 +12,7 @@ interface CheckoutItem {
   price?: number;  // decimal price (e.g., 9.99)
   quantity: number;
   description?: string;
+  meal_id?: string;
 }
 
 serve(async (req) => {
@@ -30,6 +31,8 @@ serve(async (req) => {
       successPath = "/payment-success",
       cancelPath = "/cart",
       email,
+      requested_delivery_date,
+      production_date,
     } = await req.json().catch(() => ({ items: [] }));
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -73,8 +76,18 @@ serve(async (req) => {
       customer_email: email, // if undefined, Checkout collects email
       line_items,
       mode: "payment",
-      success_url: `${origin}${successPath}`,
+      success_url: `${origin}${successPath}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}${cancelPath}`,
+      metadata: {
+        requested_delivery_date: requested_delivery_date || '',
+        production_date: production_date || '',
+        items: JSON.stringify(items.map(item => ({
+          meal_id: item.meal_id,
+          name: item.name,
+          quantity: item.quantity,
+          amount: typeof item.amount === "number" ? item.amount : Math.round((item.price ?? 0) * 100)
+        }))),
+      },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Calendar, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +15,28 @@ const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
+
+  // Calculate minimum delivery date (tomorrow)
+  const getMinDeliveryDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
+
+  // Calculate production date based on delivery date and shortest shelf life
+  const calculateProductionDate = (deliveryDate: string) => {
+    if (!deliveryDate || items.length === 0) return null;
+    
+    // Find the shortest shelf life among all meals in cart
+    const shortestShelfLife = Math.min(...items.map(item => item.shelf_life_days || 5));
+    
+    const delivery = new Date(deliveryDate);
+    const production = new Date(delivery);
+    production.setDate(production.getDate() - shortestShelfLife);
+    
+    return production.toISOString().split('T')[0];
+  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -192,13 +217,13 @@ const Cart = () => {
                   }
                 }}
               >
-                Proceed to Checkout
               </Button>
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={clearCart}
               >
+                {requestedDeliveryDate ? 'Proceed to Checkout' : 'Select Delivery Date to Continue'}
                 Clear Cart
               </Button>
             </CardContent>

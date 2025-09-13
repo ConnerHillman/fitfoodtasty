@@ -13,6 +13,7 @@ export interface CartItem {
   total_carbs: number;
   total_fat: number;
   total_fiber: number;
+  shelf_life_days: number;
   image_url?: string;
   quantity: number;
   type?: 'meal' | 'package';
