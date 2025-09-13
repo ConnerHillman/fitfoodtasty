@@ -40,8 +40,20 @@ All colors MUST be HSL.
     
     /* Meal prep theme colors */
     --success: 142 71% 45%;
-    --warning: 38 92% 50%;
+    --warning: 25 95% 53%;
     --info: 221 83% 53%;
+    
+    /* Order status colors */
+    --status-confirmed: 25 95% 53%;
+    --status-confirmed-foreground: 210 40% 98%;
+    --status-completed: 142 71% 45%;
+    --status-completed-foreground: 210 40% 98%;
+    --status-cancelled: 0 84% 60%;
+    --status-cancelled-foreground: 210 40% 98%;
+    --status-pending: 221 83% 53%;
+    --status-pending-foreground: 210 40% 98%;
+    --status-preparing: 39 85% 55%;
+    --status-preparing-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -102,6 +114,18 @@ All colors MUST be HSL.
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    
+    /* Order status colors - Dark mode */
+    --status-confirmed: 25 95% 53%;
+    --status-confirmed-foreground: 210 40% 98%;
+    --status-completed: 142 71% 45%;
+    --status-completed-foreground: 210 40% 98%;
+    --status-cancelled: 0 84% 60%;
+    --status-cancelled-foreground: 210 40% 98%;
+    --status-pending: 221 83% 53%;
+    --status-pending-foreground: 210 40% 98%;
+    --status-preparing: 39 85% 55%;
+    --status-preparing-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;

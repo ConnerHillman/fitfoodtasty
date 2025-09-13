@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import OrderLink from "./OrderLink";
+import OrderStatusBadge from "./OrderStatusBadge";
 
 interface CustomerProfile {
   id: string;
@@ -511,12 +512,7 @@ const CustomerDetailModal = () => {
                           <TableCell>{order.items_count}</TableCell>
                           <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                           <TableCell>
-                            <Badge variant={
-                              order.status === 'completed' ? 'default' :
-                              order.status === 'pending' ? 'secondary' : 'destructive'
-                            }>
-                              {order.status}
-                            </Badge>
+                            <OrderStatusBadge status={order.status} />
                           </TableCell>
                         </TableRow>
                       ))}
@@ -563,12 +559,7 @@ const CustomerDetailModal = () => {
                           <TableCell>{order.items_count}</TableCell>
                           <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                           <TableCell>
-                            <Badge variant={
-                              order.status === 'completed' ? 'default' :
-                              order.status === 'pending' ? 'secondary' : 'destructive'
-                            }>
-                              {order.status}
-                            </Badge>
+                            <OrderStatusBadge status={order.status} />
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
