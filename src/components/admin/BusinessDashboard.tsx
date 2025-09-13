@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer, PlusCircle, Eye, TrendingDown, Activity, FileText, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { addDays, subDays } from "date-fns";
 
 const BusinessDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -15,17 +17,21 @@ const BusinessDashboard = () => {
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuViews, setMenuViews] = useState(0);
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
   
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [dateRange]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch regular orders
+      // Fetch regular orders within date range
       const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
         .select(`
@@ -39,6 +45,8 @@ const BusinessDashboard = () => {
             meal_id
           )
         `)
+        .gte("created_at", dateRange.from.toISOString())
+        .lte("created_at", dateRange.to.toISOString())
         .order("created_at", { ascending: false });
 
       if (ordersError) {
@@ -47,7 +55,7 @@ const BusinessDashboard = () => {
         setOrders(ordersData || []);
       }
 
-      // Fetch package orders
+      // Fetch package orders within date range
       const { data: packageOrdersData, error: packageOrdersError } = await supabase
         .from("package_orders")
         .select(`
@@ -58,6 +66,8 @@ const BusinessDashboard = () => {
             meal_id
           )
         `)
+        .gte("created_at", dateRange.from.toISOString())
+        .lte("created_at", dateRange.to.toISOString())
         .order("created_at", { ascending: false });
 
       if (packageOrdersError) {
@@ -90,15 +100,13 @@ const BusinessDashboard = () => {
         setPackages(packagesData || []);
       }
 
-      // Fetch menu views from today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
+      // Fetch menu views within date range
       const { data: viewsData, error: viewsError } = await supabase
         .from("page_views")
         .select("id")
         .eq("page_type", "menu")
-        .gte("created_at", today.toISOString());
+        .gte("created_at", dateRange.from.toISOString())
+        .lte("created_at", dateRange.to.toISOString());
 
       if (viewsError) {
         console.error("Error fetching views:", viewsError);
@@ -410,6 +418,14 @@ const BusinessDashboard = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
+              <DateRangePicker
+                date={dateRange}
+                onDateChange={(range) => {
+                  if (range?.from && range?.to) {
+                    setDateRange({ from: range.from, to: range.to });
+                  }
+                }}
+              />
               <Button
                 onClick={fetchDashboardData}
                 variant="outline"
