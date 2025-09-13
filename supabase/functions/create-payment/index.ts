@@ -85,8 +85,8 @@ serve(async (req) => {
       : '';
 
     const deliveryInfo = delivery_method === 'pickup' 
-      ? `Collection Date: ${formattedDeliveryDate}`
-      : `Delivery Date: ${formattedDeliveryDate}`;
+      ? `🗓️ COLLECTION DATE: ${formattedDeliveryDate.toUpperCase()}`
+      : `🚚 DELIVERY DATE: ${formattedDeliveryDate.toUpperCase()}`;
 
     console.log('Debug delivery info:', {
       requested_delivery_date,
@@ -104,7 +104,7 @@ serve(async (req) => {
       cancel_url: `${origin}${cancelPath}`,
       custom_text: requested_delivery_date ? {
         submit: {
-          message: deliveryInfo
+          message: `\n═══════════════════════════════\n${deliveryInfo}\n═══════════════════════════════`
         }
       } : undefined,
       metadata: {
