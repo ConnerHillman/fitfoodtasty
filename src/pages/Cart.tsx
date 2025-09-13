@@ -31,8 +31,8 @@ const Cart = () => {
   const [collectionPoints, setCollectionPoints] = useState<any[]>([]);
   const [deliveryFee, setDeliveryFee] = useState(4.5);
   const [clientSecret, setClientSecret] = useState<string>("");
-  const [paymentIntentId, setPaymentIntentId] = useState<string>("");
-  const [showPayment, setShowPayment] = useState(false);
+  
+  
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [deliveryZone, setDeliveryZone] = useState<any>(null);
   const [userPostcode, setUserPostcode] = useState<string>("");
@@ -167,6 +167,58 @@ const Cart = () => {
 
     fetchDeliveryFee();
   }, []);
+
+  // Auto-create Stripe PaymentIntent when requirements are met
+  useEffect(() => {
+    const createPI = async () => {
+      try {
+        if (!requestedDeliveryDate) return;
+
+        // Validate availability for the chosen day
+        const validDay = isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00'));
+        if (!validDay) return;
+
+        // Validate delivery/pickup specifics
+        if (deliveryMethod === 'pickup') {
+          if (!selectedCollectionPoint) return;
+        } else {
+          if (!deliveryZone) return;
+        }
+
+        const collectionPoint = deliveryMethod === 'pickup' ? collectionPoints.find(cp => cp.id === selectedCollectionPoint) : null;
+        const collectionFee = collectionPoint?.collection_fee || 0;
+
+        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+          body: {
+            currency: 'gbp',
+            items: items.map(i => ({
+              name: i.name,
+              amount: Math.round(i.price * 100),
+              quantity: i.quantity,
+              description: i.description,
+              meal_id: i.id,
+            })),
+            delivery_fee: deliveryMethod === 'delivery' ? Math.round(deliveryFee * 100) : Math.round(collectionFee * 100),
+            delivery_method: deliveryMethod,
+            collection_point_id: deliveryMethod === 'pickup' ? selectedCollectionPoint : null,
+            requested_delivery_date: requestedDeliveryDate,
+            production_date: calculateProductionDate(requestedDeliveryDate),
+            customer_email: user?.email,
+            customer_name: (user as any)?.user_metadata?.full_name,
+          }
+        });
+
+        if (error) throw error;
+        if (data?.clientSecret) {
+          setClientSecret(data.clientSecret);
+        }
+      } catch (err) {
+        console.error('Auto-create payment intent failed:', err);
+      }
+    };
+
+    createPI();
+  }, [requestedDeliveryDate, deliveryMethod, selectedCollectionPoint, deliveryZone, items, deliveryFee]);
 
   // Calculate minimum delivery date (tomorrow)
   const getMinDeliveryDate = () => {
@@ -576,97 +628,19 @@ const Cart = () => {
                 </Popover>
               </div>
 
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={!requestedDeliveryDate || (deliveryMethod === "pickup" && !selectedCollectionPoint) || (deliveryMethod === "pickup" && !isDateAvailable(requestedDeliveryDate))}
-                onClick={async () => {
-                  if (!requestedDeliveryDate) {
-                    toast({ 
-                      title: `${deliveryMethod === "delivery" ? "Delivery" : "Collection"} date required`, 
-                      description: `Please select your preferred ${deliveryMethod === "delivery" ? "delivery" : "collection"} date`,
-                      variant: 'destructive' 
-                    });
-                    return;
-                  }
-
-                  if (deliveryMethod === "pickup" && !selectedCollectionPoint) {
-                    toast({ 
-                      title: "Collection point required", 
-                      description: "Please select a collection point",
-                      variant: 'destructive' 
-                    });
-                    return;
-                  }
-
-                  if (deliveryMethod === "delivery" && !deliveryZone) {
-                    toast({ 
-                      title: "Delivery not available", 
-                      description: "No delivery service available for your postcode",
-                      variant: 'destructive' 
-                    });
-                    return;
-                  }
-
-                  if (deliveryMethod === "pickup" && !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00'))) {
-                    toast({ 
-                      title: "Invalid collection date", 
-                      description: "Please select a date that falls on an available collection day",
-                      variant: 'destructive' 
-                    });
-                    return;
-                  }
-
-                  if (deliveryMethod === "delivery" && !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00'))) {
-                    toast({ 
-                      title: "Invalid delivery date", 
-                      description: "Please select a date that falls on an available delivery day",
-                      variant: 'destructive' 
-                    });
-                    return;
-                  }
-
-                  try {
-                    const collectionPoint = deliveryMethod === "pickup" ? collectionPoints.find(cp => cp.id === selectedCollectionPoint) : null;
-                    const collectionFee = collectionPoint?.collection_fee || 0;
-
-                    const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-                      body: {
-                        currency: 'gbp',
-                        items: items.map(i => ({
-                          name: i.name,
-                          amount: Math.round(i.price * 100),
-                          quantity: i.quantity,
-                          description: i.description,
-                          meal_id: i.id,
-                        })),
-                        delivery_fee: deliveryMethod === "delivery" ? Math.round(deliveryFee * 100) : Math.round(collectionFee * 100),
-                        delivery_method: deliveryMethod,
-                        collection_point_id: deliveryMethod === "pickup" ? selectedCollectionPoint : null,
-                        requested_delivery_date: requestedDeliveryDate,
-                        production_date: calculateProductionDate(requestedDeliveryDate),
-                        customer_email: user?.email,
-                        customer_name: (user as any)?.user_metadata?.full_name,
-                      }
-                    });
-                    if (error) throw error;
-                    if (data?.clientSecret) {
-                      setClientSecret(data.clientSecret);
-                    } else {
-                      throw new Error('No client secret returned');
-                    }
-                  } catch (err: any) {
-                    console.error(err);
-                    toast({ title: 'Checkout error', description: err.message || 'Unable to start checkout', variant: 'destructive' });
-                  }
-                }}
-              >
-                {(!requestedDeliveryDate || 
-                  (deliveryMethod === "pickup" && (!selectedCollectionPoint || !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00')))) ||
-                  (deliveryMethod === "delivery" && (!deliveryZone || !isAvailableDay(new Date(requestedDeliveryDate + 'T12:00:00'))))) ? 
-                  `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} ${!requestedDeliveryDate ? "Date" : !selectedCollectionPoint && deliveryMethod === "pickup" ? "Point" : !deliveryZone && deliveryMethod === "delivery" ? "Valid Postcode" : "Valid Date"} to Continue` : 
-                  'Continue to Payment'}
-              </Button>
+              {/* Inline Payment Form appears after date selection */}
+              {requestedDeliveryDate && user && clientSecret && (
+                <div className="mt-4">
+                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <PaymentForm
+                      clientSecret={clientSecret}
+                      totalAmount={Math.round((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0))) * 100)}
+                      deliveryMethod={deliveryMethod}
+                      requestedDeliveryDate={requestedDeliveryDate}
+                    />
+                  </Elements>
+                </div>
+              )}
               <Button
                 variant="outline"
                 className="w-full"
@@ -678,19 +652,6 @@ const Cart = () => {
           </Card>
         </div>
         
-        {/* Payment Form - shows directly after date selection */}
-        {requestedDeliveryDate && user && clientSecret && (
-          <div className="mt-6 lg:col-span-3">
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <PaymentForm
-                clientSecret={clientSecret}
-                totalAmount={Math.round((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0))) * 100)}
-                deliveryMethod={deliveryMethod}
-                requestedDeliveryDate={requestedDeliveryDate}
-              />
-            </Elements>
-          </div>
-        )}
       </div>
     </div>
   );
