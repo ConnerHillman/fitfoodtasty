@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, TrendingDown, Package, Users, DollarSign, Star, RefreshCw, Calendar, Target, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { addDays, subDays } from "date-fns";
 
 interface Package {
   id: string;
@@ -44,6 +46,10 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
   const [selectedTimeRange, setSelectedTimeRange] = useState(timeRange);
   const [analytics, setAnalytics] = useState<PackageAnalytics[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,7 +60,7 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
     if (packages.length > 0) {
       fetchAnalytics();
     }
-  }, [packages, selectedPackage, selectedTimeRange]);
+  }, [packages, selectedPackage, selectedTimeRange, dateRange]);
 
   const fetchPackages = async () => {
     const { data, error } = await supabase
@@ -72,15 +78,15 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const daysAgo = parseInt(selectedTimeRange);
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - daysAgo);
-
+      const startDate = dateRange.from;
+      const endDate = dateRange.to;
+      
+      // Calculate the number of days in the selected range
+      const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      
       // Get previous period for comparison
-      const prevStartDate = new Date();
-      prevStartDate.setDate(prevStartDate.getDate() - (daysAgo * 2));
-      const prevEndDate = new Date();
-      prevEndDate.setDate(prevEndDate.getDate() - daysAgo);
+      const prevEndDate = startDate;
+      const prevStartDate = subDays(startDate, daysDiff);
 
       const packageFilter = selectedPackage === "all" ? {} : { package_id: selectedPackage };
 
@@ -97,6 +103,7 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
           packages (name, price)
         `)
         .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString())
         .match(packageFilter);
 
       if (ordersError) throw ordersError;
@@ -116,7 +123,8 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
         .from("page_views")
         .select("*")
         .eq("page_type", "packages")
-        .gte("created_at", startDate.toISOString());
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString());
 
       if (viewsError) throw viewsError;
 
@@ -254,16 +262,14 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
             </SelectContent>
           </Select>
 
-          <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Time range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-            </SelectContent>
-          </Select>
+          <DateRangePicker
+            date={dateRange}
+            onDateChange={(range) => {
+              if (range?.from && range?.to) {
+                setDateRange({ from: range.from, to: range.to });
+              }
+            }}
+          />
         </div>
 
         <Button onClick={fetchAnalytics} variant="outline" size="sm">
