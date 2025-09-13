@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Save, X, ShoppingCart, DollarSign, Calendar, Users, TrendingUp, Calculator, ChefHat, Plus, Trash2 } from "lucide-react";
+import { Edit, Save, X, ShoppingCart, DollarSign, Calendar, Users, TrendingUp, Calculator, ChefHat, Plus, Trash2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CategoryTag from "../CategoryTag";
@@ -36,6 +36,7 @@ interface Meal {
   is_active: boolean;
   image_url?: string;
   created_at: string;
+  shelf_life_days: number;
 }
 
 interface Ingredient {
@@ -298,6 +299,7 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
           description: editData.description,
           price: parseFloat(editData.price),
           category: editData.category,
+          shelf_life_days: parseInt(editData.shelf_life_days),
         })
         .eq("id", meal.id);
 
@@ -543,6 +545,23 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
                     />
                   ) : (
                     <p>{meal.description || 'No description available'}</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Shelf Life (days)
+                  </Label>
+                  {editMode === 'basic' ? (
+                    <Input
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={editData.shelf_life_days || ''}
+                      onChange={(e) => setEditData({...editData, shelf_life_days: e.target.value})}
+                    />
+                  ) : (
+                    <p className="font-medium">{meal.shelf_life_days} days</p>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
