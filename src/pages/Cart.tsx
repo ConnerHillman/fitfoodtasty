@@ -100,6 +100,41 @@ const Cart = () => {
     return tomorrow.toISOString().split('T')[0];
   };
 
+  // Get available dates for selected collection point
+  const getAvailableCollectionDates = () => {
+    if (deliveryMethod !== "pickup" || !selectedCollectionPoint) return [];
+    
+    const selectedPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+    if (!selectedPoint) return [];
+    
+    const availableDates = [];
+    const today = new Date();
+    
+    // Generate next 30 days and filter by collection days
+    for (let i = 1; i <= 30; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      
+      // Check if this day is in the collection point's available days
+      if (selectedPoint.collection_days.some(day => day.toLowerCase() === dayName)) {
+        availableDates.push(date.toISOString().split('T')[0]);
+      }
+    }
+    
+    return availableDates;
+  };
+
+  // Check if a date is available for collection
+  const isDateAvailable = (dateString: string) => {
+    if (deliveryMethod === "delivery") return true;
+    if (!selectedCollectionPoint) return false;
+    
+    const availableDates = getAvailableCollectionDates();
+    return availableDates.includes(dateString);
+  };
+
   // Calculate production date based on delivery date and shortest shelf life
   const calculateProductionDate = (deliveryDate: string) => {
     if (!deliveryDate || items.length === 0) return null;
@@ -326,7 +361,7 @@ const Cart = () => {
                               {point.city}, {point.postcode}<br />
                               {point.phone && <span>Phone: {point.phone}<br /></span>}
                               <strong>Collection fee: £{point.collection_fee.toFixed(2)}</strong><br />
-                              <strong>Collection days:</strong> {point.collection_days.join(', ')}
+                              <strong>Collection days:</strong> {point.collection_days.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(', ')}
                               {point.special_instructions && (
                                 <div className="mt-2">
                                   <strong>Special instructions:</strong><br />
@@ -348,20 +383,51 @@ const Cart = () => {
                   <Calendar className="h-4 w-4" />
                   {deliveryMethod === "delivery" ? "Delivery Date" : "Collection Date"}
                 </Label>
+                
+                {deliveryMethod === "pickup" && selectedCollectionPoint && (
+                  <div className="text-sm text-muted-foreground mb-2">
+                    {(() => {
+                      const point = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+                      return point ? (
+                        <span>Available collection days: {point.collection_days.map(day => 
+                          day.charAt(0).toUpperCase() + day.slice(1)
+                        ).join(', ')}</span>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
+                
                 <Input
                   id="delivery-date"
                   type="date"
                   min={getMinDeliveryDate()}
                   value={requestedDeliveryDate}
-                  onChange={(e) => setRequestedDeliveryDate(e.target.value)}
+                  onChange={(e) => {
+                    const selectedDate = e.target.value;
+                    if (deliveryMethod === "delivery" || isDateAvailable(selectedDate)) {
+                      setRequestedDeliveryDate(selectedDate);
+                    } else {
+                      toast({
+                        title: "Invalid collection date",
+                        description: "Please select a date that falls on an available collection day",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
                   className="w-full"
                 />
+                
+                {deliveryMethod === "pickup" && requestedDeliveryDate && !isDateAvailable(requestedDeliveryDate) && (
+                  <div className="text-sm text-destructive">
+                    This date is not available for collection at the selected point
+                  </div>
+                )}
               </div>
 
               <Button
                 className="w-full"
                 size="lg"
-                disabled={!requestedDeliveryDate || (deliveryMethod === "pickup" && !selectedCollectionPoint)}
+                disabled={!requestedDeliveryDate || (deliveryMethod === "pickup" && !selectedCollectionPoint) || (deliveryMethod === "pickup" && !isDateAvailable(requestedDeliveryDate))}
                 onClick={async () => {
                   if (!requestedDeliveryDate) {
                     toast({ 
@@ -376,6 +442,15 @@ const Cart = () => {
                     toast({ 
                       title: "Collection point required", 
                       description: "Please select a collection point",
+                      variant: 'destructive' 
+                    });
+                    return;
+                  }
+
+                  if (deliveryMethod === "pickup" && !isDateAvailable(requestedDeliveryDate)) {
+                    toast({ 
+                      title: "Invalid collection date", 
+                      description: "Please select a date that falls on an available collection day",
                       variant: 'destructive' 
                     });
                     return;
@@ -416,7 +491,9 @@ const Cart = () => {
                   }
                 }}
               >
-                {(!requestedDeliveryDate || (deliveryMethod === "pickup" && !selectedCollectionPoint)) ? `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} ${!requestedDeliveryDate ? "Date" : "Point"} to Continue` : 'Proceed to Checkout'}
+                {(!requestedDeliveryDate || (deliveryMethod === "pickup" && (!selectedCollectionPoint || !isDateAvailable(requestedDeliveryDate)))) ? 
+                  `Select ${deliveryMethod === "delivery" ? "Delivery" : "Collection"} ${!requestedDeliveryDate ? "Date" : !selectedCollectionPoint ? "Point" : "Valid Date"} to Continue` : 
+                  'Proceed to Checkout'}
               </Button>
               <Button
                 variant="outline"
