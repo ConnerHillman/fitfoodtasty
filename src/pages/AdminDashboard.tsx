@@ -12,8 +12,9 @@ import AllOrders from "@/pages/AllOrders";
 import CustomersManager from "@/components/admin/CustomersManager";
 import CustomerDetailModal from "@/components/admin/CustomerDetailModal";
 import Marketing from "@/components/admin/Marketing";
-import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp, ListOrdered, Users } from "lucide-react";
+import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, TrendingUp, ListOrdered, Users, Tags } from "lucide-react";
 import DataImporter from "@/components/DataImporter";
+import { LabelGenerator as LabelGeneratorComponent } from "@/components/LabelGenerator";
 import { useSearchParams } from "react-router-dom";
 import { CustomerDetailProvider } from "@/contexts/CustomerDetailContext";
 const AdminDashboard = () => {
@@ -38,7 +39,7 @@ const AdminDashboard = () => {
 
         <Tabs value={tab} onValueChange={(v) => { setTab(v); setSearchParams({ tab: v }); }} className="space-y-8">
           <div className="relative bg-gradient-to-r from-background via-background/95 to-background backdrop-blur-sm border border-border/50 rounded-xl p-2 shadow-lg">
-            <TabsList className="grid w-full grid-cols-10 bg-transparent gap-1 p-0 h-auto">
+            <TabsList className="grid w-full grid-cols-11 bg-transparent gap-1 p-0 h-auto">
               <TabsTrigger 
                 value="dashboard" 
                 className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
@@ -99,6 +100,12 @@ const AdminDashboard = () => {
               >
                 <span>Marketing</span>
               </TabsTrigger>
+              <TabsTrigger 
+                value="labels" 
+                className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/20 hover:bg-muted/50 text-sm font-medium"
+              >
+                <span>Labels</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -140,6 +147,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="marketing">
             <Marketing />
+          </TabsContent>
+
+          <TabsContent value="labels">
+            <LabelGeneratorComponent />
           </TabsContent>
         </Tabs>
         
