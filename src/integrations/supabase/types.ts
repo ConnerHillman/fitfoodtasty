@@ -383,6 +383,7 @@ export type Database = {
           default_production_same_day: boolean
           id: string
           is_active: boolean
+          is_business_open: boolean
           updated_at: string
         }
         Insert: {
@@ -394,6 +395,7 @@ export type Database = {
           default_production_same_day?: boolean
           id?: string
           is_active?: boolean
+          is_business_open?: boolean
           updated_at?: string
         }
         Update: {
@@ -405,6 +407,7 @@ export type Database = {
           default_production_same_day?: boolean
           id?: string
           is_active?: boolean
+          is_business_open?: boolean
           updated_at?: string
         }
         Relationships: []

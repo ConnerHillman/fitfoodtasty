@@ -17,6 +17,7 @@ interface GlobalSchedule {
   default_cutoff_day?: string;
   default_production_lead_days: number;
   default_production_same_day: boolean;
+  is_business_open: boolean;
   is_active: boolean;
 }
 
@@ -52,6 +53,7 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
       default_cutoff_day: day, // Default to same day
       default_production_lead_days: 2,
       default_production_same_day: false,
+      is_business_open: true,
       is_active: true
     };
   };
@@ -105,6 +107,10 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
     const schedule = getScheduleForDay(day);
     const cutoffDay = schedule.default_cutoff_day || day;
     const cutoffTime = formatTimeForInput(schedule.default_cutoff_time);
+    
+    if (!schedule.is_business_open) {
+      return `CLOSED - No deliveries or collections available`;
+    }
     
     if (schedule.default_production_same_day) {
       return `Orders close: ${dayLabels[cutoffDay as keyof typeof dayLabels]} ${cutoffTime} • Production: Same day as delivery`;
@@ -204,18 +210,26 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
             {daysOfWeek.map((day) => {
               const schedule = getScheduleForDay(day);
               return (
-                <Card key={day} className="border-l-4 border-l-primary/20">
+                <Card key={day} className={`border-l-4 ${schedule.is_business_open ? 'border-l-primary/20' : 'border-l-red-500/50 bg-red-50/30 dark:bg-red-950/30'}`}>
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-semibold text-lg capitalize flex items-center gap-2">
                         {day}
-                        <Badge variant="secondary" className="text-xs">
-                          {schedule.is_active ? 'Active' : 'Inactive'}
+                        <Badge variant={schedule.is_business_open ? "default" : "destructive"} className="text-xs">
+                          {schedule.is_business_open ? 'Open' : 'Closed'}
                         </Badge>
                       </h3>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={schedule.is_business_open}
+                          onCheckedChange={(checked) => updateSchedule(day, 'is_business_open', checked)}
+                          disabled={saving}
+                        />
+                        <Label className="text-sm font-medium">Open for business</Label>
+                      </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${!schedule.is_business_open ? 'opacity-50 pointer-events-none' : ''}`}>
                       <div className="space-y-2">
                         <Label className="flex items-center gap-2 text-sm font-medium">
                           <Clock className="h-4 w-4" />
@@ -227,7 +241,7 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
                             <Select
                               value={schedule.default_cutoff_day || day}
                               onValueChange={(value) => updateSchedule(day, 'default_cutoff_day', value)}
-                              disabled={saving}
+                              disabled={saving || !schedule.is_business_open}
                             >
                               <SelectTrigger>
                                 <SelectValue />
@@ -247,7 +261,7 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
                               type="time"
                               value={formatTimeForInput(schedule.default_cutoff_time)}
                               onChange={(e) => updateSchedule(day, 'default_cutoff_time', e.target.value + ':00')}
-                              disabled={saving}
+                              disabled={saving || !schedule.is_business_open}
                             />
                           </div>
                         </div>
@@ -266,7 +280,7 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
                             <Switch
                               checked={schedule.default_production_same_day}
                               onCheckedChange={(checked) => updateSchedule(day, 'default_production_same_day', checked)}
-                              disabled={saving}
+                              disabled={saving || !schedule.is_business_open}
                             />
                             <Label className="text-sm">Same day production</Label>
                           </div>
@@ -279,7 +293,7 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
                                 max="7"
                                 value={schedule.default_production_lead_days}
                                 onChange={(e) => updateSchedule(day, 'default_production_lead_days', parseInt(e.target.value))}
-                                disabled={saving}
+                                disabled={saving || !schedule.is_business_open}
                                 className="w-20"
                               />
                             </div>
@@ -289,8 +303,8 @@ const WeeklyScheduleManager = ({ globalSchedule, deliveryZones = [], onScheduleU
 
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Preview</Label>
-                        <div className="p-3 bg-muted rounded-md">
-                          <p className="text-xs text-muted-foreground leading-relaxed">
+                        <div className={`p-3 rounded-md ${schedule.is_business_open ? 'bg-muted' : 'bg-red-100 dark:bg-red-950'}`}>
+                          <p className={`text-xs leading-relaxed ${schedule.is_business_open ? 'text-muted-foreground' : 'text-red-700 dark:text-red-300 font-medium'}`}>
                             {getProductionPreview(day)}
                           </p>
                         </div>

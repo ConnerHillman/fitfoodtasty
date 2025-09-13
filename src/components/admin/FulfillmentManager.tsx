@@ -41,8 +41,10 @@ interface GlobalSchedule {
   id: string;
   day_of_week: string;
   default_cutoff_time: string;
+  default_cutoff_day?: string;
   default_production_lead_days: number;
   default_production_same_day: boolean;
+  is_business_open: boolean;
   is_active: boolean;
 }
 
