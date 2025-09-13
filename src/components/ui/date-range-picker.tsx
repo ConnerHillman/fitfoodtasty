@@ -142,8 +142,12 @@ export function DateRangePicker({
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open)
-    if (!open) {
-      // Reset if closing without completing selection
+    if (open) {
+      // Opening - reset to fresh state so first click starts new selection
+      setTempDate(undefined)
+      setClickCount(0)
+    } else if (!open) {
+      // Closing - reset if closing without completing selection
       setTempDate(date)
       setClickCount(0)
     }
