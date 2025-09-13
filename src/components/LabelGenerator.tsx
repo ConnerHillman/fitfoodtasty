@@ -241,9 +241,8 @@ export const LabelGenerator: React.FC = () => {
         <div className="flex items-center justify-center gap-4">
           <h1 className="text-4xl font-bold text-primary">Label Generator</h1>
           <Button
-            variant="outline"
             onClick={() => setShowLabelReport(true)}
-            className="ml-auto bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300"
+            className="ml-auto bg-primary hover:bg-primary/90"
           >
             <Calendar className="w-4 h-4 mr-2" />
             Production Report
