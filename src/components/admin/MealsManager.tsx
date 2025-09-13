@@ -447,7 +447,7 @@ const MealsManager = () => {
 
                       {/* Action Buttons */}
                       <div className="flex items-center gap-2 pt-3">
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={0}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -464,7 +464,7 @@ const MealsManager = () => {
                           </Tooltip>
                         </TooltipProvider>
 
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={0}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -481,7 +481,7 @@ const MealsManager = () => {
                         </TooltipProvider>
 
                         <AlertDialog>
-                          <TooltipProvider>
+                          <TooltipProvider delayDuration={0}>
                             <Tooltip>
                               <AlertDialogTrigger asChild>
                                 <TooltipTrigger asChild>
@@ -598,7 +598,7 @@ const MealsManager = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <TooltipProvider>
+                          <TooltipProvider delayDuration={0}>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -614,7 +614,7 @@ const MealsManager = () => {
                             </Tooltip>
                           </TooltipProvider>
                           
-                          <TooltipProvider>
+                          <TooltipProvider delayDuration={0}>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -631,7 +631,7 @@ const MealsManager = () => {
                           </TooltipProvider>
 
                           <AlertDialog>
-                            <TooltipProvider>
+                            <TooltipProvider delayDuration={0}>
                               <Tooltip>
                                 <AlertDialogTrigger asChild>
                                   <TooltipTrigger asChild>
