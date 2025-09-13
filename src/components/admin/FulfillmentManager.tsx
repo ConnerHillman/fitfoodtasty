@@ -492,7 +492,7 @@ const FulfillmentManager = () => {
                     Add Zone
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "Edit" : "Add"} Delivery Zone
@@ -732,7 +732,7 @@ const FulfillmentManager = () => {
                     Add Collection Point
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "Edit" : "Add"} Collection Point
