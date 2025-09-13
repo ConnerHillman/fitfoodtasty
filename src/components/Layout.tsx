@@ -11,8 +11,6 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const { getTotalItems } = useCart();
-  const isBusinessRoute = location.pathname.startsWith('/business');
-
   const customerNavItems = [
     { to: '/', label: 'Menu', icon: ChefHat },
     { to: '/about', label: 'About Us', icon: Info },
@@ -20,15 +18,7 @@ const Layout = ({ children }: LayoutProps) => {
     { to: '/subscription', label: 'Subscription', icon: Calendar },
   ];
 
-  const businessNavItems = [
-    { to: '/business', label: 'Dashboard', icon: BarChart3 },
-    { to: '/business/orders', label: 'Orders', icon: Package },
-    { to: '/business/kitchen', label: 'Kitchen', icon: ChefHat },
-    { to: '/business/analytics', label: 'Analytics', icon: BarChart3 },
-    { to: '/business/settings', label: 'Settings', icon: Settings },
-  ];
-
-  const navItems = isBusinessRoute ? businessNavItems : customerNavItems;
+  const navItems = customerNavItems;
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,21 +55,19 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {!isBusinessRoute && (
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/cart">
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Cart ({getTotalItems()})
-                  </Link>
-                </Button>
-              )}
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/cart">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Cart ({getTotalItems()})
+                </Link>
+              </Button>
               <Button 
                 asChild 
                 className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold px-4 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                <Link to={isBusinessRoute ? "/" : "/admin"} className="flex items-center space-x-2">
+                <Link to="/admin" className="flex items-center space-x-2">
                   <Shield className="h-4 w-4" />
-                  <span>{isBusinessRoute ? "Customer View" : "ADMIN"}</span>
+                  <span>ADMIN</span>
                 </Link>
               </Button>
             </div>
