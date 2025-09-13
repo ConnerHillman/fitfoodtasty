@@ -8,7 +8,7 @@ import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { addDays, subDays } from "date-fns";
+import { addDays, subDays, startOfDay, endOfDay } from "date-fns";
 
 const BusinessDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -31,6 +31,9 @@ const BusinessDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      const from = startOfDay(dateRange.from);
+      const to = endOfDay(dateRange.to);
+
       // Fetch regular orders within date range
       const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
@@ -45,8 +48,8 @@ const BusinessDashboard = () => {
             meal_id
           )
         `)
-        .gte("created_at", dateRange.from.toISOString())
-        .lte("created_at", dateRange.to.toISOString())
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
         .order("created_at", { ascending: false });
 
       if (ordersError) {
@@ -66,8 +69,8 @@ const BusinessDashboard = () => {
             meal_id
           )
         `)
-        .gte("created_at", dateRange.from.toISOString())
-        .lte("created_at", dateRange.to.toISOString())
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
         .order("created_at", { ascending: false });
 
       if (packageOrdersError) {
@@ -105,8 +108,8 @@ const BusinessDashboard = () => {
         .from("page_views")
         .select("id")
         .eq("page_type", "menu")
-        .gte("created_at", dateRange.from.toISOString())
-        .lte("created_at", dateRange.to.toISOString());
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString());
 
       if (viewsError) {
         console.error("Error fetching views:", viewsError);
