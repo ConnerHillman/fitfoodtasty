@@ -941,7 +941,7 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
       delivery_fee: parseFloat(formData.delivery_fee.toString()) || 0,
       minimum_order: parseFloat(formData.minimum_order.toString()) || 0,
       maximum_distance_km: formData.maximum_distance_km ? parseFloat(formData.maximum_distance_km.toString()) : null,
-      production_day_offset: parseInt(formData.production_day_offset.toString()) || -2,
+      production_day_offset: formData.production_day_offset === '' ? -2 : parseInt(formData.production_day_offset.toString()),
       allow_custom_dates: formData.allow_custom_dates,
       production_notes: formData.production_notes.trim() || null,
     };
@@ -1134,7 +1134,7 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
               <Input
                 type="number"
                 value={formData.production_day_offset}
-                onChange={(e) => setFormData(prev => ({ ...prev, production_day_offset: parseInt(e.target.value) || -2 }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, production_day_offset: e.target.value === '' ? -2 : parseInt(e.target.value) }))}
                 className="w-20"
               />
               <span className="text-sm text-muted-foreground">days before delivery</span>
