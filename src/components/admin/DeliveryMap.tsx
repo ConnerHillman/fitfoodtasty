@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, AlertCircle } from 'lucide-react';
+import { MapPin, AlertCircle, Plus, Square, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,15 +25,19 @@ interface DeliveryZone {
 
 interface DeliveryMapProps {
   deliveryZones: DeliveryZone[];
+  onZoneCreated?: (zoneData: Partial<DeliveryZone>) => void;
 }
 
-const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones }) => {
+const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones, onZoneCreated }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const draw = useRef<MapboxDraw | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [testPostcode, setTestPostcode] = useState('');
-  const [testResult, setTestResult] = useState<string>('');
+  const [testResult, setTestResult] = useState<{ found: boolean; zone?: DeliveryZone } | null>(null);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [selectedArea, setSelectedArea] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,9 +87,114 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones }) => {
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+    // Initialize Mapbox Draw
+    draw.current = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: {
+        polygon: true,
+        trash: true
+      },
+      defaultMode: 'simple_select'
+    });
+    
+    map.current.addControl(draw.current, 'top-left');
+
+    // Listen for drawing events
+    map.current.on('draw.create', handleDrawCreate);
+    map.current.on('draw.update', handleDrawUpdate);
+    map.current.on('draw.delete', handleDrawDelete);
+
     map.current.on('load', () => {
       addDeliveryZonesToMap();
     });
+  };
+
+  // Drawing event handlers
+  const handleDrawCreate = async (e: any) => {
+    const feature = e.features[0];
+    setSelectedArea(feature);
+    
+    if (feature.geometry.type === 'Polygon') {
+      const postcodes = await getPostcodesInPolygon(feature.geometry.coordinates[0]);
+      
+      if (onZoneCreated && postcodes.length > 0) {
+        onZoneCreated({
+          zone_name: `Zone ${new Date().toLocaleTimeString()}`,
+          postcodes: postcodes,
+          delivery_fee: 5.99,
+          delivery_days: ['monday', 'wednesday', 'friday'],
+          is_active: true
+        });
+      } else {
+        toast({
+          title: "No postcodes found",
+          description: "No existing postcodes found in the selected area. You can manually add postcodes to this zone.",
+          variant: "default",
+        });
+        
+        if (onZoneCreated) {
+          onZoneCreated({
+            zone_name: `Zone ${new Date().toLocaleTimeString()}`,
+            postcodes: [],
+            delivery_fee: 5.99,
+            delivery_days: ['monday', 'wednesday', 'friday'],
+            is_active: true
+          });
+        }
+      }
+    }
+  };
+
+  const handleDrawUpdate = (e: any) => {
+    const feature = e.features[0];
+    setSelectedArea(feature);
+  };
+
+  const handleDrawDelete = () => {
+    setSelectedArea(null);
+  };
+
+  const toggleDrawingMode = () => {
+    if (draw.current) {
+      if (isDrawingMode) {
+        draw.current.changeMode('simple_select');
+      } else {
+        draw.current.changeMode('draw_polygon');
+      }
+      setIsDrawingMode(!isDrawingMode);
+    }
+  };
+
+  const getPostcodesInPolygon = async (coordinates: number[][]): Promise<string[]> => {
+    // Simple implementation: check existing postcodes if they fall within the polygon
+    const postcodes: string[] = [];
+    
+    for (const zone of deliveryZones) {
+      for (const postcode of zone.postcodes) {
+        const coords = await geocodePostcode(postcode);
+        if (coords && isPointInPolygon(coords, coordinates)) {
+          postcodes.push(postcode);
+        }
+      }
+    }
+    
+    return postcodes;
+  };
+
+  const isPointInPolygon = (point: [number, number], polygon: number[][]): boolean => {
+    const [x, y] = point;
+    let inside = false;
+    
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const [xi, yi] = polygon[i];
+      const [xj, yj] = polygon[j];
+      
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+        inside = !inside;
+      }
+    }
+    
+    return inside;
   };
 
   const addDeliveryZonesToMap = async () => {
@@ -196,7 +307,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones }) => {
     );
 
     if (matchingZone) {
-      setTestResult(`✓ Delivery available in ${matchingZone.zone_name} - Fee: £${matchingZone.delivery_fee}, Min Order: £${matchingZone.minimum_order}`);
+      setTestResult({ found: true, zone: matchingZone });
       
       // Try to center map on this postcode
       try {
@@ -208,7 +319,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones }) => {
         console.warn('Failed to center map on postcode');
       }
     } else {
-      setTestResult(`✗ No delivery available to ${normalizedPostcode}`);
+      setTestResult({ found: false });
     }
   };
 
@@ -257,16 +368,65 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span>Exact Postcodes</span>
-              <div className="w-3 h-3 rounded-full bg-orange-500 ml-4"></div>
-              <span>Postcode Prefixes</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span>Exact Postcodes</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                  <span>Postcode Prefixes</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={toggleDrawingMode}
+                  variant={isDrawingMode ? "destructive" : "outline"}
+                  size="sm"
+                >
+                  {isDrawingMode ? (
+                    <>
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Cancel Drawing
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Draw New Zone
+                    </>
+                  )}
+                </Button>
+                {selectedArea && (
+                  <Button 
+                    onClick={() => {
+                      draw.current?.delete(selectedArea.id);
+                      setSelectedArea(null);
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Square className="w-4 h-4 mr-2" />
+                    Clear Selection
+                  </Button>
+                )}
+              </div>
             </div>
             
             <div className="h-96 w-full rounded-lg overflow-hidden border">
               <div ref={mapContainer} className="w-full h-full" />
             </div>
+
+            {selectedArea && (
+              <div className="p-3 rounded-lg border bg-primary/10 border-primary/20">
+                <div className="text-sm font-medium mb-2">Zone Selection Active</div>
+                <p className="text-sm opacity-90">
+                  Draw a polygon on the map to define a new delivery zone. 
+                  The system will automatically detect postcodes within the selected area.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -294,12 +454,30 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({ deliveryZones }) => {
             </div>
             
             {testResult && (
-              <div className={`p-3 rounded-md text-sm ${
-                testResult.startsWith('✓') 
-                  ? 'bg-green-50 text-green-800 border border-green-200' 
-                  : 'bg-red-50 text-red-800 border border-red-200'
+              <div className={`p-3 rounded-lg border ${
+                testResult.found 
+                  ? 'bg-success/10 border-success/20 text-success-foreground' 
+                  : 'bg-destructive/10 border-destructive/20 text-destructive-foreground'
               }`}>
-                {testResult}
+                <div className="flex items-center gap-2">
+                  {testResult.found ? (
+                    <CheckCircle className="w-5 h-5 text-success" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-destructive" />
+                  )}
+                  <span className="font-medium">
+                    {testResult.found 
+                      ? `✓ Delivery available in ${testResult.zone?.zone_name}` 
+                      : '✗ No delivery available for this postcode'
+                    }
+                  </span>
+                </div>
+                {testResult.found && testResult.zone && (
+                  <div className="mt-2 text-sm opacity-90">
+                    Delivery fee: £{testResult.zone.delivery_fee} | 
+                    Days: {testResult.zone.delivery_days.join(', ')}
+                  </div>
+                )}
               </div>
             )}
           </div>

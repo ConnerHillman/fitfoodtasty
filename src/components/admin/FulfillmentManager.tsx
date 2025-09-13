@@ -732,7 +732,20 @@ const FulfillmentManager = () => {
         </TabsContent>
 
         <TabsContent value="map" className="space-y-6">
-          <DeliveryMap deliveryZones={deliveryZones} />
+            <DeliveryMap 
+              deliveryZones={deliveryZones} 
+              onZoneCreated={(zoneData) => {
+                setEditingItem({ 
+                  id: '', 
+                  minimum_order: 0, 
+                  maximum_distance_km: null,
+                  postcode_prefixes: [],
+                  ...zoneData 
+                } as DeliveryZone);
+                setIsDialogOpen(true);
+                setActiveTab("zones");
+              }}
+            />
         </TabsContent>
       </Tabs>
     </div>
