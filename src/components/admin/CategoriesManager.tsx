@@ -599,12 +599,59 @@ const CategoriesManager = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className={`animate-fade-in ${
-          viewMode === 'grid' 
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
-            : 'space-y-4'
-        }`}>
-          {displayedCategories.map((category) => (
+        <div className="space-y-6">
+          {/* Unassigned Meals Section */}
+          {getTotalUnassignedMeals() > 0 && (
+            <Card className="border-2 border-dashed border-orange-200 bg-orange-50/50 dark:bg-orange-950/20 dark:border-orange-800">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-6 w-6 rounded-full bg-orange-500 flex items-center justify-center">
+                      <Target className="h-3 w-3 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-semibold text-orange-700 dark:text-orange-300">
+                        Unassigned Meals
+                      </CardTitle>
+                      <Badge variant="secondary" className="mt-1 text-xs bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                        Requires attention
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedCategory({ id: 'unassigned', name: 'unassigned', description: 'Unassigned meals', color: '#f97316', is_active: true, sort_order: -1 });
+                      setIsMealAssignmentOpen(true);
+                    }}
+                    className="border-orange-200 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-900"
+                  >
+                    <ChefHat className="h-4 w-4 mr-2" />
+                    Manage
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-orange-600 dark:text-orange-400 mb-4">
+                  These meals need to be assigned to a category to appear in the menu properly.
+                </p>
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className="text-xs border-orange-200 text-orange-700 dark:border-orange-800 dark:text-orange-300">
+                    {getTotalUnassignedMeals()} unassigned meals
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Categories */}
+          <div className={`animate-fade-in ${
+            viewMode === 'grid' 
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+              : 'space-y-4'
+          }`}>
+            {displayedCategories.map((category) => (
             <div key={category.id}>
               {viewMode === 'grid' ? (
                 <CategoryCard category={category} />
@@ -678,7 +725,8 @@ const CategoriesManager = () => {
                 </Card>
               )}
             </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -688,10 +736,16 @@ const CategoriesManager = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ChefHat className="h-5 w-5" />
-              Manage Meals in "{selectedCategory?.name}" Category
+              {selectedCategory?.name === 'unassigned' ? 
+                'Manage Unassigned Meals' : 
+                `Manage Meals in "${selectedCategory?.name}" Category`
+              }
             </DialogTitle>
             <DialogDescription>
-              Add or remove meals from this category. You can also move meals to other categories.
+              {selectedCategory?.name === 'unassigned' ? 
+                'Assign these meals to appropriate categories to organize your menu.' :
+                'Add or remove meals from this category. You can also move meals to other categories.'
+              }
             </DialogDescription>
           </DialogHeader>
           
@@ -708,16 +762,17 @@ const CategoriesManager = () => {
             </div>
 
             {/* Current meals in category */}
-            <div>
-              <h4 className="font-semibold mb-3 flex items-center justify-between">
-                <span>Current Meals</span>
-                <Badge variant="outline">
-                  {mealSearchQuery ? 
-                    `${getMealsInCategory(selectedCategory?.name || '').length} of ${getTotalMealsInCategory(selectedCategory?.name || '')}` :
-                    getTotalMealsInCategory(selectedCategory?.name || '')
-                  }
-                </Badge>
-              </h4>
+            {selectedCategory?.name !== 'unassigned' && (
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center justify-between">
+                  <span>Current Meals</span>
+                  <Badge variant="outline">
+                    {mealSearchQuery ? 
+                      `${getMealsInCategory(selectedCategory?.name || '').length} of ${getTotalMealsInCategory(selectedCategory?.name || '')}` :
+                      getTotalMealsInCategory(selectedCategory?.name || '')
+                    }
+                  </Badge>
+                </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {getMealsInCategory(selectedCategory?.name || '').map((meal) => (
                   <Card key={meal.id} className="p-3 hover:shadow-md transition-shadow">
@@ -761,7 +816,8 @@ const CategoriesManager = () => {
                   </div>
                 )}
               </div>
-            </div>
+              </div>
+            )}
 
             {/* Unassigned meals */}
             <div>
@@ -782,13 +838,23 @@ const CategoriesManager = () => {
                         <h5 className="font-medium truncate">{meal.name}</h5>
                         <p className="text-sm text-muted-foreground line-clamp-1">{meal.description}</p>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => assignMealToCategory(meal.id, selectedCategory?.name || '')}
-                        className="shrink-0"
-                      >
-                        Add to {selectedCategory?.name}
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" className="shrink-0">
+                            Assign Category
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {categories.filter(c => c.is_active).map((category) => (
+                            <DropdownMenuItem
+                              key={category.id}
+                              onClick={() => assignMealToCategory(meal.id, category.name)}
+                            >
+                              Assign to {category.name}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </Card>
                 ))}
