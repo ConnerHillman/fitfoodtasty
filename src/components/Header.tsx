@@ -81,19 +81,6 @@ const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Cart Button */}
-            <Button variant="outline" size="sm" asChild className="relative">
-              <Link to="/cart" className="flex items-center space-x-2">
-                <ShoppingCart className="h-4 w-4" />
-                <span>Cart</span>
-                {getTotalItems() > 0 && (
-                  <Badge className="bg-green-600 text-white text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center">
-                    {getTotalItems()}
-                  </Badge>
-                )}
-              </Link>
-            </Button>
-            
             {/* User Actions */}
             {user ? (
               <div className="flex items-center space-x-4">
@@ -152,27 +139,33 @@ const Header = () => {
               </>
             )}
             
+            {/* Cart Button - Primary CTA */}
             <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              <Link to="/menu">ORDER NOW</Link>
-            </Button>
-          </div>
-
-          {/* Mobile Actions */}
-          <div className="flex md:hidden items-center space-x-2">
-            {/* Mobile Cart Button */}
-            <Button variant="outline" size="sm" asChild className="relative">
-              <Link to="/cart" className="flex items-center space-x-1">
+              <Link to="/cart" className="flex items-center space-x-2">
                 <ShoppingCart className="h-4 w-4" />
+                <span>CART</span>
                 {getTotalItems() > 0 && (
-                  <Badge className="bg-green-600 text-white text-xs rounded-full min-w-[1rem] h-4 flex items-center justify-center">
+                  <Badge className="bg-white text-green-600 text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center ml-2">
                     {getTotalItems()}
                   </Badge>
                 )}
               </Link>
             </Button>
-            
+          </div>
+
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center space-x-2">
+            {/* Mobile Cart Button - Primary CTA */}
             <Button asChild size="sm" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-4 py-2 rounded-full">
-              <Link to="/menu">ORDER</Link>
+              <Link to="/cart" className="flex items-center space-x-1">
+                <ShoppingCart className="h-4 w-4" />
+                <span>CART</span>
+                {getTotalItems() > 0 && (
+                  <Badge className="bg-white text-green-600 text-xs rounded-full min-w-[1rem] h-4 flex items-center justify-center ml-1">
+                    {getTotalItems()}
+                  </Badge>
+                )}
+              </Link>
             </Button>
             
             {/* Mobile Menu */}
