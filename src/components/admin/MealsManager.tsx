@@ -439,7 +439,7 @@ const MealsManager = () => {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => toggleActive(meal)}>
                                   Deactivate
                                 </AlertDialogAction>
@@ -595,7 +595,7 @@ const MealsManager = () => {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => toggleActive(meal)}>
                                   Deactivate
                                 </AlertDialogAction>
