@@ -25,7 +25,9 @@ import {
   Clock,
   Package,
   Utensils,
-  Star
+  Star,
+  Grid3X3,
+  List
 } from "lucide-react";
 import { format } from "date-fns";
 import { subDays, startOfDay, endOfDay } from "date-fns";
@@ -71,6 +73,7 @@ const CustomersManager = () => {
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterBy, setFilterBy] = useState("all");
+  const [viewMode, setViewMode] = useState<"list" | "card">("list");
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: subDays(new Date(), 30),
     to: new Date(),
@@ -446,6 +449,26 @@ const CustomersManager = () => {
                 {sortOrder === "asc" ? "↑" : "↓"}
               </Button>
 
+              {/* View Mode Toggle */}
+              <div className="flex border border-border rounded-lg overflow-hidden">
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="rounded-none border-r border-border"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "card" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("card")}
+                  className="rounded-none"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+              </div>
+
               <DateRangePicker
                 date={dateRange}
                 onDateChange={(range) => {
@@ -459,7 +482,7 @@ const CustomersManager = () => {
         </CardContent>
       </Card>
 
-      {/* Customer Grid */}
+      {/* Customer Views */}
       <Card>
         <CardHeader>
           <CardTitle>Customers ({filteredCustomers.length})</CardTitle>
@@ -472,122 +495,237 @@ const CustomersManager = () => {
               <p>No customers match your current search criteria.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCustomers.map((customer) => (
-                <div
-                  key={customer.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openCustomerDetail(customer.user_id || customer.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      openCustomerDetail(customer.user_id || customer.id);
-                    }
-                  }}
-                  className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card via-card/95 to-card/90 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {/* Premium badge for high-value customers */}
-                  {getCustomerValue(customer) === "high" && (
-                    <div className="absolute top-3 right-3">
-                      <Badge variant="default" className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-medium">
-                        <Star className="h-3 w-3 mr-1" />
-                        VIP
-                      </Badge>
-                    </div>
-                  )}
+            <>
+              {/* List View */}
+              {viewMode === "list" && (
+                <div className="space-y-2">
+                  {filteredCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openCustomerDetail(customer.user_id || customer.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openCustomerDetail(customer.user_id || customer.id);
+                        }
+                      }}
+                      className="group flex items-center justify-between p-4 rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring bg-gradient-to-r from-card to-card/95"
+                    >
+                      {/* Left Section - Customer Info */}
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-primary" />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {customer.full_name}
+                            </h3>
+                            {getCustomerValue(customer) === "high" && (
+                              <Badge variant="default" className="text-xs">
+                                <Star className="h-3 w-3 mr-1" />
+                                VIP
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              Customer since {format(new Date(customer.created_at), "MMM yyyy")}
+                            </span>
+                            
+                            {customer.phone && (
+                              <span className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                {customer.phone}
+                              </span>
+                            )}
+                            
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {customer.city || 'No city'}, {customer.postal_code || 'No postcode'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* Customer Header */}
-                  <div className="space-y-3">
-                    <CustomerLink
-                      customerId={customer.user_id}
-                      customerName={customer.full_name}
-                      variant="ghost"
-                      className="text-xl font-bold text-foreground hover:text-primary transition-colors duration-200 p-0 h-auto justify-start w-full"
-                    />
-                    
-                    <div className="text-sm text-muted-foreground">
-                      Customer since {format(new Date(customer.created_at), "MMM yyyy")}
-                    </div>
-                  </div>
+                      {/* Center Section - Order Stats */}
+                      <div className="hidden md:flex items-center gap-6 mx-6">
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-primary">{customer.total_orders}</div>
+                          <div className="text-xs text-muted-foreground">Orders</div>
+                        </div>
+                        
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-green-600">{formatCurrency(customer.total_spent)}</div>
+                          <div className="text-xs text-muted-foreground">Spent</div>
+                        </div>
+                        
+                        <div className="text-center">
+                          <div className="text-sm text-muted-foreground">
+                            {customer.last_order_date 
+                              ? format(new Date(customer.last_order_date), "MMM dd")
+                              : "Never"
+                            }
+                          </div>
+                          <div className="text-xs text-muted-foreground">Last Order</div>
+                        </div>
+                      </div>
 
-                  {/* Customer Stats */}
-                  <div className="mt-4 grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 rounded-lg bg-muted/30">
-                      <div className="text-lg font-bold text-primary">
-                        {customer.total_orders}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Total Orders
-                      </div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-muted/30">
-                      <div className="text-lg font-bold text-green-600">
-                        {formatCurrency(customer.total_spent)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Total Spent
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Customer Details */}
-                  <div className="mt-4 space-y-2">
-                    {customer.phone && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        <span>{customer.phone}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      <span>{customer.city || 'No city'}, {customer.postal_code || 'No postcode'}</span>
-                    </div>
-
-                    {customer.last_order_date && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>Last order {format(new Date(customer.last_order_date), "MMM dd, yyyy")}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Customer Value Badge */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <Badge variant={
-                      getCustomerValue(customer) === "high" ? "default" :
-                      getCustomerValue(customer) === "medium" ? "secondary" : "outline"
-                    } className="text-xs">
-                      {getCustomerValue(customer) === "high" ? "High Value" :
-                       getCustomerValue(customer) === "medium" ? "Regular" : "New Customer"}
-                    </Badge>
-
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Utensils className="h-3 w-3" />
-                        <span>{customer.order_count}</span>
-                      </div>
-                      <div className="flex items-center gap-1 ml-2">
-                        <Package className="h-3 w-3" />
-                        <span>{customer.package_order_count}</span>
+                      {/* Right Section - Status & Action */}
+                      <div className="flex items-center gap-3">
+                        <Badge variant={
+                          getCustomerValue(customer) === "high" ? "default" :
+                          getCustomerValue(customer) === "medium" ? "secondary" : "outline"
+                        } className="hidden sm:flex">
+                          {getCustomerValue(customer) === "high" ? "High Value" :
+                           getCustomerValue(customer) === "medium" ? "Regular" : "New"}
+                        </Badge>
+                        
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Utensils className="h-3 w-3" />
+                            <span>{customer.order_count}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Package className="h-3 w-3" />
+                            <span>{customer.package_order_count}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <Eye className="h-4 w-4 text-primary" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Hover Effect Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  
-                  {/* Click indicator */}
-                  <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="flex items-center gap-1 text-xs text-primary font-medium">
-                      <span>View Details</span>
-                      <Eye className="h-3 w-3" />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* Card View */}
+              {viewMode === "card" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openCustomerDetail(customer.user_id || customer.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openCustomerDetail(customer.user_id || customer.id);
+                        }
+                      }}
+                      className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card via-card/95 to-card/90 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      {/* Premium badge for high-value customers */}
+                      {getCustomerValue(customer) === "high" && (
+                        <div className="absolute top-3 right-3">
+                          <Badge variant="default" className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-medium">
+                            <Star className="h-3 w-3 mr-1" />
+                            VIP
+                          </Badge>
+                        </div>
+                      )}
+
+                      {/* Customer Header */}
+                      <div className="space-y-3">
+                        <CustomerLink
+                          customerId={customer.user_id}
+                          customerName={customer.full_name}
+                          variant="ghost"
+                          className="text-xl font-bold text-foreground hover:text-primary transition-colors duration-200 p-0 h-auto justify-start w-full"
+                        />
+                        
+                        <div className="text-sm text-muted-foreground">
+                          Customer since {format(new Date(customer.created_at), "MMM yyyy")}
+                        </div>
+                      </div>
+
+                      {/* Customer Stats */}
+                      <div className="mt-4 grid grid-cols-2 gap-4">
+                        <div className="text-center p-3 rounded-lg bg-muted/30">
+                          <div className="text-lg font-bold text-primary">
+                            {customer.total_orders}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Total Orders
+                          </div>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted/30">
+                          <div className="text-lg font-bold text-green-600">
+                            {formatCurrency(customer.total_spent)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Total Spent
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Customer Details */}
+                      <div className="mt-4 space-y-2">
+                        {customer.phone && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Phone className="h-3 w-3" />
+                            <span>{customer.phone}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span>{customer.city || 'No city'}, {customer.postal_code || 'No postcode'}</span>
+                        </div>
+
+                        {customer.last_order_date && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>Last order {format(new Date(customer.last_order_date), "MMM dd, yyyy")}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Customer Value Badge */}
+                      <div className="mt-4 flex items-center justify-between">
+                        <Badge variant={
+                          getCustomerValue(customer) === "high" ? "default" :
+                          getCustomerValue(customer) === "medium" ? "secondary" : "outline"
+                        } className="text-xs">
+                          {getCustomerValue(customer) === "high" ? "High Value" :
+                           getCustomerValue(customer) === "medium" ? "Regular" : "New Customer"}
+                        </Badge>
+
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Utensils className="h-3 w-3" />
+                            <span>{customer.order_count}</span>
+                          </div>
+                          <div className="flex items-center gap-1 ml-2">
+                            <Package className="h-3 w-3" />
+                            <span>{customer.package_order_count}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hover Effect Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      
+                      {/* Click indicator */}
+                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="flex items-center gap-1 text-xs text-primary font-medium">
+                          <span>View Details</span>
+                          <Eye className="h-3 w-3" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
