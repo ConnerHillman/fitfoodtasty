@@ -68,6 +68,10 @@ const Cart = () => {
     if (!postcode) return;
     
     try {
+      // Clean and format the postcode consistently
+      const cleanPostcode = postcode.toUpperCase().replace(/\s+/g, '');
+      console.log('Checking delivery for postcode:', cleanPostcode);
+      
       // Find delivery zone for this postcode
       const { data: zones, error: zonesError } = await supabase
         .from('delivery_zones')
@@ -75,18 +79,27 @@ const Cart = () => {
         .eq('is_active', true);
 
       if (zonesError) throw zonesError;
+      console.log('Available zones:', zones?.length);
 
       // Find matching zone based on postcode
       const matchingZone = zones?.find(zone => {
-        // Check exact postcode match
-        if (zone.postcodes?.includes(postcode.toUpperCase())) {
+        // Check exact postcode match (with and without spaces)
+        if (zone.postcodes?.some((zonePostcode: string) => 
+          zonePostcode.toUpperCase().replace(/\s+/g, '') === cleanPostcode
+        )) {
+          console.log('Exact postcode match found:', zone.zone_name);
           return true;
         }
         
         // Check prefix match
-        if (zone.postcode_prefixes?.some((prefix: string) => 
-          postcode.toUpperCase().startsWith(prefix.toUpperCase())
-        )) {
+        if (zone.postcode_prefixes?.some((prefix: string) => {
+          const cleanPrefix = prefix.toUpperCase().replace(/\s+/g, '');
+          const matches = cleanPostcode.startsWith(cleanPrefix);
+          if (matches) {
+            console.log('Prefix match found:', prefix, 'for zone:', zone.zone_name);
+          }
+          return matches;
+        })) {
           return true;
         }
         
@@ -94,12 +107,14 @@ const Cart = () => {
       });
 
       if (matchingZone) {
+        console.log('Found matching zone:', matchingZone.zone_name);
         setDeliveryZone(matchingZone);
         // Update delivery fee from zone if available
         if (matchingZone.delivery_fee) {
           setDeliveryFee(matchingZone.delivery_fee);
         }
       } else {
+        console.log('No matching zone found for postcode:', cleanPostcode);
         setDeliveryZone(null);
       }
     } catch (error) {
