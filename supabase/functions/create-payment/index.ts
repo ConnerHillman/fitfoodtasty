@@ -85,8 +85,8 @@ serve(async (req) => {
       : '';
 
     const deliveryInfo = delivery_method === 'pickup' 
-      ? `🗓️ COLLECTION DATE: ${formattedDeliveryDate.toUpperCase()}`
-      : `🚚 DELIVERY DATE: ${formattedDeliveryDate.toUpperCase()}`;
+      ? `🗓️🗓️🗓️ COLLECTION DATE 🗓️🗓️🗓️\n\n🔥 ${formattedDeliveryDate.toUpperCase()} 🔥`
+      : `🚚🚚🚚 DELIVERY DATE 🚚🚚🚚\n\n🔥 ${formattedDeliveryDate.toUpperCase()} 🔥`;
 
     console.log('Debug delivery info:', {
       requested_delivery_date,
@@ -99,12 +99,12 @@ serve(async (req) => {
       customer_email: email, // if undefined, Checkout collects email
       line_items,
       mode: "payment",
-      submit_type: "book",
+      submit_type: "pay",
       success_url: `${origin}${successPath}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}${cancelPath}`,
       custom_text: requested_delivery_date ? {
         submit: {
-          message: `\n═══════════════════════════════\n${deliveryInfo}\n═══════════════════════════════`
+          message: `\n\n███████████████████████████████\n${deliveryInfo}\n███████████████████████████████\n\n`
         }
       } : undefined,
       metadata: {
