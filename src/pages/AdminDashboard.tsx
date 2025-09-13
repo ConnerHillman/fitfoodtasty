@@ -65,10 +65,10 @@ const AdminDashboard = () => {
                   <Home className="w-4 h-4 mr-2" />
                   Core Operations
                 </h3>
-                <div className="grid grid-cols-6 gap-3">
+                <TabsList className="grid grid-cols-6 gap-3 bg-transparent h-auto p-0">
                   <TabsTrigger 
                     value="dashboard" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <BarChart3 className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Dashboard</span>
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="orders" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <ListOrdered className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Orders</span>
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="customers" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <Users className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Customers</span>
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="reports" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <FileText className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Reports</span>
@@ -100,7 +100,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="marketing" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <Target className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Marketing</span>
@@ -108,12 +108,12 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="fulfillment" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <Truck className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Fulfillment</span>
                   </TabsTrigger>
-                </div>
+                </TabsList>
               </div>
               
               {/* Second Row - Product Management */}
@@ -122,10 +122,10 @@ const AdminDashboard = () => {
                   <Package className="w-4 h-4 mr-2" />
                   Product Management
                 </h3>
-                <div className="grid grid-cols-6 gap-3">
+                <TabsList className="grid grid-cols-6 gap-3 bg-transparent h-auto p-0">
                   <TabsTrigger 
                     value="ingredients" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <ShoppingBag className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Ingredients</span>
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="meals" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <ChefHat className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Meals</span>
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="categories" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <Tags className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Categories</span>
@@ -149,7 +149,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="packages" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <Package className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Packages</span>
@@ -157,7 +157,7 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="labels" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <Tag className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Labels</span>
@@ -165,12 +165,12 @@ const AdminDashboard = () => {
                   
                   <TabsTrigger 
                     value="import" 
-                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px]"
+                    className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0"
                   >
                     <Upload className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
                     <span className="text-xs">Import</span>
                   </TabsTrigger>
-                </div>
+                </TabsList>
               </div>
             </div>
           </div>
