@@ -167,6 +167,19 @@ const Cart = () => {
     return date < minDate || !selectedPoint.collection_days.includes(dayOfWeek);
   };
 
+  const isAvailableCollectionDay = (date: Date) => {
+    if (deliveryMethod === "delivery") return true;
+    if (!selectedCollectionPoint) return false;
+    
+    const selectedPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+    if (!selectedPoint) return false;
+    
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const minDate = new Date(getMinDeliveryDate());
+    
+    return date >= minDate && selectedPoint.collection_days.includes(dayOfWeek);
+  };
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'breakfast': return 'bg-orange-100 text-orange-800 border-orange-200';
@@ -443,6 +456,12 @@ const Cart = () => {
                         }
                       }}
                       disabled={isDateDisabled}
+                      modifiers={{
+                        available: deliveryMethod === "pickup" ? isAvailableCollectionDay : () => false
+                      }}
+                      modifiersStyles={{
+                        available: { fontWeight: 'bold' }
+                      }}
                       initialFocus
                       className="pointer-events-auto"
                     />
