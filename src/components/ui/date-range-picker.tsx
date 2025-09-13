@@ -71,53 +71,64 @@ export function DateRangePicker({
     setClickCount(0)
   }, [date])
 
-  const handleDateSelect = (selectedDate: DateRange | undefined) => {
-    if (!selectedDate?.from) {
+  const handleDateSelect = (range: DateRange | undefined) => {
+    if (!range?.from) {
       setTempDate(undefined)
       setClickCount(0)
       setSelectedPreset(null)
       return
     }
 
-    setSelectedPreset(null) // Clear preset selection when manually selecting dates
+    setSelectedPreset(null)
 
     if (clickCount === 0) {
-      // First click - set the start date only
-      setTempDate({ from: selectedDate.from, to: undefined })
+      // First click - set start date only
+      setTempDate({ from: range.from, to: undefined })
       setClickCount(1)
       return
     }
 
-    // Second click
-    const firstDate = tempDate?.from
-    const secondDate = selectedDate.from
+    // Second click logic
+    const first = tempDate?.from
+    const second = range.from
 
-    if (!firstDate) {
-      // Fallback - restart
-      setTempDate({ from: secondDate, to: undefined })
+    if (!first) {
+      // Safety: if first missing, start over
+      setTempDate({ from: second, to: undefined })
       setClickCount(1)
       return
     }
 
-    if (secondDate.getTime() === firstDate.getTime()) {
-      // Same date clicked twice - single day selection
-      const finalDate: DateRange = { from: firstDate, to: firstDate }
-      setTempDate(finalDate)
-      onDateChange?.(finalDate)
-      setIsOpen(false)
-      setClickCount(0)
-    } else if (secondDate < firstDate) {
-      // Second date is before first date - reset and start over with the earlier date
-      setTempDate({ from: secondDate, to: undefined })
-      setClickCount(1)
-    } else {
-      // Second date is after first date - create range
-      const finalRange: DateRange = { from: firstDate, to: secondDate }
+    if (range.to) {
+      // DayPicker provided a full range
+      if (second.getTime() < first.getTime()) {
+        // Second click earlier than first: restart with earlier as new start
+        setTempDate({ from: second, to: undefined })
+        setClickCount(1)
+        return
+      }
+      const finalRange: DateRange = { from: first, to: range.to }
       setTempDate(finalRange)
       onDateChange?.(finalRange)
       setIsOpen(false)
       setClickCount(0)
+      return
     }
+
+    // No 'to' yet
+    if (second.getTime() === first.getTime()) {
+      // Same day twice -> single-day
+      const finalDate: DateRange = { from: first, to: first }
+      setTempDate(finalDate)
+      onDateChange?.(finalDate)
+      setIsOpen(false)
+      setClickCount(0)
+      return
+    }
+
+    // Switching the start day while selecting
+    setTempDate({ from: second, to: undefined })
+    setClickCount(1)
   }
 
   const handlePresetSelect = (preset: typeof presetRanges[0]) => {
