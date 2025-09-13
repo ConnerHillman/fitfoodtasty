@@ -791,7 +791,7 @@ function DeliveryZoneForm({
             type="number"
             step="0.01"
             value={formData.delivery_fee}
-            onChange={(e) => setFormData(prev => ({ ...prev, delivery_fee: parseFloat(e.target.value) || 0 }))}
+            onChange={(e) => setFormData(prev => ({ ...prev, delivery_fee: e.target.value === '' ? 0 : parseFloat(e.target.value) }))}
             placeholder="0.00"
           />
         </div>
@@ -802,7 +802,7 @@ function DeliveryZoneForm({
             type="number"
             step="0.01"
             value={formData.minimum_order}
-            onChange={(e) => setFormData(prev => ({ ...prev, minimum_order: parseFloat(e.target.value) || 0 }))}
+            onChange={(e) => setFormData(prev => ({ ...prev, minimum_order: e.target.value === '' ? 0 : parseFloat(e.target.value) }))}
             placeholder="0.00"
           />
         </div>
