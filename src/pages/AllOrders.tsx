@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import CustomerLink from "@/components/admin/CustomerLink";
 
 interface Order {
   id: string;
@@ -252,7 +253,12 @@ const AllOrders: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2 font-bold text-lg">
-                        <span>{order.customer_name || 'Customer'}</span>
+                        <CustomerLink 
+                          customerId={order.user_id}
+                          customerName={order.customer_name || 'Customer'}
+                          variant="link"
+                          className="font-bold text-lg"
+                        />
                         <span className="text-sm text-muted-foreground font-normal">
                           #{order.id.slice(-8)} • {order.customer_email}
                         </span>

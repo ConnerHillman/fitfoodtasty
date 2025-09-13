@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { subDays, startOfDay, endOfDay } from "date-fns";
+import CustomerLink from "./CustomerLink";
 
 interface Customer {
   id: string;
@@ -525,141 +526,13 @@ const CustomersManager = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCustomer(customer);
-                            fetchCustomerOrders(customer.user_id);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Customer Details</DialogTitle>
-                          <DialogDescription>
-                            Complete profile and order history for {selectedCustomer?.full_name}
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        {selectedCustomer && (
-                          <Tabs defaultValue="profile" className="w-full">
-                            <TabsList>
-                              <TabsTrigger value="profile">Profile</TabsTrigger>
-                              <TabsTrigger value="orders">Orders ({customerOrders.length})</TabsTrigger>
-                            </TabsList>
-                            
-                            <TabsContent value="profile" className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <Card>
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">Contact Information</CardTitle>
-                                  </CardHeader>
-                                  <CardContent className="space-y-2">
-                                    <div className="flex items-center">
-                                      <Users className="h-4 w-4 mr-2" />
-                                      <span>{selectedCustomer.full_name}</span>
-                                    </div>
-                                    {selectedCustomer.phone && (
-                                      <div className="flex items-center">
-                                        <Phone className="h-4 w-4 mr-2" />
-                                        <span>{selectedCustomer.phone}</span>
-                                      </div>
-                                    )}
-                                    <div className="flex items-center">
-                                      <MapPin className="h-4 w-4 mr-2" />
-                                      <span>{selectedCustomer.delivery_address}</span>
-                                    </div>
-                                    <div className="ml-6">
-                                      <span>{selectedCustomer.city}, {selectedCustomer.postal_code}</span>
-                                    </div>
-                                    {selectedCustomer.county && (
-                                      <div className="ml-6">
-                                        <span>{selectedCustomer.county}</span>
-                                      </div>
-                                    )}
-                                  </CardContent>
-                                </Card>
-
-                                <Card>
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">Order Summary</CardTitle>
-                                  </CardHeader>
-                                  <CardContent className="space-y-2">
-                                    <div className="flex justify-between">
-                                      <span>Total Orders:</span>
-                                      <span className="font-medium">{selectedCustomer.total_orders}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Meal Orders:</span>
-                                      <span>{selectedCustomer.order_count}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Package Orders:</span>
-                                      <span>{selectedCustomer.package_order_count}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Total Spent:</span>
-                                      <span className="font-medium">{formatCurrency(selectedCustomer.total_spent)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Customer Since:</span>
-                                      <span>{format(new Date(selectedCustomer.created_at), "MMM dd, yyyy")}</span>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              </div>
-                            </TabsContent>
-                            
-                            <TabsContent value="orders">
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead>Order ID</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Items</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {customerOrders.map((order) => (
-                                    <TableRow key={order.id}>
-                                      <TableCell className="font-mono text-sm">
-                                        {order.id.slice(0, 8)}...
-                                      </TableCell>
-                                      <TableCell>
-                                        {format(new Date(order.created_at), "MMM dd, yyyy")}
-                                      </TableCell>
-                                      <TableCell>
-                                        <Badge variant="outline">
-                                          {order.type === 'order' ? 'Meal' : 'Package'}
-                                        </Badge>
-                                      </TableCell>
-                                      <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-                                      <TableCell>
-                                        <Badge variant={
-                                          order.status === 'completed' ? 'default' :
-                                          order.status === 'pending' ? 'secondary' : 'destructive'
-                                        }>
-                                          {order.status}
-                                        </Badge>
-                                      </TableCell>
-                                      <TableCell>{order.items_count}</TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </TabsContent>
-                          </Tabs>
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                    <CustomerLink
+                      customerId={customer.user_id}
+                      customerName="View Details"
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    />
                   </TableCell>
                 </TableRow>
               ))}

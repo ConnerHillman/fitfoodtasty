@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { addDays, subDays, startOfDay, endOfDay } from "date-fns";
+import CustomerLink from "@/components/admin/CustomerLink";
 
 const BusinessDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -710,7 +711,12 @@ const BusinessDashboard = () => {
                     <div>
                       <div className="font-medium">#{order.id.slice(-8)}</div>
                       <div className="text-sm text-muted-foreground">
-                        {order.customer_name || 'Customer'}
+                        <CustomerLink 
+                          customerId={order.user_id}
+                          customerName={order.customer_name || 'Customer'}
+                          variant="link"
+                          size="sm"
+                        />
                         {order.type === 'package' && <Badge variant="outline" className="ml-2 text-xs">Package</Badge>}
                       </div>
                       <div className="text-xs text-muted-foreground">
