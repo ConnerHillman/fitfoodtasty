@@ -544,6 +544,8 @@ const MealAnalytics = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Meal Performance</CardTitle>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">Sort By:</span>
             <div className="flex items-center gap-2">
               <Button
                 variant={sortBy === 'revenue' ? 'default' : 'outline'}
@@ -562,6 +564,7 @@ const MealAnalytics = () => {
                 Orders
               </Button>
             </div>
+          </div>
           </div>
         </CardHeader>
         <CardContent>
