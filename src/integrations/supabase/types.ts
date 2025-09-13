@@ -286,6 +286,7 @@ export type Database = {
       delivery_zones: {
         Row: {
           allow_custom_dates: boolean | null
+          business_hours_override: Json | null
           created_at: string
           delivery_days: string[]
           delivery_fee: number
@@ -305,6 +306,7 @@ export type Database = {
         }
         Insert: {
           allow_custom_dates?: boolean | null
+          business_hours_override?: Json | null
           created_at?: string
           delivery_days: string[]
           delivery_fee?: number
@@ -324,6 +326,7 @@ export type Database = {
         }
         Update: {
           allow_custom_dates?: boolean | null
+          business_hours_override?: Json | null
           created_at?: string
           delivery_days?: string[]
           delivery_fee?: number

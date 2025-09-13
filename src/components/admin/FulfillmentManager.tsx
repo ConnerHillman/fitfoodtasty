@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +63,7 @@ interface DeliveryZone {
   allow_custom_dates?: boolean;
   production_notes?: string | null;
   order_cutoffs?: Record<string, { cutoff_day: string; cutoff_time: string }> | any;
+  business_hours_override?: Record<string, { is_open: boolean; override_reason?: string }> | null;
   is_active: boolean;
 }
 
@@ -92,20 +93,12 @@ const FulfillmentManager = () => {
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("general");
+  const [showZoneDialog, setShowZoneDialog] = useState(false);
+  const [showCollectionPointDialog, setShowCollectionPointDialog] = useState(false);
+  const [editingZone, setEditingZone] = useState<DeliveryZone | null>(null);
+  const [editingCollectionPoint, setEditingCollectionPoint] = useState<CollectionPoint | null>(null);
+  const [activeTab, setActiveTab] = useState("schedule");
   const { toast } = useToast();
-
-  const daysOfWeek = [
-    { value: "monday", label: "Monday" },
-    { value: "tuesday", label: "Tuesday" },
-    { value: "wednesday", label: "Wednesday" },
-    { value: "thursday", label: "Thursday" },
-    { value: "friday", label: "Friday" },
-    { value: "saturday", label: "Saturday" },
-    { value: "sunday", label: "Sunday" }
-  ];
 
   useEffect(() => {
     fetchAllData();
@@ -205,47 +198,13 @@ const FulfillmentManager = () => {
     }
   };
 
-  const updateSetting = async (settingType: string, settingKey: string, value: any) => {
+  const handleZoneSubmit = async (data: any) => {
     try {
-      const { error } = await supabase
-        .from("fulfillment_settings")
-        .upsert({
-          setting_type: settingType,
-          setting_key: settingKey,
-          setting_value: value,
-        }, {
-          onConflict: 'setting_type,setting_key'
-        });
-
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Setting updated successfully",
-      });
-      
-      fetchSettings();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getSetting = (settingType: string, settingKey: string) => {
-    const setting = settings.find(s => s.setting_type === settingType && s.setting_key === settingKey);
-    return setting?.setting_value;
-  };
-
-  const handleSaveDeliveryZone = async (data: any) => {
-    try {
-      if (editingItem && editingItem.id) {
+      if (editingZone?.id) {
         const { error } = await supabase
           .from("delivery_zones")
           .update(data)
-          .eq("id", editingItem.id);
+          .eq("id", editingZone.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -256,11 +215,11 @@ const FulfillmentManager = () => {
 
       toast({
         title: "Success",
-        description: `Delivery zone ${editingItem ? 'updated' : 'created'} successfully`,
+        description: `Delivery zone ${editingZone ? 'updated' : 'created'} successfully`,
       });
 
-      setIsDialogOpen(false);
-      setEditingItem(null);
+      setShowZoneDialog(false);
+      setEditingZone(null);
       fetchDeliveryZones();
     } catch (error: any) {
       toast({
@@ -271,13 +230,13 @@ const FulfillmentManager = () => {
     }
   };
 
-  const handleSaveCollectionPoint = async (data: any) => {
+  const handleCollectionPointSubmit = async (data: any) => {
     try {
-      if (editingItem && editingItem.id) {
+      if (editingCollectionPoint?.id) {
         const { error } = await supabase
           .from("collection_points")
           .update(data)
-          .eq("id", editingItem.id);
+          .eq("id", editingCollectionPoint.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -288,50 +247,12 @@ const FulfillmentManager = () => {
 
       toast({
         title: "Success",
-        description: `Collection point ${editingItem ? 'updated' : 'created'} successfully`,
+        description: `Collection point ${editingCollectionPoint ? 'updated' : 'created'} successfully`,
       });
 
-      setIsDialogOpen(false);
-      setEditingItem(null);
+      setShowCollectionPointDialog(false);
+      setEditingCollectionPoint(null);
       fetchCollectionPoints();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDelete = async (table: "delivery_zones" | "collection_points", id: string) => {
-    try {
-      let error;
-      if (table === "delivery_zones") {
-        const result = await supabase
-          .from("delivery_zones")
-          .delete()
-          .eq("id", id);
-        error = result.error;
-      } else {
-        const result = await supabase
-          .from("collection_points")
-          .delete()
-          .eq("id", id);
-        error = result.error;
-      }
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Item deleted successfully",
-      });
-
-      if (table === "delivery_zones") {
-        fetchDeliveryZones();
-      } else if (table === "collection_points") {
-        fetchCollectionPoints();
-      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -384,114 +305,23 @@ const FulfillmentManager = () => {
         </TabsContent>
 
         <TabsContent value="general" className="space-y-6">
-
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Timer className="h-5 w-5" />
-                Delivery Time Slots
-              </CardTitle>
+              <CardTitle>Time Slots</CardTitle>
+              <CardDescription>
+                Configure delivery time slot options
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <Checkbox
-                  id="enable-time-slots"
-                  checked={getSetting("general", "time_slots_enabled") !== false}
-                  onCheckedChange={(checked) => updateSetting("general", "time_slots_enabled", checked)}
-                />
-                <Label htmlFor="enable-time-slots" className="text-sm font-medium">
-                  Enable delivery time slots
-                </Label>
-              </div>
-              <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${getSetting("general", "time_slots_enabled") === false ? 'opacity-50 pointer-events-none' : ''}`}>
-                {["morning", "afternoon", "evening"].map((slot) => {
-                  const slots = getSetting("general", "delivery_slots");
-                  const timeSlotsEnabled = getSetting("general", "time_slots_enabled") !== false;
-                  return (
-                    <div key={slot} className="space-y-2">
-                      <Label className="capitalize">{slot}</Label>
-                      <Input
-                        defaultValue={slots?.[slot] || ""}
-                        placeholder="09:00-12:00"
-                        disabled={!timeSlotsEnabled}
-                        onBlur={(e) => {
-                          if (timeSlotsEnabled) {
-                            const newSlots = { ...slots, [slot]: e.target.value };
-                            updateSetting("general", "delivery_slots", newSlots);
-                          }
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="delivery-days" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Delivery Days</CardTitle>
-              <p className="text-sm text-muted-foreground">Select which days you offer delivery service</p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {daysOfWeek.map((day) => {
-                  const availableDays = getSetting("delivery_days", "available_days") || [];
-                  const isChecked = availableDays.includes(day.value);
-                  
-                  return (
-                    <div key={day.value} className="flex items-center space-x-2">
-                      <Switch
-                        id={`delivery-${day.value}`}
-                        checked={isChecked}
-                        onCheckedChange={(checked) => {
-                          const newDays = checked 
-                            ? [...availableDays, day.value]
-                            : availableDays.filter((d: string) => d !== day.value);
-                          updateSetting("delivery_days", "available_days", newDays);
-                        }}
-                      />
-                      <Label htmlFor={`delivery-${day.value}`} className="text-sm font-medium">
-                        {day.label}
-                      </Label>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Collection Days</CardTitle>
-              <p className="text-sm text-muted-foreground">Select which days customers can collect orders</p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {daysOfWeek.map((day) => {
-                  const availableDays = getSetting("collection_days", "available_days") || [];
-                  const isChecked = availableDays.includes(day.value);
-                  
-                  return (
-                    <div key={day.value} className="flex items-center space-x-2">
-                      <Switch
-                        id={`collection-${day.value}`}
-                        checked={isChecked}
-                        onCheckedChange={(checked) => {
-                          const newDays = checked 
-                            ? [...availableDays, day.value]
-                            : availableDays.filter((d: string) => d !== day.value);
-                          updateSetting("collection_days", "available_days", newDays);
-                        }}
-                      />
-                      <Label htmlFor={`collection-${day.value}`} className="text-sm font-medium">
-                        {day.label}
-                      </Label>
-                    </div>
-                  );
-                })}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {["morning", "afternoon", "evening"].map((slot) => (
+                  <div key={slot} className="space-y-2">
+                    <Label className="capitalize">{slot}</Label>
+                    <Input
+                      placeholder="09:00-12:00"
+                    />
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -502,122 +332,39 @@ const FulfillmentManager = () => {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Delivery Zones</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
+                <CardDescription>
                   Configure different delivery areas with custom schedules and fees
-                </p>
+                </CardDescription>
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => setEditingItem(null)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Zone
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingItem ? "Edit" : "Add"} Delivery Zone
-                    </DialogTitle>
-                  </DialogHeader>
-                  <DeliveryZoneForm
-                    zone={editingItem}
-                    onSave={handleSaveDeliveryZone}
-                    onCancel={() => {
-                      setIsDialogOpen(false);
-                      setEditingItem(null);
-                    }}
-                  />
-                </DialogContent>
-              </Dialog>
+              <Button onClick={() => {
+                setEditingZone(null);
+                setShowZoneDialog(true);
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Zone
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-medium mb-2">Zone Types:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span><strong>Local:</strong> Multiple delivery days available</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span><strong>Regional:</strong> Weekly delivery (e.g., Bristol)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    <span><strong>National:</strong> Shipped nationwide</span>
-                  </div>
-                </div>
-              </div>
-              
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Zone Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Postcodes</TableHead>
-                    <TableHead>Delivery Days</TableHead>
-                    <TableHead>Fee</TableHead>
-                    <TableHead>Min Order</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {deliveryZones.map((zone) => {
-                    const zoneType = zone.zone_name.toLowerCase().includes('local') ? 'local' : 
-                                   zone.zone_name.toLowerCase().includes('bristol') ? 'regional' :
-                                   zone.zone_name.toLowerCase().includes('national') || zone.zone_name.toLowerCase().includes('shipping') ? 'national' : 'local';
-                    const typeColor = zoneType === 'local' ? 'bg-green-500' : zoneType === 'regional' ? 'bg-blue-500' : 'bg-purple-500';
-                    
-                    return (
-                      <TableRow 
-                        key={zone.id} 
-                        className="cursor-pointer hover:bg-muted/50" 
-                        onClick={() => {
-                          setEditingItem(zone);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <TableCell className="font-medium">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Zone Name</TableHead>
+                      <TableHead>Delivery Days</TableHead>
+                      <TableHead>Fee</TableHead>
+                      <TableHead>Min Order</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {deliveryZones.map((zone) => (
+                      <TableRow key={zone.id}>
+                        <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${typeColor}`}></div>
                             {zone.zone_name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {zoneType}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            {zone.postcodes.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {zone.postcodes.slice(0, 3).map((code, index) => (
-                                  <Badge key={index} variant="secondary" className="text-xs">
-                                    {code}
-                                  </Badge>
-                                ))}
-                                {zone.postcodes.length > 3 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    +{zone.postcodes.length - 3} more
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-                            {zone.postcode_prefixes && zone.postcode_prefixes.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {zone.postcode_prefixes.slice(0, 2).map((prefix, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {prefix}*
-                                  </Badge>
-                                ))}
-                                {zone.postcode_prefixes.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{zone.postcode_prefixes.length - 2} more
-                                  </Badge>
-                                )}
-                              </div>
+                            {zone.business_hours_override && Object.keys(zone.business_hours_override).length > 0 && (
+                              <Badge variant="outline" className="text-xs">Override</Badge>
                             )}
                           </div>
                         </TableCell>
@@ -642,112 +389,19 @@ const FulfillmentManager = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingItem(zone);
-                                setIsDialogOpen(true);
+                              onClick={() => {
+                                setEditingZone(zone);
+                                setShowZoneDialog(true);
                               }}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete("delivery_zones", zone.id);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
-                  {deliveryZones.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        No delivery zones configured. Add your first zone to get started.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">Quick Setup Templates:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setEditingItem({
-                        zone_name: "Local Delivery",
-                        postcodes: [],
-                        postcode_prefixes: [],
-                        delivery_days: ["sunday", "monday", "wednesday"],
-                        delivery_fee: 4.50,
-                        minimum_order: 15.00,
-                        maximum_distance_km: 10,
-                        production_day_offset: 0,
-                        allow_custom_dates: false,
-                        production_notes: "Local delivery - same day production and delivery",
-                        is_active: true
-                      });
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Local Zone
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setEditingItem({
-                        zone_name: "Bristol Weekly",
-                        postcodes: [],
-                        postcode_prefixes: ["BS"],
-                        delivery_days: ["sunday"],
-                        delivery_fee: 8.00,
-                        minimum_order: 25.00,
-                        maximum_distance_km: null,
-                        production_day_offset: 0,
-                        allow_custom_dates: false,
-                        production_notes: "Regional delivery - same day production and delivery",
-                        is_active: true
-                      });
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Regional Zone
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setEditingItem({
-                        zone_name: "National Shipping",
-                        postcodes: [],
-                        postcode_prefixes: [],
-                        delivery_days: ["tuesday"],
-                        delivery_fee: 12.00,
-                        minimum_order: 30.00,
-                        maximum_distance_km: null,
-                        production_day_offset: -2,
-                        allow_custom_dates: true,
-                        production_notes: "National shipping - cook Sunday, ship Monday, deliver Tuesday",
-                        is_active: true
-                      });
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    National Zone
-                  </Button>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
@@ -756,168 +410,137 @@ const FulfillmentManager = () => {
         <TabsContent value="collection" className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Collection Points</CardTitle>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => setEditingItem(null)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Collection Point
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingItem ? "Edit" : "Add"} Collection Point
-                    </DialogTitle>
-                  </DialogHeader>
-                  <CollectionPointForm
-                    point={editingItem}
-                    onSave={handleSaveCollectionPoint}
-                    onCancel={() => {
-                      setIsDialogOpen(false);
-                      setEditingItem(null);
-                    }}
-                  />
-                </DialogContent>
-              </Dialog>
+              <div>
+                <CardTitle>Collection Points</CardTitle>
+                <CardDescription>
+                  Manage locations where customers can collect their orders
+                </CardDescription>
+              </div>
+              <Button onClick={() => {
+                setEditingCollectionPoint(null);
+                setShowCollectionPointDialog(true);
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Collection Point
+              </Button>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Collection Days</TableHead>
-                    <TableHead>Fee</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {collectionPoints.map((point) => (
-                    <TableRow key={point.id}>
-                      <TableCell className="font-medium">{point.point_name}</TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {point.address}<br />
-                          {point.city}, {point.postcode}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {point.collection_days.map((day, index) => (
-                            <Badge key={index} variant="outline" className="text-xs capitalize">
-                              {day.substring(0, 3)}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>£{point.collection_fee.toFixed(2)}</TableCell>
-                      <TableCell>{point.maximum_capacity}</TableCell>
-                      <TableCell>
-                        <Badge variant={point.is_active ? "default" : "secondary"}>
-                          {point.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingItem(point);
-                              setIsDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete("collection_points", point.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Collection Days</TableHead>
+                      <TableHead>Fee</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {collectionPoints.map((point) => (
+                      <TableRow key={point.id}>
+                        <TableCell>{point.point_name}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div>{point.address}</div>
+                            <div className="text-muted-foreground">{point.city}, {point.postcode}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {point.collection_days.map((day, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs capitalize">
+                                {day.substring(0, 3)}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>£{point.collection_fee.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Badge variant={point.is_active ? "default" : "secondary"}>
+                            {point.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingCollectionPoint(point);
+                                setShowCollectionPointDialog(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="fees" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Delivery Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Default Delivery Fee (£)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    defaultValue={getSetting("general", "default_delivery_fee")?.value || 2.99}
-                    onBlur={(e) => {
-                      updateSetting("general", "default_delivery_fee", { 
-                        value: parseFloat(e.target.value) || 2.99, 
-                        currency: "gbp" 
-                      });
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Minimum Order for Delivery (£)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    defaultValue={getSetting("general", "minimum_order_delivery")?.value || 15.00}
-                    onBlur={(e) => {
-                      updateSetting("general", "minimum_order_delivery", { 
-                        value: parseFloat(e.target.value) || 15.00, 
-                        currency: "gbp" 
-                      });
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Collection Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Minimum Order for Collection (£)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    defaultValue={getSetting("general", "minimum_order_collection")?.value || 10.00}
-                    onBlur={(e) => {
-                      updateSetting("general", "minimum_order_collection", { 
-                        value: parseFloat(e.target.value) || 10.00, 
-                        currency: "gbp" 
-                      });
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
       </Tabs>
+
+      {/* Zone Dialog */}
+      <Dialog open={showZoneDialog} onOpenChange={setShowZoneDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingZone ? 'Edit' : 'Add'} Delivery Zone
+            </DialogTitle>
+          </DialogHeader>
+          <DeliveryZoneForm
+            zone={editingZone}
+            globalSchedule={globalSchedule}
+            onSubmit={handleZoneSubmit}
+            onClose={() => {
+              setShowZoneDialog(false);
+              setEditingZone(null);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Collection Point Dialog */}
+      <Dialog open={showCollectionPointDialog} onOpenChange={setShowCollectionPointDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingCollectionPoint ? 'Edit' : 'Add'} Collection Point
+            </DialogTitle>
+          </DialogHeader>
+          <CollectionPointForm
+            collectionPoint={editingCollectionPoint}
+            globalSchedule={globalSchedule}
+            onSubmit={handleCollectionPointSubmit}
+            onClose={() => {
+              setShowCollectionPointDialog(false);
+              setEditingCollectionPoint(null);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// Form components for creating/editing zones and collection points
-const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
+// Zone Form Component
+function DeliveryZoneForm({ 
+  zone, 
+  globalSchedule,
+  onSubmit, 
+  onClose 
+}: {
+  zone: DeliveryZone | null;
+  globalSchedule: GlobalSchedule[];
+  onSubmit: (data: any) => void;
+  onClose: () => void;
+}) {
   const [formData, setFormData] = useState({
     zone_name: zone?.zone_name || "",
     postcodes: zone?.postcodes?.join(", ") || "",
@@ -926,12 +549,7 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
     delivery_fee: zone?.delivery_fee || 0,
     minimum_order: zone?.minimum_order || 0,
     maximum_distance_km: zone?.maximum_distance_km || null,
-    production_day_offset: zone?.production_day_offset ?? -2,
-    production_lead_days: zone?.production_lead_days ?? 2,
-    production_same_day: zone?.production_same_day ?? false,
-    allow_custom_dates: zone?.allow_custom_dates ?? false,
-    production_notes: zone?.production_notes || "",
-    order_cutoffs: zone?.order_cutoffs || {},
+    business_hours_override: zone?.business_hours_override || {},
     is_active: zone?.is_active ?? true,
   });
 
@@ -961,15 +579,10 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
       delivery_fee: parseFloat(formData.delivery_fee.toString()) || 0,
       minimum_order: parseFloat(formData.minimum_order.toString()) || 0,
       maximum_distance_km: formData.maximum_distance_km ? parseFloat(formData.maximum_distance_km.toString()) : null,
-      production_day_offset: formData.production_day_offset === '' ? -2 : parseInt(formData.production_day_offset.toString()),
-      production_lead_days: parseInt(formData.production_lead_days.toString()) || 2,
-      production_same_day: formData.production_same_day,
-      allow_custom_dates: formData.allow_custom_dates,
-      production_notes: formData.production_notes.trim() || null,
-      order_cutoffs: formData.order_cutoffs || {},
+      business_hours_override: Object.keys(formData.business_hours_override).length > 0 ? formData.business_hours_override : null,
     };
 
-    onSave(processedData);
+    onSubmit(processedData);
   };
 
   const handleDayToggle = (day: string) => {
@@ -981,40 +594,30 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
     }));
   };
 
-  const getZoneTypeInfo = () => {
-    const name = formData.zone_name.toLowerCase();
-    if (name.includes('local')) {
-      return {
-        type: 'Local Delivery',
-        description: 'Multiple cooking/delivery days available',
-        suggestedDays: ['sunday', 'monday', 'wednesday'],
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        example: 'For customers within 10km - can deliver on any cooking day'
-      };
-    } else if (name.includes('bristol') || name.includes('regional')) {
-      return {
-        type: 'Regional Delivery',
-        description: 'Weekly delivery to distant cities',
-        suggestedDays: ['sunday'],
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50',
-        example: 'For cities like Bristol - weekly delivery due to distance'
-      };
-    } else if (name.includes('national') || name.includes('shipping')) {
-      return {
-        type: 'National Shipping',
-        description: 'Nationwide courier delivery',
-        suggestedDays: ['tuesday'],
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50',
-        example: 'Anywhere in UK - fixed Tuesday delivery (cook Sun, ship Mon, arrive Tue)'
-      };
-    }
-    return null;
+  const getGlobalScheduleForDay = (day: string) => {
+    return globalSchedule?.find(s => s.day_of_week === day);
   };
 
-  const zoneInfo = getZoneTypeInfo();
+  const handleBusinessHourOverride = (day: string, isOpen: boolean, reason?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      business_hours_override: {
+        ...prev.business_hours_override,
+        [day]: { is_open: isOpen, override_reason: reason || '' }
+      }
+    }));
+  };
+
+  const removeBusinessHourOverride = (day: string) => {
+    setFormData(prev => {
+      const newOverrides = { ...prev.business_hours_override };
+      delete newOverrides[day];
+      return {
+        ...prev,
+        business_hours_override: newOverrides
+      };
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -1028,14 +631,6 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
             placeholder="e.g., Local Delivery, Bristol Weekly, National Shipping"
             required
           />
-          {zoneInfo && (
-            <div className={`p-3 rounded-lg ${zoneInfo.bgColor} border`}>
-              <p className={`text-sm font-medium ${zoneInfo.color}`}>
-                <strong>{zoneInfo.type}:</strong> {zoneInfo.description}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">{zoneInfo.example}</p>
-            </div>
-          )}
         </div>
 
         <div className="space-y-2">
@@ -1057,20 +652,6 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
           <p className="text-sm text-muted-foreground mb-2">
             Select which days this zone receives deliveries
           </p>
-          {zoneInfo && (
-            <div className="mb-3 p-2 bg-muted rounded text-sm">
-              <strong>Suggested for {zoneInfo.type}:</strong> {zoneInfo.suggestedDays.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')}
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="ml-2 h-auto p-0"
-                onClick={() => setFormData(prev => ({ ...prev, delivery_days: zoneInfo.suggestedDays }))}
-              >
-                Use suggested
-              </Button>
-            </div>
-          )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {daysOfWeek.map((day) => (
               <div key={day.value} className="flex items-center space-x-2">
@@ -1087,6 +668,97 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
           </div>
         </div>
       </div>
+
+      {/* Business Hours Override Section */}
+      <Card className="border-orange-200 bg-orange-50/30 dark:bg-orange-950/30">
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Business Hours Override
+            <Badge variant="outline" className="text-xs">Optional</Badge>
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Override global business hours for this specific zone. Useful when a zone operates on different days 
+            (e.g., Nationwide delivers on Tuesday even when kitchen is closed)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {daysOfWeek.map((day) => {
+            const globalDay = getGlobalScheduleForDay(day.value);
+            const hasOverride = formData.business_hours_override[day.value];
+            const isGlobalOpen = globalDay?.is_business_open ?? true;
+            
+            return (
+              <div key={day.value} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="font-medium w-20">{day.label}</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Global:</span>
+                    <Badge variant={isGlobalOpen ? "default" : "destructive"} className="text-xs">
+                      {isGlobalOpen ? "Open" : "Closed"}
+                    </Badge>
+                  </div>
+                  {hasOverride && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-orange-600">→ Override:</span>
+                      <Badge variant={hasOverride.is_open ? "default" : "destructive"} className="text-xs">
+                        {hasOverride.is_open ? "Open" : "Closed"}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasOverride ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBusinessHourOverride(
+                          day.value, 
+                          !hasOverride.is_open, 
+                          hasOverride.override_reason
+                        )}
+                      >
+                        {hasOverride.is_open ? "Set Closed" : "Set Open"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBusinessHourOverride(day.value)}
+                      >
+                        Remove Override
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBusinessHourOverride(day.value, true, "Custom override")}
+                        disabled={isGlobalOpen}
+                      >
+                        Override Open
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBusinessHourOverride(day.value, false, "Custom override")}
+                        disabled={!isGlobalOpen}
+                      >
+                        Override Closed
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -1120,9 +792,10 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
             step="0.01"
             value={formData.delivery_fee}
             onChange={(e) => setFormData(prev => ({ ...prev, delivery_fee: parseFloat(e.target.value) || 0 }))}
-            required
+            placeholder="0.00"
           />
         </div>
+
         <div className="space-y-2">
           <Label>Minimum Order (£)</Label>
           <Input
@@ -1130,353 +803,178 @@ const DeliveryZoneForm = ({ zone, onSave, onCancel }: any) => {
             step="0.01"
             value={formData.minimum_order}
             onChange={(e) => setFormData(prev => ({ ...prev, minimum_order: parseFloat(e.target.value) || 0 }))}
-            required
+            placeholder="0.00"
           />
         </div>
+
         <div className="space-y-2">
-          <Label>Max Distance (km) - Optional</Label>
+          <Label>Max Distance (km)</Label>
           <Input
             type="number"
-            value={formData.maximum_distance_km || ""}
+            step="0.1"
+            value={formData.maximum_distance_km || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, maximum_distance_km: e.target.value ? parseFloat(e.target.value) : null }))}
-            placeholder="Leave empty for unlimited"
+            placeholder="Optional"
           />
         </div>
       </div>
 
-      <div className="space-y-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <div>
-          <h4 className="font-medium text-blue-900">Customer Order Deadlines</h4>
-          <p className="text-sm text-blue-700">
-            Set when customers must place their orders by for each delivery day
-          </p>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <Label>Order Cut-Off Times</Label>
-            <p className="text-sm text-muted-foreground mb-3">
-              Set customer order deadlines for each delivery day
-              </p>
-              {formData.delivery_days?.map((day) => (
-                <div key={day} className="space-y-2 p-3 border rounded-lg mb-3">
-                  <Label className="text-sm font-medium capitalize">{day} Delivery</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">Cut-off Day</Label>
-                      <select
-                        className="w-full p-2 border rounded text-sm"
-                        value={formData.order_cutoffs?.[day]?.cutoff_day || ''}
-                        onChange={(e) => {
-                          const newCutoffs = { ...formData.order_cutoffs };
-                          if (!newCutoffs[day]) newCutoffs[day] = {};
-                          newCutoffs[day].cutoff_day = e.target.value;
-                          setFormData(prev => ({ ...prev, order_cutoffs: newCutoffs }));
-                        }}
-                      >
-                        <option value="">Select day</option>
-                        <option value="sunday">Sunday</option>
-                        <option value="monday">Monday</option>
-                        <option value="tuesday">Tuesday</option>
-                        <option value="wednesday">Wednesday</option>
-                        <option value="thursday">Thursday</option>
-                        <option value="friday">Friday</option>
-                        <option value="saturday">Saturday</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Cut-off Time</Label>
-                      <Input
-                        type="time"
-                        value={formData.order_cutoffs?.[day]?.cutoff_time || '23:59'}
-                        onChange={(e) => {
-                          const newCutoffs = { ...formData.order_cutoffs };
-                          if (!newCutoffs[day]) newCutoffs[day] = {};
-                          newCutoffs[day].cutoff_time = e.target.value;
-                          setFormData(prev => ({ ...prev, order_cutoffs: newCutoffs }));
-                        }}
-                        className="text-sm"
-                      />
-                    </div>
-                  </div>
-                  {formData.order_cutoffs?.[day]?.cutoff_day && (
-                    <p className="text-xs text-muted-foreground">
-                      For {day} delivery, customers must order by {formData.order_cutoffs[day].cutoff_time || '23:59'} on {formData.order_cutoffs[day].cutoff_day}
-                    </p>
-                  )}
-                </div>
-              ))}
-          </div>
-        </div>
-
-        <div>
-          <h4 className="font-medium text-blue-900">Kitchen Production Scheduling</h4>
-          <p className="text-sm text-blue-700">
-            Configure when the kitchen should start production relative to delivery dates
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="production_lead_days">Production Lead Time (days)</Label>
-              <Input
-                id="production_lead_days"
-                type="number"
-                value={formData.production_lead_days || 2}
-                onChange={(e) => setFormData({...formData, production_lead_days: parseInt(e.target.value)})}
-                min="0"
-                max="7"
-              />
-              <p className="text-sm text-muted-foreground">
-                How many days before delivery the kitchen starts production
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="production_same_day"
-                checked={formData.production_same_day || false}
-                onChange={(e) => setFormData({...formData, production_same_day: e.target.checked})}
-                className="rounded"
-              />
-              <Label htmlFor="production_same_day">Same-day production</Label>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Kitchen can cook and deliver on the same day (overrides lead time when checked)
-          </p>
-
-          <div className="space-y-2">
-            <Label>Legacy Production Day Offset (Fallback)</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                value={formData.production_day_offset}
-                onChange={(e) => setFormData(prev => ({ ...prev, production_day_offset: e.target.value === '' ? -2 : parseInt(e.target.value) }))}
-                className="w-20"
-              />
-              <span className="text-sm text-muted-foreground">days before delivery</span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Used as fallback when new production settings are not configured
-            </p>
-          </div>
-        </div>
-      </div>
-          
-      <div className="space-y-2">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="allow_custom_dates"
-            checked={formData.allow_custom_dates}
-            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allow_custom_dates: checked as boolean }))}
-          />
-          <Label htmlFor="allow_custom_dates" className="text-sm">
-            Allow custom date overrides
-          </Label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Permit manual adjustment of production/delivery dates for this zone
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Production Notes (Optional)</Label>
-        <Textarea
-          value={formData.production_notes}
-          onChange={(e) => setFormData(prev => ({ ...prev, production_notes: e.target.value }))}
-          placeholder="Special kitchen instructions or notes for this delivery zone..."
-          rows={2}
-        />
-      </div>
-
-      <div className="p-3 bg-white rounded border text-sm">
-        <strong>Examples:</strong><br />
-        • <strong>Customer deadline:</strong> For Tuesday delivery, customers order by Friday 11:59 PM<br />
-        • <strong>Kitchen production:</strong> For Tuesday delivery, kitchen starts cooking on Sunday<br />
-        These are separate timelines that can be configured independently.
-      </div>
-
-      <div className="flex justify-end space-x-2 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
         <Button type="submit">
-          {zone ? "Update Zone" : "Create Zone"}
+          {zone ? 'Update' : 'Create'} Zone
         </Button>
       </div>
     </form>
   );
-};
+}
 
-const CollectionPointForm = ({ point, onSave, onCancel }: any) => {
+// Collection Point Form Component
+function CollectionPointForm({ 
+  collectionPoint, 
+  globalSchedule,
+  onSubmit, 
+  onClose 
+}: {
+  collectionPoint: CollectionPoint | null;
+  globalSchedule: GlobalSchedule[];
+  onSubmit: (data: any) => void;
+  onClose: () => void;
+}) {
   const [formData, setFormData] = useState({
-    point_name: point?.point_name || "",
-    address: point?.address || "",
-    city: point?.city || "",
-    postcode: point?.postcode || "",
-    phone: point?.phone || "",
-    email: point?.email || "",
-    collection_days: point?.collection_days || [],
-    collection_fee: point?.collection_fee || 0,
-    maximum_capacity: point?.maximum_capacity || 50,
-    special_instructions: point?.special_instructions || "",
-    is_active: point?.is_active ?? true,
+    point_name: collectionPoint?.point_name || '',
+    address: collectionPoint?.address || '',
+    city: collectionPoint?.city || '',
+    postcode: collectionPoint?.postcode || '',
+    phone: collectionPoint?.phone || '',
+    email: collectionPoint?.email || '',
+    collection_days: collectionPoint?.collection_days || [],
+    collection_fee: collectionPoint?.collection_fee || 0,
+    maximum_capacity: collectionPoint?.maximum_capacity || 50,
+    special_instructions: collectionPoint?.special_instructions || '',
+    order_cutoffs: collectionPoint?.order_cutoffs || {},
+    production_lead_days: collectionPoint?.production_lead_days || 2,
+    production_same_day: collectionPoint?.production_same_day || false,
+    production_notes: collectionPoint?.production_notes || '',
   });
 
   const daysOfWeek = [
-    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
+    { value: "sunday", label: "Sunday" },
+    { value: "monday", label: "Monday" },
+    { value: "tuesday", label: "Tuesday" },
+    { value: "wednesday", label: "Wednesday" },
+    { value: "thursday", label: "Thursday" },
+    { value: "friday", label: "Friday" },
+    { value: "saturday", label: "Saturday" }
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      ...formData,
-      collection_fee: parseFloat(formData.collection_fee.toString()),
-      maximum_capacity: parseInt(formData.maximum_capacity.toString()),
-    });
+    onSubmit(formData);
+  };
+
+  const handleDayToggle = (day: string) => {
+    setFormData(prev => ({
+      ...prev,
+      collection_days: prev.collection_days.includes(day)
+        ? prev.collection_days.filter(d => d !== day)
+        : [...prev.collection_days, day]
+    }));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Point Name</Label>
           <Input
             value={formData.point_name}
-            onChange={(e) => setFormData({...formData, point_name: e.target.value})}
+            onChange={(e) => setFormData(prev => ({ ...prev, point_name: e.target.value }))}
+            placeholder="Collection Point Name"
             required
           />
         </div>
-        <div className="space-y-2">
-          <Label>Phone</Label>
-          <Input
-            value={formData.phone}
-            onChange={(e) => setFormData({...formData, phone: e.target.value})}
-          />
-        </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label>Address</Label>
-        <Input
-          value={formData.address}
-          onChange={(e) => setFormData({...formData, address: e.target.value})}
-          required
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>City</Label>
-          <Input
-            value={formData.city}
-            onChange={(e) => setFormData({...formData, city: e.target.value})}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Postcode</Label>
-          <Input
-            value={formData.postcode}
-            onChange={(e) => setFormData({...formData, postcode: e.target.value})}
-            required
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Collection Days</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {daysOfWeek.map((day) => (
-            <div key={day} className="flex items-center space-x-2">
-              <Switch
-                checked={formData.collection_days.includes(day)}
-                onCheckedChange={(checked) => {
-                  const newDays = checked 
-                    ? [...formData.collection_days, day]
-                    : formData.collection_days.filter(d => d !== day);
-                  setFormData({...formData, collection_days: newDays});
-                }}
-              />
-              <Label className="capitalize text-sm">{day}</Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Collection Fee (£)</Label>
           <Input
             type="number"
             step="0.01"
             value={formData.collection_fee}
-            onChange={(e) => setFormData({...formData, collection_fee: parseFloat(e.target.value) || 0})}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Maximum Capacity</Label>
-          <Input
-            type="number"
-            value={formData.maximum_capacity}
-            onChange={(e) => setFormData({...formData, maximum_capacity: parseInt(e.target.value) || 50})}
-            required
+            onChange={(e) => setFormData(prev => ({ ...prev, collection_fee: parseFloat(e.target.value) || 0 }))}
+            placeholder="0.00"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Special Instructions</Label>
+        <Label>Address</Label>
         <Textarea
-          value={formData.special_instructions}
-          onChange={(e) => setFormData({...formData, special_instructions: e.target.value})}
-          placeholder="Any special instructions for collection..."
+          value={formData.address}
+          onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+          placeholder="Full address"
+          rows={2}
+          required
         />
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          checked={formData.is_active}
-          onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
-        />
-        <Label>Active</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>City</Label>
+          <Input
+            value={formData.city}
+            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+            placeholder="City"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Postcode</Label>
+          <Input
+            value={formData.postcode}
+            onChange={(e) => setFormData(prev => ({ ...prev, postcode: e.target.value }))}
+            placeholder="Postcode"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <Label>Collection Days</Label>
+          <p className="text-sm text-muted-foreground mb-2">
+            Select which days customers can collect from this point
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {daysOfWeek.map((day) => (
+              <div key={day.value} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`collection-day-${day.value}`}
+                  checked={formData.collection_days.includes(day.value)}
+                  onCheckedChange={() => handleDayToggle(day.value)}
+                />
+                <Label htmlFor={`collection-day-${day.value}`} className="text-sm">
+                  {day.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
         <Button type="submit">
-          {point ? "Update" : "Create"} Collection Point
+          {collectionPoint ? 'Update' : 'Create'} Point
         </Button>
       </div>
     </form>
   );
-};
-
-// Helper function to check if a postcode matches a delivery zone
-export const postcodeMatchesZone = (customerPostcode: string, zone: DeliveryZone): boolean => {
-  if (!customerPostcode) return false;
-  
-  const normalizedCustomerPostcode = customerPostcode.trim().toUpperCase();
-  
-  // Check exact postcodes
-  if (zone.postcodes.some(postcode => 
-    postcode.trim().toUpperCase() === normalizedCustomerPostcode
-  )) {
-    return true;
-  }
-  
-  // Check postcode prefixes
-  if (zone.postcode_prefixes && zone.postcode_prefixes.some(prefix => 
-    normalizedCustomerPostcode.startsWith(prefix.trim().toUpperCase())
-  )) {
-    return true;
-  }
-  
-  return false;
-};
+}
 
 export default FulfillmentManager;
