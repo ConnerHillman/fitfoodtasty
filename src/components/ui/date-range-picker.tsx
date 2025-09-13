@@ -83,7 +83,7 @@ export function DateRangePicker({
 
     if (clickCount === 0) {
       // First click - set the start date
-      setTempDate({ from: selectedDate.from, to: selectedDate.from })
+      setTempDate({ from: selectedDate.from, to: undefined })
       setClickCount(1)
     } else {
       // Second click - finalize the selection
@@ -157,6 +157,9 @@ export function DateRangePicker({
                 </span>
                 {selectedPreset && (
                   <span className="text-xs text-muted-foreground">{selectedPreset}</span>
+                )}
+                {!selectedPreset && date.to && date.from.getTime() !== date.to.getTime() && (
+                  <span className="text-xs text-muted-foreground">Custom range</span>
                 )}
               </div>
             ) : (

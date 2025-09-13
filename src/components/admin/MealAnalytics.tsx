@@ -90,12 +90,14 @@ const MealAnalytics = () => {
       let endDate: Date;
 
       // Use custom date range if provided, otherwise default to last 30 days
-      if (dateRange?.from && dateRange?.to) {
+      if (dateRange?.from) {
         startDate = startOfDay(dateRange.from);
-        endDate = endOfDay(dateRange.to);
-      } else if (dateRange?.from) {
-        startDate = startOfDay(dateRange.from);
-        endDate = endOfDay(new Date());
+        // If we have a 'to' date and it's different from 'from', use it; otherwise use 'from' date
+        if (dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime()) {
+          endDate = endOfDay(dateRange.to);
+        } else {
+          endDate = endOfDay(dateRange.from);
+        }
       } else {
         // Default to last 30 days
         startDate = startOfDay(subDays(new Date(), 29));
