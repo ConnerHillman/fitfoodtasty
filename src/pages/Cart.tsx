@@ -631,7 +631,7 @@ const Cart = () => {
               {/* Inline Payment Form appears after date selection */}
               {requestedDeliveryDate && user && clientSecret && (
                 <div className="mt-4">
-                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
                     <PaymentForm
                       clientSecret={clientSecret}
                       totalAmount={Math.round((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0))) * 100)}
