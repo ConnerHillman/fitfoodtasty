@@ -112,6 +112,10 @@ const Marketing = () => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [usageStats, setUsageStats] = useState<Record<string, number>>({});
+    const [showUsageModal, setShowUsageModal] = useState(false);
+    const [selectedCouponUsage, setSelectedCouponUsage] = useState<any>(null);
+    const [usageOrders, setUsageOrders] = useState<any[]>([]);
+    const [loadingUsage, setLoadingUsage] = useState(false);
     const { toast } = useToast();
 
     // Form state
@@ -397,6 +401,140 @@ const Marketing = () => {
       });
     };
 
+    const fetchCouponUsageOrders = async (couponCode: string) => {
+      setLoadingUsage(true);
+      try {
+        const { data: orders, error } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            customer_name,
+            customer_email,
+            total_amount,
+            created_at,
+            status,
+            referral_code_used
+          `)
+          .eq('referral_code_used', couponCode)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        setUsageOrders(orders || []);
+      } catch (err) {
+        console.error('Error fetching coupon usage orders:', err);
+        toast({
+          title: "Error",
+          description: "Failed to load coupon usage details",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingUsage(false);
+      }
+    };
+
+    const handleUsageClick = (coupon: any) => {
+      const usageCount = usageStats[coupon.code] || 0;
+      if (usageCount === 0) return; // Don't open modal if no usage
+      
+      setSelectedCouponUsage(coupon);
+      setShowUsageModal(true);
+      fetchCouponUsageOrders(coupon.code);
+    };
+
+    // Usage Insights Modal
+    const UsageInsightsModal = () => (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                Usage Details: {selectedCouponUsage?.code}
+              </h3>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowUsageModal(false)}
+              >
+                Close
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <div className="text-sm text-muted-foreground">
+                Total Uses: <span className="font-semibold">{usageStats[selectedCouponUsage?.code] || 0}</span>
+                {" • "}
+                Discount: <span className="font-semibold">{selectedCouponUsage?.discount_percentage}%</span>
+              </div>
+            </div>
+
+            <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-y-auto max-h-96">
+                {loadingUsage ? (
+                  <div className="p-8 text-center">
+                    <div className="text-sm text-muted-foreground">Loading usage details...</div>
+                  </div>
+                ) : usageOrders.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    No orders found for this coupon
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead className="bg-muted/50 sticky top-0">
+                      <tr className="border-b">
+                        <th className="text-left p-3 font-medium">Order ID</th>
+                        <th className="text-left p-3 font-medium">Customer</th>
+                        <th className="text-left p-3 font-medium">Total</th>
+                        <th className="text-left p-3 font-medium">Status</th>
+                        <th className="text-left p-3 font-medium">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usageOrders.map((order) => (
+                        <tr key={order.id} className="border-b hover:bg-muted/20">
+                          <td className="p-3">
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {order.id.slice(0, 8)}...
+                            </code>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <div className="font-medium">{order.customer_name || 'Unknown'}</div>
+                              <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-medium">£{order.total_amount}</span>
+                          </td>
+                          <td className="p-3">
+                            <Badge 
+                              variant={order.status === 'completed' ? 'default' : 'secondary'}
+                              className={order.status === 'completed' ? 'bg-green-100 text-green-800' : ''}
+                            >
+                              {order.status}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-sm text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
     // Modal Component
     const CouponModal = ({ isEdit = false }) => (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -635,9 +773,17 @@ const Marketing = () => {
                               </Badge>
                             </td>
                             <td className="p-3">
-                              <span className="text-sm">
+                              <button
+                                onClick={() => handleUsageClick(coupon)}
+                                className={`text-sm transition-colors ${
+                                  (usageStats[coupon.code] || 0) > 0 
+                                    ? 'text-blue-600 hover:text-blue-800 cursor-pointer underline' 
+                                    : 'text-muted-foreground cursor-default'
+                                }`}
+                                disabled={(usageStats[coupon.code] || 0) === 0}
+                              >
                                 {usageStats[coupon.code] || 0} uses
-                              </span>
+                              </button>
                             </td>
                             <td className="p-3 text-sm text-muted-foreground">
                               {new Date(coupon.created_at).toLocaleDateString('en-GB', {
@@ -694,6 +840,7 @@ const Marketing = () => {
           {showCreateModal && <CouponModal isEdit={false} />}
           {showEditModal && <CouponModal isEdit={true} />}
           {showDeleteDialog && <DeleteDialog />}
+          {showUsageModal && <UsageInsightsModal />}
         </CardContent>
       </Card>
     );
