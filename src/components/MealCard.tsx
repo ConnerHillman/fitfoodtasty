@@ -148,20 +148,20 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
         {/* Quick nutrition view */}
         {(meal.total_calories >= 0 || meal.total_protein >= 0 || meal.total_carbs >= 0 || meal.total_fat >= 0) && (
           <div className="mb-3 px-2 py-1.5 bg-muted/30 rounded-md">
-            <ul className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:text-xs text-muted-foreground leading-tight">
-              <li className="whitespace-nowrap after:mx-1 after:text-muted-foreground/60 after:content-['·'] last:after:content-['']">
+            <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:text-xs text-muted-foreground leading-tight">
+              <li className="whitespace-nowrap">
                 <span className="text-muted-foreground">Calories:</span>{" "}
                 <span className="font-bold text-foreground">{Math.round(meal.total_calories || 0)}</span>
               </li>
-              <li className="whitespace-nowrap after:mx-1 after:text-muted-foreground/60 after:content-['·'] last:after:content-['']">
+              <li className="whitespace-nowrap">
                 <span className="text-muted-foreground">Protein:</span>{" "}
                 <span className="font-bold text-foreground">{(meal.total_protein || 0).toFixed(1)}g</span>
               </li>
-              <li className="whitespace-nowrap after:mx-1 after:text-muted-foreground/60 after:content-['·'] last:after:content-['']">
+              <li className="whitespace-nowrap">
                 <span className="text-muted-foreground">Carbs:</span>{" "}
                 <span className="font-bold text-foreground">{(meal.total_carbs || 0).toFixed(1)}g</span>
               </li>
-              <li className="whitespace-nowrap after:mx-1 after:text-muted-foreground/60 after:content-['']">
+              <li className="whitespace-nowrap">
                 <span className="text-muted-foreground">Fat:</span>{" "}
                 <span className="font-bold text-foreground">{(meal.total_fat || 0).toFixed(1)}g</span>
               </li>
