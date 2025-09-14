@@ -252,6 +252,8 @@ const Cart = () => {
               quantity: i.quantity,
               description: i.description,
               meal_id: i.id,
+              type: i.type,
+              packageData: i.packageData,
             })),
             delivery_fee: deliveryMethod === 'delivery' ? Math.round(deliveryFee * 100) : Math.round(collectionFee * 100),
             delivery_method: deliveryMethod,
@@ -371,41 +373,121 @@ const Cart = () => {
       const originalTotal = getTotalPrice() + deliveryFeeToUse;
       const discountAmount = originalTotal; // Full discount for free orders
 
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user?.id,
-          total_amount: 0,
-          discount_amount: discountAmount,
-          currency: 'gbp',
-          status: 'confirmed',
-          customer_email: user?.email,
-          customer_name: (user as any)?.user_metadata?.full_name,
-          requested_delivery_date: requestedDeliveryDate,
-          production_date: calculateProductionDate(requestedDeliveryDate),
-          delivery_address: (user as any)?.user_metadata?.delivery_address,
-          referral_code_used: appliedCoupon?.code,
-        })
-        .select()
-        .single();
+      // Check if we have package items
+      const hasPackageItems = items.some(item => item.type === 'package');
+      
+      if (hasPackageItems) {
+        // Handle package order creation
+        const packageItem = items.find(item => item.type === 'package');
+        if (!packageItem?.packageData) {
+          throw new Error('Package data not found');
+        }
 
-      if (error) throw error;
+        const { data: packageOrderData, error: packageOrderError } = await supabase
+          .from('package_orders')
+          .insert({
+            user_id: user?.id,
+            package_id: packageItem.packageData.packageId,
+            total_amount: 0,
+            currency: 'gbp',
+            status: 'confirmed',
+            customer_email: user?.email,
+            customer_name: (user as any)?.user_metadata?.full_name,
+            requested_delivery_date: requestedDeliveryDate,
+            production_date: calculateProductionDate(requestedDeliveryDate),
+            delivery_address: (user as any)?.user_metadata?.delivery_address,
+          })
+          .select()
+          .single();
 
-      // Create order items
-      const orderItems = items.map(item => ({
-        order_id: data.id,
-        meal_id: item.id,
-        meal_name: item.name,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.price * item.quantity,
-      }));
+        if (packageOrderError) throw packageOrderError;
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+        // Create package meal selections
+        const packageSelections = Object.entries(packageItem.packageData.selectedMeals).map(([mealId, quantity]) => ({
+          package_order_id: packageOrderData.id,
+          meal_id: mealId,
+          quantity: quantity,
+        }));
 
-      if (itemsError) throw itemsError;
+        // Add free item to package meal selections if applicable
+        if (appliedCoupon?.free_item_id) {
+          packageSelections.push({
+            package_order_id: packageOrderData.id,
+            meal_id: appliedCoupon.free_item_id,
+            quantity: 1,
+          });
+        }
+
+        const { error: selectionsError } = await supabase
+          .from('package_meal_selections')
+          .insert(packageSelections);
+
+        if (selectionsError) throw selectionsError;
+
+      } else {
+        // Handle regular order creation
+        const { data, error } = await supabase
+          .from('orders')
+          .insert({
+            user_id: user?.id,
+            total_amount: 0,
+            discount_amount: discountAmount,
+            currency: 'gbp',
+            status: 'confirmed',
+            customer_email: user?.email,
+            customer_name: (user as any)?.user_metadata?.full_name,
+            requested_delivery_date: requestedDeliveryDate,
+            production_date: calculateProductionDate(requestedDeliveryDate),
+            delivery_address: (user as any)?.user_metadata?.delivery_address,
+            referral_code_used: appliedCoupon?.code,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Create order items (including regular cart items)
+        const orderItems = items
+          .filter(item => !item.id.startsWith('free-')) // Exclude already-free items to avoid duplication
+          .map(item => ({
+            order_id: data.id,
+            meal_id: item.id,
+            meal_name: item.name,
+            quantity: item.quantity,
+            unit_price: item.price,
+            total_price: item.price * item.quantity,
+          }));
+
+        // Add free item as separate order item if applicable
+        if (appliedCoupon?.free_item_id) {
+          try {
+            const { data: freeItemData, error: freeItemError } = await supabase
+              .from('meals')
+              .select('name')
+              .eq('id', appliedCoupon.free_item_id)
+              .single();
+
+            if (!freeItemError && freeItemData) {
+              orderItems.push({
+                order_id: data.id,
+                meal_id: appliedCoupon.free_item_id,
+                meal_name: `🎁 FREE: ${freeItemData.name}`,
+                quantity: 1,
+                unit_price: 0,
+                total_price: 0,
+              });
+            }
+          } catch (err) {
+            console.error('Error adding free item to order:', err);
+          }
+        }
+
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+
+        if (itemsError) throw itemsError;
+      }
 
       toast({
         title: "Order Confirmed!",
