@@ -449,6 +449,7 @@ const Cart = () => {
             coupon_discount_amount: appliedCoupon?.discount_amount || 0,
             coupon_free_delivery: appliedCoupon?.free_delivery || false,
             coupon_free_item_id: appliedCoupon?.free_item_id || null,
+            expires_at: appliedCoupon?.expires_at || null,
           })
           .select()
           .single();
@@ -704,6 +705,18 @@ const Cart = () => {
         } else if (data.coupon.free_item_id) {
           message = "Coupon applied: Free item added to cart";
         }
+        
+        // Add expiration date to message if available
+        if (data.coupon.expires_at) {
+          const expirationDate = new Date(data.coupon.expires_at);
+          const formattedDate = expirationDate.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+          message += `, expires ${formattedDate}`;
+        }
+        
         setCouponMessage(message);
         
         toast({

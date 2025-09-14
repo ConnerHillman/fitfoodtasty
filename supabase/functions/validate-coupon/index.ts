@@ -67,6 +67,23 @@ serve(async (req) => {
       );
     }
 
+    // Check if coupon has expired
+    if (coupon.expires_at) {
+      const now = new Date();
+      const expirationDate = new Date(coupon.expires_at);
+      
+      if (now > expirationDate) {
+        console.log(`Coupon expired: ${code} - expired on ${expirationDate.toISOString()}`);
+        return new Response(
+          JSON.stringify({ valid: false, error: "Coupon has expired" }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
+      }
+    }
+
     // Check minimum order value requirement
     if (coupon.min_order_value && cart_total < coupon.min_order_value) {
       console.log(`Cart total ${cart_total} below minimum required ${coupon.min_order_value}`);
