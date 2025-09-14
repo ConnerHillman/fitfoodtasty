@@ -253,6 +253,8 @@ const Cart = () => {
             production_date: calculateProductionDate(requestedDeliveryDate),
             customer_email: user?.email,
             customer_name: (user as any)?.user_metadata?.full_name,
+            coupon_code: couponApplied ? couponCode : null,
+            discount_percentage: couponApplied ? couponDiscount : 0,
           }
         });
 
@@ -273,6 +275,78 @@ const Cart = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
+  };
+
+  // Calculate discounted total
+  const getDiscountedTotal = () => {
+    const subtotal = getTotalPrice();
+    const fees = deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0);
+    const total = subtotal + fees;
+    
+    if (couponApplied && couponDiscount > 0) {
+      const discountAmount = (total * couponDiscount) / 100;
+      return Math.max(0, total - discountAmount);
+    }
+    
+    return total;
+  };
+
+  // Create free order for 100% off coupons
+  const createFreeOrder = async () => {
+    try {
+      const collectionPoint = deliveryMethod === 'pickup' ? collectionPoints.find(cp => cp.id === selectedCollectionPoint) : null;
+      const collectionFee = collectionPoint?.collection_fee || 0;
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user?.id,
+          total_amount: 0,
+          currency: 'gbp',
+          status: 'confirmed',
+          customer_email: user?.email,
+          customer_name: (user as any)?.user_metadata?.full_name,
+          requested_delivery_date: requestedDeliveryDate,
+          production_date: calculateProductionDate(requestedDeliveryDate),
+          delivery_address: (user as any)?.user_metadata?.delivery_address,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: data.id,
+        meal_id: item.id,
+        meal_name: item.name,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.price * item.quantity,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      toast({
+        title: "Order Confirmed!",
+        description: "Your free order has been placed successfully.",
+      });
+
+      clearCart();
+      // Redirect to success page or orders page
+      window.location.href = '/orders';
+    } catch (error) {
+      console.error('Error creating free order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create order. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Get available dates for selected collection point
@@ -597,10 +671,16 @@ const Cart = () => {
                   <span>£{(collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0).toFixed(2)}</span>
                 </div>
               )}
+              {couponApplied && couponDiscount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({couponDiscount}%)</span>
+                  <span>-£{((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)) * couponDiscount / 100).toFixed(2)}</span>
+                </div>
+              )}
               <div className="border-t pt-4">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>£{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)).toFixed(2)}</span>
+                  <span>£{getDiscountedTotal().toFixed(2)}</span>
                 </div>
               </div>
               
@@ -784,13 +864,25 @@ const Cart = () => {
                 </div>
               )}
 
-              {/* Payment Form - Only for authenticated users */}
-              {requestedDeliveryDate && user && clientSecret && (
+              {/* Free Order Button for 100% off coupons */}
+              {requestedDeliveryDate && user && couponApplied && couponDiscount === 100 && (
+                <div className="mt-4">
+                  <Button
+                    onClick={createFreeOrder}
+                    className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  >
+                    Complete Free Order
+                  </Button>
+                </div>
+              )}
+
+              {/* Payment Form - Only for authenticated users with payment required */}
+              {requestedDeliveryDate && user && clientSecret && (!couponApplied || couponDiscount < 100) && (
                 <div className="mt-4">
                   <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
                     <PaymentForm
                       clientSecret={clientSecret}
-                      totalAmount={Math.round((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0))) * 100)}
+                      totalAmount={Math.round(getDiscountedTotal() * 100)}
                       deliveryMethod={deliveryMethod}
                       requestedDeliveryDate={requestedDeliveryDate}
                     />
@@ -1006,13 +1098,25 @@ const Cart = () => {
                 </div>
               )}
 
-              {/* Payment Form - Only for authenticated users */}
-              {requestedDeliveryDate && user && clientSecret && (
+              {/* Free Order Button for 100% off coupons */}
+              {requestedDeliveryDate && user && couponApplied && couponDiscount === 100 && (
+                <div className="mt-4">
+                  <Button
+                    onClick={createFreeOrder}
+                    className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  >
+                    Complete Free Order
+                  </Button>
+                </div>
+              )}
+
+              {/* Payment Form - Only for authenticated users with payment required */}
+              {requestedDeliveryDate && user && clientSecret && (!couponApplied || couponDiscount < 100) && (
                 <div className="mt-4">
                   <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
                     <PaymentForm
                       clientSecret={clientSecret}
-                      totalAmount={Math.round((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0))) * 100)}
+                      totalAmount={Math.round(getDiscountedTotal() * 100)}
                       deliveryMethod={deliveryMethod}
                       requestedDeliveryDate={requestedDeliveryDate}
                     />
