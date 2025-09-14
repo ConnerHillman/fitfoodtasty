@@ -21,8 +21,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get the coupon code from request body
-    const { code } = await req.json();
+    // Get the coupon code and cart total from request body
+    const { code, cart_total } = await req.json();
     
     if (!code) {
       console.log("No coupon code provided");
@@ -67,13 +67,38 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Valid coupon found: ${code} with ${coupon.discount_percentage}% discount`);
+    // Check minimum order value requirement
+    if (coupon.min_order_value && cart_total < coupon.min_order_value) {
+      console.log(`Cart total ${cart_total} below minimum required ${coupon.min_order_value}`);
+      return new Response(
+        JSON.stringify({ 
+          valid: false, 
+          error: `Minimum order value of £${coupon.min_order_value} required` 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    // Determine discount type
+    let discountType = "percentage";
+    if (coupon.discount_amount && coupon.discount_amount > 0) {
+      discountType = "fixed_amount";
+    } else if (coupon.free_delivery) {
+      discountType = "free_delivery";
+    } else if (coupon.free_item_id) {
+      discountType = "free_item";
+    }
+
+    console.log(`Valid coupon found: ${code} - Type: ${discountType}`);
 
     return new Response(
       JSON.stringify({
         valid: true,
-        discount_percentage: coupon.discount_percentage,
-        code: coupon.code
+        coupon: coupon,
+        discount_type: discountType
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
