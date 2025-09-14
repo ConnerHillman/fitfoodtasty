@@ -37,6 +37,8 @@ const Cart = () => {
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [couponMessage, setCouponMessage] = useState("");
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
   
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [deliveryZone, setDeliveryZone] = useState<any>(null);
@@ -368,6 +370,50 @@ const Cart = () => {
       if (!selectedPoint) return false;
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       return selectedPoint.collection_days.includes(dayOfWeek);
+    }
+  };
+
+  // Apply coupon function
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponMessage("Please enter a coupon code");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-coupon', {
+        body: { code: couponCode.trim() }
+      });
+
+      if (error) {
+        setCouponMessage("Error validating coupon");
+        return;
+      }
+
+      if (data.valid && data.discount_percentage === 100) {
+        setCouponApplied(true);
+        setCouponDiscount(data.discount_percentage);
+        setCouponMessage("Coupon applied: 100% off");
+        setCouponCode(""); // Clear input
+        toast({
+          title: "Coupon Applied!",
+          description: "100% discount has been applied to your order.",
+        });
+      } else if (data.valid) {
+        setCouponApplied(true);
+        setCouponDiscount(data.discount_percentage);
+        setCouponMessage(`Coupon applied: ${data.discount_percentage}% off`);
+        setCouponCode(""); // Clear input
+        toast({
+          title: "Coupon Applied!",
+          description: `${data.discount_percentage}% discount has been applied to your order.`,
+        });
+      } else {
+        setCouponMessage(data.error || "Invalid or expired coupon");
+      }
+    } catch (err) {
+      console.error("Coupon validation error:", err);
+      setCouponMessage("Failed to validate coupon");
     }
   };
 
@@ -903,20 +949,23 @@ const Cart = () => {
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       className="flex-1 h-12"
+                      disabled={couponApplied}
                     />
                     <Button
                       variant="outline"
                       className="h-12 lg:w-auto w-full px-6"
-                      onClick={() => {
-                        // TODO: Add coupon validation logic
-                        setCouponMessage("Coupon validation logic coming soon!");
-                      }}
+                      onClick={applyCoupon}
+                      disabled={couponApplied || !couponCode.trim()}
                     >
                       Apply
                     </Button>
                   </div>
                   {couponMessage && (
-                    <div className="mt-3 text-sm text-muted-foreground">
+                    <div className={`mt-3 text-sm ${
+                      couponApplied 
+                        ? "text-green-600 font-medium" 
+                        : "text-red-600"
+                    }`}>
                       {couponMessage}
                     </div>
                   )}
