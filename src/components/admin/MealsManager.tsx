@@ -1,227 +1,41 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Calculator, Search, Grid, List, BarChart3, FlaskConical, FileText, ImageIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus, BarChart3, FlaskConical, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import MealBuilder from "./MealBuilder";
+import { useMealsData } from "@/hooks/useMealsData";
+import { useFilteredMeals } from "@/hooks/useFilteredMeals";
+import { MealFiltersBar } from "./meals/MealFiltersBar";
+import { MealGridView } from "./meals/MealGridView";
 import MealFormWithIngredients from "./MealFormWithIngredients";
+import MealBuilder from "./MealBuilder";
 import MealAnalytics from "./MealAnalytics";
 import MealDetailModal from "./MealDetailModal";
-import CategoryTag from "../CategoryTag";
-
-interface Category {
-  id: string;
-  name: string;
-  color: string;
-}
-
-interface Meal {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price: number;
-  total_calories: number;
-  total_protein: number;
-  total_carbs: number;
-  total_fat: number;
-  total_fiber?: number;
-  total_weight?: number;
-  is_active: boolean;
-  image_url?: string;
-  created_at: string;
-  sort_order: number;
-}
+import type { MealFilters } from "@/types/meal";
 
 const MealsManager = () => {
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
-  const [toggleStates, setToggleStates] = useState<Record<string, boolean>>({});
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
-  const [isNewMealFormOpen, setIsNewMealFormOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
-  const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    category: "lunch",
-    price: "",
-    image_url: "",
-    shelf_life_days: 5
-  });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+  const { meals, categories, loading, fetchMeals, toggleMealActive } = useMealsData();
+  
+  // Filter state
+  const [filters, setFilters] = useState<MealFilters>({
+    searchQuery: "",
+    statusFilter: 'active',
+    categoryFilter: 'all',
+    viewMode: 'list'
+  });
 
-  useEffect(() => {
-    fetchMeals();
-    fetchCategories();
-  }, []);
+  // Dialog states
+  const [isNewMealFormOpen, setIsNewMealFormOpen] = useState(false);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
 
-  useEffect(() => {
-    applyFilters();
-  }, [meals, statusFilter, searchQuery, categoryFilter]);
+  const filteredMeals = useFilteredMeals(meals, filters);
 
-  const fetchMeals = async () => {
-    const { data, error } = await supabase
-      .from("meals")
-      .select("*")
-      .order("name", { ascending: true });
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to fetch meals", variant: "destructive" });
-    } else {
-      setMeals(data || []);
-    }
-  };
-
-  const fetchCategories = async () => {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("id, name, color")
-      .eq("is_active", true)
-      .order("sort_order");
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to fetch categories", variant: "destructive" });
-    } else {
-      setCategories(data || []);
-    }
-  };
-
-  const applyFilters = () => {
-    let filtered = meals;
-    
-    // Apply status filter
-    if (statusFilter === 'active') {
-      filtered = filtered.filter(meal => meal.is_active);
-    } else if (statusFilter === 'inactive') {
-      filtered = filtered.filter(meal => !meal.is_active);
-    }
-    
-    // Apply category filter
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(meal => meal.category === categoryFilter);
-    }
-    
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(meal =>
-        meal.name.toLowerCase().includes(query) ||
-        (meal.description && meal.description.toLowerCase().includes(query)) ||
-        (meal.category && meal.category.toLowerCase().includes(query))
-      );
-    }
-    
-    setFilteredMeals(filtered);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsUploading(true);
-    
-    let imageUrl = formData.image_url;
-    
-    // Upload image if a new file is selected
-    if (imageFile) {
-      try {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('meal-images')
-          .upload(fileName, imageFile);
-        
-        if (uploadError) {
-          throw uploadError;
-        }
-        
-        // Get the public URL for the uploaded image
-        const { data: { publicUrl } } = supabase.storage
-          .from('meal-images')
-          .getPublicUrl(fileName);
-        
-        imageUrl = publicUrl;
-        
-        toast({
-          title: "Success",
-          description: "Image uploaded successfully",
-        });
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        toast({
-          title: "Error",
-          description: "Failed to upload image",
-          variant: "destructive",
-        });
-        setIsUploading(false);
-        return;
-      }
-    }
-    
-    const mealData = {
-      name: formData.name,
-      description: formData.description,
-      category: formData.category,
-      price: parseFloat(formData.price) || 0,
-      image_url: imageUrl
-    };
-
-    let result;
-    if (editingMeal) {
-      result = await supabase
-        .from("meals")
-        .update(mealData)
-        .eq("id", editingMeal.id);
-    } else {
-      result = await supabase
-        .from("meals")
-        .insert([mealData]);
-    }
-
-    if (result.error) {
-      toast({ title: "Error", description: result.error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: `Meal ${editingMeal ? 'updated' : 'created'} successfully` });
-      setIsDialogOpen(false);
-      resetForm();
-      fetchMeals();
-    }
-    setIsUploading(false);
-  };
-
-  const handleEdit = (meal: Meal) => {
-    setEditingMeal(meal);
-    setFormData({
-      name: meal.name,
-      description: meal.description || "",
-      category: meal.category || "lunch",
-      price: meal.price?.toString() || "",
-      image_url: (meal as any).image_url || "",
-      shelf_life_days: (meal as any).shelf_life_days || 5
-    });
-    setImageFile(null);
-    setIsDialogOpen(true);
+  const handleFiltersChange = (newFilters: Partial<MealFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const handleViewMeal = (mealId: string) => {
@@ -234,570 +48,80 @@ const MealsManager = () => {
     setIsBuilderOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase
-      .from("meals")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: "Meal deleted successfully" });
-      fetchMeals();
-    }
+  const handleEditMeal = (mealId: string) => {
+    toast({
+      title: "Coming Soon",
+      description: "Meal editing feature is being developed",
+    });
   };
 
-  const toggleActive = async (meal: Meal) => {
-    const newStatus = !meal.is_active;
-    
-    // Optimistic update - immediately update the UI
-    console.log('Setting optimistic state for', meal.id, 'to', newStatus);
-    setToggleStates(prev => ({ ...prev, [meal.id]: newStatus }));
-    
-    const { error } = await supabase
-      .from("meals")
-      .update({ is_active: newStatus })
-      .eq("id", meal.id);
-
-    if (error) {
-      // Revert optimistic update on error
-      console.log('Reverting optimistic state for', meal.id, 'back to', meal.is_active);
-      setToggleStates(prev => ({ ...prev, [meal.id]: meal.is_active }));
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      // Remove from toggle states and refresh data
-      console.log('Removing optimistic state for', meal.id);
-      setToggleStates(prev => {
-        const newStates = { ...prev };
-        delete newStates[meal.id];
-        return newStates;
-      });
-      fetchMeals();
-      toast({
-        title: newStatus ? "Meal activated" : "Meal deactivated",
-        description: !newStatus && statusFilter === 'active'
-          ? "It's now hidden by the Active filter. Switch to All/Inactive to view it."
-          : undefined,
-      });
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-    name: "",
-    description: "",
-    category: "lunch",
-    price: "",
-    image_url: "",
-    shelf_life_days: 5
-  });
-    setImageFile(null);
-    setEditingMeal(null);
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Meals Management</h2>
+          <h1 className="text-2xl font-bold">Meals Management</h1>
           <p className="text-muted-foreground">
-            Manage your meal offerings, prices, and analytics
+            Manage your meal offerings, nutrition, and ingredients
           </p>
         </div>
+        <Button onClick={() => setIsNewMealFormOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Meal
+        </Button>
       </div>
 
-      <Tabs defaultValue="management" className="w-full">
+      <Tabs defaultValue="meals" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="management" className="flex items-center gap-2">
-            <Grid className="h-4 w-4" />
-            Management
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics & Insights
+          <TabsTrigger value="meals">Meals</TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="management" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Meal Management</h3>
-              <p className="text-sm text-muted-foreground">Create and manage your meal offerings</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => setIsNewMealFormOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Calculator className="h-4 w-4" />
-                Build with Ingredients
-              </Button>
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Quick Add Meal
-              </Button>
-            </div>
-          </div>
-          
-          {/* Search and Filters */}
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="flex items-center gap-4 flex-1 max-w-md">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search meals..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.name}>
-                      {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex border rounded-lg p-1">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {filteredMeals.length} of {meals.length} meals
-              </div>
-            </div>
-          </div>
+        <TabsContent value="meals" className="space-y-6">
+          <MealFiltersBar
+            filters={filters}
+            categories={categories}
+            onFiltersChange={handleFiltersChange}
+            totalCount={meals.length}
+            filteredCount={filteredMeals.length}
+          />
 
-          {/* Meals Display */}
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredMeals.map((meal) => (
-                <Card key={meal.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleViewMeal(meal.id)}>
-                  <div className="relative h-48">
-                    {meal.image_url ? (
-                      <img
-                        src={meal.image_url}
-                        alt={meal.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                    )}
-                    <Badge
-                      variant={meal.is_active ? "default" : "secondary"}
-                      className="absolute top-2 right-2"
-                    >
-                      {meal.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between">
-                        <h3 className="font-semibold line-clamp-1">{meal.name}</h3>
-                        <span className="font-bold text-primary">£{meal.price?.toFixed(2)}</span>
-                      </div>
-                      {meal.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">{meal.description}</p>
-                      )}
-                      <CategoryTag category={meal.category} />
-                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                        <span>Cal: {Math.round(meal.total_calories)}</span>
-                        <span>Protein: {meal.total_protein?.toFixed(1)}g</span>
-                        <span>Carbs: {meal.total_carbs?.toFixed(1)}g</span>
-                        <span>Fat: {meal.total_fat?.toFixed(1)}g</span>
-                      </div>
-                      
-                      {/* Active Status Checkbox */}
-                      <div className="flex items-center gap-2 pt-2">
-                        <label className="text-sm font-medium">Active:</label>
-                        {(toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : meal.is_active) ? (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <Checkbox checked={true} className="h-5 w-5" />
-                              </div>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Deactivate Meal</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to make "{meal.name}" inactive? It will be hidden from the menu.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={(e) => { e.stopPropagation(); toggleActive(meal); }}>
-                                  Deactivate
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        ) : (
-                          <Checkbox 
-                            checked={toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : false} 
-                            onCheckedChange={() => toggleActive(meal)} 
-                            onClick={(e) => e.stopPropagation()}
-                            className="h-5 w-5"
-                          />
-                        )}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 pt-3">
-                        <TooltipProvider delayDuration={0}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="default"
-                                variant="outline"
-                                onClick={() => handleBuildMeal(meal.id)}
-                                className="flex items-center gap-2 h-10 px-3 flex-1"
-                              >
-                                <Calculator className="h-4 w-4" />
-                                <span className="text-sm">Build</span>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit nutrition & ingredients</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider delayDuration={0}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="default"
-                                variant="outline"
-                                onClick={() => handleEdit(meal)}
-                                className="h-10 px-3"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit meal details</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <AlertDialog>
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <AlertDialogTrigger asChild>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size="default"
-                                    variant="outline"
-                                    className="h-10 px-3"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                              </AlertDialogTrigger>
-                              <TooltipContent>Delete item</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Meal</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to permanently delete "{meal.name}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(meal.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          {filteredMeals.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No meals found matching your filters.</p>
             </div>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Image</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Nutrition</TableHead>
-                    <TableHead>Active</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMeals.map((meal) => (
-                    <TableRow key={meal.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewMeal(meal.id)}>
-                      <TableCell>
-                        {meal.image_url ? (
-                          <img
-                            src={meal.image_url}
-                            alt={meal.name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
-                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{meal.name}</div>
-                          {meal.description && (
-                            <div className="text-sm text-muted-foreground line-clamp-1">
-                              {meal.description}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <CategoryTag category={meal.category} />
-                      </TableCell>
-                      <TableCell className="font-medium">£{meal.price?.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="text-xs space-y-1">
-                          <div>Cal: {Math.round(meal.total_calories)}</div>
-                          <div>P: {meal.total_protein?.toFixed(1)}g C: {meal.total_carbs?.toFixed(1)}g F: {meal.total_fat?.toFixed(1)}g</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {(toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : meal.is_active) ? (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <Checkbox checked={true} className="h-5 w-5" />
-                              </div>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Deactivate Meal</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to make "{meal.name}" inactive? It will be hidden from the menu.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={(e) => { e.stopPropagation(); toggleActive(meal); }}>
-                                  Deactivate
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        ) : (
-                          <Checkbox 
-                            checked={toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : false} 
-                            onCheckedChange={() => toggleActive(meal)} 
-                            onClick={(e) => e.stopPropagation()}
-                            className="h-5 w-5"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="default"
-                                  variant="outline"
-                                  onClick={() => handleBuildMeal(meal.id)}
-                                  className="h-9 px-3"
-                                >
-                                  <Calculator className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit nutrition & ingredients</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="default"
-                                  variant="outline"
-                                  onClick={() => handleEdit(meal)}
-                                  className="h-9 px-3"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit meal details</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-
-                          <AlertDialog>
-                            <TooltipProvider delayDuration={0}>
-                              <Tooltip>
-                                <AlertDialogTrigger asChild>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="default"
-                                      variant="outline"
-                                      className="h-9 px-3"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                </AlertDialogTrigger>
-                                <TooltipContent>Delete item</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Meal</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to permanently delete "{meal.name}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(meal.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {/* Quick Add Dialog */}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>{editingMeal ? "Edit Meal" : "Add New Meal"}</DialogTitle>
-                <DialogDescription>
-                  {editingMeal ? "Update the meal details below." : "Create a new meal by filling out the form below."}
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="Meal name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="price">Price (£)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="shelf_life">Shelf Life (days)</Label>
-                    <Input
-                      id="shelf_life"
-                      type="number"
-                      min="1"
-                      max="30"
-                      placeholder="5"
-                      value={formData.shelf_life_days}
-                      onChange={(e) => setFormData({ ...formData, shelf_life_days: parseInt(e.target.value) || 5 })}
-                      required
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">How many days this meal stays fresh after production</p>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Meal description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isUploading}>
-                    {isUploading ? "Saving..." : editingMeal ? "Update Meal" : "Add Meal"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-
-          {isNewMealFormOpen && (
-            <MealFormWithIngredients
-              onSuccess={() => {
-                setIsNewMealFormOpen(false);
-                fetchMeals();
-              }}
-              onCancel={() => setIsNewMealFormOpen(false)}
+            <MealGridView
+              meals={filteredMeals}
+              onToggleActive={toggleMealActive}
+              onViewMeal={handleViewMeal}
+              onBuildMeal={handleBuildMeal}
+              onEditMeal={handleEditMeal}
             />
           )}
+
+          {/* New Meal Form Dialog */}
+          <Dialog open={isNewMealFormOpen} onOpenChange={setIsNewMealFormOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Meal</DialogTitle>
+                <DialogDescription>Create a new meal with ingredients and nutritional information.</DialogDescription>
+              </DialogHeader>
+              <MealFormWithIngredients
+                onSuccess={() => {
+                  setIsNewMealFormOpen(false);
+                  fetchMeals();
+                }}
+                onCancel={() => setIsNewMealFormOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
 
           {/* Builder Dialog */}
           <Dialog open={isBuilderOpen && !!selectedMealId} onOpenChange={setIsBuilderOpen}>
