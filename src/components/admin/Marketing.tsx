@@ -116,20 +116,42 @@ const Marketing = () => {
     const [selectedCouponUsage, setSelectedCouponUsage] = useState<any>(null);
     const [usageOrders, setUsageOrders] = useState<any[]>([]);
     const [loadingUsage, setLoadingUsage] = useState(false);
+    const [meals, setMeals] = useState<any[]>([]);
     const { toast } = useToast();
 
     // Form state
     const [formData, setFormData] = useState({
       code: '',
+      discount_type: 'percentage', // percentage, fixed_amount, free_delivery, free_item
       discount_percentage: 0,
+      discount_amount: 0,
+      free_delivery: false,
+      free_item_id: '',
+      min_order_value: 0,
       active: true
     });
 
-    // Fetch coupons and usage stats on component load
+    // Fetch coupons, usage stats, and meals on component load
     useEffect(() => {
       fetchCoupons();
       fetchUsageStats();
+      fetchMeals();
     }, []);
+
+    const fetchMeals = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('meals')
+          .select('id, name')
+          .eq('is_active', true)
+          .order('name');
+
+        if (error) throw error;
+        setMeals(data || []);
+      } catch (err) {
+        console.error('Error fetching meals:', err);
+      }
+    };
 
     const fetchCoupons = async () => {
       try {
@@ -201,7 +223,12 @@ const Marketing = () => {
     const resetForm = () => {
       setFormData({
         code: '',
+        discount_type: 'percentage',
         discount_percentage: 0,
+        discount_amount: 0,
+        free_delivery: false,
+        free_item_id: '',
+        min_order_value: 0,
         active: true
       });
     };
@@ -213,9 +240,25 @@ const Marketing = () => {
 
     const openEditModal = (coupon: any) => {
       setSelectedCoupon(coupon);
+      
+      // Determine discount type based on existing coupon data
+      let discountType = 'percentage';
+      if (coupon.discount_amount && coupon.discount_amount > 0) {
+        discountType = 'fixed_amount';
+      } else if (coupon.free_delivery) {
+        discountType = 'free_delivery';
+      } else if (coupon.free_item_id) {
+        discountType = 'free_item';
+      }
+      
       setFormData({
         code: coupon.code,
-        discount_percentage: coupon.discount_percentage,
+        discount_type: discountType,
+        discount_percentage: coupon.discount_percentage || 0,
+        discount_amount: coupon.discount_amount || 0,
+        free_delivery: coupon.free_delivery || false,
+        free_item_id: coupon.free_item_id || '',
+        min_order_value: coupon.min_order_value || 0,
         active: coupon.active
       });
       setShowEditModal(true);
@@ -237,10 +280,40 @@ const Marketing = () => {
         return;
       }
 
-      if (formData.discount_percentage < 0 || formData.discount_percentage > 100) {
+      // Validate based on discount type
+      if (formData.discount_type === 'percentage') {
+        if (formData.discount_percentage < 0 || formData.discount_percentage > 100) {
+          toast({
+            title: "Error",
+            description: "Discount percentage must be between 0 and 100",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else if (formData.discount_type === 'fixed_amount') {
+        if (formData.discount_amount <= 0) {
+          toast({
+            title: "Error",
+            description: "Discount amount must be greater than 0",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else if (formData.discount_type === 'free_item') {
+        if (!formData.free_item_id) {
+          toast({
+            title: "Error",
+            description: "Please select a free item",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      if (formData.min_order_value && formData.min_order_value < 0) {
         toast({
           title: "Error",
-          description: "Discount percentage must be between 0 and 100",
+          description: "Minimum order value must be 0 or greater",
           variant: "destructive",
         });
         return;
@@ -251,15 +324,22 @@ const Marketing = () => {
       try {
         const couponCode = formData.code.trim().toUpperCase();
 
+        // Prepare data based on discount type
+        const couponData = {
+          code: couponCode,
+          discount_percentage: formData.discount_type === 'percentage' ? formData.discount_percentage : 0,
+          discount_amount: formData.discount_type === 'fixed_amount' ? formData.discount_amount : null,
+          free_delivery: formData.discount_type === 'free_delivery',
+          free_item_id: formData.discount_type === 'free_item' ? formData.free_item_id || null : null,
+          min_order_value: formData.min_order_value > 0 ? formData.min_order_value : null,
+          active: formData.active
+        };
+
         if (isEdit && selectedCoupon) {
           // Update existing coupon
           const { error } = await supabase
             .from('coupons')
-            .update({
-              code: couponCode,
-              discount_percentage: formData.discount_percentage,
-              active: formData.active
-            })
+            .update(couponData)
             .eq('id', selectedCoupon.id);
 
           if (error) {
@@ -293,11 +373,7 @@ const Marketing = () => {
 
           const { error } = await supabase
             .from('coupons')
-            .insert({
-              code: couponCode,
-              discount_percentage: formData.discount_percentage,
-              active: formData.active
-            });
+            .insert(couponData);
 
           if (error) throw error;
 
@@ -358,11 +434,26 @@ const Marketing = () => {
       }
     };
 
+    const getDiscountDisplay = (coupon: any) => {
+      if (coupon.discount_percentage > 0) {
+        return `${coupon.discount_percentage}% off`;
+      } else if (coupon.discount_amount > 0) {
+        return `£${coupon.discount_amount} off`;
+      } else if (coupon.free_delivery) {
+        return 'Free delivery';
+      } else if (coupon.free_item_id) {
+        const meal = meals.find(m => m.id === coupon.free_item_id);
+        return `Free: ${meal?.name || 'Unknown item'}`;
+      }
+      return 'No discount';
+    };
+
     const exportToCsv = () => {
       // Prepare CSV data
       const csvData = filteredCoupons.map(coupon => ({
         Code: coupon.code,
-        'Discount %': coupon.discount_percentage,
+        Discount: getDiscountDisplay(coupon),
+        'Min Order': coupon.min_order_value ? `£${coupon.min_order_value}` : 'None',
         Status: coupon.active ? 'Active' : 'Inactive',
         'Usage Count': usageStats[coupon.code] || 0,
         'Created Date': new Date(coupon.created_at).toLocaleDateString('en-GB'),
@@ -536,7 +627,7 @@ const Marketing = () => {
     // Modal Component
     const CouponModal = ({ isEdit = false }) => (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-md">
+        <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             <h3 className="text-lg font-semibold mb-4">
               {isEdit ? 'Edit Coupon' : 'Create New Coupon'}
@@ -561,25 +652,125 @@ const Marketing = () => {
                 </div>
               </div>
 
-              {/* Discount Percentage */}
+              {/* Discount Type Selector */}
               <div>
-                <Label htmlFor="discount">Discount Percentage</Label>
+                <Label htmlFor="discount-type">Discount Type</Label>
+                <Select 
+                  value={formData.discount_type} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, discount_type: value }))}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger className="mt-1 bg-white border border-input z-50">
+                    <SelectValue placeholder="Select discount type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-input shadow-lg z-[60]">
+                    <SelectItem value="percentage">Percentage Discount</SelectItem>
+                    <SelectItem value="fixed_amount">Fixed Amount (£)</SelectItem>
+                    <SelectItem value="free_delivery">Free Delivery</SelectItem>
+                    <SelectItem value="free_item">Free Item</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Dynamic Fields Based on Discount Type */}
+              {formData.discount_type === 'percentage' && (
+                <div>
+                  <Label htmlFor="discount-percentage">Discount Percentage</Label>
+                  <Input
+                    id="discount-percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="e.g., 20"
+                    value={formData.discount_percentage}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      discount_percentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
+                    }))}
+                    className="mt-1"
+                    disabled={isSubmitting}
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Value between 0 and 100
+                  </div>
+                </div>
+              )}
+
+              {formData.discount_type === 'fixed_amount' && (
+                <div>
+                  <Label htmlFor="discount-amount">Discount Amount (£)</Label>
+                  <Input
+                    id="discount-amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g., 10.00"
+                    value={formData.discount_amount}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      discount_amount: Math.max(0, parseFloat(e.target.value) || 0)
+                    }))}
+                    className="mt-1"
+                    disabled={isSubmitting}
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Fixed amount to subtract from order total
+                  </div>
+                </div>
+              )}
+
+              {formData.discount_type === 'free_delivery' && (
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    This coupon will provide free delivery to customers.
+                  </p>
+                </div>
+              )}
+
+              {formData.discount_type === 'free_item' && (
+                <div>
+                  <Label htmlFor="free-item">Free Item</Label>
+                  <Select 
+                    value={formData.free_item_id} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, free_item_id: value }))}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger className="mt-1 bg-white border border-input z-50">
+                      <SelectValue placeholder="Select a meal" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-input shadow-lg z-[60] max-h-48 overflow-y-auto">
+                      {meals.map((meal) => (
+                        <SelectItem key={meal.id} value={meal.id}>
+                          {meal.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Customer will receive this meal for free
+                  </div>
+                </div>
+              )}
+
+              {/* Minimum Order Value */}
+              <div>
+                <Label htmlFor="min-order">Minimum Order Value (£) - Optional</Label>
                 <Input
-                  id="discount"
+                  id="min-order"
                   type="number"
                   min="0"
-                  max="100"
-                  placeholder="e.g., 20"
-                  value={formData.discount_percentage}
+                  step="0.01"
+                  placeholder="e.g., 25.00"
+                  value={formData.min_order_value}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    discount_percentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
+                    min_order_value: Math.max(0, parseFloat(e.target.value) || 0)
                   }))}
                   className="mt-1"
                   disabled={isSubmitting}
                 />
                 <div className="text-xs text-muted-foreground mt-1">
-                  Value between 0 and 100
+                  Leave empty for no minimum requirement
                 </div>
               </div>
 
@@ -737,7 +928,8 @@ const Marketing = () => {
                     <thead className="bg-muted/50">
                       <tr className="border-b">
                         <th className="text-left p-3 font-medium">Code</th>
-                        <th className="text-left p-3 font-medium">Discount %</th>
+                        <th className="text-left p-3 font-medium">Discount</th>
+                        <th className="text-left p-3 font-medium">Min Order</th>
                         <th className="text-left p-3 font-medium">Active</th>
                         <th className="text-left p-3 font-medium">Usage</th>
                         <th className="text-left p-3 font-medium">Created At</th>
@@ -760,7 +952,12 @@ const Marketing = () => {
                               </code>
                             </td>
                             <td className="p-3">
-                              <span className="font-medium">{coupon.discount_percentage}%</span>
+                              <span className="font-medium">{getDiscountDisplay(coupon)}</span>
+                            </td>
+                            <td className="p-3">
+                              <span className="text-sm">
+                                {coupon.min_order_value ? `£${coupon.min_order_value}` : 'None'}
+                              </span>
                             </td>
                             <td className="p-3">
                               <Badge 
