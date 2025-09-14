@@ -727,34 +727,34 @@ const Orders = () => {
                           </CardDescription>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {/* Quick Reorder Button */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2">
+                        {/* Regular Reorder Button - First on mobile (top) */}
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReorder(order.id);
+                          }}
+                          className="bg-green-500 hover:bg-green-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg w-full sm:w-auto"
+                          size="sm"
+                          title="Reorder this order"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Reorder
+                        </Button>
+                        
+                        {/* Quick Reorder Button - Second on mobile (bottom) */}
                         <Button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleQuickReorder(order.id, 'package');
                           }}
-                          className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                          className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg w-full sm:w-auto"
                           size="sm"
                           title="Quick reorder - add directly to cart"
                           disabled={isQuickReordering}
                         >
                           <Zap className="h-4 w-4 mr-1" />
                           Quick
-                        </Button>
-                        
-                        {/* Regular Reorder Button */}
-                        <Button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReorder(order.id);
-                          }}
-                          className="bg-green-500 hover:bg-green-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-                          size="sm"
-                          title="Reorder this order"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-1" />
-                          Reorder
                         </Button>
                         
                         {/* Favorites Button */}
@@ -890,34 +890,34 @@ const Orders = () => {
                           </CardDescription>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {/* Quick Reorder Button */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2">
+                        {/* Regular Reorder Button - First on mobile (top) */}
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMealOrderReorder(order.id);
+                          }}
+                          className="bg-green-500 hover:bg-green-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg w-full sm:w-auto"
+                          size="sm"
+                          title="Reorder this order"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Reorder
+                        </Button>
+                        
+                        {/* Quick Reorder Button - Second on mobile (bottom) */}
                         <Button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleQuickReorder(order.id, 'regular');
                           }}
-                          className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                          className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg w-full sm:w-auto"
                           size="sm"
                           title="Quick reorder - add directly to cart"
                           disabled={isQuickReordering}
                         >
                           <Zap className="h-4 w-4 mr-1" />
                           Quick
-                        </Button>
-                        
-                        {/* Regular Reorder Button */}
-                        <Button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMealOrderReorder(order.id);
-                          }}
-                          className="bg-green-500 hover:bg-green-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-                          size="sm"
-                          title="Reorder this order"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-1" />
-                          Reorder
                         </Button>
                         
                         {/* Favorites Button */}
