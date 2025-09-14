@@ -60,7 +60,7 @@ const Orders = () => {
   const [showReplacementDialog, setShowReplacementDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { startReorder, reorderData } = useCart();
+  const { startReorder, reorderData, addToCart } = useCart();
 
   useEffect(() => {
     fetchOrders();
@@ -211,6 +211,121 @@ const Orders = () => {
       toast({
         title: "Error",
         description: result.error || "Failed to process reorder.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMealOrderReorder = async (orderId: string) => {
+    try {
+      // Get the original order with its items and coupon info
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          coupon_type,
+          coupon_discount_percentage,
+          coupon_discount_amount,
+          coupon_free_delivery,
+          coupon_free_item_id,
+          order_items (
+            meal_id,
+            meal_name,
+            quantity,
+            unit_price,
+            meals (
+              id,
+              name,
+              description,
+              category,
+              price,
+              image_url,
+              is_active,
+              total_calories,
+              total_protein,
+              total_carbs,
+              total_fat,
+              total_fiber,
+              shelf_life_days
+            )
+          )
+        `)
+        .eq("id", orderId)
+        .single();
+
+      if (orderError) throw orderError;
+
+      const orderItems = orderData.order_items || [];
+      let unavailableCount = 0;
+      let addedCount = 0;
+
+      // Add available meals to cart
+      for (const item of orderItems) {
+        if (item.meals && item.meals.is_active) {
+          const cartItem = {
+            id: item.meals.id,
+            name: item.meals.name,
+            description: item.meals.description || "",
+            category: item.meals.category || "uncategorized",
+            price: item.meals.price || item.unit_price,
+            total_calories: item.meals.total_calories || 0,
+            total_protein: item.meals.total_protein || 0,
+            total_carbs: item.meals.total_carbs || 0,
+            total_fat: item.meals.total_fat || 0,
+            total_fiber: item.meals.total_fiber || 0,
+            shelf_life_days: item.meals.shelf_life_days || 5,
+            image_url: item.meals.image_url,
+          };
+
+          // Add each quantity individually
+          for (let i = 0; i < item.quantity; i++) {
+            addToCart(cartItem);
+          }
+          addedCount += item.quantity;
+        } else {
+          unavailableCount++;
+        }
+      }
+
+      // Check and reapply coupon if it was used in the original order
+      let couponMessage = "";
+      if (orderData.coupon_type) {
+        const { data: couponData, error: couponError } = await supabase
+          .from("coupons")
+          .select("code, active, expires_at")
+          .eq("code", orderData.coupon_type)
+          .single();
+
+        if (!couponError && couponData) {
+          const now = new Date();
+          const expiresAt = couponData.expires_at ? new Date(couponData.expires_at) : null;
+          
+          if (couponData.active && (!expiresAt || expiresAt > now)) {
+            couponMessage = ` Original coupon "${orderData.coupon_type}" is still active and can be reapplied at checkout.`;
+          } else {
+            couponMessage = ` Note: Original coupon "${orderData.coupon_type}" has expired and cannot be reapplied.`;
+          }
+        }
+      }
+
+      // Show success message
+      let description = `${addedCount} meal${addedCount > 1 ? 's' : ''} added to cart.`;
+      if (unavailableCount > 0) {
+        description += ` ${unavailableCount} meal${unavailableCount > 1 ? 's are' : ' is'} no longer available.`;
+      }
+      description += couponMessage;
+
+      toast({
+        title: "Reorder Complete!",
+        description,
+        variant: "success" as any,
+      });
+
+    } catch (error) {
+      console.error("Error reordering meals:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reorder meals. Please try again.",
         variant: "destructive",
       });
     }
@@ -433,6 +548,18 @@ const Orders = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Reorder Button for Regular Orders */}
+                <div className="pt-4 border-t">
+                  <Button 
+                    onClick={() => handleMealOrderReorder(order.id)}
+                    className="flex items-center gap-2"
+                    size="sm"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Reorder Meals
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
