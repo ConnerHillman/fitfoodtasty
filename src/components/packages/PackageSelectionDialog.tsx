@@ -303,12 +303,12 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           />
         </div>
 
-        {/* Selection status */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 mt-2">
-          <div className="text-muted-foreground text-center sm:text-left">
+        {/* Desktop Selection status */}
+        <div className="hidden sm:flex sm:items-center sm:justify-between gap-4 mb-4 mt-2">
+          <div className="text-muted-foreground">
             Selected: <span className="font-semibold text-foreground">{totalSelected}</span> / {pkg?.meal_count ?? 0}
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-2">
+          <div className="flex items-center gap-2">
             {totalSelected === (pkg?.meal_count ?? 0) ? (
               <div className="text-green-600 flex items-center gap-1 text-sm">
                 <CheckCircle2 size={16} /> Ready to add
@@ -316,7 +316,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
             ) : (
               <div className="text-muted-foreground text-sm">Pick {((pkg?.meal_count ?? 0) - totalSelected)} more</div>
             )}
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 onClick={handleAddToCart} 
@@ -332,6 +332,46 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                 className="h-12 min-w-[140px] touch-manipulation"
               >
                 Proceed to Checkout
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Persistent Counter - Fixed at bottom */}
+        <div className="sm:hidden fixed bottom-4 left-4 right-4 z-50 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="text-base font-semibold text-foreground">
+                {totalSelected}/{pkg?.meal_count ?? 0}
+              </div>
+              {totalSelected === (pkg?.meal_count ?? 0) ? (
+                <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                  <CheckCircle2 size={14} />
+                  Complete
+                </div>
+              ) : (
+                <div className="text-muted-foreground text-sm">
+                  Pick {((pkg?.meal_count ?? 0) - totalSelected)} more
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleAddToCart} 
+                disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                className="h-10 min-w-[80px] touch-manipulation text-sm"
+              >
+                Add to Cart
+              </Button>
+              <Button 
+                size="sm"
+                onClick={handleCheckout} 
+                disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                className="h-10 min-w-[90px] touch-manipulation text-sm"
+              >
+                Continue
               </Button>
             </div>
           </div>
