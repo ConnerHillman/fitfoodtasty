@@ -800,9 +800,14 @@ const Cart = () => {
                 
                 {/* Show free items separately */}
                 {items.filter(item => item.id.startsWith('free-')).map(freeItem => (
-                  <div key={freeItem.id} className="flex justify-between text-green-600 font-medium">
-                    <span>🎁 {freeItem.name.replace('🎁 FREE: ', '')}</span>
-                    <span>FREE</span>
+                  <div key={freeItem.id} className="flex justify-between items-center bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        FREE
+                      </span>
+                      <span className="text-green-800 font-medium">🎁 {freeItem.name.replace('🎁 FREE: ', '')}</span>
+                    </div>
+                    <span className="text-green-600 font-bold">FREE</span>
                   </div>
                 ))}
                 
@@ -839,68 +844,87 @@ const Cart = () => {
       <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Cart Items */}
         <div className="order-2 lg:order-1 lg:col-span-2 space-y-4">
-          {items.map((item) => (
-            <Card key={item.id}>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start gap-4">
-                  {item.image_url && (
-                    <img
-                      src={item.image_url}
-                      alt={item.name}
-                      className="w-full sm:w-20 h-32 sm:h-20 object-cover rounded-lg"
-                    />
-                  )}
-                  <div className="flex-1 w-full">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 pr-2">
-                        <h3 className="font-semibold text-base sm:text-lg">{item.name}</h3>
-                        <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
-                          {item.description}
-                        </p>
-                        <div className="text-lg font-semibold sm:hidden">
-                          £{(item.price * item.quantity).toFixed(2)}
+          {items.map((item) => {
+            const isFreeItem = item.id.startsWith('free-');
+            
+            return (
+              <Card key={item.id} className={isFreeItem ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200" : ""}>
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    {item.image_url && (
+                      <div className="relative">
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full sm:w-20 h-32 sm:h-20 object-cover rounded-lg"
+                        />
+                        {isFreeItem && (
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                            FREE
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex-1 w-full">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 pr-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-base sm:text-lg">{item.name}</h3>
+                            {isFreeItem && (
+                              <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                FREE ITEM
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
+                            {item.description}
+                          </p>
+                          <div className={`text-lg font-semibold sm:hidden ${isFreeItem ? 'text-green-600' : ''}`}>
+                            {isFreeItem ? 'FREE' : `£${(item.price * item.quantity).toFixed(2)}`}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-destructive hover:text-destructive min-h-[44px] min-w-[44px] p-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1 || isFreeItem}
+                            className="h-11 w-11 sm:h-9 sm:w-9"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-12 sm:w-8 text-center font-medium text-lg sm:text-base">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            disabled={isFreeItem}
+                            className="h-11 w-11 sm:h-9 sm:w-9"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className={`text-lg font-semibold hidden sm:block ${isFreeItem ? 'text-green-600' : ''}`}>
+                          {isFreeItem ? 'FREE' : `£${(item.price * item.quantity).toFixed(2)}`}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-destructive hover:text-destructive min-h-[44px] min-w-[44px] p-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                          className="h-11 w-11 sm:h-9 sm:w-9"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-12 sm:w-8 text-center font-medium text-lg sm:text-base">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="h-11 w-11 sm:h-9 sm:w-9"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="text-lg font-semibold hidden sm:block">
-                        £{(item.price * item.quantity).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                     </div>
+                   </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Order Summary - Desktop only */}
