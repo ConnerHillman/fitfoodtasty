@@ -7,11 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Package, Truck, RotateCcw, ChevronRight, Star, StarIcon, Zap, CheckCircle2 } from "lucide-react";
+import { Calendar, Package, Truck, RotateCcw, ChevronRight, Star, StarIcon, Zap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import MealReplacementDialog from "@/components/packages/MealReplacementDialog";
 import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
-import { Checkbox } from "@/components/ui/checkbox";
+
 
 interface OrderItem {
   id: string;
@@ -84,7 +84,7 @@ const Orders = () => {
   const [selectedOrderType, setSelectedOrderType] = useState<'regular' | 'package'>('regular');
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  
   const [isQuickReordering, setIsQuickReordering] = useState(false);
 
   const [showReplacementDialog, setShowReplacementDialog] = useState(false);
@@ -207,66 +207,6 @@ const Orders = () => {
     }
   };
 
-  const handleBulkReorder = async () => {
-    if (selectedOrderIds.size === 0) return;
-
-    setIsQuickReordering(true);
-    let successCount = 0;
-    let needsReplacementCount = 0;
-
-    for (const orderId of selectedOrderIds) {
-      // Determine order type by checking if it exists in packageOrders or orders
-      const orderType = packageOrders.some(o => o.id === orderId) ? 'package' : 'regular';
-      
-      const result = await startReorder(orderId, orderType);
-      if (result.success) {
-        successCount++;
-        if (result.needsReplacements) {
-          needsReplacementCount++;
-        }
-      }
-    }
-
-    setIsQuickReordering(false);
-    setSelectedOrderIds(new Set());
-
-    if (needsReplacementCount > 0) {
-      setShowReplacementDialog(true);
-      toast({
-        title: "Bulk Reorder Partial",
-        description: `${successCount} orders processed. ${needsReplacementCount} need meal replacements.`,
-        variant: "default",
-      });
-    } else {
-      toast({
-        title: "Bulk Reorder Success!",
-        description: `${successCount} orders added to cart successfully.`,
-        variant: "success" as any,
-      });
-      navigate("/cart");
-    }
-  };
-
-  const toggleOrderSelection = (orderId: string) => {
-    setSelectedOrderIds(prev => {
-      const updated = new Set(prev);
-      if (updated.has(orderId)) {
-        updated.delete(orderId);
-      } else {
-        updated.add(orderId);
-      }
-      return updated;
-    });
-  };
-
-  const selectAllOrders = () => {
-    const allOrderIds = [...packageOrders.map(o => o.id), ...orders.map(o => o.id)];
-    setSelectedOrderIds(new Set(allOrderIds));
-  };
-
-  const clearAllSelections = () => {
-    setSelectedOrderIds(new Set());
-  };
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -642,48 +582,6 @@ const Orders = () => {
             </p>
           </div>
           
-          {/* Bulk Selection Controls */}
-          {(orders.length > 0 || packageOrders.length > 0) && (
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={selectAllOrders}
-                  className="flex items-center gap-2"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Select All
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearAllSelections}
-                  disabled={selectedOrderIds.size === 0}
-                >
-                  Clear
-                </Button>
-              </div>
-              
-              {selectedOrderIds.size > 0 && (
-                <Button
-                  onClick={handleBulkReorder}
-                  disabled={isQuickReordering}
-                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-                  size="sm"
-                >
-                  {isQuickReordering ? (
-                    <>Processing...</>
-                  ) : (
-                    <>
-                      <RotateCcw className="h-4 w-4" />
-                      Reorder Selected ({selectedOrderIds.size})
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
