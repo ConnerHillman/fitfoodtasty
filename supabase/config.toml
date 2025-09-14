@@ -3,5 +3,8 @@ project_id = "aicpnaomarzgborltdkt"
 [functions.create-payment]
 verify_jwt = false
 
+[functions.create-test-order]
+verify_jwt = false
+
 [functions.generate-labels-pdf]
 verify_jwt = true
