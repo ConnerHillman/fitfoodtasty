@@ -98,27 +98,198 @@ const Marketing = () => {
     <ReferralSettingsAdmin />
   );
 
-  const CouponsSection = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Tag className="h-5 w-5" />
-          Coupons
-        </CardTitle>
-        <CardDescription>
-          Create and manage discount coupons
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <Button>Create New Coupon</Button>
-          <div className="text-sm text-muted-foreground">
-            No active coupons
+  const CouponsSection = () => {
+    const [coupons, setCoupons] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [searchFilter, setSearchFilter] = useState("");
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+    // Fetch coupons on component load
+    useEffect(() => {
+      fetchCoupons();
+    }, []);
+
+    const fetchCoupons = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const { data, error: fetchError } = await supabase
+          .from('coupons')
+          .select('*')
+          .order('created_at', { ascending: sortOrder === 'asc' });
+
+        if (fetchError) throw fetchError;
+        
+        setCoupons(data || []);
+      } catch (err) {
+        console.error('Error fetching coupons:', err);
+        setError('Failed to load coupons');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Filter and sort coupons
+    const filteredCoupons = coupons
+      .filter(coupon => 
+        coupon.code.toLowerCase().includes(searchFilter.toLowerCase())
+      )
+      .sort((a, b) => {
+        const aDate = new Date(a.created_at).getTime();
+        const bDate = new Date(b.created_at).getTime();
+        return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+      });
+
+    const toggleSort = () => {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    };
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5" />
+            Coupons
+          </CardTitle>
+          <CardDescription>
+            Create and manage discount coupons
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <Button onClick={() => setShowCreateModal(true)}>
+                Create New Coupon
+              </Button>
+              
+              {/* Search Filter */}
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Search by code..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="w-48"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSort}
+                  className="whitespace-nowrap"
+                >
+                  Date {sortOrder === 'asc' ? '↑' : '↓'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Loading State */}
+            {loading && (
+              <div className="text-center py-8">
+                <div className="text-sm text-muted-foreground">Loading coupons...</div>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="text-center py-8">
+                <div className="text-sm text-destructive">{error}</div>
+                <Button variant="outline" size="sm" onClick={fetchCoupons} className="mt-2">
+                  Try Again
+                </Button>
+              </div>
+            )}
+
+            {/* Coupons Table */}
+            {!loading && !error && (
+              <div className="rounded-lg border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr className="border-b">
+                        <th className="text-left p-3 font-medium">Code</th>
+                        <th className="text-left p-3 font-medium">Discount %</th>
+                        <th className="text-left p-3 font-medium">Active</th>
+                        <th className="text-left p-3 font-medium">Created At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCoupons.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="text-center p-8 text-muted-foreground">
+                            {searchFilter ? 'No coupons match your search' : 'No coupons created yet'}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredCoupons.map((coupon) => (
+                          <tr key={coupon.id} className="border-b hover:bg-muted/20">
+                            <td className="p-3">
+                              <code className="px-2 py-1 bg-muted rounded text-sm font-mono">
+                                {coupon.code}
+                              </code>
+                            </td>
+                            <td className="p-3">
+                              <span className="font-medium">{coupon.discount_percentage}%</span>
+                            </td>
+                            <td className="p-3">
+                              <Badge 
+                                variant={coupon.active ? "default" : "secondary"}
+                                className={coupon.active ? "bg-green-100 text-green-800" : ""}
+                              >
+                                {coupon.active ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </td>
+                            <td className="p-3 text-sm text-muted-foreground">
+                              {new Date(coupon.created_at).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Results Count */}
+            {!loading && !error && filteredCoupons.length > 0 && (
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredCoupons.length} of {coupons.length} coupons
+              </div>
+            )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+
+          {/* Create Modal Placeholder */}
+          {showCreateModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
+                <h3 className="text-lg font-semibold mb-4">Create New Coupon</h3>
+                <p className="text-muted-foreground mb-4">
+                  Coupon creation form will be implemented here.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button disabled>
+                    Create (Coming Soon)
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   const GiftCardsSection = () => (
     <Card>
