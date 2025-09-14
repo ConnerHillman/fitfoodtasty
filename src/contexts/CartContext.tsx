@@ -167,7 +167,15 @@ export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_CART' });
   };
 
-  const startReorder = async (packageOrderId: string) => {
+  const startReorder = async (orderId: string, orderType: 'package' | 'regular' = 'package') => {
+    if (orderType === 'package') {
+      return await startPackageReorder(orderId);
+    } else {
+      return await startRegularOrderReorder(orderId);
+    }
+  };
+
+  const startPackageReorder = async (packageOrderId: string) => {
     try {
       // Get the original package order and its meal selections
       const { data: packageOrder, error: packageError } = await supabase
@@ -263,6 +271,163 @@ export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Error starting reorder:', error);
       return { success: false, error: 'Failed to start reorder' };
+    }
+  };
+
+  const startRegularOrderReorder = async (orderId: string) => {
+    try {
+      // Get the original order with its items and coupon info
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          coupon_type,
+          coupon_discount_percentage,
+          coupon_discount_amount,
+          coupon_free_delivery,
+          coupon_free_item_id,
+          order_items (
+            meal_id,
+            meal_name,
+            quantity,
+            unit_price,
+            meals (
+              id,
+              name,
+              price,
+              is_active,
+              image_url,
+              description,
+              category,
+              total_calories,
+              total_protein,
+              total_carbs,
+              total_fat,
+              total_fiber,
+              shelf_life_days
+            )
+          )
+        `)
+        .eq("id", orderId)
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Check which meals are still available
+      const unavailableMeals = orderData.order_items.filter(item => !item.meals?.is_active);
+      const availableMeals = orderData.order_items.filter(item => item.meals?.is_active);
+
+      // Check if original coupon is still valid
+      let couponValidationMessage = "";
+      if (orderData.coupon_type) {
+        const couponResult = await validateCoupon(orderData.coupon_type);
+        if (couponResult.valid) {
+          couponValidationMessage = ` Original coupon "${orderData.coupon_type}" is still active and can be reapplied.`;
+        } else {
+          couponValidationMessage = ` Note: Original coupon "${orderData.coupon_type}" has expired and cannot be reapplied.`;
+        }
+      }
+
+      if (unavailableMeals.length === 0) {
+        // All meals are still available, add to cart directly
+        for (const item of availableMeals) {
+          if (item.meals) {
+            for (let i = 0; i < item.quantity; i++) {
+              addToCart({
+                id: item.meals.id,
+                name: item.meals.name,
+                description: item.meals.description || '',
+                category: item.meals.category || '',
+                price: item.meals.price || item.unit_price,
+                total_calories: item.meals.total_calories || 0,
+                total_protein: item.meals.total_protein || 0,
+                total_carbs: item.meals.total_carbs || 0,
+                total_fat: item.meals.total_fat || 0,
+                total_fiber: item.meals.total_fiber || 0,
+                shelf_life_days: item.meals.shelf_life_days || 5,
+                image_url: item.meals.image_url || '',
+              });
+            }
+          }
+        }
+        return { 
+          success: true, 
+          needsReplacements: false, 
+          message: `${availableMeals.reduce((sum, item) => sum + item.quantity, 0)} meals added to cart.${couponValidationMessage}`
+        };
+      } else {
+        // Some meals need replacement
+        dispatch({
+          type: 'SET_REORDER_DATA',
+          payload: {
+            originalOrderId: orderId,
+            packageData: null, // Not a package order
+            unavailableMeals: unavailableMeals.map(item => ({
+              mealId: item.meal_id,
+              mealName: item.meal_name,
+              quantity: item.quantity
+            }))
+          }
+        });
+        
+        // Add available meals to cart first
+        for (const item of availableMeals) {
+          if (item.meals) {
+            for (let i = 0; i < item.quantity; i++) {
+              addToCart({
+                id: item.meals.id,
+                name: item.meals.name,
+                description: item.meals.description || '',
+                category: item.meals.category || '',
+                price: item.meals.price || item.unit_price,
+                total_calories: item.meals.total_calories || 0,
+                total_protein: item.meals.total_protein || 0,
+                total_carbs: item.meals.total_carbs || 0,
+                total_fat: item.meals.total_fat || 0,
+                total_fiber: item.meals.total_fiber || 0,
+                shelf_life_days: item.meals.shelf_life_days || 5,
+                image_url: item.meals.image_url || '',
+              });
+            }
+          }
+        }
+        
+        return { 
+          success: true, 
+          needsReplacements: true, 
+          unavailableCount: unavailableMeals.length,
+          message: `${availableMeals.reduce((sum, item) => sum + item.quantity, 0)} meals added. ${unavailableMeals.length} meals need replacement.${couponValidationMessage}`
+        };
+      }
+    } catch (error) {
+      console.error('Error starting regular order reorder:', error);
+      return { success: false, error: 'Failed to start reorder' };
+    }
+  };
+
+  const validateCoupon = async (couponCode: string) => {
+    try {
+      const { data: coupon, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode)
+        .single();
+        
+      if (error || !coupon) {
+        return { valid: false };
+      }
+      
+      const now = new Date();
+      const expiresAt = coupon.expires_at ? new Date(coupon.expires_at) : null;
+      
+      if (coupon.active && (!expiresAt || expiresAt > now)) {
+        return { valid: true, coupon };
+      }
+      
+      return { valid: false };
+    } catch (error) {
+      console.error('Error validating coupon:', error);
+      return { valid: false };
     }
   };
 

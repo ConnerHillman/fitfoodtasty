@@ -32,7 +32,7 @@ export interface CartContextType {
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
-  startReorder?: (packageOrderId: string) => Promise<{ success: boolean; needsReplacements?: boolean; unavailableCount?: number; error?: string }>;
+  startReorder?: (orderId: string, orderType?: 'package' | 'regular') => Promise<{ success: boolean; needsReplacements?: boolean; unavailableCount?: number; error?: string; message?: string }>;
   reorderData?: {
     originalOrderId: string;
     packageData: any;

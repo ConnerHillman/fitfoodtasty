@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, CheckCircle2, ShoppingCart, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
@@ -53,8 +54,14 @@ const MealReplacementDialog = ({ open, onOpenChange }: Props) => {
   const [loadingIngredients, setLoadingIngredients] = useState<Record<string, boolean>>({});
   const [expandedIngredients, setExpandedIngredients] = useState<Record<string, boolean>>({});
   const [replacements, setReplacements] = useState<Record<string, string>>({});
+  
+  // Calculate progress
   const { toast } = useToast();
   const { reorderData, addPackageToCart } = useCart();
+  
+  const totalUnavailable = reorderData?.unavailableMeals?.length || 0;
+  const replacedCount = Object.keys(replacements).length;
+  const progressPercentage = totalUnavailable > 0 ? (replacedCount / totalUnavailable) * 100 : 0;
 
   const MOBILE_BAR_HEIGHT = 96;
 

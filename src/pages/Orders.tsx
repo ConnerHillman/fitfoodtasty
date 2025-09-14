@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Calendar, Package, Truck, RotateCcw, ChevronRight } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import MealReplacementDialog from "@/components/packages/MealReplacementDialog";
 import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
 
@@ -250,7 +250,7 @@ const Orders = () => {
 
     setShowReorderModal(false);
     
-    const result = await startReorder(packageOrder.id);
+    const result = await startReorder(packageOrder.id, 'package');
     
     if (result.success) {
       if (result.needsReplacements) {
@@ -290,7 +290,7 @@ const Orders = () => {
 
     setShowReorderModal(false);
     
-    const result = await startReorder(packageOrder.id);
+    const result = await startReorder(packageOrder.id, 'package');
     
     if (result.success) {
       if (result.needsReplacements) {
@@ -326,142 +326,93 @@ const Orders = () => {
 
   const handleMealReorderAsIs = async () => {
     const order = selectedOrder as Order;
-    if (!order) return;
-
-    setShowReorderModal(false);
-    await executeMealReorder(order.id, false); // Don't redirect to cart, go to checkout
-  };
-
-  const handleMealEditInCart = async () => {
-    const order = selectedOrder as Order;
-    if (!order) return;
-
-    setShowReorderModal(false);
-    await executeMealReorder(order.id, true); // Redirect to cart for editing
-  };
-
-  const executeMealReorder = async (orderId: string, redirectToCart: boolean = false) => {
-    try {
-      // Get the original order with its items and coupon info
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .select(`
-          id,
-          coupon_type,
-          coupon_discount_percentage,
-          coupon_discount_amount,
-          coupon_free_delivery,
-          coupon_free_item_id,
-          order_items (
-            meal_id,
-            meal_name,
-            quantity,
-            unit_price,
-            meals (
-              id,
-              name,
-              price,
-              is_active,
-              image_url
-            )
-          )
-        `)
-        .eq("id", orderId)
-        .single();
-
-      if (orderError) {
-        toast({
-          title: "Error",
-          description: "Could not find order details.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Track available and unavailable items
-      let addedCount = 0;
-      let unavailableCount = 0;
-
-      // Add available items to cart
-      for (const item of orderData.order_items) {
-        if (item.meals && item.meals.is_active) {
-          // Add each quantity individually to match original order
-          for (let i = 0; i < item.quantity; i++) {
-            addToCart({
-              id: item.meals.id,
-              name: item.meals.name,
-              description: '',
-              category: '',
-              price: item.meals.price || item.unit_price,
-              total_calories: 0,
-              total_protein: 0,
-              total_carbs: 0,
-              total_fat: 0,
-              total_fiber: 0,
-              shelf_life_days: 0,
-              image_url: item.meals.image_url || '',
-            });
-            addedCount++;
-          }
-        } else {
-          unavailableCount += item.quantity;
-        }
-      }
-
-      // Check if original coupon is still valid
-      let couponMessage = "";
-      if (orderData.coupon_type) {
-        const { data: couponData, error: couponError } = await supabase
-          .from("coupons")
-          .select("active, expires_at")
-          .eq("code", orderData.coupon_type)
-          .single();
-
-        if (!couponError && couponData) {
-          const now = new Date();
-          const expiresAt = couponData.expires_at ? new Date(couponData.expires_at) : null;
-          
-          if (couponData.active && (!expiresAt || expiresAt > now)) {
-            couponMessage = ` Original coupon "${orderData.coupon_type}" is still active and can be reapplied at checkout.`;
-          } else {
-            couponMessage = ` Note: Original coupon "${orderData.coupon_type}" has expired and cannot be reapplied.`;
-          }
-        }
-      }
-
-      // Show success message
-      let description = `${addedCount} meal${addedCount > 1 ? 's' : ''} added to cart.`;
-      if (unavailableCount > 0) {
-        description += ` ${unavailableCount} meal${unavailableCount > 1 ? 's are' : ' is'} no longer available.`;
-      }
-      description += couponMessage;
-
+    if (!order || !startReorder) {
       toast({
-        title: "Reorder Complete!",
-        description,
-        variant: "success" as any,
+        title: "Error",
+        description: "Unable to process reorder.",
+        variant: "destructive",
       });
+      return;
+    }
 
-      // Navigate based on action type
-      if (redirectToCart) {
-        // For "add to cart", go to menu to continue shopping
-        navigate("/menu");
+    setShowReorderModal(false);
+    
+    const result = await startReorder(order.id, 'regular');
+    
+    if (result.success) {
+      if (result.needsReplacements) {
+        // Show replacement dialog
+        setShowReplacementDialog(true);
+        toast({
+          title: "Partial Reorder!",
+          description: result.message || "Some meals need replacement.",
+          variant: "default",
+        });
       } else {
-        // For "reorder as is", stay on cart but scroll to checkout
+        // All meals available, proceed to checkout
+        toast({
+          title: "Added to Cart!",
+          description: result.message || "All meals added to cart. Proceeding to checkout.",
+          variant: "success" as any,
+        });
         navigate("/cart");
         setTimeout(() => {
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }, 100);
       }
-    } catch (error) {
-      console.error("Error reordering:", error);
+    } else {
       toast({
         title: "Error",
-        description: "Failed to reorder items.",
+        description: result.error || "Failed to process reorder.",
         variant: "destructive",
       });
     }
   };
+
+  const handleMealEditInCart = async () => {
+    const order = selectedOrder as Order;
+    if (!order || !startReorder) {
+      toast({
+        title: "Error",
+        description: "Unable to process reorder.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setShowReorderModal(false);
+    
+    const result = await startReorder(order.id, 'regular');
+    
+    if (result.success) {
+      if (result.needsReplacements) {
+        // Show replacement dialog first
+        setShowReplacementDialog(true);
+        toast({
+          title: "Partial Reorder!",
+          description: result.message || "Some meals need replacement.",
+          variant: "default",
+        });
+      } else {
+        // All meals available, go to menu for shopping
+        toast({
+          title: "Added to Cart!",
+          description: result.message || "Meals added to cart. Continue shopping.",
+          variant: "success" as any,
+        });
+        navigate("/menu");
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to process reorder.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Legacy function - now using unified startReorder system
+  // This can be removed in future cleanup
 
   if (loading) {
     return (
@@ -522,11 +473,11 @@ const Orders = () => {
             <Collapsible key={`package-${order.id}`}>
               <Card className="overflow-hidden">
                 <CollapsibleTrigger asChild>
-                  <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors">
+                  <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors group">
                     <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-1">
                         <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-                        <div className="space-y-1">
+                        <div className="space-y-1 flex-1">
                           <CardTitle className="text-lg flex items-center gap-2">
                             <Package className="h-5 w-5" />
                             Order #{order.id.slice(-8)}
@@ -546,17 +497,18 @@ const Orders = () => {
                             e.stopPropagation();
                             handleReorder(order.id);
                           }}
-                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                          className="bg-green-500 hover:bg-green-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
                           size="sm"
+                          title="Reorder this order"
                         >
-                          <RotateCcw className="h-4 w-4" />
+                          <RotateCcw className="h-4 w-4 mr-1" />
                           Reorder
                         </Button>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status.replace("_", " ")}
-                        </Badge>
-                        <div className="text-right">
-                          <div className="font-semibold">
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status.replace("_", " ")}
+                          </Badge>
+                          <div className="font-semibold text-lg">
                             {formatCurrency(order.total_amount, order.currency)}
                           </div>
                         </div>
@@ -641,11 +593,11 @@ const Orders = () => {
             <Collapsible key={order.id}>
               <Card className="overflow-hidden">
                 <CollapsibleTrigger asChild>
-                  <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors">
+                  <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors group">
                     <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-1">
                         <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-                        <div className="space-y-1">
+                        <div className="space-y-1 flex-1">
                           <CardTitle className="text-lg">
                             Order #{order.id.slice(-8)}
                           </CardTitle>
@@ -664,17 +616,18 @@ const Orders = () => {
                             e.stopPropagation();
                             handleMealOrderReorder(order.id);
                           }}
-                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                          className="bg-green-500 hover:bg-green-600 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
                           size="sm"
+                          title="Reorder this order"
                         >
-                          <RotateCcw className="h-4 w-4" />
+                          <RotateCcw className="h-4 w-4 mr-1" />
                           Reorder
                         </Button>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status.replace("_", " ")}
-                        </Badge>
-                        <div className="text-right">
-                          <div className="font-semibold">
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status.replace("_", " ")}
+                          </Badge>
+                          <div className="font-semibold text-lg">
                             {formatCurrency(order.total_amount, order.currency)}
                           </div>
                         </div>
