@@ -131,7 +131,8 @@ const Marketing = () => {
       free_delivery: false,
       free_item_id: '',
       min_order_value: 0,
-      active: true
+      active: true,
+      expires_at: null as Date | null
     });
 
     // Fetch coupons, usage stats, and meals on component load
@@ -232,7 +233,8 @@ const Marketing = () => {
         free_delivery: false,
         free_item_id: '',
         min_order_value: 0,
-        active: true
+        active: true,
+        expires_at: null
       });
     };
 
@@ -262,7 +264,8 @@ const Marketing = () => {
         free_delivery: coupon.free_delivery || false,
         free_item_id: coupon.free_item_id || '',
         min_order_value: coupon.min_order_value || 0,
-        active: coupon.active
+        active: coupon.active,
+        expires_at: coupon.expires_at ? new Date(coupon.expires_at) : null
       });
       setShowEditModal(true);
     };
@@ -322,6 +325,16 @@ const Marketing = () => {
         return;
       }
 
+      // Validate expiration date
+      if (formData.expires_at && formData.expires_at < new Date()) {
+        toast({
+          title: "Error",
+          description: "Expiration date must be in the future",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setIsSubmitting(true);
 
       try {
@@ -335,7 +348,8 @@ const Marketing = () => {
           free_delivery: formData.discount_type === 'free_delivery',
           free_item_id: formData.discount_type === 'free_item' ? formData.free_item_id || null : null,
           min_order_value: formData.min_order_value > 0 ? formData.min_order_value : null,
-          active: formData.active
+          active: formData.active,
+          expires_at: formData.expires_at ? formData.expires_at.toISOString() : null
         };
 
         if (isEdit && selectedCoupon) {
@@ -457,6 +471,13 @@ const Marketing = () => {
         Code: coupon.code,
         Discount: getDiscountDisplay(coupon),
         'Min Order': coupon.min_order_value ? `£${coupon.min_order_value}` : 'None',
+        'Expires': coupon.expires_at 
+          ? new Date(coupon.expires_at).toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: '2-digit', 
+              year: 'numeric'
+            })
+          : 'None',
         Status: coupon.active ? 'Active' : 'Inactive',
         'Usage Count': usageStats[coupon.code] || 0,
         'Created Date': new Date(coupon.created_at).toLocaleDateString('en-GB'),
@@ -628,6 +649,7 @@ const Marketing = () => {
                         <th className="text-left p-3 font-medium">Code</th>
                         <th className="text-left p-3 font-medium">Discount</th>
                         <th className="text-left p-3 font-medium">Min Order</th>
+                        <th className="text-left p-3 font-medium">Expires</th>
                         <th className="text-left p-3 font-medium">Active</th>
                         <th className="text-left p-3 font-medium">Usage</th>
                         <th className="text-left p-3 font-medium">Created At</th>
@@ -637,7 +659,7 @@ const Marketing = () => {
                     <tbody>
                       {filteredCoupons.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                          <td colSpan={8} className="text-center p-8 text-muted-foreground">
                             {searchFilter || activeFilter !== 'all' ? 'No coupons match your filters' : 'No coupons created yet'}
                           </td>
                         </tr>
@@ -655,6 +677,18 @@ const Marketing = () => {
                             <td className="p-3">
                               <span className="text-sm">
                                 {coupon.min_order_value ? `£${coupon.min_order_value}` : 'None'}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="text-sm">
+                                {coupon.expires_at 
+                                  ? new Date(coupon.expires_at).toLocaleDateString('en-GB', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric'
+                                    })
+                                  : 'None'
+                                }
                               </span>
                             </td>
                             <td className="p-3">

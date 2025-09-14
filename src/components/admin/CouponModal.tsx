@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface CouponModalProps {
   isEdit: boolean;
@@ -17,6 +22,7 @@ interface CouponModalProps {
     free_item_id: string;
     min_order_value: number;
     active: boolean;
+    expires_at: Date | null;
   };
   setFormData: (updater: (prev: any) => any) => void;
   isSubmitting: boolean;
@@ -196,6 +202,57 @@ const CouponModal = ({
               />
               <div className="text-xs text-muted-foreground mt-1">
                 Leave empty for no minimum requirement
+              </div>
+            </div>
+
+            {/* Expiration Date */}
+            <div>
+              <Label htmlFor="expires-at">Expiration Date - Optional</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.expires_at && "text-muted-foreground"
+                      )}
+                      disabled={isSubmitting}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.expires_at ? (
+                        format(formData.expires_at, "dd/MM/yyyy")
+                      ) : (
+                        <span>Pick expiration date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.expires_at || undefined}
+                      onSelect={(date) => setFormData(prev => ({ ...prev, expires_at: date || null }))}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                {formData.expires_at && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData(prev => ({ ...prev, expires_at: null }))}
+                    disabled={isSubmitting}
+                    className="px-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Coupon will be automatically disabled after this date • British format: DD/MM/YYYY
               </div>
             </div>
 
