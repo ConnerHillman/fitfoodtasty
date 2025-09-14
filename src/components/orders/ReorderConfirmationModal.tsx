@@ -137,6 +137,27 @@ const ReorderConfirmationModal = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Action Buttons - Top */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={onReorderAsIs}
+              className="flex-1 flex items-center gap-2 h-12"
+              size="lg"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              Reorder & Checkout
+            </Button>
+            <Button
+              onClick={onEditInCart}
+              variant="outline"
+              className="flex-1 flex items-center gap-2 h-12"
+              size="lg"
+            >
+              <Edit3 className="h-5 w-5" />
+              Add to Cart
+            </Button>
+          </div>
+
           {/* Order Summary */}
           <Card>
             <CardHeader>
@@ -282,7 +303,7 @@ const ReorderConfirmationModal = ({
             </Card>
           )}
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Bottom */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               onClick={onReorderAsIs}
