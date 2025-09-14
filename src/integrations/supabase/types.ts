@@ -283,6 +283,30 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_percentage: number
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_percentage: number
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_percentage?: number
+          id?: string
+        }
+        Relationships: []
+      }
       delivery_zones: {
         Row: {
           allow_custom_dates: boolean | null
