@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Package2, Zap, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { GenericDataTable } from "@/components/common/GenericDataTable";
+import { GenericFiltersBar } from "@/components/common/GenericFiltersBar";
+import { StatsCardsGrid } from "@/components/common/StatsCards";
+import { GenericModal } from "@/components/common/GenericModal";
 
 interface Allergen {
   id: string;
@@ -36,13 +37,16 @@ interface Ingredient {
 
 const IngredientsManager = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [filterBy, setFilterBy] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
-  const scrollPositionRef = useRef<number>(0);
+  const [loading, setLoading] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -56,6 +60,7 @@ const IngredientsManager = () => {
     salt_per_100g: "",
     default_unit: "g"
   });
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -63,11 +68,8 @@ const IngredientsManager = () => {
     fetchAllergens();
   }, []);
 
-  useEffect(() => {
-    applySearch();
-  }, [ingredients, searchQuery]);
-
   const fetchIngredients = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("ingredients")
       .select(`
@@ -94,6 +96,7 @@ const IngredientsManager = () => {
       })) || [];
       setIngredients(ingredientsWithAllergens);
     }
+    setLoading(false);
   };
 
   const fetchAllergens = async () => {
@@ -109,19 +112,30 @@ const IngredientsManager = () => {
     }
   };
 
-  const applySearch = () => {
-    let filtered = ingredients;
+  const filteredIngredients = ingredients.filter(ingredient => {
+    const matchesSearch = ingredient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (ingredient.description && ingredient.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = ingredients.filter(ingredient =>
-        ingredient.name.toLowerCase().includes(query) ||
-        (ingredient.description && ingredient.description.toLowerCase().includes(query))
-      );
+    const matchesFilter = filterBy === "all" || 
+                         (filterBy === "high-protein" && ingredient.protein_per_100g > 15) ||
+                         (filterBy === "low-calorie" && ingredient.calories_per_100g < 100) ||
+                         (filterBy === "with-allergens" && ingredient.allergens && ingredient.allergens.length > 0);
+    
+    return matchesSearch && matchesFilter;
+  }).sort((a, b) => {
+    const aValue = a[sortBy as keyof Ingredient];
+    const bValue = b[sortBy as keyof Ingredient];
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortOrder === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     }
     
-    setFilteredIngredients(filtered);
-  };
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+    }
+    
+    return 0;
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,13 +179,11 @@ const IngredientsManager = () => {
 
     // Handle allergen associations
     if (ingredientId) {
-      // Delete existing allergen associations
       await supabase
         .from("ingredient_allergens")
         .delete()
         .eq("ingredient_id", ingredientId);
 
-      // Insert new allergen associations
       if (selectedAllergens.length > 0) {
         const allergenAssociations = selectedAllergens.map(allergenId => ({
           ingredient_id: ingredientId,
@@ -189,27 +201,12 @@ const IngredientsManager = () => {
     }
 
     toast({ title: "Success", description: `Ingredient ${editingIngredient ? 'updated' : 'created'} successfully` });
-
-    // Remember current scroll before any UI updates
-    scrollPositionRef.current = window.scrollY;
-
-    // Refresh data first so the table doesn't remount after we restore scroll
     await fetchIngredients();
-
-    // Close dialog and reset form
-    setIsDialogOpen(false);
+    setIsModalOpen(false);
     resetForm();
-
-    // Restore scroll on next frames to avoid layout thrash
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollPositionRef.current });
-    });
   };
 
   const handleEdit = (ingredient: Ingredient) => {
-    // Store current scroll position before opening dialog
-    scrollPositionRef.current = window.scrollY;
-    
     setEditingIngredient(ingredient);
     setFormData({
       name: ingredient.name,
@@ -225,7 +222,7 @@ const IngredientsManager = () => {
       default_unit: ingredient.default_unit || "g"
     });
     setSelectedAllergens(ingredient.allergens?.map(a => a.id) || []);
-    setIsDialogOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -268,310 +265,355 @@ const IngredientsManager = () => {
     );
   };
 
-  return (
-    <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
-        <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Ingredients Database</h2>
-              <p className="text-muted-foreground">Manage nutritional data for all ingredients</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search ingredients..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-[300px] bg-background/80 backdrop-blur-sm"
-                />
-              </div>
-              <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                if (!open) {
-                  // Restore scroll position when dialog is closed via escape or backdrop
-                  setTimeout(() => {
-                    window.scrollTo(0, scrollPositionRef.current);
-                  }, 100);
-                }
-                setIsDialogOpen(open);
-              }}>
-                <DialogTrigger asChild>
-                  <Button onClick={resetForm} className="bg-primary hover:bg-primary/90">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Ingredient
-                  </Button>
-                </DialogTrigger>
-          <DialogContent 
-            className="max-w-2xl"
-            onOpenAutoFocus={(e) => e.preventDefault()}
-            onCloseAutoFocus={(e) => {
-              e.preventDefault();
-              requestAnimationFrame(() => {
-                window.scrollTo({ top: scrollPositionRef.current });
-              });
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">
-                {editingIngredient ? "Edit Ingredient" : "Add New Ingredient"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="unit">Default Unit</Label>
-                  <Input
-                    id="unit"
-                    value={formData.default_unit}
-                    onChange={(e) => setFormData({ ...formData, default_unit: e.target.value })}
-                    placeholder="g, ml, piece"
-                  />
-                </div>
-              </div>
+  const statsData = [
+    {
+      id: "total-ingredients",
+      title: "Total Ingredients",
+      value: ingredients.length.toString(),
+      subtitle: "Available ingredients",
+      icon: Package2,
+    },
+    {
+      id: "avg-calories", 
+      title: "Avg Calories",
+      value: Math.round(ingredients.reduce((sum, ing) => sum + ing.calories_per_100g, 0) / ingredients.length || 0).toString(),
+      subtitle: "Per 100g average",
+      icon: Zap,
+    },
+    {
+      id: "high-protein",
+      title: "High Protein",
+      value: ingredients.filter(ing => ing.protein_per_100g > 15).length.toString(),
+      subtitle: "Over 15g protein per 100g",
+      icon: Target,
+    },
+    {
+      id: "with-allergens",
+      title: "With Allergens",
+      value: ingredients.filter(ing => ing.allergens && ing.allergens.length > 0).length.toString(),
+      subtitle: "Contain allergens",
+      icon: Package2,
+    },
+  ];
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={2}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="calories">Calories per 100g</Label>
-                  <Input
-                    id="calories"
-                    type="number"
-                    step="0.01"
-                    value={formData.calories_per_100g}
-                    onChange={(e) => setFormData({ ...formData, calories_per_100g: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="protein">Protein per 100g</Label>
-                  <Input
-                    id="protein"
-                    type="number"
-                    step="0.01"
-                    value={formData.protein_per_100g}
-                    onChange={(e) => setFormData({ ...formData, protein_per_100g: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="carbs">Carbs per 100g</Label>
-                  <Input
-                    id="carbs"
-                    type="number"
-                    step="0.01"
-                    value={formData.carbs_per_100g}
-                    onChange={(e) => setFormData({ ...formData, carbs_per_100g: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fat">Fat per 100g</Label>
-                  <Input
-                    id="fat"
-                    type="number"
-                    step="0.01"
-                    value={formData.fat_per_100g}
-                    onChange={(e) => setFormData({ ...formData, fat_per_100g: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="saturated_fat">Saturated Fat per 100g</Label>
-                  <Input
-                    id="saturated_fat"
-                    type="number"
-                    step="0.01"
-                    value={formData.saturated_fat_per_100g}
-                    onChange={(e) => setFormData({ ...formData, saturated_fat_per_100g: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fiber">Fiber per 100g</Label>
-                  <Input
-                    id="fiber"
-                    type="number"
-                    step="0.01"
-                    value={formData.fiber_per_100g}
-                    onChange={(e) => setFormData({ ...formData, fiber_per_100g: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sugar">Sugar per 100g</Label>
-                  <Input
-                    id="sugar"
-                    type="number"
-                    step="0.01"
-                    value={formData.sugar_per_100g}
-                    onChange={(e) => setFormData({ ...formData, sugar_per_100g: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="salt">Salt per 100g</Label>
-                  <Input
-                    id="salt"
-                    type="number"
-                    step="0.01"
-                    value={formData.salt_per_100g}
-                    onChange={(e) => setFormData({ ...formData, salt_per_100g: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Allergens Section */}
-              <div className="space-y-3">
-                <Label>Allergens</Label>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
-                  {allergens.map((allergen) => (
-                    <div key={allergen.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`allergen-${allergen.id}`}
-                        checked={selectedAllergens.includes(allergen.id)}
-                        onCheckedChange={() => handleAllergenToggle(allergen.id)}
-                      />
-                      <Label 
-                        htmlFor={`allergen-${allergen.id}`}
-                        className="text-sm cursor-pointer"
-                      >
-                        {allergen.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-                {selectedAllergens.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {selectedAllergens.map(allergenId => {
-                      const allergen = allergens.find(a => a.id === allergenId);
-                      return allergen ? (
-                        <Badge key={allergenId} variant="secondary" className="text-xs">
-                          {allergen.name}
-                        </Badge>
-                      ) : null;
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => {
-                  setTimeout(() => {
-                    window.scrollTo(0, scrollPositionRef.current);
-                  }, 100);
-                  setIsDialogOpen(false);
-                }}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary/90">
-                  {editingIngredient ? "Update" : "Create"} Ingredient
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-            </div>
+  const tableColumns = [
+    {
+      key: "name",
+      label: "Name",
+      sortable: true,
+      render: (ingredient: Ingredient) => (
+        <div>
+          <div className="font-medium">{ingredient.name}</div>
+          <div className="text-sm text-muted-foreground truncate max-w-[200px]">
+            {ingredient.description}
           </div>
         </div>
+      ),
+    },
+    {
+      key: "calories_per_100g",
+      label: "Calories",
+      sortable: true,
+      render: (ingredient: Ingredient) => `${ingredient.calories_per_100g}`,
+    },
+    {
+      key: "protein_per_100g",
+      label: "Protein",
+      sortable: true,
+      render: (ingredient: Ingredient) => `${ingredient.protein_per_100g}g`,
+    },
+    {
+      key: "carbs_per_100g",
+      label: "Carbs",
+      sortable: true,
+      render: (ingredient: Ingredient) => `${ingredient.carbs_per_100g}g`,
+    },
+    {
+      key: "fat_per_100g",
+      label: "Fat",
+      sortable: true,
+      render: (ingredient: Ingredient) => `${ingredient.fat_per_100g}g`,
+    },
+    {
+      key: "allergens",
+      label: "Allergens",
+      render: (ingredient: Ingredient) => (
+        <div className="flex flex-wrap gap-1">
+          {ingredient.allergens?.slice(0, 2).map((allergen) => (
+            <Badge key={allergen.id} variant="secondary" className="text-xs">
+              {allergen.name}
+            </Badge>
+          ))}
+          {ingredient.allergens && ingredient.allergens.length > 2 && (
+            <Badge variant="outline" className="text-xs">
+              +{ingredient.allergens.length - 2}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (ingredient: Ingredient) => (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEdit(ingredient)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDelete(ingredient.id)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const filterOptions = [
+    { value: "all", label: "All Ingredients" },
+    { value: "high-protein", label: "High Protein (>15g)" },
+    { value: "low-calorie", label: "Low Calorie (<100)" },
+    { value: "with-allergens", label: "With Allergens" },
+  ];
+
+  const sortOptions = [
+    { value: "name", label: "Name" },
+    { value: "calories_per_100g", label: "Calories" },
+    { value: "protein_per_100g", label: "Protein" },
+    { value: "carbs_per_100g", label: "Carbs" },
+    { value: "fat_per_100g", label: "Fat" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Package2 className="h-8 w-8 text-primary" />
+          <div>
+            <h2 className="text-2xl font-bold">Ingredients Database</h2>
+            <p className="text-muted-foreground">Manage nutritional data for all ingredients</p>
+          </div>
+        </div>
+        <Button 
+          onClick={() => {
+            resetForm();
+            setIsModalOpen(true);
+          }}
+          className="bg-primary hover:bg-primary/90"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Ingredient
+        </Button>
       </div>
 
-      <Card className="overflow-hidden border-0 shadow-sm">
-        <CardContent className="p-0">
-          <div className="p-6 border-b bg-muted/30">
-            <div className="flex justify-between items-center text-sm text-muted-foreground">
-              <span>Showing {(filteredIngredients.length > 0 || searchQuery) ? filteredIngredients.length : ingredients.length} of {ingredients.length} ingredients</span>
-              {searchQuery && (
-                <span>Search: "{searchQuery}"</span>
-              )}
+      {/* Stats Cards */}
+      <StatsCardsGrid stats={statsData} />
+
+      {/* Filters and Table */}
+      <GenericFiltersBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterValue={filterBy}
+        onFilterChange={setFilterBy}
+        filterOptions={filterOptions}
+        sortValue={sortBy}
+        onSortChange={setSortBy}
+        sortOptions={sortOptions}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        totalCount={ingredients.length}
+        filteredCount={filteredIngredients.length}
+        exportLabel="Export Ingredients"
+      />
+
+      <GenericDataTable
+        data={filteredIngredients}
+        columns={tableColumns}
+        loading={loading}
+        emptyMessage="No ingredients found matching your filters."
+      />
+
+      {/* Add/Edit Modal */}
+      <GenericModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={editingIngredient ? "Edit Ingredient" : "Add New Ingredient"}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unit">Default Unit</Label>
+              <Input
+                id="unit"
+                value={formData.default_unit}
+                onChange={(e) => setFormData({ ...formData, default_unit: e.target.value })}
+                placeholder="g, ml, piece"
+              />
             </div>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Calories</TableHead>
-                <TableHead>Protein</TableHead>
-                <TableHead>Carbs</TableHead>
-                <TableHead>Sugar</TableHead>
-                <TableHead>Fat</TableHead>
-                <TableHead>Allergens</TableHead>
-                <TableHead>Unit</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {((filteredIngredients.length > 0 || searchQuery) ? filteredIngredients : ingredients).map((ingredient) => (
-                <TableRow key={ingredient.id}>
-                  <TableCell className="font-medium">
-                    <div>
-                      <div>{ingredient.name}</div>
-                      {ingredient.description && (
-                        <div className="text-sm text-muted-foreground">{ingredient.description}</div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{ingredient.calories_per_100g}kcal</TableCell>
-                  <TableCell>{ingredient.protein_per_100g}g</TableCell>
-                  <TableCell>{ingredient.carbs_per_100g}g</TableCell>
-                  <TableCell>{ingredient.sugar_per_100g || 0}g</TableCell>
-                  <TableCell>{ingredient.fat_per_100g}g</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {ingredient.allergens?.map((allergen) => (
-                        <Badge key={allergen.id} variant="destructive" className="text-xs">
-                          {allergen.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{ingredient.default_unit}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(ingredient)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(ingredient.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={2}
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="calories">Calories per 100g</Label>
+              <Input
+                id="calories"
+                type="number"
+                step="0.01"
+                value={formData.calories_per_100g}
+                onChange={(e) => setFormData({ ...formData, calories_per_100g: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="protein">Protein per 100g</Label>
+              <Input
+                id="protein"
+                type="number"
+                step="0.01"
+                value={formData.protein_per_100g}
+                onChange={(e) => setFormData({ ...formData, protein_per_100g: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="carbs">Carbs per 100g</Label>
+              <Input
+                id="carbs"
+                type="number"
+                step="0.01"
+                value={formData.carbs_per_100g}
+                onChange={(e) => setFormData({ ...formData, carbs_per_100g: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fat">Fat per 100g</Label>
+              <Input
+                id="fat"
+                type="number"
+                step="0.01"
+                value={formData.fat_per_100g}
+                onChange={(e) => setFormData({ ...formData, fat_per_100g: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="saturated_fat">Saturated Fat per 100g</Label>
+              <Input
+                id="saturated_fat"
+                type="number"
+                step="0.01"
+                value={formData.saturated_fat_per_100g}
+                onChange={(e) => setFormData({ ...formData, saturated_fat_per_100g: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fiber">Fiber per 100g</Label>
+              <Input
+                id="fiber"
+                type="number"
+                step="0.01"
+                value={formData.fiber_per_100g}
+                onChange={(e) => setFormData({ ...formData, fiber_per_100g: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sugar">Sugar per 100g</Label>
+              <Input
+                id="sugar"
+                type="number"
+                step="0.01"
+                value={formData.sugar_per_100g}
+                onChange={(e) => setFormData({ ...formData, sugar_per_100g: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="salt">Salt per 100g</Label>
+              <Input
+                id="salt"
+                type="number"
+                step="0.01"
+                value={formData.salt_per_100g}
+                onChange={(e) => setFormData({ ...formData, salt_per_100g: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Allergens Section */}
+          <div className="space-y-3">
+            <Label>Allergens</Label>
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
+              {allergens.map((allergen) => (
+                <div key={allergen.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`allergen-${allergen.id}`}
+                    checked={selectedAllergens.includes(allergen.id)}
+                    onCheckedChange={() => handleAllergenToggle(allergen.id)}
+                  />
+                  <Label 
+                    htmlFor={`allergen-${allergen.id}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {allergen.name}
+                  </Label>
+                </div>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </div>
+            {selectedAllergens.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedAllergens.map(allergenId => {
+                  const allergen = allergens.find(a => a.id === allergenId);
+                  return allergen ? (
+                    <Badge key={allergenId} variant="secondary" className="text-xs">
+                      {allergen.name}
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" className="bg-primary hover:bg-primary/90">
+              {editingIngredient ? "Update" : "Create"} Ingredient
+            </Button>
+          </div>
+        </form>
+      </GenericModal>
     </div>
   );
 };

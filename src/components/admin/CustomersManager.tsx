@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
-import { RefreshCw, Users } from "lucide-react";
+import { RefreshCw, Users, UserPlus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { subDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomersData } from "@/hooks/useCustomersData";
 import { useFilteredCustomers } from "@/hooks/useFilteredCustomers";
-import { CustomerStatsCards } from "./customers/CustomerStatsCards";
-import { CustomerFiltersBar } from "./customers/CustomerFiltersBar";
-import { CustomerCardView } from "./customers/CustomerCardView";
+import { GenericDataTable } from "@/components/common/GenericDataTable";
+import { GenericFiltersBar } from "@/components/common/GenericFiltersBar";
+import { StatsCardsGrid } from "@/components/common/StatsCards";
+import { GenericModal } from "@/components/common/GenericModal";
 import AddCustomerDialog from "./AddCustomerDialog";
+import CustomerDetailModal from "./CustomerDetailModal";
 import type { CustomerFilters } from "@/types/customer";
 
 const CustomersManager = () => {
   const { toast } = useToast();
   const { customers, loading, fetchCustomers, getCustomerStats, getCustomerValue } = useCustomersData();
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   
   const [filters, setFilters] = useState<CustomerFilters>({
     searchTerm: "",
@@ -49,6 +52,88 @@ const CustomersManager = () => {
     });
   };
 
+  const statsData = [
+    {
+      id: "total-customers",
+      title: "Total Customers",
+      value: customerStats.total.toString(),
+      subtitle: "Active customer accounts",
+      icon: Users,
+    },
+    {
+      id: "active-customers",
+      title: "Active Customers", 
+      value: customerStats.activeCustomers.toString(),
+      subtitle: "Customers with recent activity",
+      icon: UserPlus,
+    },
+    {
+      id: "customers-with-orders",
+      title: "With Orders",
+      value: customerStats.withOrders.toString(),
+      subtitle: "Customers with pending orders",
+      icon: RefreshCw,
+    },
+    {
+      id: "total-revenue",
+      title: "Total Revenue",
+      value: `£${customerStats.totalRevenue.toFixed(2)}`,
+      subtitle: "Combined customer revenue",
+      icon: Download,
+    },
+  ];
+
+  const tableColumns = [
+    {
+      key: "display_name",
+      label: "Name",
+      sortable: true,
+      render: (customer: any) => (
+        <div>
+          <div className="font-medium">{customer.display_name}</div>
+          <div className="text-sm text-muted-foreground">{customer.user_email}</div>
+        </div>
+      ),
+    },
+    {
+      key: "total_orders",
+      label: "Orders",
+      sortable: true,
+      render: (customer: any) => customer.total_orders || 0,
+    },
+    {
+      key: "total_spent",
+      label: "Total Spent",
+      sortable: true,
+      render: (customer: any) => `£${(customer.total_spent || 0).toFixed(2)}`,
+    },
+    {
+      key: "created_at",
+      label: "Joined",
+      sortable: true,
+      render: (customer: any) => new Date(customer.created_at).toLocaleDateString(),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (customer: any) => (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setSelectedCustomer(customer)}
+        >
+          View Details
+        </Button>
+      ),
+    },
+  ];
+
+  const filterOptions = [
+    { value: "all", label: "All Customers" },
+    { value: "active", label: "Active" },
+    { value: "new", label: "New This Month" },
+  ];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -79,26 +164,38 @@ const CustomersManager = () => {
       </div>
 
       {/* Stats Cards */}
-      <CustomerStatsCards stats={customerStats} />
+      <StatsCardsGrid stats={statsData} />
 
-      {/* Filters and Controls */}
-      <CustomerFiltersBar
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
+      {/* Filters and Table */}
+      <GenericFiltersBar
+        searchValue={filters.searchTerm}
+        onSearchChange={(value) => handleFiltersChange({ searchTerm: value })}
+        filterValue={filters.filterBy}
+        onFilterChange={(value) => handleFiltersChange({ filterBy: value })}
+        filterOptions={filterOptions}
+        sortValue={filters.sortBy}
+        onSortChange={(value) => handleFiltersChange({ sortBy: value })}
+        sortOrder={filters.sortOrder}
+        onSortOrderChange={(value) => handleFiltersChange({ sortOrder: value })}
         totalCount={customers.length}
         filteredCount={filteredCustomers.length}
         onExport={handleExport}
+        exportLabel="Export Customers"
       />
 
-      {/* Customer Display */}
-      {filteredCustomers.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No customers found matching your filters.</p>
-        </div>
-      ) : (
-        <CustomerCardView
-          customers={filteredCustomers}
-          getCustomerValue={getCustomerValue}
+      <GenericDataTable
+        data={filteredCustomers}
+        columns={tableColumns}
+        loading={loading}
+        emptyMessage="No customers found matching your filters."
+      />
+
+      {/* Customer Detail Modal */}
+      {selectedCustomer && (
+        <CustomerDetailModal
+          customer={selectedCustomer}
+          open={!!selectedCustomer}
+          onOpenChange={(open) => !open && setSelectedCustomer(null)}
         />
       )}
     </div>
