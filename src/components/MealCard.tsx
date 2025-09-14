@@ -163,7 +163,6 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
                 <span className="text-muted-foreground">Carbs:</span>{" "}
                 <span className="font-bold text-foreground">{(meal.total_carbs || 0).toFixed(1)}g</span>
               </span>
-              <span className="text-muted-foreground/60">·</span>
               <span>
                 <span className="text-muted-foreground">Fat:</span>{" "}
                 <span className="font-bold text-foreground">{(meal.total_fat || 0).toFixed(1)}g</span>
