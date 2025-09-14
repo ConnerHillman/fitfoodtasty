@@ -546,9 +546,8 @@ const Orders = () => {
                             e.stopPropagation();
                             handleReorder(order.id);
                           }}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
                           size="sm"
-                          variant="outline"
                         >
                           <RotateCcw className="h-4 w-4" />
                           Reorder
@@ -665,9 +664,8 @@ const Orders = () => {
                             e.stopPropagation();
                             handleMealOrderReorder(order.id);
                           }}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
                           size="sm"
-                          variant="outline"
                         >
                           <RotateCcw className="h-4 w-4" />
                           Reorder
