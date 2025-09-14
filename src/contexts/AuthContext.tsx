@@ -1,61 +1,84 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { createContextHook } from './contextUtils';
 
-interface AuthContextType {
+// Auth state and actions
+interface AuthState {
   user: User | null;
   session: Session | null;
   loading: boolean;
+}
+
+type AuthAction = 
+  | { type: 'SET_SESSION'; payload: { session: Session | null; user: User | null } }
+  | { type: 'SET_LOADING'; payload: boolean };
+
+const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+  switch (action.type) {
+    case 'SET_SESSION':
+      return {
+        ...state,
+        session: action.payload.session,
+        user: action.payload.user,
+        loading: false
+      };
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    default:
+      return state;
+  }
+};
+
+interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+// Use the generic context hook creator
+export const useAuth = createContextHook(AuthContext, 'Auth');
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, dispatch] = useReducer(authReducer, {
+    user: null,
+    session: null,
+    loading: true
+  });
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        dispatch({
+          type: 'SET_SESSION',
+          payload: { session, user: session?.user ?? null }
+        });
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      dispatch({
+        type: 'SET_SESSION',
+        payload: { session, user: session?.user ?? null }
+      });
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
+    dispatch({ type: 'SET_LOADING', payload: true });
     await supabase.auth.signOut();
   };
 
-  const value = {
-    user,
-    session,
-    loading,
+  const value: AuthContextType = {
+    ...state,
     signOut
   };
 

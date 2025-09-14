@@ -18,7 +18,7 @@ import { ChefHat, Package, ShoppingBag, Upload, Tag, Gift, BarChart3, FileText, 
 import DataImporter from "@/components/DataImporter";
 import { LabelGenerator as LabelGeneratorComponent } from "@/components/LabelGenerator";
 import { useSearchParams } from "react-router-dom";
-import { CustomerDetailProvider } from "@/contexts/CustomerDetailContext";
+import { CustomerDetailProvider } from "@/contexts/ModalContext";
 
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();

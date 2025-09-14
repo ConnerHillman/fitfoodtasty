@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, MapPin, Clock, Star } from "lucide-react";
 import { format } from "date-fns";
 import CustomerLink from "../CustomerLink";
-import { useCustomerDetail } from "@/contexts/CustomerDetailContext";
+import { useCustomerDetail } from "@/contexts/ModalContext";
 import type { Customer } from "@/types/customer";
 
 interface CustomerCardViewProps {
@@ -11,7 +11,7 @@ interface CustomerCardViewProps {
 }
 
 export function CustomerCardView({ customers, getCustomerValue }: CustomerCardViewProps) {
-  const { openCustomerDetail } = useCustomerDetail();
+  const { open: openCustomerDetail } = useCustomerDetail();
   const formatCurrency = (amount: number) => `£${amount.toFixed(2)}`;
 
   return (

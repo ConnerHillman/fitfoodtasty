@@ -1,31 +1,110 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useReducer, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { useAbandonedCart } from '@/hooks/useAbandonedCart';
+import { createContextHook, ContextProviderProps } from './contextUtils';
 import type { CartItem, CartContextType } from '@/types/cart';
+
+// Cart state and actions for better state management
+interface CartState {
+  items: CartItem[];
+}
+
+type CartAction = 
+  | { type: 'SET_ITEMS'; payload: CartItem[] }
+  | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'quantity'> }
+  | { type: 'ADD_PACKAGE'; payload: Omit<CartItem, 'quantity'> }
+  | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'REMOVE_ITEM'; payload: string }
+  | { type: 'CLEAR_CART' };
+
+const cartReducer = (state: CartState, action: CartAction): CartState => {
+  switch (action.type) {
+    case 'SET_ITEMS':
+      return { items: action.payload };
+    
+    case 'ADD_ITEM': {
+      const existingItem = state.items.find(
+        item => item.id === action.payload.id && item.type !== 'package'
+      );
+      
+      if (existingItem) {
+        return {
+          items: state.items.map(item =>
+            item.id === action.payload.id && item.type !== 'package'
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        };
+      } else {
+        return {
+          items: [...state.items, { ...action.payload, quantity: 1, type: 'meal' }]
+        };
+      }
+    }
+    
+    case 'ADD_PACKAGE':
+      return {
+        items: [...state.items, { ...action.payload, quantity: 1, type: 'package' }]
+      };
+    
+    case 'UPDATE_QUANTITY': {
+      if (action.payload.quantity <= 0) {
+        return {
+          items: state.items.filter(item => item.id !== action.payload.id)
+        };
+      }
+      return {
+        items: state.items.map(item =>
+          item.id === action.payload.id
+            ? { ...item, quantity: action.payload.quantity }
+            : item
+        )
+      };
+    }
+    
+    case 'REMOVE_ITEM':
+      return {
+        items: state.items.filter(item => item.id !== action.payload)
+      };
+    
+    case 'CLEAR_CART':
+      return { items: [] };
+    
+    default:
+      return state;
+  }
+};
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
-};
+export const useCart = createContextHook(CartContext, 'Cart');
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
+  const [state, dispatch] = useReducer(cartReducer, { items: [] });
   const { user } = useAuth();
+
+  // Memoized calculations for better performance
+  const calculations = useMemo(() => {
+    const getTotalPrice = () => {
+      return state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    };
+
+    const getTotalItems = () => {
+      return state.items.reduce((total, item) => total + item.quantity, 0);
+    };
+
+    return { getTotalPrice, getTotalItems };
+  }, [state.items]);
 
   // Initialize abandoned cart tracking
   const { trackCartRecovery } = useAbandonedCart({
-    cartItems: items.map(item => ({
+    cartItems: state.items.map(item => ({
       id: item.id,
       name: item.name,
       price: item.price,
       quantity: item.quantity
     })),
-    total: getTotalPrice(),
+    total: calculations.getTotalPrice(),
     customerEmail: user?.email
   });
 
@@ -34,7 +113,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       try {
-        setItems(JSON.parse(savedCart));
+        const items = JSON.parse(savedCart);
+        dispatch({ type: 'SET_ITEMS', payload: items });
       } catch (error) {
         console.error('Failed to parse cart from localStorage:', error);
       }
@@ -43,79 +123,46 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Save cart to localStorage whenever items change
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
-  }, [items]);
-
-  // Helper function for total price (needed for abandoned cart hook)
-  function getTotalPrice() {
-    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
-  }
+    localStorage.setItem('cart', JSON.stringify(state.items));
+  }, [state.items]);
 
   const addToCart = (meal: Omit<CartItem, 'quantity'>) => {
-    setItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === meal.id && item.type !== 'package');
-      if (existingItem) {
-        return prevItems.map(item =>
-          item.id === meal.id && item.type !== 'package'
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevItems, { ...meal, quantity: 1, type: 'meal' }];
-      }
-    });
+    dispatch({ type: 'ADD_ITEM', payload: meal });
   };
 
   const addPackageToCart = (packageItem: Omit<CartItem, 'quantity'>) => {
-    setItems(prevItems => {
-      // For packages, we always add a new item since each package selection is unique
-      return [...prevItems, { ...packageItem, quantity: 1, type: 'package' }];
-    });
+    dispatch({ type: 'ADD_PACKAGE', payload: packageItem });
   };
 
   const removeFromCart = (mealId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== mealId));
+    dispatch({ type: 'REMOVE_ITEM', payload: mealId });
   };
 
   const updateQuantity = (mealId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(mealId);
-      return;
-    }
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === mealId
-          ? { ...item, quantity }
-          : item
-      )
-    );
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { id: mealId, quantity } });
   };
 
   const clearCart = () => {
     // Track cart recovery when clearing (likely after successful order)
-    if (items.length > 0) {
+    if (state.items.length > 0) {
       trackCartRecovery();
     }
-    setItems([]);
+    dispatch({ type: 'CLEAR_CART' });
   };
 
-  const getTotalItems = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
+  const value: CartContextType = {
+    items: state.items,
+    addToCart,
+    addPackageToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getTotalItems: calculations.getTotalItems,
+    getTotalPrice: calculations.getTotalPrice,
   };
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addToCart,
-        addPackageToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        getTotalItems,
-        getTotalPrice: () => getTotalPrice(),
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useCustomerDetail } from '@/contexts/CustomerDetailContext';
+import { useCustomerDetail } from '@/contexts/ModalContext';
 
 interface CustomerLinkProps {
   customerId: string;
@@ -17,7 +17,7 @@ const CustomerLink: React.FC<CustomerLinkProps> = ({
   variant = "link",
   size = "sm"
 }) => {
-  const { openCustomerDetail } = useCustomerDetail();
+  const { open: openCustomerDetail } = useCustomerDetail();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();

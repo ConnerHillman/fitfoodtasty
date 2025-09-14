@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useCustomerDetail } from "@/contexts/CustomerDetailContext";
+import { useCustomerDetail } from "@/contexts/ModalContext";
 import { 
   Users, 
   Mail, 
@@ -94,7 +94,7 @@ interface AbandonedCart {
 }
 
 const CustomerDetailModal = () => {
-  const { isOpen, customerId, closeCustomerDetail } = useCustomerDetail();
+  const { isOpen, data: customerId, close: closeCustomerDetail } = useCustomerDetail();
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [stats, setStats] = useState<CustomerStats | null>(null);
