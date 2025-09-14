@@ -285,7 +285,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-6xl max-h-[95vh] overflow-y-auto pointer-events-auto">
+      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-6xl max-h-[95vh] overflow-y-auto pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+96px)] md:pb-0">
         <DialogHeader className="mb-6 sm:mb-8">
           <DialogTitle className="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-500 to-green-700 bg-clip-text text-transparent animate-fade-in tracking-tight leading-tight">
             {pkg ? `Choose ${pkg.meal_count} meals` : 'Choose Meals'}
@@ -337,76 +337,9 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           </div>
         </div>
 
-        {/* Mobile Persistent Counter - Sticky at bottom with proper spacing */}
-        <div className={`sm:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
-          pkg && open ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-        }`}>
-          {/* Gradient backdrop for better readability */}
-          <div className="bg-gradient-to-t from-background via-background/95 to-transparent pt-4 pb-safe">
-            <div className="mx-4 mb-4">
-              <div className="bg-card/95 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl p-4 animate-fade-in">
-                {/* Visual Progress Indicator */}
-                <div className="w-full bg-muted/60 rounded-full h-2 mb-4 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 h-2 rounded-full transition-all duration-700 ease-out shadow-sm"
-                    style={{ width: `${pkg ? Math.min((totalSelected / pkg.meal_count) * 100, 100) : 0}%` }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between gap-4">
-                  {/* Selection Status */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="text-xl font-bold text-foreground tracking-tight">
-                        {totalSelected}
-                      </div>
-                      <div className="text-muted-foreground text-lg font-medium">
-                        /{pkg?.meal_count ?? 0}
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      {totalSelected === (pkg?.meal_count ?? 0) ? (
-                        <div className="flex items-center gap-1.5 text-green-600 text-sm font-semibold">
-                          <CheckCircle2 size={16} className="animate-scale-in" />
-                          Ready!
-                        </div>
-                      ) : (
-                        <div className="text-muted-foreground text-sm">
-                          {((pkg?.meal_count ?? 0) - totalSelected)} left
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex gap-2.5">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleAddToCart} 
-                      disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
-                      className="h-12 min-w-[90px] touch-manipulation text-sm font-medium transition-all duration-300 hover:scale-105 disabled:hover:scale-100 border-border/60 bg-background/80"
-                    >
-                      Add to Cart
-                    </Button>
-                    <Button 
-                      size="sm"
-                      onClick={handleCheckout} 
-                      disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
-                      className="h-12 min-w-[100px] touch-manipulation text-sm font-medium transition-all duration-300 hover:scale-105 disabled:hover:scale-100 bg-gradient-to-r from-primary to-primary/90 shadow-md"
-                    >
-                      Continue
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Meals grid with mobile bottom padding to prevent counter overlap */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 pb-32 sm:pb-0"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8rem)' }}>
+        {/* Meals grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {loading && Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="h-40" />
           ))}
@@ -536,6 +469,66 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           })}
         </div>
       </DialogContent>
+
+      {/* Mobile Persistent Counter outside scrollable area */}
+      <div className={`md:hidden fixed inset-x-0 bottom-0 z-[60] transition-all duration-500 ease-out ${open ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+        <div className="pointer-events-none bg-gradient-to-t from-background via-background/95 to-transparent pt-3 pb-safe">
+          <div className="mx-4 mb-4 pointer-events-auto">
+            <div className="bg-card/95 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl p-4 animate-fade-in">
+              <div className="w-full bg-muted/60 rounded-full h-2 mb-4 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 h-2 rounded-full transition-all duration-700 ease-out shadow-sm"
+                  style={{ width: `${pkg ? Math.min((totalSelected / pkg.meal_count) * 100, 100) : 0}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="text-xl font-bold text-foreground tracking-tight">
+                      {totalSelected}
+                    </div>
+                    <div className="text-muted-foreground text-lg font-medium">
+                      /{pkg?.meal_count ?? 0}
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    {totalSelected === (pkg?.meal_count ?? 0) ? (
+                      <div className="flex items-center gap-1.5 text-green-600 text-sm font-semibold">
+                        <CheckCircle2 size={16} className="animate-scale-in" />
+                        Ready!
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground text-sm">
+                        {((pkg?.meal_count ?? 0) - totalSelected)} left
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddToCart}
+                    disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                    className="h-12 min-w-[90px] touch-manipulation text-sm font-medium transition-all duration-300 hover:scale-105 disabled:hover:scale-100 border-border/60 bg-background/80"
+                  >
+                    Add to Cart
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleCheckout}
+                    disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                    className="h-12 min-w-[100px] touch-manipulation text-sm font-medium transition-all duration-300 hover:scale-105 disabled:hover:scale-100 bg-gradient-to-r from-primary to-primary/90 shadow-md"
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </Dialog>
   );
 };
