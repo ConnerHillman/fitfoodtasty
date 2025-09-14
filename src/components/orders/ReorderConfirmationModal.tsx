@@ -299,7 +299,7 @@ const ReorderConfirmationModal = ({
               size="lg"
             >
               <Edit3 className="h-5 w-5" />
-              Edit in Cart
+              Add to Cart
             </Button>
           </div>
         </div>

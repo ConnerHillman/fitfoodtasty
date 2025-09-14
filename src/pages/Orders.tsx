@@ -258,13 +258,13 @@ const Orders = () => {
         // Show replacement dialog first
         setShowReplacementDialog(true);
       } else {
-        // All meals available, go to cart for editing
+        // All meals available, go to menu for shopping
         toast({
           title: "Added to Cart!",
-          description: "Package added to cart. You can edit it before checkout.",
+          description: "Package added to cart. Continue shopping or go to cart to checkout.",
           variant: "success" as any,
         });
-        navigate("/cart");
+        navigate("/menu");
       }
     } else {
       toast({
@@ -406,9 +406,10 @@ const Orders = () => {
         variant: "success" as any,
       });
 
-      // Redirect to cart if requested, otherwise scroll to checkout section
+      // Navigate based on action type
       if (redirectToCart) {
-        navigate("/cart");
+        // For "add to cart", go to menu to continue shopping
+        navigate("/menu");
       } else {
         // For "reorder as is", stay on cart but scroll to checkout
         navigate("/cart");
