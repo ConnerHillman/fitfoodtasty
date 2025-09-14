@@ -405,8 +405,8 @@ const Cart = () => {
       </div>
       
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">Your Cart</h1>
-        <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
+        <h1 className="text-display-sm text-foreground mb-2">Your Cart</h1>
+        <p className="text-body-md text-muted-foreground">
           Review your selected meals before checkout
         </p>
       </div>

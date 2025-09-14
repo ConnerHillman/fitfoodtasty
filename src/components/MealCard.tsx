@@ -282,14 +282,14 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
 
         {/* Price and Add to cart button */}
         {onAddToCart && (
-          <div className="space-y-3">
+          <div className="space-mobile-sm">
             <div className="text-center">
-              <span className="text-xl sm:text-2xl font-bold text-primary">£{meal.price.toFixed(2)}</span>
+              <span className="text-heading-md font-bold text-primary">£{meal.price.toFixed(2)}</span>
             </div>
             <Button 
               onClick={() => onAddToCart(meal)}
               size="lg"
-              className="w-full min-h-[48px] bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base rounded-lg touch-manipulation"
+              className="w-full min-h-[48px] bg-primary hover:bg-primary/90 text-primary-foreground font-semibold btn-text-mobile rounded-lg touch-manipulation"
             >
               Add to Cart
             </Button>

@@ -40,7 +40,7 @@ const HeroSection = () => {
                 Premium Meal Prep
               </Badge>
               
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+              <h1 className="text-display-lg">
                 <span className="text-white">PREMIUM</span>
                 <br />
                 <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
@@ -53,25 +53,25 @@ const HeroSection = () => {
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <Flame className="text-green-400" size={20} />
-                <span className="text-lg font-medium">High Protein, Calorie Controlled</span>
+                <span className="text-body-lg font-medium">High Protein, Calorie Controlled</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Clock className="text-green-400" size={20} />
-                <span className="text-lg font-medium">Ready to Eat in 3 mins</span>
+                <span className="text-body-lg font-medium">Ready to Eat in 3 mins</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Users className="text-green-400" size={20} />
-                <span className="text-lg font-medium">Simple Weekly Subscription</span>
+                <span className="text-body-lg font-medium">Simple Weekly Subscription</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Award className="text-green-400" size={20} />
-                <span className="text-lg font-medium">Designed by Nutritionists, prepared by Elite Chefs</span>
+                <span className="text-body-lg font-medium">Designed by Nutritionists, prepared by Elite Chefs</span>
               </div>
             </div>
 
              {/* CTA */}
              <div className="space-y-4">
-               <Button size="lg" onClick={handleGetStarted} className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 text-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200">
+               <Button size="lg" onClick={handleGetStarted} className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200">
                  ✨ Create Your Perfect Plan
                </Button>
                
@@ -93,7 +93,7 @@ const HeroSection = () => {
           <div className="space-y-8">
             {/* Stats */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-              <h3 className="text-2xl font-bold text-white mb-6">
+              <h3 className="text-heading-lg text-white mb-6">
                 Over 500,000 Meals Delivered
               </h3>
               

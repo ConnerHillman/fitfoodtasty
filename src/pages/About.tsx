@@ -15,15 +15,15 @@ const About = () => {
         
         {/* Hero Section */}
         <section className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-primary">ABOUT FIT FOOD TASTY</h1>
-          <h3 className="text-xl text-muted-foreground mb-8">
+          <h1 className="text-display-md text-primary">ABOUT FIT FOOD TASTY</h1>
+          <h3 className="text-heading-md text-muted-foreground mb-8">
             Fit Food Tasty is the home of healthy and nutritious meal prep meals.
           </h3>
         </section>
 
         {/* History Section */}
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6">A History Of Promoting Healthy Eating</h2>
+          <h2 className="text-heading-lg mb-6">A History Of Promoting Healthy Eating</h2>
           
           <div className="grid md:grid-cols-2 gap-8 items-center mb-8">
             <div className="prose prose-lg max-w-none text-foreground">
@@ -44,7 +44,7 @@ const About = () => {
           </div>
           
           <div className="bg-muted p-6 rounded-lg mb-6">
-            <h3 className="text-xl font-semibold mb-4">Enter Fit Food Tasty</h3>
+            <h3 className="text-heading-md mb-4">Enter Fit Food Tasty</h3>
             <p>
               We provide fresh, nutritional meals, using only high quality ingredients, without the time and effort involved in preparing your own meals.
             </p>
@@ -101,8 +101,8 @@ const About = () => {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">👨‍🍳</span>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Expert Team</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-heading-sm mb-2">Expert Team</h3>
+                <p className="text-body-md text-muted-foreground">
                   Our dedicated team based in our prep kitchen in Bridgwater
                 </p>
               </CardContent>

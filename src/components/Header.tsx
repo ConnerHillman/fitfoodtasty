@@ -18,7 +18,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
       {/* Promo Banner */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-sm font-medium">
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-body-sm font-medium">
         <span className="font-bold">WELCOME OFFER: SAVE20</span> - Save 20% on your first box, 10% on your second box
       </div>
       
@@ -31,7 +31,7 @@ const Header = () => {
               alt="FIT FOOD TASTY Logo" 
               className="h-10 w-auto"
             />
-            <Badge className="bg-green-100 text-green-800 text-xs">PREMIUM MEAL PREP</Badge>
+            <Badge className="bg-green-100 text-green-800 text-caption">PREMIUM MEAL PREP</Badge>
           </Link>
 
           {/* Navigation */}
@@ -46,13 +46,13 @@ const Header = () => {
                     <NavigationMenuLink asChild>
                       <Link to="/menu" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
                         <div className="font-semibold text-green-700">All Meals</div>
-                        <p className="text-sm text-gray-600">Browse our complete menu</p>
+                        <p className="text-body-sm text-gray-600">Browse our complete menu</p>
                       </Link>
                     </NavigationMenuLink>
                     <NavigationMenuLink asChild>
                       <Link to="/packages" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
                         <div className="font-semibold text-green-700">Meal Packages</div>
-                        <p className="text-sm text-gray-600">Curated meal combinations</p>
+                        <p className="text-body-sm text-gray-600">Curated meal combinations</p>
                       </Link>
                     </NavigationMenuLink>
                   </div>
@@ -68,7 +68,7 @@ const Header = () => {
                     <NavigationMenuLink asChild>
                       <Link to="/about" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
                         <div className="font-semibold text-green-700">About Us</div>
-                        <p className="text-sm text-gray-600">Our story and mission</p>
+                        <p className="text-body-sm text-gray-600">Our story and mission</p>
                       </Link>
                     </NavigationMenuLink>
                   </div>
@@ -96,7 +96,7 @@ const Header = () => {
                   </Button>
                 )}
                 {!isAdmin() && (
-                  <span className="text-sm text-gray-600">
+                  <span className="text-body-sm text-gray-600">
                     Welcome back!
                   </span>
                 )}
@@ -188,21 +188,21 @@ const Header = () => {
                   <div className="border-t pt-4 space-y-4">
                     <Link 
                       to="/menu" 
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
+                      className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Our Menu
                     </Link>
                     <Link 
                       to="/packages" 
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
+                      className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Meal Packages
                     </Link>
                     <Link 
                       to="/about" 
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
+                      className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       About Us
@@ -252,7 +252,7 @@ const Header = () => {
                     <div className="border-t pt-4 space-y-4">
                       <Link 
                         to="/auth" 
-                        className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
+                        className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         Login
