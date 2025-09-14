@@ -103,8 +103,20 @@ const Marketing = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [selectedCoupon, setSelectedCoupon] = useState<any>(null);
     const [searchFilter, setSearchFilter] = useState("");
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { toast } = useToast();
+
+    // Form state
+    const [formData, setFormData] = useState({
+      code: '',
+      discount_percentage: 0,
+      active: true
+    });
 
     // Fetch coupons on component load
     useEffect(() => {
@@ -147,6 +159,259 @@ const Marketing = () => {
       setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
     };
 
+    const resetForm = () => {
+      setFormData({
+        code: '',
+        discount_percentage: 0,
+        active: true
+      });
+    };
+
+    const openCreateModal = () => {
+      resetForm();
+      setShowCreateModal(true);
+    };
+
+    const openEditModal = (coupon: any) => {
+      setSelectedCoupon(coupon);
+      setFormData({
+        code: coupon.code,
+        discount_percentage: coupon.discount_percentage,
+        active: coupon.active
+      });
+      setShowEditModal(true);
+    };
+
+    const openDeleteDialog = (coupon: any) => {
+      setSelectedCoupon(coupon);
+      setShowDeleteDialog(true);
+    };
+
+    const handleSubmit = async (isEdit: boolean = false) => {
+      if (!formData.code.trim()) {
+        toast({
+          title: "Error",
+          description: "Coupon code is required",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (formData.discount_percentage < 0 || formData.discount_percentage > 100) {
+        toast({
+          title: "Error",
+          description: "Discount percentage must be between 0 and 100",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        if (isEdit && selectedCoupon) {
+          // Update existing coupon
+          const { error } = await supabase
+            .from('coupons')
+            .update({
+              code: formData.code.trim().toUpperCase(),
+              discount_percentage: formData.discount_percentage,
+              active: formData.active
+            })
+            .eq('id', selectedCoupon.id);
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: "Coupon updated successfully",
+          });
+          setShowEditModal(false);
+        } else {
+          // Create new coupon
+          const { error } = await supabase
+            .from('coupons')
+            .insert({
+              code: formData.code.trim().toUpperCase(),
+              discount_percentage: formData.discount_percentage,
+              active: formData.active
+            });
+
+          if (error) {
+            if (error.code === '23505') { // Unique constraint violation
+              throw new Error('A coupon with this code already exists');
+            }
+            throw error;
+          }
+
+          toast({
+            title: "Success",
+            description: "Coupon created successfully",
+          });
+          setShowCreateModal(false);
+        }
+
+        // Refresh the table
+        await fetchCoupons();
+        resetForm();
+      } catch (err: any) {
+        console.error('Error saving coupon:', err);
+        toast({
+          title: "Error",
+          description: err.message || "Failed to save coupon",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const handleDelete = async () => {
+      if (!selectedCoupon) return;
+
+      setIsSubmitting(true);
+
+      try {
+        const { error } = await supabase
+          .from('coupons')
+          .delete()
+          .eq('id', selectedCoupon.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Coupon deleted successfully",
+        });
+
+        setShowDeleteDialog(false);
+        setSelectedCoupon(null);
+        
+        // Refresh the table
+        await fetchCoupons();
+      } catch (err: any) {
+        console.error('Error deleting coupon:', err);
+        toast({
+          title: "Error",
+          description: "Failed to delete coupon",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    // Modal Component
+    const CouponModal = ({ isEdit = false }) => (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-md">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              {isEdit ? 'Edit Coupon' : 'Create New Coupon'}
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Code Input */}
+              <div>
+                <Label htmlFor="code">Coupon Code</Label>
+                <Input
+                  id="code"
+                  type="text"
+                  placeholder="e.g., SAVE20"
+                  value={formData.code}
+                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                  className="mt-1"
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Discount Percentage */}
+              <div>
+                <Label htmlFor="discount">Discount Percentage</Label>
+                <Input
+                  id="discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="e.g., 20"
+                  value={formData.discount_percentage}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    discount_percentage: parseInt(e.target.value) || 0 
+                  }))}
+                  className="mt-1"
+                  disabled={isSubmitting}
+                />
+                <div className="text-xs text-muted-foreground mt-1">
+                  Value between 0 and 100
+                </div>
+              </div>
+
+              {/* Active Checkbox */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="active"
+                  checked={formData.active}
+                  onChange={(e) => setFormData(prev => ({ ...prev, active: e.target.checked }))}
+                  className="rounded"
+                  disabled={isSubmitting}
+                />
+                <Label htmlFor="active">Active</Label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => isEdit ? setShowEditModal(false) : setShowCreateModal(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => handleSubmit(isEdit)}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // Delete Confirmation Dialog
+    const DeleteDialog = () => (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-sm">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-2">Delete Coupon</h3>
+            <p className="text-muted-foreground mb-4">
+              Are you sure you want to delete the coupon "{selectedCoupon?.code}"? This action cannot be undone.
+            </p>
+            
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
     return (
       <Card>
         <CardHeader>
@@ -162,7 +427,7 @@ const Marketing = () => {
           <div className="space-y-4">
             {/* Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <Button onClick={() => setShowCreateModal(true)}>
+              <Button onClick={openCreateModal}>
                 Create New Coupon
               </Button>
               
@@ -213,12 +478,13 @@ const Marketing = () => {
                         <th className="text-left p-3 font-medium">Discount %</th>
                         <th className="text-left p-3 font-medium">Active</th>
                         <th className="text-left p-3 font-medium">Created At</th>
+                        <th className="text-left p-3 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredCoupons.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="text-center p-8 text-muted-foreground">
+                          <td colSpan={5} className="text-center p-8 text-muted-foreground">
                             {searchFilter ? 'No coupons match your search' : 'No coupons created yet'}
                           </td>
                         </tr>
@@ -250,6 +516,26 @@ const Marketing = () => {
                                 minute: '2-digit'
                               })}
                             </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditModal(coupon)}
+                                  className="h-8 px-2"
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => openDeleteDialog(coupon)}
+                                  className="h-8 px-2"
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </td>
                           </tr>
                         ))
                       )}
@@ -267,25 +553,10 @@ const Marketing = () => {
             )}
           </div>
 
-          {/* Create Modal Placeholder */}
-          {showCreateModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
-                <h3 className="text-lg font-semibold mb-4">Create New Coupon</h3>
-                <p className="text-muted-foreground mb-4">
-                  Coupon creation form will be implemented here.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-                    Cancel
-                  </Button>
-                  <Button disabled>
-                    Create (Coming Soon)
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Modals */}
+          {showCreateModal && <CouponModal isEdit={false} />}
+          {showEditModal && <CouponModal isEdit={true} />}
+          {showDeleteDialog && <DeleteDialog />}
         </CardContent>
       </Card>
     );
