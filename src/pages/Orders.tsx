@@ -697,19 +697,12 @@ const Orders = () => {
               <Card className="overflow-hidden">
                 <CollapsibleTrigger asChild>
                   <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors group">
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div 
-                          className="flex items-center gap-3"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Checkbox
-                            checked={selectedOrderIds.has(order.id)}
-                            onCheckedChange={() => toggleOrderSelection(order.id)}
-                            aria-label="Select order for bulk reorder"
-                          />
-                          <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-                        </div>
+                     <div className="flex items-center justify-between w-full">
+                       <div className="flex items-center gap-2 flex-1">
+                         {/* Large, easy-to-tap expand arrow */}
+                         <div className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-muted/50 transition-colors">
+                           <ChevronRight className="h-6 w-6 transition-transform group-data-[state=open]:rotate-90 text-muted-foreground" />
+                         </div>
                         <div className="space-y-1 flex-1">
                           <CardTitle className="text-lg flex items-center gap-2">
                             <Package className="h-5 w-5" />
@@ -859,21 +852,14 @@ const Orders = () => {
           return (
             <Collapsible key={order.id}>
               <Card className="overflow-hidden">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors group">
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div 
-                          className="flex items-center gap-3"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Checkbox
-                            checked={selectedOrderIds.has(order.id)}
-                            onCheckedChange={() => toggleOrderSelection(order.id)}
-                            aria-label="Select order for bulk reorder"
-                          />
-                          <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-                        </div>
+                 <CollapsibleTrigger asChild>
+                   <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors group">
+                     <div className="flex items-center justify-between w-full">
+                       <div className="flex items-center gap-2 flex-1">
+                         {/* Large, easy-to-tap expand arrow */}
+                         <div className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-muted/50 transition-colors">
+                           <ChevronRight className="h-6 w-6 transition-transform group-data-[state=open]:rotate-90 text-muted-foreground" />
+                         </div>
                         <div className="space-y-1 flex-1">
                           <CardTitle className="text-lg flex items-center gap-2">
                             Order #{order.id.slice(-8)}
@@ -921,17 +907,17 @@ const Orders = () => {
                         </Button>
                         
                         {/* Favorites Button */}
-                        <Button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(order.id, 'regular');
-                          }}
-                          variant={favorites[`regular-${order.id}`] ? "default" : "outline"}
-                          className={favorites[`regular-${order.id}`] ? "bg-blue-500 hover:bg-blue-600 text-white" : "border-blue-500 text-blue-500 hover:bg-blue-50"}
-                          size="sm"
-                          title="Save to favorites"
-                        >
-                          <Star className={`h-4 w-4 ${favorites[`regular-${order.id}`] ? 'fill-current' : ''}`} />
+                         <Button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             toggleFavorite(order.id, 'regular');
+                           }}
+                           variant={favorites[`regular-${order.id}`] ? "default" : "outline"}
+                           className={favorites[`regular-${order.id}`] ? "bg-blue-500 hover:bg-blue-600 text-white" : "border-blue-500 text-blue-500 hover:bg-blue-50"}
+                           size="sm"
+                           title="Save to favorites"
+                         >
+                           <Star className={`h-5 w-5 ${favorites[`regular-${order.id}`] ? 'fill-current' : ''}`} />
                         </Button>
                         
                         <div className="flex flex-col items-end gap-1">
