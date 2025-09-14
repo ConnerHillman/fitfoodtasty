@@ -34,6 +34,8 @@ serve(async (req) => {
       production_date,
       customer_email,
       customer_name,
+      coupon_code,
+      discount_percentage,
     } = await req.json().catch(() => ({ items: [] }));
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -94,6 +96,8 @@ serve(async (req) => {
         production_date: production_date || '',
         customer_email: customer_email || '',
         customer_name: customer_name || '',
+        coupon_code: coupon_code || '',
+        discount_percentage: discount_percentage?.toString() || '0',
         items: JSON.stringify(items.map(item => ({
           meal_id: item.meal_id,
           name: item.name,

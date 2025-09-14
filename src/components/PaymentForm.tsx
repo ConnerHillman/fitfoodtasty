@@ -13,6 +13,7 @@ import { Loader2, CreditCard, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -61,18 +62,35 @@ export default function PaymentForm({
         variant: "destructive",
       });
     } else {
-      // Payment succeeded
-      clearCart();
-      toast({
-        title: "Payment successful!",
-        description: `Your ${deliveryMethod === "pickup" ? "collection" : "delivery"} is confirmed for ${new Date(requestedDeliveryDate + 'T12:00:00').toLocaleDateString('en-GB', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        })}`,
-      });
-      navigate("/payment-success");
+      // Payment succeeded - create order in database
+      try {
+        const paymentIntentId = clientSecret.split('_secret_')[0];
+        
+        const { data, error } = await supabase.functions.invoke('create-order-from-payment', {
+          body: { payment_intent_id: paymentIntentId }
+        });
+
+        if (error) throw error;
+
+        clearCart();
+        toast({
+          title: "Payment successful!",
+          description: `Your ${deliveryMethod === "pickup" ? "collection" : "delivery"} is confirmed for ${new Date(requestedDeliveryDate + 'T12:00:00').toLocaleDateString('en-GB', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          })}`,
+        });
+        navigate("/payment-success");
+      } catch (orderError) {
+        console.error("Failed to create order:", orderError);
+        toast({
+          title: "Payment successful, but order creation failed",
+          description: "Please contact support for assistance.",
+          variant: "destructive",
+        });
+      }
     }
 
     setIsLoading(false);
