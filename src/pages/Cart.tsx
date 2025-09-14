@@ -846,16 +846,21 @@ const Cart = () => {
                   </div>
                 )}
                 
-                {/* Show free items separately */}
+                {/* Show free items separately with enhanced UI */}
                 {items.filter(item => item.id.startsWith('free-')).map(freeItem => (
-                  <div key={freeItem.id} className="flex justify-between items-center bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div key={freeItem.id} className="flex justify-between items-center bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        FREE
-                      </span>
-                      <span className="text-green-800 font-medium">🎁 {freeItem.name.replace('🎁 FREE: ', '')}</span>
+                      <div className="bg-green-500 text-white p-1.5 rounded-full">
+                        🎁
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full w-fit mb-1">
+                          FREE ITEM
+                        </span>
+                        <span className="text-green-800 font-semibold">{freeItem.name.replace('🎁 FREE: ', '')}</span>
+                      </div>
                     </div>
-                    <span className="text-green-600 font-bold">FREE</span>
+                    <span className="text-green-700 font-bold text-lg">FREE</span>
                   </div>
                 ))}
                 
@@ -999,11 +1004,21 @@ const Cart = () => {
                 </div>
               )}
               
-              {/* Show free items separately */}
+              {/* Show free items separately with enhanced UI for desktop */}
               {items.filter(item => item.id.startsWith('free-')).map(freeItem => (
-                <div key={freeItem.id} className="flex justify-between text-green-600 font-medium">
-                  <span>🎁 {freeItem.name.replace('🎁 FREE: ', '')}</span>
-                  <span>FREE</span>
+                <div key={freeItem.id} className="flex justify-between items-center bg-green-100 border-2 border-green-300 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-green-500 text-white p-1 rounded-full text-sm">
+                      🎁
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full w-fit mb-1">
+                        FREE ITEM
+                      </span>
+                      <span className="text-green-800 font-medium">{freeItem.name.replace('🎁 FREE: ', '')}</span>
+                    </div>
+                  </div>
+                  <span className="text-green-700 font-bold">FREE</span>
                 </div>
               ))}
               
