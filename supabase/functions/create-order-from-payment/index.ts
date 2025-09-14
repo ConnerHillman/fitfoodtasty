@@ -135,6 +135,11 @@ serve(async (req) => {
           production_date: metadata.production_date,
           delivery_address: user.user_metadata?.delivery_address,
           referral_code_used: metadata.coupon_code || null,
+          coupon_type: metadata.coupon_type || null,
+          coupon_discount_percentage: parseFloat(metadata.coupon_discount_percentage || '0'),
+          coupon_discount_amount: parseFloat(metadata.coupon_discount_amount || '0'),
+          coupon_free_delivery: metadata.coupon_free_delivery === 'true',
+          coupon_free_item_id: metadata.coupon_free_item_id || null,
           stripe_session_id: payment_intent_id,
         })
         .select()

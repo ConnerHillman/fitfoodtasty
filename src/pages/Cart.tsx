@@ -440,6 +440,15 @@ const Cart = () => {
             production_date: calculateProductionDate(requestedDeliveryDate),
             delivery_address: (user as any)?.user_metadata?.delivery_address,
             referral_code_used: appliedCoupon?.code,
+            coupon_type: appliedCoupon ? (
+              appliedCoupon.discount_amount > 0 ? 'fixed_amount' :
+              appliedCoupon.free_delivery ? 'free_delivery' :
+              appliedCoupon.free_item_id ? 'free_item' : 'percentage'
+            ) : null,
+            coupon_discount_percentage: appliedCoupon?.discount_percentage || 0,
+            coupon_discount_amount: appliedCoupon?.discount_amount || 0,
+            coupon_free_delivery: appliedCoupon?.free_delivery || false,
+            coupon_free_item_id: appliedCoupon?.free_item_id || null,
           })
           .select()
           .single();

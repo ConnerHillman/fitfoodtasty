@@ -751,6 +751,11 @@ export type Database = {
         Row: {
           actual_delivery_date: string | null
           actual_production_date: string | null
+          coupon_discount_amount: number | null
+          coupon_discount_percentage: number | null
+          coupon_free_delivery: boolean | null
+          coupon_free_item_id: string | null
+          coupon_type: string | null
           created_at: string
           currency: string
           customer_email: string | null
@@ -770,6 +775,11 @@ export type Database = {
         Insert: {
           actual_delivery_date?: string | null
           actual_production_date?: string | null
+          coupon_discount_amount?: number | null
+          coupon_discount_percentage?: number | null
+          coupon_free_delivery?: boolean | null
+          coupon_free_item_id?: string | null
+          coupon_type?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -789,6 +799,11 @@ export type Database = {
         Update: {
           actual_delivery_date?: string | null
           actual_production_date?: string | null
+          coupon_discount_amount?: number | null
+          coupon_discount_percentage?: number | null
+          coupon_free_delivery?: boolean | null
+          coupon_free_item_id?: string | null
+          coupon_type?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
