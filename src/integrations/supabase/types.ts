@@ -288,24 +288,44 @@ export type Database = {
           active: boolean
           code: string
           created_at: string
+          discount_amount: number | null
           discount_percentage: number
+          free_delivery: boolean
+          free_item_id: string | null
           id: string
+          min_order_value: number | null
         }
         Insert: {
           active?: boolean
           code: string
           created_at?: string
+          discount_amount?: number | null
           discount_percentage: number
+          free_delivery?: boolean
+          free_item_id?: string | null
           id?: string
+          min_order_value?: number | null
         }
         Update: {
           active?: boolean
           code?: string
           created_at?: string
+          discount_amount?: number | null
           discount_percentage?: number
+          free_delivery?: boolean
+          free_item_id?: string | null
           id?: string
+          min_order_value?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_coupons_free_item"
+            columns: ["free_item_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_zones: {
         Row: {
