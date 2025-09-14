@@ -541,6 +541,18 @@ const Orders = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReorder(order.id);
+                          }}
+                          className="flex items-center gap-2"
+                          size="sm"
+                          variant="outline"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Reorder
+                        </Button>
                         <Badge className={getStatusColor(order.status)}>
                           {order.status.replace("_", " ")}
                         </Badge>
@@ -614,18 +626,6 @@ const Orders = () => {
                           </div>
                         </div>
                       )}
-
-                      {/* Reorder Button */}
-                      <div className="pt-4 border-t">
-                        <Button 
-                          onClick={() => handleReorder(order.id)}
-                          className="flex items-center gap-2"
-                          size="sm"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                          Reorder Package
-                        </Button>
-                      </div>
                     </div>
                   </CardContent>
                 </CollapsibleContent>
@@ -660,6 +660,18 @@ const Orders = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMealOrderReorder(order.id);
+                          }}
+                          className="flex items-center gap-2"
+                          size="sm"
+                          variant="outline"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Reorder
+                        </Button>
                         <Badge className={getStatusColor(order.status)}>
                           {order.status.replace("_", " ")}
                         </Badge>
@@ -720,18 +732,6 @@ const Orders = () => {
                           </div>
                         </div>
                       )}
-
-                      {/* Reorder Button */}
-                      <div className="pt-4 border-t">
-                        <Button 
-                          onClick={() => handleMealOrderReorder(order.id)}
-                          className="flex items-center gap-2"
-                          size="sm"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                          Reorder Meals
-                        </Button>
-                      </div>
                     </div>
                   </CardContent>
                 </CollapsibleContent>
