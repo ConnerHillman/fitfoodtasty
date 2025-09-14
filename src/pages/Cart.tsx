@@ -368,12 +368,15 @@ const Cart = () => {
         deliveryFeeToUse = 0;
       }
 
+      const originalTotal = getTotalPrice() + deliveryFeeToUse;
+      const discountAmount = originalTotal; // Full discount for free orders
+
       const { data, error } = await supabase
         .from('orders')
         .insert({
           user_id: user?.id,
           total_amount: 0,
-          discount_amount: getTotalPrice() + deliveryFeeToUse,
+          discount_amount: discountAmount,
           currency: 'gbp',
           status: 'confirmed',
           customer_email: user?.email,
@@ -545,6 +548,48 @@ const Cart = () => {
         setCouponApplied(true);
         setCouponCode(""); // Clear input
         
+        // Add free item to cart if applicable
+        if (data.coupon.free_item_id && !freeItemAdded) {
+          try {
+            const { data: mealData, error: mealError } = await supabase
+              .from('meals')
+              .select('*')
+              .eq('id', data.coupon.free_item_id)
+              .single();
+
+            if (!mealError && mealData) {
+              // Add free item to cart
+              const freeItem = {
+                id: `free-${mealData.id}`,
+                name: `FREE: ${mealData.name}`,
+                description: mealData.description,
+                category: mealData.category,
+                price: 0,
+                total_calories: mealData.total_calories,
+                total_protein: mealData.total_protein,
+                total_carbs: mealData.total_carbs,
+                total_fat: mealData.total_fat,
+                total_fiber: mealData.total_fiber,
+                shelf_life_days: mealData.shelf_life_days,
+                image_url: mealData.image_url,
+                quantity: 1
+              };
+              
+              // Use existing cart context method if available
+              if (typeof window !== 'undefined') {
+                const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+                cartItems.push(freeItem);
+                localStorage.setItem('cart', JSON.stringify(cartItems));
+                window.location.reload(); // Force refresh to update cart
+              }
+              
+              setFreeItemAdded(true);
+            }
+          } catch (err) {
+            console.error("Error adding free item:", err);
+          }
+        }
+        
         // Set appropriate message based on discount type
         let message = "";
         if (data.coupon.discount_percentage > 0) {
@@ -554,7 +599,7 @@ const Cart = () => {
         } else if (data.coupon.free_delivery) {
           message = "Coupon applied: Free delivery";
         } else if (data.coupon.free_item_id) {
-          message = "Coupon applied: Free item will be added";
+          message = "Coupon applied: Free item added to cart";
         }
         setCouponMessage(message);
         
@@ -967,6 +1012,25 @@ const Cart = () => {
                         : "text-red-600"
                     }`}>
                       {couponMessage}
+                      {couponApplied && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="ml-2 h-8"
+                          onClick={() => {
+                            setCouponApplied(false);
+                            setAppliedCoupon(null);
+                            setCouponMessage("");
+                            setFreeItemAdded(false);
+                            toast({
+                              title: "Coupon Removed",
+                              description: "Coupon has been removed from your order.",
+                            });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1201,6 +1265,25 @@ const Cart = () => {
                         : "text-red-600"
                     }`}>
                       {couponMessage}
+                      {couponApplied && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="ml-2 h-8"
+                          onClick={() => {
+                            setCouponApplied(false);
+                            setAppliedCoupon(null);
+                            setCouponMessage("");
+                            setFreeItemAdded(false);
+                            toast({
+                              title: "Coupon Removed",
+                              description: "Coupon has been removed from your order.",
+                            });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>

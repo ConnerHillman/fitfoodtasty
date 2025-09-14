@@ -35,6 +35,7 @@ serve(async (req) => {
       customer_email,
       customer_name,
       coupon_code,
+      coupon_data,
       discount_percentage,
     } = await req.json().catch(() => ({ items: [] }));
 
@@ -98,6 +99,12 @@ serve(async (req) => {
         customer_name: customer_name || '',
         coupon_code: coupon_code || '',
         discount_percentage: discount_percentage?.toString() || '0',
+        coupon_type: coupon_data?.discount_amount ? 'fixed_amount' : 
+                   coupon_data?.free_delivery ? 'free_delivery' : 
+                   coupon_data?.free_item_id ? 'free_item' : 'percentage',
+        discount_amount: coupon_data?.discount_amount?.toString() || '0',
+        free_delivery: coupon_data?.free_delivery?.toString() || 'false',
+        free_item_id: coupon_data?.free_item_id || '',
         items: JSON.stringify(items.map(item => ({
           meal_id: item.meal_id,
           name: item.name,
