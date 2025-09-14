@@ -641,7 +641,7 @@ const Cart = () => {
                 )}
               </div>
 
-              {/* Delivery Date Selection */}
+                {/* Delivery Date Selection */}
               <div className="space-y-3 border-t pt-4">
                 <Label htmlFor="delivery-date" className="flex items-center gap-2 font-semibold">
                   <CalendarIcon className="h-4 w-4" />
@@ -677,12 +677,13 @@ const Cart = () => {
                   </div>
                 )}
                 
+                {/* Desktop Calendar Button */}
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal h-12",
+                        "w-full justify-start text-left font-normal h-12 hidden lg:flex",
                         !requestedDeliveryDate && "text-muted-foreground"
                       )}
                     >
@@ -694,32 +695,6 @@ const Cart = () => {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" side="bottom" align="start" sideOffset={4}>
-                    <Calendar
-                      mode="single"
-                      selected={requestedDeliveryDate ? new Date(requestedDeliveryDate + 'T12:00:00') : undefined}
-                      onSelect={(date) => {
-                        if (date) {
-                          // Format date as YYYY-MM-DD without timezone conversion
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const dateString = `${year}-${month}-${day}`;
-                          setRequestedDeliveryDate(dateString);
-                          setCalendarOpen(false); // Close the popover after selection
-                        }
-                      }}
-                      disabled={isDateDisabled}
-                      modifiers={{
-                        available: isAvailableDay
-                      }}
-                      modifiersStyles={{
-                        available: { fontWeight: 'bold' }
-                      }}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
                 </Popover>
               </div>
 
@@ -890,50 +865,23 @@ const Cart = () => {
                   </div>
                 )}
                 
-                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-12 text-base",
-                        !requestedDeliveryDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {requestedDeliveryDate ? (
-                        format(new Date(requestedDeliveryDate), "PPP")
-                      ) : (
-                        <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" side="bottom" align="center" sideOffset={4}>
-                    <Calendar
-                      mode="single"
-                      selected={requestedDeliveryDate ? new Date(requestedDeliveryDate + 'T12:00:00') : undefined}
-                      onSelect={(date) => {
-                        if (date) {
-                          // Format date as YYYY-MM-DD without timezone conversion
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const dateString = `${year}-${month}-${day}`;
-                          setRequestedDeliveryDate(dateString);
-                          setCalendarOpen(false); // Close the popover after selection
-                        }
-                      }}
-                      disabled={isDateDisabled}
-                      modifiers={{
-                        available: isAvailableDay
-                      }}
-                      modifiersStyles={{
-                        available: { fontWeight: 'bold' }
-                      }}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
+                {/* Mobile Calendar Button */}
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-12 text-base lg:hidden",
+                      !requestedDeliveryDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {requestedDeliveryDate ? (
+                      format(new Date(requestedDeliveryDate), "PPP")
+                    ) : (
+                      <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
               </div>
 
               {/* Payment Form - Only for authenticated users */}
@@ -973,6 +921,34 @@ const Cart = () => {
         </div>
         
       </div>
+
+      {/* Single Shared Calendar Popover */}
+      <PopoverContent className="w-auto p-0" side="bottom" align="center" sideOffset={4}>
+        <Calendar
+          mode="single"
+          selected={requestedDeliveryDate ? new Date(requestedDeliveryDate + 'T12:00:00') : undefined}
+          onSelect={(date) => {
+            if (date) {
+              // Format date as YYYY-MM-DD without timezone conversion
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              const dateString = `${year}-${month}-${day}`;
+              setRequestedDeliveryDate(dateString);
+              setCalendarOpen(false); // Close the popover after selection
+            }
+          }}
+          disabled={isDateDisabled}
+          modifiers={{
+            available: isAvailableDay
+          }}
+          modifiersStyles={{
+            available: { fontWeight: 'bold' }
+          }}
+          initialFocus
+          className={cn("p-3 pointer-events-auto")}
+        />
+      </PopoverContent>
 
     </div>
   );
