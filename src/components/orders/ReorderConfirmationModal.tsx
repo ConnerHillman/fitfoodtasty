@@ -290,7 +290,7 @@ const ReorderConfirmationModal = ({
               size="lg"
             >
               <ShoppingCart className="h-5 w-5" />
-              Reorder as is
+              Reorder & Checkout
             </Button>
             <Button
               onClick={onEditInCart}

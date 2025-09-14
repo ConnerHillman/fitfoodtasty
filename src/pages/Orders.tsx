@@ -218,13 +218,16 @@ const Orders = () => {
         // Show replacement dialog
         setShowReplacementDialog(true);
       } else {
-        // All meals available, redirect to cart
+        // All meals available, go to cart and scroll to checkout
         toast({
           title: "Added to Cart!",
-          description: "Your package has been added to cart.",
+          description: "Your package has been added to cart. Proceeding to checkout.",
           variant: "success" as any,
         });
         navigate("/cart");
+        setTimeout(() => {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 100);
       }
     } else {
       toast({
@@ -287,7 +290,7 @@ const Orders = () => {
     if (!order) return;
 
     setShowReorderModal(false);
-    await executeMealReorder(order.id, true);
+    await executeMealReorder(order.id, false); // Don't redirect to cart, go to checkout
   };
 
   const handleMealEditInCart = async () => {
@@ -295,7 +298,7 @@ const Orders = () => {
     if (!order) return;
 
     setShowReorderModal(false);
-    await executeMealReorder(order.id, false);
+    await executeMealReorder(order.id, true); // Redirect to cart for editing
   };
 
   const executeMealReorder = async (orderId: string, redirectToCart: boolean = false) => {
@@ -403,9 +406,15 @@ const Orders = () => {
         variant: "success" as any,
       });
 
-      // Redirect to cart if requested
+      // Redirect to cart if requested, otherwise scroll to checkout section
       if (redirectToCart) {
         navigate("/cart");
+      } else {
+        // For "reorder as is", stay on cart but scroll to checkout
+        navigate("/cart");
+        setTimeout(() => {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 100);
       }
 
     } catch (error) {
