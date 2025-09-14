@@ -337,45 +337,63 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
           </div>
         </div>
 
-        {/* Mobile Persistent Counter - Fixed at bottom */}
-        <div className="sm:hidden fixed bottom-4 left-4 right-4 z-50 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="text-base font-semibold text-foreground">
-                {totalSelected}/{pkg?.meal_count ?? 0}
-              </div>
-              {totalSelected === (pkg?.meal_count ?? 0) ? (
-                <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
-                  <CheckCircle2 size={14} />
-                  Complete
-                </div>
-              ) : (
-                <div className="text-muted-foreground text-sm">
-                  Pick {((pkg?.meal_count ?? 0) - totalSelected)} more
-                </div>
-              )}
+        {/* Mobile Persistent Counter - Fixed at bottom with animations */}
+        <div className={`sm:hidden fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 ease-in-out ${
+          pkg && totalSelected >= 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+        }`}>
+          <div className="bg-background/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-4 animate-fade-in">
+            {/* Progress Bar */}
+            <div className="w-full bg-muted rounded-full h-1.5 mb-3">
+              <div 
+                className="bg-gradient-to-r from-primary to-primary/80 h-1.5 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${pkg ? (totalSelected / pkg.meal_count) * 100 : 0}%` }}
+              />
             </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleAddToCart} 
-                disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
-                className="h-10 min-w-[80px] touch-manipulation text-sm"
-              >
-                Add to Cart
-              </Button>
-              <Button 
-                size="sm"
-                onClick={handleCheckout} 
-                disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
-                className="h-10 min-w-[90px] touch-manipulation text-sm"
-              >
-                Continue
-              </Button>
+            
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="text-lg font-bold text-foreground">
+                  {totalSelected}/{pkg?.meal_count ?? 0}
+                </div>
+                <div className="flex flex-col">
+                  {totalSelected === (pkg?.meal_count ?? 0) ? (
+                    <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                      <CheckCircle2 size={14} className="animate-scale-in" />
+                      Complete
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground text-sm">
+                      {((pkg?.meal_count ?? 0) - totalSelected)} more to go
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAddToCart} 
+                  disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                  className="h-11 min-w-[85px] touch-manipulation text-sm font-medium transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
+                >
+                  Add to Cart
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={handleCheckout} 
+                  disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                  className="h-11 min-w-[95px] touch-manipulation text-sm font-medium transition-all duration-200 hover:scale-105 disabled:hover:scale-100 bg-gradient-to-r from-primary to-primary/90"
+                >
+                  Continue
+                </Button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Mobile bottom padding to prevent overlap */}
+        <div className="sm:hidden h-24" />
 
         {/* Meals grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
