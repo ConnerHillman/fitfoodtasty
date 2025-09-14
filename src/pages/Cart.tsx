@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CalendarIcon, Clock, Truck, MapPin } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CalendarIcon, Clock, Truck, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +38,7 @@ const Cart = () => {
   const [userPostcode, setUserPostcode] = useState<string>("");
   const [manualPostcode, setManualPostcode] = useState<string>("");
   const [postcodeChecked, setPostcodeChecked] = useState<boolean>(false);
+  const [orderSummaryExpanded, setOrderSummaryExpanded] = useState<boolean>(false);
 
   // Fetch collection points
   useEffect(() => {
@@ -376,14 +377,14 @@ const Cart = () => {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="text-center py-12">
           <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
-          <p className="text-muted-foreground mb-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-2">Your cart is empty</h2>
+          <p className="text-muted-foreground mb-6 text-sm sm:text-base">
             Start adding some delicious meals to your cart!
           </p>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto h-12 sm:h-10">
             <Link to="/menu">Browse Menu</Link>
           </Button>
         </div>
@@ -392,76 +393,125 @@ const Cart = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Continue Shopping Button */}
-      <div className="mb-6">
-        <Button asChild size="lg" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-          <Link to="/menu" className="flex items-center space-x-2">
+      <div className="mb-4 sm:mb-6">
+        <Button asChild size="lg" className="w-full sm:w-auto h-12 sm:h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+          <Link to="/menu" className="flex items-center justify-center space-x-2">
             <ArrowLeft className="h-5 w-5" />
-            <span>CONTINUE SHOPPING</span>
+            <span className="text-sm sm:text-base">CONTINUE SHOPPING</span>
           </Link>
         </Button>
       </div>
       
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-2">Your Cart</h1>
-        <p className="text-muted-foreground text-lg">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">Your Cart</h1>
+        <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
           Review your selected meals before checkout
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Mobile: Show collapsible order summary first */}
+      <div className="block lg:hidden mb-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <Button
+              variant="ghost"
+              className="w-full flex items-center justify-between p-0 h-auto"
+              onClick={() => setOrderSummaryExpanded(!orderSummaryExpanded)}
+            >
+              <CardTitle className="text-lg">Order Summary - £{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)).toFixed(2)}</CardTitle>
+              {orderSummaryExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </Button>
+          </CardHeader>
+          {orderSummaryExpanded && (
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>£{getTotalPrice().toFixed(2)}</span>
+                </div>
+                {deliveryMethod === "delivery" && (
+                  <div className="flex justify-between">
+                    <span>Delivery</span>
+                    <span>£{deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
+                {deliveryMethod === "pickup" && selectedCollectionPoint && (
+                  <div className="flex justify-between">
+                    <span>Collection</span>
+                    <span>£{(collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="border-t pt-4">
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span>Total</span>
+                    <span>£{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      </div>
+
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Cart Items */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="order-2 lg:order-1 lg:col-span-2 space-y-4">
           {items.map((item) => (
             <Card key={item.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start gap-4">
                   {item.image_url && (
                     <img
                       src={item.image_url}
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg"
+                      className="w-full sm:w-20 h-32 sm:h-20 object-cover rounded-lg"
                     />
                   )}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">{item.name}</h3>
-                        <p className="text-muted-foreground text-sm mb-2">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 pr-2">
+                        <h3 className="font-semibold text-base sm:text-lg">{item.name}</h3>
+                        <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
                           {item.description}
                         </p>
+                        <div className="text-lg font-semibold sm:hidden">
+                          £{(item.price * item.quantity).toFixed(2)}
+                        </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => removeFromCart(item.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive min-h-[44px] min-w-[44px] p-2"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                     
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
+                          className="h-11 w-11 sm:h-9 sm:w-9"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-4 w-4" />
                         </Button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                        <span className="w-12 sm:w-8 text-center font-medium text-lg sm:text-base">{item.quantity}</span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="h-11 w-11 sm:h-9 sm:w-9"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="text-lg font-semibold">
+                      <div className="text-lg font-semibold hidden sm:block">
                         £{(item.price * item.quantity).toFixed(2)}
                       </div>
                     </div>
@@ -472,8 +522,8 @@ const Cart = () => {
           ))}
         </div>
 
-        {/* Order Summary */}
-        <div className="space-y-4">
+        {/* Order Summary - Desktop only */}
+        <div className="order-1 lg:order-2 hidden lg:block space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
@@ -511,7 +561,7 @@ const Cart = () => {
                     placeholder="Enter postcode (e.g. SW1A 1AA)"
                     value={manualPostcode}
                     onChange={(e) => handlePostcodeChange(e.target.value)}
-                    className="uppercase"
+                    className="uppercase h-12"
                   />
                   {manualPostcode && postcodeChecked && !deliveryZone && (
                     <p className="text-sm text-destructive">No delivery available for this postcode</p>
@@ -523,7 +573,7 @@ const Cart = () => {
               <div className="space-y-3 border-t pt-4">
                 <Label className="font-semibold">Delivery or Collection?</Label>
                 <Select value={deliveryMethod} onValueChange={(value: "delivery" | "pickup") => setDeliveryMethod(value)}>
-                  <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50">
+                  <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50 h-12">
                     <SelectValue placeholder="Choose delivery method" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border shadow-lg z-50">
@@ -546,7 +596,7 @@ const Cart = () => {
                   <div className="space-y-3">
                     <Label className="font-semibold">Select Collection Point</Label>
                     <Select value={selectedCollectionPoint} onValueChange={setSelectedCollectionPoint}>
-                      <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50">
+                      <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50 h-12">
                         <SelectValue placeholder="Choose collection point" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border shadow-lg z-50">
@@ -632,7 +682,7 @@ const Cart = () => {
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-normal h-12",
                         !requestedDeliveryDate && "text-muted-foreground"
                       )}
                     >
@@ -692,14 +742,228 @@ const Cart = () => {
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="font-semibold text-blue-800 mb-2">Ready to complete your order?</h4>
                   <p className="text-sm text-blue-700 mb-3">Create an account or log in to proceed with payment</p>
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full h-12">
                     <Link to="/auth">Create Account / Log In</Link>
                   </Button>
                 </div>
               )}
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full h-12"
+                onClick={clearCart}
+              >
+                Clear Cart
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Mobile: Full-width forms and checkout at bottom */}
+        <div className="order-3 lg:hidden space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Delivery & Payment</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Postcode Input for Non-Authenticated Users */}
+              {!user && (
+                <div className="space-y-3">
+                  <Label htmlFor="postcode-mobile" className="font-semibold">Enter your postcode to check delivery availability</Label>
+                  <Input
+                    id="postcode-mobile"
+                    placeholder="Enter postcode (e.g. SW1A 1AA)"
+                    value={manualPostcode}
+                    onChange={(e) => handlePostcodeChange(e.target.value)}
+                    className="uppercase h-12 text-base"
+                  />
+                  {manualPostcode && postcodeChecked && !deliveryZone && (
+                    <p className="text-sm text-destructive">No delivery available for this postcode</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Delivery Method Selection */}
+              <div className="space-y-3">
+                <Label className="font-semibold">Delivery or Collection?</Label>
+                <Select value={deliveryMethod} onValueChange={(value: "delivery" | "pickup") => setDeliveryMethod(value)}>
+                  <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50 h-12 text-base">
+                    <SelectValue placeholder="Choose delivery method" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    <SelectItem value="delivery" className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4" />
+                        Delivery - £{deliveryFee.toFixed(2)}
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="pickup" className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Collection - From £{collectionPoints.length > 0 ? Math.min(...collectionPoints.map(cp => cp.collection_fee)).toFixed(2) : '0.00'}
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {deliveryMethod === "pickup" && collectionPoints.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="font-semibold">Select Collection Point</Label>
+                    <Select value={selectedCollectionPoint} onValueChange={setSelectedCollectionPoint}>
+                      <SelectTrigger className="w-full bg-background border-2 focus:border-primary/50 h-12 text-base">
+                        <SelectValue placeholder="Choose collection point" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-lg z-50">
+                        {collectionPoints.map((point) => (
+                          <SelectItem key={point.id} value={point.id}>
+                            <div>
+                              <div className="font-medium">{point.point_name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {point.city} - £{point.collection_fee.toFixed(2)}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {selectedCollectionPoint && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        {(() => {
+                          const point = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+                          return point ? (
+                            <div className="text-sm text-blue-800">
+                              <strong>Collection Address:</strong><br />
+                              {point.point_name}<br />
+                              {point.address}<br />
+                              {point.city}, {point.postcode}<br />
+                              {point.phone && <span>Phone: {point.phone}<br /></span>}
+                              <strong>Collection fee: £{point.collection_fee.toFixed(2)}</strong><br />
+                              <strong>Collection days:</strong> {point.collection_days.map(day => day.charAt(0).toUpperCase() + day.slice(1)).join(', ')}
+                              {point.special_instructions && (
+                                <div className="mt-2">
+                                  <strong>Special instructions:</strong><br />
+                                  {point.special_instructions}
+                                </div>
+                              )}
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Delivery Date Selection */}
+              <div className="space-y-3">
+                <Label htmlFor="delivery-date-mobile" className="flex items-center gap-2 font-semibold">
+                  <CalendarIcon className="h-4 w-4" />
+                  {deliveryMethod === "delivery" ? "Delivery Date" : "Collection Date"}
+                </Label>
+                
+                {deliveryMethod === "pickup" && selectedCollectionPoint && (
+                  <div className="text-sm text-muted-foreground mb-2">
+                    {(() => {
+                      const point = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+                      return point ? (
+                        <span>Available collection days: {point.collection_days.map(day => 
+                          day.charAt(0).toUpperCase() + day.slice(1)
+                        ).join(', ')}</span>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
+                
+                {deliveryMethod === "delivery" && deliveryZone && (
+                  <div className="text-sm text-muted-foreground mb-2">
+                    <span>Available delivery days: {deliveryZone.delivery_days.map((day: string) => 
+                      day.charAt(0).toUpperCase() + day.slice(1)
+                    ).join(', ')}</span>
+                    <br />
+                    <span className="text-xs">Delivery zone: {deliveryZone.zone_name}</span>
+                  </div>
+                )}
+                
+                {deliveryMethod === "delivery" && !deliveryZone && userPostcode && (
+                  <div className="text-sm text-destructive mb-2">
+                    <span>No delivery available for postcode: {userPostcode}</span>
+                  </div>
+                )}
+                
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-12 text-base",
+                        !requestedDeliveryDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {requestedDeliveryDate ? (
+                        format(new Date(requestedDeliveryDate), "PPP")
+                      ) : (
+                        <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={requestedDeliveryDate ? new Date(requestedDeliveryDate + 'T12:00:00') : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          // Format date as YYYY-MM-DD without timezone conversion
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const dateString = `${year}-${month}-${day}`;
+                          setRequestedDeliveryDate(dateString);
+                          setCalendarOpen(false); // Close the popover after selection
+                        }
+                      }}
+                      disabled={isDateDisabled}
+                      modifiers={{
+                        available: isAvailableDay
+                      }}
+                      modifiersStyles={{
+                        available: { fontWeight: 'bold' }
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Payment Form - Only for authenticated users */}
+              {requestedDeliveryDate && user && clientSecret && (
+                <div className="mt-4">
+                  <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
+                    <PaymentForm
+                      clientSecret={clientSecret}
+                      totalAmount={Math.round((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0))) * 100)}
+                      deliveryMethod={deliveryMethod}
+                      requestedDeliveryDate={requestedDeliveryDate}
+                    />
+                  </Elements>
+                </div>
+              )}
+              
+              {/* Login prompt for non-authenticated users */}
+              {requestedDeliveryDate && !user && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold text-blue-800 mb-2">Ready to complete your order?</h4>
+                  <p className="text-sm text-blue-700 mb-3">Create an account or log in to proceed with payment</p>
+                  <Button asChild className="w-full h-12">
+                    <Link to="/auth">Create Account / Log In</Link>
+                  </Button>
+                </div>
+              )}
+              
+              <Button
+                variant="outline"
+                className="w-full h-12"
                 onClick={clearCart}
               >
                 Clear Cart
