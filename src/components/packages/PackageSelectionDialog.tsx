@@ -261,8 +261,9 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
 
     addPackageToCart(packageCartItem);
     toast({ 
-      title: "Added to cart", 
-      description: `${pkg.name} with ${totalSelected} meals added to cart.` 
+      title: "Added to Cart!", 
+      description: `${pkg.name} with ${totalSelected} meals added to cart.`,
+      variant: "success" as any,
     });
     onOpenChange(false);
   };

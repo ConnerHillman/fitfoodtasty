@@ -126,8 +126,9 @@ const MealsGrid = () => {
   const handleAddToCart = (meal: Meal) => {
     addToCart(meal);
     toast({
-      title: "Added to Cart",
+      title: "Added to Cart!",
       description: `${meal.name} has been added to your cart`,
+      variant: "success" as any,
     });
   };
 
