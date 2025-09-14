@@ -143,7 +143,7 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[95vw] max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
@@ -159,7 +159,7 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
               placeholder="Search meals..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-12 text-base"
             />
           </div>
 
@@ -179,7 +179,7 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
                 ))}
               </TabsList>
 
-              <TabsContent value="all" className="mt-4 overflow-y-auto max-h-[60vh]">
+              <TabsContent value="all" className="mt-4 overflow-y-auto max-h-[55vh] sm:max-h-[60vh]">
                 <div className="space-y-1">
                   {filteredMeals.map(meal => (
                     <MealListItem key={meal.id} meal={meal} onSelect={handleSelectMeal} />
@@ -188,7 +188,7 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
               </TabsContent>
 
               {categories.map(category => (
-                <TabsContent key={category.id} value={category.name} className="mt-4 overflow-y-auto max-h-[60vh]">
+                <TabsContent key={category.id} value={category.name} className="mt-4 overflow-y-auto max-h-[55vh] sm:max-h-[60vh]">
                   <div className="space-y-1">
                     {groupedMeals[category.name]?.map(meal => (
                       <MealListItem key={meal.id} meal={meal} onSelect={handleSelectMeal} />
@@ -218,16 +218,16 @@ interface MealListItemProps {
 const MealListItem: React.FC<MealListItemProps> = ({ meal, onSelect }) => {
   return (
     <div 
-      className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+      className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors min-h-[60px]"
       onClick={() => onSelect(meal)}
     >
-      <div className="flex-1">
-        <h3 className="font-medium text-sm">{meal.name}</h3>
+      <div className="flex-1 pr-4">
+        <h3 className="font-medium text-sm sm:text-base">{meal.name}</h3>
         {meal.description && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{meal.description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">{meal.description}</p>
         )}
       </div>
-      <Button variant="ghost" size="sm" className="ml-4">
+      <Button variant="ghost" className="ml-4 h-11 px-4 shrink-0">
         Select
       </Button>
     </div>

@@ -291,15 +291,15 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
               Label Editor
             </span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={resetLayout}>
+              <Button variant="outline" className="h-11 px-4" onClick={resetLayout}>
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
-              <Button variant="outline" size="sm" onClick={saveChanges}>
+              <Button variant="outline" className="h-11 px-4" onClick={saveChanges}>
                 <Save className="w-4 h-4 mr-2" />
                 Save
               </Button>
-              <Button variant="outline" size="sm" onClick={onClose}>
+              <Button variant="outline" className="h-11 px-4" onClick={onClose}>
                 Close Editor
               </Button>
             </div>
@@ -314,14 +314,14 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
                 <div className="flex gap-2 mt-2">
                   <Button
                     variant={activeTool === 'select' ? 'default' : 'outline'}
-                    size="sm"
+                    className="h-11 px-4"
                     onClick={() => setActiveTool('select')}
                   >
                     <Move className="w-4 h-4" />
                   </Button>
                   <Button
                     variant={activeTool === 'text' ? 'default' : 'outline'}
-                    size="sm"
+                    className="h-11 px-4"
                     onClick={() => setActiveTool('text')}
                   >
                     <Type className="w-4 h-4" />
@@ -338,9 +338,10 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
                       value={textInput}
                       onChange={(e) => setTextInput(e.target.value)}
                       placeholder="Enter text..."
+                      className="h-12 text-base"
                       onKeyPress={(e) => e.key === 'Enter' && addText()}
                     />
-                    <Button size="sm" className="w-full mt-2" onClick={addText}>
+                    <Button className="w-full mt-2 h-11" onClick={addText}>
                       Add Text
                     </Button>
                   </div>
@@ -353,6 +354,7 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
                       min="6"
                       max="72"
                       value={fontSize}
+                      className="h-12 text-base"
                       onChange={(e) => setFontSize(parseInt(e.target.value) || 12)}
                     />
                   </div>
@@ -384,6 +386,7 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
                       min="6"
                       max="72"
                       value={selectedObject.fontSize || 12}
+                      className="h-12 text-base"
                       onChange={(e) => updateSelectedText('fontSize', parseInt(e.target.value) || 12)}
                     />
                   </div>
@@ -394,11 +397,12 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
                       id="selectedColor"
                       type="color"
                       value={selectedObject.fill || '#000000'}
+                      className="h-12"
                       onChange={(e) => updateSelectedText('fill', e.target.value)}
                     />
                   </div>
 
-                  <Button size="sm" className="w-full" onClick={centerHorizontally}>
+                  <Button className="w-full h-11" onClick={centerHorizontally}>
                     <AlignCenter className="w-4 h-4 mr-2" />
                     Center Horizontally
                   </Button>

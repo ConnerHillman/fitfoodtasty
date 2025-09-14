@@ -102,7 +102,7 @@ const Header = () => {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <Button variant="ghost" className="flex items-center space-x-2 h-11 px-3">
                       <User className="h-4 w-4" />
                       <span>{user.email}</span>
                     </Button>
@@ -156,7 +156,7 @@ const Header = () => {
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center space-x-2">
             {/* Mobile Cart Button - Primary CTA */}
-            <Button asChild size="sm" className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-4 py-2 rounded-full">
+            <Button asChild className="h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-4 py-2 rounded-full">
               <Link to="/cart" className="flex items-center space-x-1">
                 <ShoppingCart className="h-4 w-4" />
                 <span>CART</span>
@@ -171,7 +171,7 @@ const Header = () => {
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="p-2">
+                <Button variant="ghost" className="h-12 w-12 p-2">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -188,21 +188,21 @@ const Header = () => {
                   <div className="border-t pt-4 space-y-4">
                     <Link 
                       to="/menu" 
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Our Menu
                     </Link>
                     <Link 
                       to="/packages" 
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Meal Packages
                     </Link>
                     <Link 
                       to="/about" 
-                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                      className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       About Us
@@ -223,7 +223,7 @@ const Header = () => {
                       )}
                       <Link 
                         to="/orders" 
-                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-2"
+                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px]"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <User className="h-4 w-4" />
@@ -231,7 +231,7 @@ const Header = () => {
                       </Link>
                       <Link 
                         to="/account" 
-                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-2"
+                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px]"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <Settings className="h-4 w-4" />
@@ -242,7 +242,7 @@ const Header = () => {
                           signOut();
                           setIsMobileMenuOpen(false);
                         }}
-                        className="flex items-center space-x-2 text-gray-700 hover:text-red-600 py-2 w-full text-left"
+                        className="flex items-center space-x-2 text-gray-700 hover:text-red-600 py-3 px-2 w-full text-left min-h-[44px]"
                       >
                         <LogOut className="h-4 w-4" />
                         <span>Sign Out</span>
@@ -252,7 +252,7 @@ const Header = () => {
                     <div className="border-t pt-4 space-y-4">
                       <Link 
                         to="/auth" 
-                        className="block text-lg font-medium text-gray-700 hover:text-green-600 py-2"
+                        className="block text-lg font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         Login
@@ -260,7 +260,7 @@ const Header = () => {
                       <Button 
                         asChild 
                         variant="outline" 
-                        className="w-full border-green-500 text-green-600 hover:bg-green-50 font-bold rounded-full"
+                        className="w-full border-green-500 text-green-600 hover:bg-green-50 font-bold rounded-full h-12"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <Link to="/auth">CREATE ACCOUNT</Link>
