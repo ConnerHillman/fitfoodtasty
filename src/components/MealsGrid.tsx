@@ -133,15 +133,15 @@ const MealsGrid = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-wrap gap-2">
+      <div className="space-y-6 px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap gap-2 justify-center">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-20" />
+            <Skeleton key={i} className="h-10 w-24" />
           ))}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-80" />
+            <Skeleton key={i} className="h-96" />
           ))}
         </div>
       </div>
@@ -149,7 +149,7 @@ const MealsGrid = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 px-4 sm:px-6 lg:px-8">
       {/* Luxury Category Selector */}
       <LuxuryCategorySelector
         categories={displayCategories}
@@ -159,7 +159,7 @@ const MealsGrid = () => {
 
       {/* Meals Count */}
       <div className="flex items-center justify-center">
-        <div className="text-muted-foreground text-lg">
+        <div className="text-muted-foreground text-base sm:text-lg text-center">
           {filteredMeals.length} premium meal{filteredMeals.length !== 1 ? 's' : ''} available
         </div>
       </div>
@@ -167,10 +167,10 @@ const MealsGrid = () => {
       {/* Meals Grid */}
       {filteredMeals.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No meals available in this category.</p>
+          <p className="text-muted-foreground text-base sm:text-lg">No meals available in this category.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
           {filteredMeals.map((meal) => {
             // Check if meal is new (created within 2 weeks)
             const isNew = new Date(meal.created_at) > new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
