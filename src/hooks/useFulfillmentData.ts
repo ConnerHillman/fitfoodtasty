@@ -1,124 +1,43 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useDataManager } from "./useDataManager";
 import type { FulfillmentSetting, GlobalSchedule, DeliveryZone, CollectionPoint } from "@/types/fulfillment";
 
 export const useFulfillmentData = () => {
-  const [settings, setSettings] = useState<FulfillmentSetting[]>([]);
-  const [globalSchedule, setGlobalSchedule] = useState<GlobalSchedule[]>([]);
-  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
-  const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const settingsManager = useDataManager<FulfillmentSetting>("fulfillment_settings", {
+    orderBy: { column: "setting_type", ascending: true }
+  });
 
-  const fetchSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("fulfillment_settings")
-        .select("*")
-        .order("setting_type", { ascending: true });
+  const scheduleManager = useDataManager<GlobalSchedule>("global_fulfillment_schedule", {
+    filters: [{ column: "is_active", operator: "eq", value: true }],
+    orderBy: { column: "day_of_week", ascending: true }
+  });
 
-      if (error) throw error;
-      setSettings(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch fulfillment settings",
-        variant: "destructive",
-      });
-    }
-  };
+  const zonesManager = useDataManager<DeliveryZone>("delivery_zones", {
+    orderBy: { column: "zone_name", ascending: true }
+  });
 
-  const fetchGlobalSchedule = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('global_fulfillment_schedule')
-        .select('*')
-        .eq('is_active', true)
-        .order('day_of_week');
-      
-      if (error) throw error;
-      setGlobalSchedule(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch global schedule",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchDeliveryZones = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("delivery_zones")
-        .select("*")
-        .order("zone_name", { ascending: true });
-
-      if (error) throw error;
-      setDeliveryZones((data || []).map(zone => ({ ...zone, order_cutoffs: zone.order_cutoffs || {} })) as any);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch delivery zones",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchCollectionPoints = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("collection_points")
-        .select("*")
-        .order("point_name", { ascending: true });
-
-      if (error) throw error;
-      setCollectionPoints(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch collection points",
-        variant: "destructive",
-      });
-    }
-  };
+  const pointsManager = useDataManager<CollectionPoint>("collection_points", {
+    orderBy: { column: "point_name", ascending: true }
+  });
 
   const fetchAllData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchSettings(),
-        fetchGlobalSchedule(),
-        fetchDeliveryZones(),
-        fetchCollectionPoints()
-      ]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load fulfillment data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    await Promise.all([
+      settingsManager.refetch(),
+      scheduleManager.refetch(),
+      zonesManager.refetch(),
+      pointsManager.refetch()
+    ]);
   };
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
   return {
-    settings,
-    globalSchedule,
-    deliveryZones,
-    collectionPoints,
-    loading,
+    settings: settingsManager.data,
+    globalSchedule: scheduleManager.data,
+    deliveryZones: zonesManager.data.map(zone => ({ ...zone, order_cutoffs: zone.order_cutoffs || {} })),
+    collectionPoints: pointsManager.data,
+    loading: settingsManager.loading || scheduleManager.loading || zonesManager.loading || pointsManager.loading,
     fetchAllData,
-    fetchSettings,
-    fetchGlobalSchedule,
-    fetchDeliveryZones,
-    fetchCollectionPoints
+    fetchSettings: settingsManager.refetch,
+    fetchGlobalSchedule: scheduleManager.refetch,
+    fetchDeliveryZones: zonesManager.refetch,
+    fetchCollectionPoints: pointsManager.refetch
   };
 };
