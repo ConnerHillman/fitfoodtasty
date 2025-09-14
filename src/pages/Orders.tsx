@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import MealReplacementDialog from "@/components/packages/MealReplacementDialog";
+import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
 
 interface OrderItem {
   id: string;
@@ -58,6 +59,9 @@ const Orders = () => {
   const [packageOrders, setPackageOrders] = useState<PackageOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReplacementDialog, setShowReplacementDialog] = useState(false);
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | PackageOrder | null>(null);
+  const [selectedOrderType, setSelectedOrderType] = useState<'regular' | 'package'>('regular');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { startReorder, reorderData, addToCart } = useCart();
@@ -122,7 +126,8 @@ const Orders = () => {
             quantity,
             meals (
               id,
-              name
+              name,
+              is_active
             )
           )
         `)
@@ -184,28 +189,79 @@ const Orders = () => {
   };
 
   const handleReorder = async (packageOrderId: string) => {
-    if (!startReorder) {
+    // Find the package order and show confirmation modal
+    const packageOrder = packageOrders.find(order => order.id === packageOrderId);
+    if (packageOrder) {
+      setSelectedOrder(packageOrder);
+      setSelectedOrderType('package');
+      setShowReorderModal(true);
+    }
+  };
+
+  const handlePackageReorderAsIs = async () => {
+    const packageOrder = selectedOrder as PackageOrder;
+    if (!packageOrder || !startReorder) {
       toast({
         title: "Error",
-        description: "Reorder functionality is not available.",
+        description: "Unable to process reorder.",
         variant: "destructive",
       });
       return;
     }
 
-    const result = await startReorder(packageOrderId);
+    setShowReorderModal(false);
+    
+    const result = await startReorder(packageOrder.id);
     
     if (result.success) {
       if (result.needsReplacements) {
         // Show replacement dialog
         setShowReplacementDialog(true);
       } else {
-        // All meals available, added directly to cart
+        // All meals available, redirect to cart
         toast({
           title: "Added to Cart!",
           description: "Your package has been added to cart.",
           variant: "success" as any,
         });
+        navigate("/cart");
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to process reorder.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePackageEditInCart = async () => {
+    const packageOrder = selectedOrder as PackageOrder;
+    if (!packageOrder || !startReorder) {
+      toast({
+        title: "Error",
+        description: "Unable to process reorder.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setShowReorderModal(false);
+    
+    const result = await startReorder(packageOrder.id);
+    
+    if (result.success) {
+      if (result.needsReplacements) {
+        // Show replacement dialog first
+        setShowReplacementDialog(true);
+      } else {
+        // All meals available, go to cart for editing
+        toast({
+          title: "Added to Cart!",
+          description: "Package added to cart. You can edit it before checkout.",
+          variant: "success" as any,
+        });
+        navigate("/cart");
       }
     } else {
       toast({
@@ -217,6 +273,32 @@ const Orders = () => {
   };
 
   const handleMealOrderReorder = async (orderId: string) => {
+    // Find the order and show confirmation modal
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setSelectedOrderType('regular');
+      setShowReorderModal(true);
+    }
+  };
+
+  const handleMealReorderAsIs = async () => {
+    const order = selectedOrder as Order;
+    if (!order) return;
+
+    setShowReorderModal(false);
+    await executeMealReorder(order.id, true);
+  };
+
+  const handleMealEditInCart = async () => {
+    const order = selectedOrder as Order;
+    if (!order) return;
+
+    setShowReorderModal(false);
+    await executeMealReorder(order.id, false);
+  };
+
+  const executeMealReorder = async (orderId: string, redirectToCart: boolean = false) => {
     try {
       // Get the original order with its items and coupon info
       const { data: orderData, error: orderError } = await supabase
@@ -320,6 +402,11 @@ const Orders = () => {
         description,
         variant: "success" as any,
       });
+
+      // Redirect to cart if requested
+      if (redirectToCart) {
+        navigate("/cart");
+      }
 
     } catch (error) {
       console.error("Error reordering meals:", error);
@@ -571,6 +658,16 @@ const Orders = () => {
           Order Again
         </Button>
       </div>
+
+      {/* Reorder Confirmation Modal */}
+      <ReorderConfirmationModal
+        open={showReorderModal}
+        onOpenChange={setShowReorderModal}
+        order={selectedOrder}
+        orderType={selectedOrderType}
+        onReorderAsIs={selectedOrderType === 'package' ? handlePackageReorderAsIs : handleMealReorderAsIs}
+        onEditInCart={selectedOrderType === 'package' ? handlePackageEditInCart : handleMealEditInCart}
+      />
 
       {/* Meal Replacement Dialog */}
       <MealReplacementDialog
