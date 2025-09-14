@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,19 @@ const CouponModal = ({
   meals,
   onSubmit
 }: CouponModalProps) => {
+  const codeInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus code field when modal opens
+  useEffect(() => {
+    if (isVisible && !isEdit && codeInputRef.current) {
+      // Small delay to ensure modal is fully rendered
+      const timer = setTimeout(() => {
+        codeInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, isEdit]);
+
   if (!isVisible) return null;
 
   return (
@@ -48,6 +62,7 @@ const CouponModal = ({
             <div>
               <Label htmlFor="code">Coupon Code</Label>
               <Input
+                ref={codeInputRef}
                 id="code"
                 type="text"
                 placeholder="e.g., SAVE20"
@@ -58,7 +73,7 @@ const CouponModal = ({
                 maxLength={20}
               />
               <div className="text-xs text-muted-foreground mt-1">
-                Will be converted to uppercase
+                Will be converted to uppercase • Max 20 characters
               </div>
             </div>
 
