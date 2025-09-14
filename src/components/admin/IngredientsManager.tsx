@@ -299,9 +299,9 @@ const IngredientsManager = () => {
   const tableColumns = [
     {
       key: "name",
-      label: "Name",
+      header: "Name",
       sortable: true,
-      render: (ingredient: Ingredient) => (
+      cell: (value: any, ingredient: Ingredient) => (
         <div>
           <div className="font-medium">{ingredient.name}</div>
           <div className="text-sm text-muted-foreground truncate max-w-[200px]">
@@ -312,32 +312,32 @@ const IngredientsManager = () => {
     },
     {
       key: "calories_per_100g",
-      label: "Calories",
+      header: "Calories",
       sortable: true,
-      render: (ingredient: Ingredient) => `${ingredient.calories_per_100g}`,
+      cell: (value: any, ingredient: Ingredient) => `${ingredient.calories_per_100g}`,
     },
     {
       key: "protein_per_100g",
-      label: "Protein",
+      header: "Protein",
       sortable: true,
-      render: (ingredient: Ingredient) => `${ingredient.protein_per_100g}g`,
+      cell: (value: any, ingredient: Ingredient) => `${ingredient.protein_per_100g}g`,
     },
     {
       key: "carbs_per_100g",
-      label: "Carbs",
+      header: "Carbs",
       sortable: true,
-      render: (ingredient: Ingredient) => `${ingredient.carbs_per_100g}g`,
+      cell: (value: any, ingredient: Ingredient) => `${ingredient.carbs_per_100g}g`,
     },
     {
       key: "fat_per_100g",
-      label: "Fat",
+      header: "Fat",
       sortable: true,
-      render: (ingredient: Ingredient) => `${ingredient.fat_per_100g}g`,
+      cell: (value: any, ingredient: Ingredient) => `${ingredient.fat_per_100g}g`,
     },
     {
       key: "allergens",
-      label: "Allergens",
-      render: (ingredient: Ingredient) => (
+      header: "Allergens",
+      cell: (value: any, ingredient: Ingredient) => (
         <div className="flex flex-wrap gap-1">
           {ingredient.allergens?.slice(0, 2).map((allergen) => (
             <Badge key={allergen.id} variant="secondary" className="text-xs">
@@ -352,28 +352,19 @@ const IngredientsManager = () => {
         </div>
       ),
     },
+  ];
+
+  const ingredientActions = [
     {
-      key: "actions",
-      label: "Actions",
-      render: (ingredient: Ingredient) => (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEdit(ingredient)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDelete(ingredient.id)}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
+      label: "Edit",
+      icon: Edit,
+      onClick: (ingredient: Ingredient) => handleEdit(ingredient),
+    },
+    {
+      label: "Delete",
+      icon: Trash2,
+      onClick: (ingredient: Ingredient) => handleDelete(ingredient.id),
+      variant: "destructive" as const,
     },
   ];
 
@@ -382,14 +373,6 @@ const IngredientsManager = () => {
     { value: "high-protein", label: "High Protein (>15g)" },
     { value: "low-calorie", label: "Low Calorie (<100)" },
     { value: "with-allergens", label: "With Allergens" },
-  ];
-
-  const sortOptions = [
-    { value: "name", label: "Name" },
-    { value: "calories_per_100g", label: "Calories" },
-    { value: "protein_per_100g", label: "Protein" },
-    { value: "carbs_per_100g", label: "Carbs" },
-    { value: "fat_per_100g", label: "Fat" },
   ];
 
   return (
@@ -420,24 +403,26 @@ const IngredientsManager = () => {
 
       {/* Filters and Table */}
       <GenericFiltersBar
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        filterValue={filterBy}
-        onFilterChange={setFilterBy}
-        filterOptions={filterOptions}
-        sortValue={sortBy}
-        onSortChange={setSortBy}
-        sortOptions={sortOptions}
-        sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
+        filters={{ searchTerm: searchQuery, sortBy, sortOrder, viewMode: "list" as const }}
+        onFiltersChange={(newFilters) => {
+          if (newFilters.searchTerm !== undefined) setSearchQuery(newFilters.searchTerm);
+          if (newFilters.sortBy !== undefined) setSortBy(newFilters.sortBy);
+          if (newFilters.sortOrder !== undefined) setSortOrder(newFilters.sortOrder);
+        }}
         totalCount={ingredients.length}
         filteredCount={filteredIngredients.length}
+        entityName="ingredient"
+        entityNamePlural="ingredients"
+        customFilters={filterOptions}
+        customFilterValue={filterBy}
+        onCustomFilterChange={setFilterBy}
         exportLabel="Export Ingredients"
       />
 
       <GenericDataTable
         data={filteredIngredients}
         columns={tableColumns}
+        actions={ingredientActions}
         loading={loading}
         emptyMessage="No ingredients found matching your filters."
       />

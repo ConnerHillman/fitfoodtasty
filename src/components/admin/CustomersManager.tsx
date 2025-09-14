@@ -10,7 +10,7 @@ import { GenericFiltersBar } from "@/components/common/GenericFiltersBar";
 import { StatsCardsGrid } from "@/components/common/StatsCards";
 import { GenericModal } from "@/components/common/GenericModal";
 import AddCustomerDialog from "./AddCustomerDialog";
-import CustomerDetailModal from "./CustomerDetailModal";
+
 import type { CustomerFilters } from "@/types/customer";
 
 const CustomersManager = () => {
@@ -86,9 +86,9 @@ const CustomersManager = () => {
   const tableColumns = [
     {
       key: "display_name",
-      label: "Name",
+      header: "Name",
       sortable: true,
-      render: (customer: any) => (
+      cell: (value: any, customer: any) => (
         <div>
           <div className="font-medium">{customer.display_name}</div>
           <div className="text-sm text-muted-foreground">{customer.user_email}</div>
@@ -97,34 +97,28 @@ const CustomersManager = () => {
     },
     {
       key: "total_orders",
-      label: "Orders",
+      header: "Orders",
       sortable: true,
-      render: (customer: any) => customer.total_orders || 0,
+      cell: (value: any, customer: any) => customer.total_orders || 0,
     },
     {
       key: "total_spent",
-      label: "Total Spent",
+      header: "Total Spent",
       sortable: true,
-      render: (customer: any) => `£${(customer.total_spent || 0).toFixed(2)}`,
+      cell: (value: any, customer: any) => `£${(customer.total_spent || 0).toFixed(2)}`,
     },
     {
       key: "created_at",
-      label: "Joined",
+      header: "Joined",
       sortable: true,
-      render: (customer: any) => new Date(customer.created_at).toLocaleDateString(),
+      cell: (value: any, customer: any) => new Date(customer.created_at).toLocaleDateString(),
     },
+  ];
+
+  const customerActions = [
     {
-      key: "actions",
-      label: "Actions",
-      render: (customer: any) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setSelectedCustomer(customer)}
-        >
-          View Details
-        </Button>
-      ),
+      label: "View Details",
+      onClick: (customer: any) => setSelectedCustomer(customer),
     },
   ];
 
@@ -168,35 +162,60 @@ const CustomersManager = () => {
 
       {/* Filters and Table */}
       <GenericFiltersBar
-        searchValue={filters.searchTerm}
-        onSearchChange={(value) => handleFiltersChange({ searchTerm: value })}
-        filterValue={filters.filterBy}
-        onFilterChange={(value) => handleFiltersChange({ filterBy: value })}
-        filterOptions={filterOptions}
-        sortValue={filters.sortBy}
-        onSortChange={(value) => handleFiltersChange({ sortBy: value })}
-        sortOrder={filters.sortOrder}
-        onSortOrderChange={(value) => handleFiltersChange({ sortOrder: value })}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
         totalCount={customers.length}
         filteredCount={filteredCustomers.length}
-        onExport={handleExport}
+        entityName="customer"
+        entityNamePlural="customers"
+        customFilters={filterOptions}
+        customFilterValue={filters.filterBy}
+        onCustomFilterChange={(value) => handleFiltersChange({ filterBy: value })}
         exportLabel="Export Customers"
+        onExport={handleExport}
       />
 
       <GenericDataTable
         data={filteredCustomers}
         columns={tableColumns}
+        actions={customerActions}
         loading={loading}
         emptyMessage="No customers found matching your filters."
       />
 
       {/* Customer Detail Modal */}
       {selectedCustomer && (
-        <CustomerDetailModal
-          customer={selectedCustomer}
+        <GenericModal
           open={!!selectedCustomer}
           onOpenChange={(open) => !open && setSelectedCustomer(null)}
-        />
+          title={`Customer Details: ${selectedCustomer.display_name}`}
+          size="lg"
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <p className="text-sm text-muted-foreground">{selectedCustomer.display_name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <p className="text-sm text-muted-foreground">{selectedCustomer.user_email}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Total Orders</label>
+                <p className="text-sm text-muted-foreground">{selectedCustomer.total_orders || 0}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Total Spent</label>
+                <p className="text-sm text-muted-foreground">£{(selectedCustomer.total_spent || 0).toFixed(2)}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Joined</label>
+                <p className="text-sm text-muted-foreground">{new Date(selectedCustomer.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+        </GenericModal>
       )}
     </div>
   );
