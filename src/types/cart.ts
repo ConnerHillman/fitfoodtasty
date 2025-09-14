@@ -32,6 +32,13 @@ export interface CartContextType {
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  startReorder?: (packageOrderId: string) => Promise<{ success: boolean; needsReplacements?: boolean; unavailableCount?: number; error?: string }>;
+  reorderData?: {
+    originalOrderId: string;
+    packageData: any;
+    unavailableMeals: any[];
+    replacements: Record<string, string>;
+  };
 }
 
 // Simplified cart item for abandoned cart tracking

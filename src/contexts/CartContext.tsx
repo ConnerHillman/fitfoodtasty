@@ -2,11 +2,18 @@ import React, { createContext, useReducer, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { useAbandonedCart } from '@/hooks/useAbandonedCart';
 import { createContextHook, ContextProviderProps } from './contextUtils';
+import { supabase } from '@/integrations/supabase/client';
 import type { CartItem, CartContextType } from '@/types/cart';
 
 // Cart state and actions for better state management
 interface CartState {
   items: CartItem[];
+  reorderData?: {
+    originalOrderId: string;
+    packageData: any;
+    unavailableMeals: any[];
+    replacements: Record<string, string>;
+  };
 }
 
 type CartAction = 
@@ -15,12 +22,22 @@ type CartAction =
   | { type: 'ADD_PACKAGE'; payload: Omit<CartItem, 'quantity'> }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'CLEAR_CART' };
+  | { type: 'CLEAR_CART' }
+  | { type: 'SET_REORDER_DATA'; payload: { originalOrderId: string; packageData: any; unavailableMeals: any[] } };
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'SET_ITEMS':
-      return { items: action.payload };
+      return { ...state, items: action.payload };
+    
+    case 'SET_REORDER_DATA':
+      return { 
+        ...state, 
+        reorderData: {
+          ...action.payload,
+          replacements: {}
+        }
+      };
     
     case 'ADD_ITEM': {
       const existingItem = state.items.find(
@@ -68,7 +85,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       };
     
     case 'CLEAR_CART':
-      return { items: [] };
+      return { items: [], reorderData: undefined };
     
     default:
       return state;
@@ -80,7 +97,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const useCart = createContextHook(CartContext, 'Cart');
 
 export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+  const [state, dispatch] = useReducer(cartReducer, { items: [], reorderData: undefined });
   const { user } = useAuth();
 
   // Memoized calculations for better performance
@@ -150,6 +167,105 @@ export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_CART' });
   };
 
+  const startReorder = async (packageOrderId: string) => {
+    try {
+      // Get the original package order and its meal selections
+      const { data: packageOrder, error: packageError } = await supabase
+        .from('package_orders')
+        .select(`
+          id,
+          package_id,
+          packages (
+            id,
+            name,
+            meal_count,
+            price,
+            image_url
+          )
+        `)
+        .eq('id', packageOrderId)
+        .single();
+
+      if (packageError) throw packageError;
+
+      const { data: mealSelections, error: selectionsError } = await supabase
+        .from('package_meal_selections')
+        .select(`
+          meal_id,
+          quantity,
+          meals (
+            id,
+            name,
+            is_active,
+            image_url,
+            price,
+            total_calories,
+            total_protein,
+            total_carbs,
+            total_fat,
+            total_fiber
+          )
+        `)
+        .eq('package_order_id', packageOrderId);
+
+      if (selectionsError) throw selectionsError;
+
+      // Check which meals are still available
+      const unavailableMeals = mealSelections.filter(selection => !selection.meals?.is_active);
+      const availableMeals = mealSelections.filter(selection => selection.meals?.is_active);
+
+      if (unavailableMeals.length === 0) {
+        // All meals are still available, add to cart directly
+        const packageCartItem = {
+          id: `reorder-${packageOrder.id}-${Date.now()}`,
+          name: packageOrder.packages.name,
+          description: `Reorder of ${availableMeals.length} meals`,
+          category: 'package',
+          price: packageOrder.packages.price,
+          total_calories: 0,
+          total_protein: 0,
+          total_carbs: 0,
+          total_fat: 0,
+          total_fiber: 0,
+          shelf_life_days: 5,
+          image_url: packageOrder.packages.image_url,
+          packageData: {
+            packageId: packageOrder.packages.id,
+            packageName: packageOrder.packages.name,
+            mealCount: packageOrder.packages.meal_count,
+            selectedMeals: availableMeals.reduce((acc, selection) => {
+              if (selection.meals) {
+                acc[selection.meals.id] = selection.quantity;
+              }
+              return acc;
+            }, {} as Record<string, number>),
+          },
+        };
+
+        addPackageToCart(packageCartItem);
+        return { success: true, needsReplacements: false };
+      } else {
+        // Some meals need replacement
+        dispatch({
+          type: 'SET_REORDER_DATA',
+          payload: {
+            originalOrderId: packageOrderId,
+            packageData: packageOrder.packages,
+            unavailableMeals: unavailableMeals.map(selection => ({
+              mealId: selection.meal_id,
+              mealName: selection.meals?.name || 'Unknown meal',
+              quantity: selection.quantity
+            }))
+          }
+        });
+        return { success: true, needsReplacements: true, unavailableCount: unavailableMeals.length };
+      }
+    } catch (error) {
+      console.error('Error starting reorder:', error);
+      return { success: false, error: 'Failed to start reorder' };
+    }
+  };
+
   const value: CartContextType = {
     items: state.items,
     addToCart,
@@ -159,6 +275,8 @@ export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
     clearCart,
     getTotalItems: calculations.getTotalItems,
     getTotalPrice: calculations.getTotalPrice,
+    startReorder,
+    reorderData: state.reorderData,
   };
 
   return (
