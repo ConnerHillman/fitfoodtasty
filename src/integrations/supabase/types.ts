@@ -393,6 +393,36 @@ export type Database = {
         }
         Relationships: []
       }
+      filters: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          threshold: Json | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          threshold?: Json | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          threshold?: Json | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fulfillment_settings: {
         Row: {
           created_at: string

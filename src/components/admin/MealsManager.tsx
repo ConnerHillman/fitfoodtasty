@@ -17,6 +17,7 @@ import MealFormWithIngredients from "./MealFormWithIngredients";
 import MealBuilder from "./MealBuilder";
 import MealAnalytics from "./MealAnalytics";
 import MealDetailModal from "./MealDetailModal";
+import FiltersManager from "./FiltersManager";
 import CategoryTag from "@/components/CategoryTag";
 
 import type { Meal, MealFilters } from "@/types/meal";
@@ -273,6 +274,10 @@ const MealsManager = () => {
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
+          <TabsTrigger value="filters">
+            <FlaskConical className="h-4 w-4 mr-2" />
+            Filters
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="meals" className="space-y-6">
@@ -403,6 +408,10 @@ const MealsManager = () => {
             </div>
           </div>
           <MealAnalytics />
+        </TabsContent>
+
+        <TabsContent value="filters" className="space-y-6">
+          <FiltersManager />
         </TabsContent>
       </Tabs>
 
