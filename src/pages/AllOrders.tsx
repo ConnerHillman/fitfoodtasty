@@ -1,25 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { 
-  Package,
-  Search,
-  Filter,
-  CalendarIcon,
-  Eye,
-  ArrowLeft,
-  RefreshCw
-} from 'lucide-react';
-import type { DateRange } from 'react-day-picker';
+import { Package, Eye, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
+
+// Import new generic components
+import { GenericFiltersBar, StatsCardsGrid, GenericDataTable } from '@/components/common';
+import type { StatCardData, ColumnDef, ActionItem } from '@/components/common';
+
 import CustomerLink from "@/components/admin/CustomerLink";
 import OrderLink from "@/components/admin/OrderLink";
 
@@ -39,13 +30,26 @@ interface Order {
   };
 }
 
+interface OrderFilters {
+  searchTerm: string;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  viewMode: "list" | "card";
+}
+
 const AllOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Filter state
+  const [filters, setFilters] = useState<OrderFilters>({
+    searchTerm: '',
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    viewMode: 'list'
+  });
 
   useEffect(() => {
     fetchAllOrders();
@@ -98,15 +102,15 @@ const AllOrders: React.FC = () => {
         type: 'package' as const
       }));
 
-      const allOrders = [...formattedRegularOrders, ...formattedPackageOrders]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const allOrders = [...formattedRegularOrders, ...formattedPackageOrders];
+      allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       setOrders(allOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
         title: "Error",
-        description: "Failed to load orders.",
+        description: "Failed to load orders",
         variant: "destructive",
       });
     } finally {
@@ -114,194 +118,199 @@ const AllOrders: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return 'default';
-      case 'pending':
-        return 'secondary';
-      case 'cancelled':
-        return 'destructive';
-      case 'delivered':
-        return 'outline';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.customer_email || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const orderDate = new Date(order.created_at);
-    const matchesDateRange = (!dateRange?.from || orderDate >= dateRange.from) && 
-                             (!dateRange?.to || orderDate <= dateRange.to);
-    
-    return matchesSearch && matchesDateRange;
-  });
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
+  // Filter orders based on search
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order =>
+      order.id.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      (order.customer_name || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      (order.customer_email || '').toLowerCase().includes(filters.searchTerm.toLowerCase())
     );
-  }
+  }, [orders, filters.searchTerm]);
+
+  // Stats data
+  const statsData: StatCardData[] = useMemo(() => {
+    const totalRevenue = orders.reduce((sum, order) => sum + order.total_amount, 0);
+    const pendingOrders = orders.filter(order => order.status === 'pending');
+    const todayOrders = orders.filter(order => {
+      const today = new Date().toDateString();
+      return new Date(order.created_at).toDateString() === today;
+    });
+
+    return [
+      {
+        id: 'total',
+        title: 'Total Orders',
+        value: orders.length,
+        icon: Package,
+        iconColor: 'text-blue-500'
+      },
+      {
+        id: 'revenue',
+        title: 'Total Revenue',
+        value: formatCurrency(totalRevenue),
+        icon: CreditCard,
+        iconColor: 'text-green-500'
+      },
+      {
+        id: 'pending',
+        title: 'Pending Orders',
+        value: pendingOrders.length,
+        icon: Clock,
+        iconColor: 'text-orange-500'
+      },
+      {
+        id: 'today',
+        title: 'Today\'s Orders',
+        value: todayOrders.length,
+        icon: ShoppingBag,
+        iconColor: 'text-purple-500'
+      }
+    ];
+  }, [orders]);
+
+  // Table columns
+  const columns: ColumnDef<Order>[] = [
+    {
+      key: 'id',
+      header: 'Order ID',
+      width: '120px',
+      accessor: (order) => (
+        <OrderLink orderId={order.id}>
+          {order.id.slice(0, 8)}...
+        </OrderLink>
+      )
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      accessor: (order) => (
+        <Badge variant={order.type === 'package' ? 'default' : 'secondary'}>
+          {order.type === 'package' ? 'Package' : 'Individual'}
+        </Badge>
+      )
+    },
+    {
+      key: 'customer_name',
+      header: 'Customer',
+      accessor: (order) => (
+        <div>
+          <CustomerLink 
+            customerId={order.user_id} 
+            customerName={order.customer_name || 'Unknown'}
+          />
+          <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+        </div>
+      )
+    },
+    {
+      key: 'total_amount',
+      header: 'Amount',
+      cell: (value: number) => formatCurrency(value),
+      className: 'text-right'
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      accessor: (order) => (
+        <Badge variant={
+          order.status === 'delivered' ? 'default' :
+          order.status === 'pending' ? 'secondary' :
+          order.status === 'cancelled' ? 'destructive' : 'outline'
+        }>
+          {order.status}
+        </Badge>
+      )
+    },
+    {
+      key: 'created_at',
+      header: 'Date',
+      cell: (value: string) => formatDate(value, { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+  ];
+
+  // Table actions
+  const actions: ActionItem<Order>[] = [
+    {
+      label: 'View Details',
+      icon: Eye,
+      onClick: (order) => navigate(`/orders/${order.id}`),
+      variant: 'outline'
+    }
+  ];
+
+  const sortOptions = [
+    { value: 'created_at', label: 'Date Created' },
+    { value: 'total_amount', label: 'Amount' },
+    { value: 'status', label: 'Status' },
+    { value: 'customer_name', label: 'Customer Name' }
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <Button onClick={fetchAllOrders} size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">All Orders</h1>
+            <p className="text-muted-foreground">
+              View and manage all customer orders
+            </p>
+          </div>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={fetchAllOrders}
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by ID, customer name, or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date Range</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dateRange?.from && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange?.from ? (
-                      dateRange.to ? (
-                        `${format(dateRange.from, "MMM d")} - ${format(dateRange.to, "MMM d, yyyy")}`
-                      ) : (
-                        format(dateRange.from, "PPP")
-                      )
-                    ) : (
-                      <span>Pick date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    numberOfMonths={1}
-                    onDayClick={(day, _modifiers, e) => {
-                      if (e.detail === 2) {
-                        setDateRange({ from: day, to: day });
-                      }
-                    }}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats Cards */}
+      <StatsCardsGrid 
+        stats={statsData}
+        columns={4}
+        loading={loading}
+      />
 
-      {/* Orders List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Orders ({filteredOrders.length})</CardTitle>
-          <CardDescription>
-            Click on any order to view detailed information
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {filteredOrders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>No orders found matching your criteria</p>
-              </div>
-            ) : (
-              filteredOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-muted/50 hover:bg-muted/30 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/orders/${order.id}`)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Package className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2 font-bold text-lg">
-                        <CustomerLink 
-                          customerId={order.user_id}
-                          customerName={order.customer_name || 'Customer'}
-                          variant="ghost"
-                          className="font-bold text-lg"
-                        />
-                        <span className="text-sm text-muted-foreground font-normal">
-                          <OrderLink orderId={order.id} className="text-muted-foreground hover:text-foreground">
-                            #{order.id.slice(-8)}
-                          </OrderLink> • {order.customer_email}
-                        </span>
-                        {order.type === 'package' && (
-                          <Badge variant="outline" className="text-xs">
-                            Package
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {order.type === 'package' 
-                          ? `${order.package_meal_selections?.length || 0} selections`
-                          : `${order.order_items?.length || 0} items`
-                        } • {format(new Date(order.created_at), 'PPP p')}
-                      </div>
-                      {order.type === 'package' && order.packages && (
-                        <div className="text-xs text-primary">
-                          {order.packages.name}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-lg">
-                      £{order.total_amount.toFixed(2)}
-                    </div>
-                    <Badge variant={getStatusColor(order.status)} className="mt-1">
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </Badge>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      <Eye className="h-3 w-3 inline mr-1" />
-                      Click to view
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filters */}
+      <GenericFiltersBar
+        filters={filters}
+        onFiltersChange={(newFilters) => setFilters(prev => ({ ...prev, ...newFilters }))}
+        totalCount={orders.length}
+        filteredCount={filteredOrders.length}
+        searchPlaceholder="Search orders by ID, customer name, or email..."
+        sortOptions={sortOptions}
+        viewModes={['list']}
+        entityName="order"
+        entityNamePlural="orders"
+      />
+
+      {/* Orders Table */}
+      <GenericDataTable
+        data={filteredOrders}
+        columns={columns}
+        actions={actions}
+        loading={loading}
+        getRowId={(order) => order.id}
+        onRowClick={(order) => navigate(`/orders/${order.id}`)}
+        emptyMessage="No orders found"
+        emptyDescription="Orders will appear here once customers start placing them"
+      />
     </div>
   );
 };

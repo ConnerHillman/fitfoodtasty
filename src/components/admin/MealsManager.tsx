@@ -1,18 +1,26 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, BarChart3, FlaskConical, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, BarChart3, FlaskConical, FileText, Calculator, Edit, ImageIcon, Eye, Power } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMealsData } from "@/hooks/useMealsData";
 import { useFilteredMeals } from "@/hooks/useFilteredMeals";
-import { MealFiltersBar } from "./meals/MealFiltersBar";
+import { formatCurrency } from "@/lib/utils";
+
+// Import new generic components
+import { GenericFiltersBar, StatsCardsGrid, GenericDataTable, GenericModal } from "@/components/common";
+
+// Import existing components
 import { MealGridView } from "./meals/MealGridView";
 import MealFormWithIngredients from "./MealFormWithIngredients";
 import MealBuilder from "./MealBuilder";
 import MealAnalytics from "./MealAnalytics";
 import MealDetailModal from "./MealDetailModal";
-import type { MealFilters } from "@/types/meal";
+import CategoryTag from "@/components/CategoryTag";
+
+import type { Meal, MealFilters } from "@/types/meal";
+import type { StatCardData, ColumnDef, ActionItem } from "@/components/common";
 
 const MealsManager = () => {
   const { toast } = useToast();
@@ -36,8 +44,31 @@ const MealsManager = () => {
 
   const filteredMeals = useFilteredMeals(meals, filters);
 
-  const handleFiltersChange = (newFilters: Partial<MealFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+  // Convert filters to match GenericFiltersBar interface
+  const genericFilters = useMemo(() => ({
+    searchTerm: filters.searchQuery,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+    viewMode: filters.viewMode
+  }), [filters]);
+
+  const handleFiltersChange = (newFilters: any) => {
+    const updatedFilters: Partial<MealFilters> = {};
+    
+    if ('searchTerm' in newFilters) {
+      updatedFilters.searchQuery = newFilters.searchTerm;
+    }
+    if ('sortBy' in newFilters) {
+      updatedFilters.sortBy = newFilters.sortBy;
+    }
+    if ('sortOrder' in newFilters) {
+      updatedFilters.sortOrder = newFilters.sortOrder;
+    }
+    if ('viewMode' in newFilters) {
+      updatedFilters.viewMode = newFilters.viewMode;
+    }
+    
+    setFilters(prev => ({ ...prev, ...updatedFilters }));
   };
 
   const handleViewMeal = (mealId: string) => {
@@ -56,6 +87,165 @@ const MealsManager = () => {
       description: "Meal editing feature is being developed",
     });
   };
+
+  // Stats data for the new StatsCardsGrid
+  const statsData: StatCardData[] = useMemo(() => {
+    const activeMeals = meals.filter(m => m.is_active);
+    const inactiveMeals = meals.filter(m => !m.is_active);
+    const avgPrice = meals.reduce((sum, m) => sum + (m.price || 0), 0) / meals.length || 0;
+    const avgCalories = meals.reduce((sum, m) => sum + (m.total_calories || 0), 0) / meals.length || 0;
+
+    return [
+      {
+        id: 'total',
+        title: 'Total Meals',
+        value: meals.length,
+        icon: FlaskConical,
+        iconColor: 'text-blue-500'
+      },
+      {
+        id: 'active',
+        title: 'Active Meals',
+        value: activeMeals.length,
+        icon: Power,
+        iconColor: 'text-green-500',
+        subtitle: `${inactiveMeals.length} inactive`
+      },
+      {
+        id: 'avg_price',
+        title: 'Average Price',
+        value: formatCurrency(avgPrice),
+        icon: Calculator,
+        iconColor: 'text-emerald-500'
+      },
+      {
+        id: 'avg_calories',
+        title: 'Average Calories',
+        value: Math.round(avgCalories),
+        subtitle: 'per meal',
+        icon: BarChart3,
+        iconColor: 'text-orange-500'
+      }
+    ];
+  }, [meals]);
+
+  // Table columns for the new GenericDataTable
+  const columns: ColumnDef<Meal>[] = [
+    {
+      key: 'image_url',
+      header: 'Image',
+      width: '60px',
+      accessor: (meal) => (
+        <div className="h-10 w-10 rounded overflow-hidden bg-muted flex items-center justify-center">
+          {meal.image_url ? (
+            <img src={meal.image_url} alt={meal.name} className="h-full w-full object-cover" />
+          ) : (
+            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'name',
+      header: 'Name',
+      accessor: (meal) => (
+        <div>
+          <div className="font-medium">{meal.name}</div>
+          {meal.description && (
+            <div className="text-sm text-muted-foreground line-clamp-1">{meal.description}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      accessor: (meal) => <CategoryTag category={meal.category} />
+    },
+    {
+      key: 'price',
+      header: 'Price',
+      cell: (value: number) => formatCurrency(value || 0),
+      className: 'text-right'
+    },
+    {
+      key: 'total_calories',
+      header: 'Calories',
+      cell: (value: number) => `${Math.round(value || 0)} kcal`,
+      className: 'text-right'
+    },
+    {
+      key: 'total_protein',
+      header: 'Protein',
+      cell: (value: number) => `${(value || 0).toFixed(1)}g`,
+      className: 'text-right'
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
+      accessor: (meal) => (
+        <Badge variant={meal.is_active ? "default" : "secondary"}>
+          {meal.is_active ? "Active" : "Inactive"}
+        </Badge>
+      )
+    }
+  ];
+
+  // Table actions for the new GenericDataTable
+  const actions: ActionItem<Meal>[] = [
+    {
+      label: 'View',
+      icon: Eye,
+      onClick: (meal) => handleViewMeal(meal.id),
+      variant: 'outline'
+    },
+    {
+      label: 'Build',
+      icon: Calculator,
+      onClick: (meal) => handleBuildMeal(meal.id),
+      variant: 'outline'
+    },
+    {
+      label: 'Edit',
+      icon: Edit,
+      onClick: (meal) => handleEditMeal(meal.id),
+      variant: 'outline'
+    },
+    {
+      label: 'Toggle Status',
+      icon: Power,
+      onClick: (meal) => {
+        // Show confirmation for deactivation, direct action for activation
+        if (meal.is_active) {
+          // Could add confirmation dialog here if needed
+          toggleMealActive(meal);
+        } else {
+          toggleMealActive(meal);
+        }
+      },
+      variant: 'outline'
+    }
+  ];
+
+  // Filter options for GenericFiltersBar
+  const categoryFilterOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...categories.map(cat => ({ value: cat.name, label: cat.name }))
+  ];
+
+  const statusFilterOptions = [
+    { value: 'all', label: 'All Status' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' }
+  ];
+
+  const sortOptions = [
+    { value: 'created_at', label: 'Date Created' },
+    { value: 'name', label: 'Name' },
+    { value: 'price', label: 'Price' },
+    { value: 'total_calories', label: 'Calories' },
+    { value: 'category', label: 'Category' }
+  ];
 
   if (loading) {
     return <div>Loading...</div>;
@@ -86,18 +276,55 @@ const MealsManager = () => {
         </TabsList>
 
         <TabsContent value="meals" className="space-y-6">
-          <MealFiltersBar
-            filters={filters}
-            categories={categories}
+          {/* Stats Cards using new component */}
+          <StatsCardsGrid 
+            stats={statsData}
+            columns={4}
+            loading={loading}
+          />
+
+          {/* Filters using new GenericFiltersBar */}
+          <GenericFiltersBar
+            filters={genericFilters}
             onFiltersChange={handleFiltersChange}
             totalCount={meals.length}
             filteredCount={filteredMeals.length}
+            searchPlaceholder="Search meals by name, description, or category..."
+            customFilters={[
+              ...statusFilterOptions,
+              ...categoryFilterOptions
+            ]}
+            customFilterValue={filters.statusFilter}
+            onCustomFilterChange={(value) => {
+              if (['all', 'active', 'inactive'].includes(value)) {
+                setFilters(prev => ({ ...prev, statusFilter: value as any }));
+              } else {
+                setFilters(prev => ({ ...prev, categoryFilter: value }));
+              }
+            }}
+            sortOptions={sortOptions}
+            viewModes={['list', 'grid']}
+            onExport={() => toast({ title: "Export", description: "Export functionality coming soon" })}
+            entityName="meal"
+            entityNamePlural="meals"
           />
 
-          {filteredMeals.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No meals found matching your filters.</p>
-            </div>
+          {/* Conditional rendering based on view mode */}
+          {filters.viewMode === 'list' ? (
+            <GenericDataTable
+              data={filteredMeals}
+              columns={columns}
+              actions={actions}
+              loading={loading}
+              getRowId={(meal) => meal.id}
+              onRowClick={(meal) => handleViewMeal(meal.id)}
+              emptyMessage="No meals found"
+              emptyDescription="Get started by adding your first meal"
+              emptyAction={{
+                label: "Add Meal",
+                onClick: () => setIsNewMealFormOpen(true)
+              }}
+            />
           ) : (
             <MealGridView
               meals={filteredMeals}
@@ -108,39 +335,39 @@ const MealsManager = () => {
             />
           )}
 
-          {/* New Meal Form Dialog */}
-          <Dialog open={isNewMealFormOpen} onOpenChange={setIsNewMealFormOpen}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Meal</DialogTitle>
-                <DialogDescription>Create a new meal with ingredients and nutritional information.</DialogDescription>
-              </DialogHeader>
-              <MealFormWithIngredients
-                onSuccess={() => {
-                  setIsNewMealFormOpen(false);
-                  fetchMeals();
-                }}
-                onCancel={() => setIsNewMealFormOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          {/* New Meal Form using GenericModal */}
+          <GenericModal
+            open={isNewMealFormOpen}
+            onOpenChange={setIsNewMealFormOpen}
+            title="Add New Meal"
+            description="Create a new meal with ingredients and nutritional information."
+            size="4xl"
+          >
+            <MealFormWithIngredients
+              onSuccess={() => {
+                setIsNewMealFormOpen(false);
+                fetchMeals();
+              }}
+              onCancel={() => setIsNewMealFormOpen(false)}
+            />
+          </GenericModal>
 
-          {/* Builder Dialog */}
-          <Dialog open={isBuilderOpen && !!selectedMealId} onOpenChange={setIsBuilderOpen}>
-            <DialogContent className="max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Build Meal Nutrition</DialogTitle>
-                <DialogDescription>Adjust ingredients and quantities to update nutrition in real time.</DialogDescription>
-              </DialogHeader>
-              {selectedMealId && (
-                <MealBuilder
-                  mealId={selectedMealId}
-                  onClose={() => setIsBuilderOpen(false)}
-                  onNutritionUpdate={() => fetchMeals()}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
+          {/* Builder using GenericModal */}
+          <GenericModal
+            open={isBuilderOpen && !!selectedMealId}
+            onOpenChange={setIsBuilderOpen}
+            title="Build Meal Nutrition"
+            description="Adjust ingredients and quantities to update nutrition in real time."
+            size="5xl"
+          >
+            {selectedMealId && (
+              <MealBuilder
+                mealId={selectedMealId}
+                onClose={() => setIsBuilderOpen(false)}
+                onNutritionUpdate={() => fetchMeals()}
+              />
+            )}
+          </GenericModal>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">

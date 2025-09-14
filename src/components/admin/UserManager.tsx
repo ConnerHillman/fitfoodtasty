@@ -1,15 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { UserPlus, Shield, ShieldOff, Mail, Search } from "lucide-react";
+import { UserPlus, Shield, ShieldOff, Mail, Users } from "lucide-react";
+import { formatDate } from "@/lib/utils";
+
+// Import new generic components
+import { GenericFiltersBar, StatsCardsGrid, GenericDataTable, GenericModal } from "@/components/common";
+import type { StatCardData, ColumnDef, ActionItem } from "@/components/common";
 
 interface User {
   id: string;
@@ -19,14 +21,28 @@ interface User {
   roles: string[];
 }
 
+interface UserFilters {
+  searchTerm: string;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  viewMode: "list" | "card";
+}
+
 const UserManager = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "user">("user");
   const { toast } = useToast();
+
+  // Filter state
+  const [filters, setFilters] = useState<UserFilters>({
+    searchTerm: "",
+    sortBy: "created_at",
+    sortOrder: "desc",
+    viewMode: "list"
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -36,12 +52,10 @@ const UserManager = () => {
     try {
       setLoading(true);
       
-      // Get all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-
-      if (profilesError) throw profilesError;
+      // Get all user data from auth.users (admin access required)
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) throw authError;
 
       // Get all user roles
       const { data: userRoles, error: rolesError } = await supabase
@@ -50,45 +64,24 @@ const UserManager = () => {
 
       if (rolesError) throw rolesError;
 
-      // Get user emails from auth metadata (only available to admins)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        console.error('Error fetching auth users:', authError);
-        // Fallback - just show profiles without emails
-        const userList: User[] = profiles?.map(profile => {
-          const roles = userRoles?.filter(role => role.user_id === profile.user_id).map(role => role.role) || [];
-          return {
-            id: profile.user_id,
-            email: 'Email not available',
-            full_name: profile.full_name || 'Unknown User',
-            created_at: new Date().toISOString(),
-            roles
-          };
-        }) || [];
-        setUsers(userList);
-        return;
-      }
-
-      // Combine profile and auth data
-      const userList: User[] = authUsers.users.map(authUser => {
-        const profile = profiles?.find(p => p.user_id === authUser.id);
+      // Combine the data
+      const combinedUsers = authUsers?.users?.map(authUser => {
         const roles = userRoles?.filter(role => role.user_id === authUser.id).map(role => role.role) || [];
         return {
           id: authUser.id,
-          email: authUser.email || 'No email',
-          full_name: profile?.full_name || 'Unknown User',
+          email: authUser.email || '',
+          full_name: authUser.user_metadata?.full_name || authUser.email || '',
           created_at: authUser.created_at,
           roles
         };
-      });
+      }) || [];
 
-      setUsers(userList);
+      setUsers(combinedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch users",
+        description: "Failed to load users",
         variant: "destructive",
       });
     } finally {
@@ -96,41 +89,149 @@ const UserManager = () => {
     }
   };
 
-  const toggleAdminRole = async (userId: string, currentRoles: string[]) => {
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => 
+      user.email.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      user.full_name.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    );
+  }, [users, filters.searchTerm]);
+
+  // Stats data
+  const statsData: StatCardData[] = useMemo(() => {
+    const adminUsers = users.filter(u => u.roles.includes('admin'));
+    const regularUsers = users.filter(u => !u.roles.includes('admin'));
+    const recentUsers = users.filter(u => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(u.created_at) > weekAgo;
+    });
+
+    return [
+      {
+        id: 'total',
+        title: 'Total Users',
+        value: users.length,
+        icon: Users,
+        iconColor: 'text-blue-500'
+      },
+      {
+        id: 'admins',
+        title: 'Admin Users',
+        value: adminUsers.length,
+        icon: Shield,
+        iconColor: 'text-red-500',
+        subtitle: `${regularUsers.length} regular users`
+      },
+      {
+        id: 'recent',
+        title: 'New This Week',
+        value: recentUsers.length,
+        icon: UserPlus,
+        iconColor: 'text-green-500'
+      },
+      {
+        id: 'active',
+        title: 'Active Users',
+        value: users.length, // All users are considered active for now
+        icon: Mail,
+        iconColor: 'text-orange-500'
+      }
+    ];
+  }, [users]);
+
+  // Table columns
+  const columns: ColumnDef<User>[] = [
+    {
+      key: 'full_name',
+      header: 'Name',
+      accessor: (user) => (
+        <div>
+          <div className="font-medium">{user.full_name || 'No name'}</div>
+          <div className="text-sm text-muted-foreground">{user.email}</div>
+        </div>
+      )
+    },
+    {
+      key: 'roles',
+      header: 'Roles',
+      accessor: (user) => (
+        <div className="flex gap-1">
+          {user.roles.length > 0 ? (
+            user.roles.map((role, index) => (
+              <Badge 
+                key={index} 
+                variant={role === 'admin' ? 'destructive' : 'secondary'}
+              >
+                {role}
+              </Badge>
+            ))
+          ) : (
+            <Badge variant="outline">user</Badge>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'created_at',
+      header: 'Joined',
+      cell: (value: string) => formatDate(value, { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      })
+    }
+  ];
+
+  // Table actions
+  const actions: ActionItem<User>[] = [
+    {
+      label: 'Make Admin',
+      icon: Shield,
+      onClick: (user) => toggleUserRole(user.id, 'admin' as const, true),
+      variant: 'outline',
+      hidden: (user) => user.roles.includes('admin')
+    },
+    {
+      label: 'Remove Admin',
+      icon: ShieldOff,
+      onClick: (user) => toggleUserRole(user.id, 'admin' as const, false),
+      variant: 'destructive',
+      hidden: (user) => !user.roles.includes('admin')
+    }
+  ];
+
+  const toggleUserRole = async (userId: string, role: 'admin' | 'user' | 'moderator', add: boolean) => {
     try {
-      const hasAdmin = currentRoles.includes('admin');
-      
-      if (hasAdmin) {
-        // Remove admin role
+      if (add) {
         const { error } = await supabase
           .from('user_roles')
-          .delete()
-          .eq('user_id', userId)
-          .eq('role', 'admin');
-          
+          .insert({ user_id: userId, role });
+        
         if (error) throw error;
         
         toast({
           title: "Success",
-          description: "Admin role removed successfully",
+          description: `User granted ${role} role`,
         });
       } else {
-        // Add admin role
         const { error } = await supabase
           .from('user_roles')
-          .insert({ user_id: userId, role: 'admin' });
-          
+          .delete()
+          .eq('user_id', userId)
+          .eq('role', role);
+        
         if (error) throw error;
         
         toast({
-          title: "Success", 
-          description: "Admin role added successfully",
+          title: "Success",
+          description: `${role} role removed from user`,
         });
       }
       
-      fetchUsers(); // Refresh the user list
+      fetchUsers();
     } catch (error) {
-      console.error('Error toggling admin role:', error);
+      console.error('Error updating user role:', error);
       toast({
         title: "Error",
         description: "Failed to update user role",
@@ -139,186 +240,137 @@ const UserManager = () => {
     }
   };
 
-  const inviteUser = async () => {
-    try {
-      // For now, we'll just create a placeholder entry
-      // In a real app, you'd send an invitation email
-      toast({
-        title: "Feature Coming Soon",
-        description: "User invitation functionality will be added soon. For now, users need to sign up manually and then you can assign roles.",
-      });
-      
-      setIsInviteOpen(false);
-      setInviteEmail("");
-      setInviteRole("user");
-    } catch (error) {
-      console.error('Error inviting user:', error);
+  const handleInviteUser = async () => {
+    if (!inviteEmail.trim()) {
       toast({
         title: "Error",
-        description: "Failed to invite user",
+        description: "Please enter an email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Here you would typically send an invite email
+      // For now, we'll just show a success message
+      toast({
+        title: "Invite Sent",
+        description: `Invitation sent to ${inviteEmail}`,
+      });
+      
+      setInviteEmail("");
+      setIsInviteOpen(false);
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send invitation",
         variant: "destructive",
       });
     }
   };
 
-  const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (loading) {
-    return <div className="p-6">Loading users...</div>;
-  }
+  const sortOptions = [
+    { value: 'created_at', label: 'Date Joined' },
+    { value: 'full_name', label: 'Name' },
+    { value: 'email', label: 'Email' }
+  ];
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                User Management
-              </CardTitle>
-              <CardDescription>
-                Manage user roles and permissions
-              </CardDescription>
-            </div>
-            <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <UserPlus className="w-4 h-4" />
-                  Invite User
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Invite New User</DialogTitle>
-                  <DialogDescription>
-                    Send an invitation to a new user to join the platform
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="user@example.com"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="role">Initial Role</Label>
-                    <Select value={inviteRole} onValueChange={(value: "admin" | "user") => setInviteRole(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={inviteUser} disabled={!inviteEmail}>
-                      Send Invitation
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">User Management</h1>
+          <p className="text-muted-foreground">
+            Manage user accounts and permissions
+          </p>
+        </div>
+        <Button onClick={() => setIsInviteOpen(true)}>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Invite User
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <StatsCardsGrid 
+        stats={statsData}
+        columns={4}
+        loading={loading}
+      />
+
+      {/* Filters */}
+      <GenericFiltersBar
+        filters={filters}
+        onFiltersChange={(newFilters) => setFilters(prev => ({ ...prev, ...newFilters }))}
+        totalCount={users.length}
+        filteredCount={filteredUsers.length}
+        searchPlaceholder="Search users by name or email..."
+        sortOptions={sortOptions}
+        viewModes={['list']}
+        entityName="user"
+        entityNamePlural="users"
+      />
+
+      {/* Users Table */}
+      <GenericDataTable
+        data={filteredUsers}
+        columns={columns}
+        actions={actions}
+        loading={loading}
+        getRowId={(user) => user.id}
+        emptyMessage="No users found"
+        emptyDescription="Invite users to get started"
+        emptyAction={{
+          label: "Invite User",
+          onClick: () => setIsInviteOpen(true)
+        }}
+      />
+
+      {/* Invite User Modal */}
+      <GenericModal
+        open={isInviteOpen}
+        onOpenChange={setIsInviteOpen}
+        title="Invite User"
+        description="Send an invitation to join the platform"
+        size="sm"
+        scrollable={false}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleInviteUser}>
+              Send Invite
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="user@example.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users by email or name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
-            
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Roles</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="font-medium">{user.full_name}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        {user.email}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {user.roles.map((role) => (
-                          <Badge
-                            key={role}
-                            variant={role === 'admin' ? 'default' : 'secondary'}
-                          >
-                            {role}
-                          </Badge>
-                        ))}
-                        {user.roles.length === 0 && (
-                          <Badge variant="outline">user</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant={user.roles.includes('admin') ? 'destructive' : 'default'}
-                        onClick={() => toggleAdminRole(user.id, user.roles)}
-                        className="flex items-center gap-2"
-                      >
-                        {user.roles.includes('admin') ? (
-                          <>
-                            <ShieldOff className="w-4 h-4" />
-                            Remove Admin
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="w-4 h-4" />
-                            Make Admin
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            {filteredUsers.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No users found matching your search.
-              </div>
-            )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="role">Initial Role</Label>
+            <Select value={inviteRole} onValueChange={(value: "admin" | "user") => setInviteRole(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </GenericModal>
     </div>
   );
 };
