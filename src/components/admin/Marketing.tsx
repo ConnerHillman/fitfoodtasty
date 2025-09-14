@@ -434,9 +434,7 @@ const Marketing = () => {
     };
 
     const handleUsageClick = (coupon: any) => {
-      const usageCount = usageStats[coupon.code] || 0;
-      if (usageCount === 0) return; // Don't open modal if no usage
-      
+      // Always open the modal to allow testing even with zero usage
       setSelectedCouponUsage(coupon);
       setShowUsageModal(true);
       fetchCouponUsageOrders(coupon.code);
@@ -778,9 +776,9 @@ const Marketing = () => {
                                 className={`text-sm transition-colors ${
                                   (usageStats[coupon.code] || 0) > 0 
                                     ? 'text-blue-600 hover:text-blue-800 cursor-pointer underline' 
-                                    : 'text-muted-foreground cursor-default'
+                                    : 'text-muted-foreground hover:text-foreground/80 cursor-pointer underline'
                                 }`}
-                                disabled={(usageStats[coupon.code] || 0) === 0}
+                                title="View orders that used this coupon"
                               >
                                 {usageStats[coupon.code] || 0} uses
                               </button>
