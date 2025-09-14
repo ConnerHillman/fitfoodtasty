@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // State variables
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
@@ -679,7 +681,8 @@ const Cart = () => {
                 )}
                 
                 {/* Desktop Calendar Button */}
-                <PopoverTrigger asChild>
+                {!isMobile && (
+                  <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
@@ -694,7 +697,8 @@ const Cart = () => {
                         <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
                       )}
                      </Button>
-                </PopoverTrigger>
+                  </PopoverTrigger>
+                )}
               </div>
 
               {/* Payment Form - Only for authenticated users */}
@@ -865,7 +869,8 @@ const Cart = () => {
                 )}
                 
                 {/* Mobile Calendar Button */}
-                <PopoverTrigger asChild>
+                {isMobile && (
+                  <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
@@ -880,7 +885,8 @@ const Cart = () => {
                       <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
                     )}
                   </Button>
-                </PopoverTrigger>
+                  </PopoverTrigger>
+                )}
               </div>
 
               {/* Payment Form - Only for authenticated users */}
@@ -922,8 +928,13 @@ const Cart = () => {
        </div>
        </div>
       
-      {/* Single Shared Calendar Popover */}
-      <PopoverContent className="w-auto p-0" side="bottom" align="center" sideOffset={4}>
+       {/* Single Shared Calendar Popover */}
+       <PopoverContent 
+         className="w-auto p-0" 
+         side="bottom" 
+         align={isMobile ? "center" : "start"} 
+         sideOffset={4}
+       >
         <Calendar
           mode="single"
           selected={requestedDeliveryDate ? new Date(requestedDeliveryDate + 'T12:00:00') : undefined}
