@@ -577,17 +577,30 @@ const Cart = () => {
                     <span>£{(collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0).toFixed(2)}</span>
                   </div>
                 )}
-                {couponApplied && couponDiscount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount ({couponDiscount}%)</span>
-                    <span>-£{((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)) * couponDiscount / 100).toFixed(2)}</span>
-                  </div>
-                )}
+                
+                {/* Original Total (crossed out if discount applied) */}
                 <div className="border-t pt-4">
-                  <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
-                    <span>£{getDiscountedTotal().toFixed(2)}</span>
-                  </div>
+                  {couponApplied && couponDiscount > 0 ? (
+                    <>
+                      <div className="flex justify-between text-gray-500">
+                        <span>Original Total</span>
+                        <span className="line-through">£{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-green-600 font-medium">
+                        <span>Discount ({couponDiscount}%)</span>
+                        <span>-£{((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)) * couponDiscount / 100).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold text-lg text-green-700 mt-2">
+                        <span>Total</span>
+                        <span>£{getDiscountedTotal().toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between font-semibold text-lg">
+                      <span>Total</span>
+                      <span>£{getDiscountedTotal().toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -685,14 +698,23 @@ const Cart = () => {
                   <span>£{(collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0).toFixed(2)}</span>
                 </div>
               )}
-              {couponApplied && couponDiscount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount ({couponDiscount}%)</span>
-                  <span>-£{((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)) * couponDiscount / 100).toFixed(2)}</span>
-                </div>
-              )}
+              
+              {/* Original Total (crossed out if discount applied) */}
+              {couponApplied && couponDiscount > 0 ? (
+                <>
+                  <div className="flex justify-between text-gray-500">
+                    <span>Original Total</span>
+                    <span className="line-through">£{(getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Discount ({couponDiscount}%)</span>
+                    <span>-£{((getTotalPrice() + (deliveryMethod === "delivery" ? deliveryFee : selectedCollectionPoint ? (collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0) : 0)) * couponDiscount / 100).toFixed(2)}</span>
+                  </div>
+                </>
+              ) : null}
+              
               <div className="border-t pt-4">
-                <div className="flex justify-between font-semibold text-lg">
+                <div className={`flex justify-between font-semibold text-lg ${couponApplied && couponDiscount > 0 ? 'text-green-700' : ''}`}>
                   <span>Total</span>
                   <span>£{getDiscountedTotal().toFixed(2)}</span>
                 </div>
