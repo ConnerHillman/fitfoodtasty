@@ -1,4 +1,5 @@
 // Shared types for customer management
+import type { BaseEntity, BaseFilters, ViewModeFilters, DateRange } from './common';
 
 export interface Customer {
   id: string;
@@ -28,13 +29,10 @@ export interface CustomerOrder {
   currency: string;
 }
 
-export interface CustomerFilters {
-  searchTerm: string;
-  sortBy: string;
-  sortOrder: "asc" | "desc";
+export interface CustomerFilters extends BaseFilters, ViewModeFilters {
   filterBy: string;
+  dateRange: DateRange;
   viewMode: "list" | "card";
-  dateRange: { from: Date; to: Date };
 }
 
 export interface CustomerStats {

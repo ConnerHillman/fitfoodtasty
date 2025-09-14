@@ -1,4 +1,5 @@
 // Shared types for meal management
+import type { BaseEntity, BaseFilters, EntityStatus } from './common';
 
 export interface Category {
   id: string;
@@ -6,8 +7,7 @@ export interface Category {
   color: string;
 }
 
-export interface Meal {
-  id: string;
+export interface Meal extends BaseEntity {
   name: string;
   description: string;
   category: string;
@@ -18,9 +18,7 @@ export interface Meal {
   total_fat: number;
   total_fiber?: number;
   total_weight?: number;
-  is_active: boolean;
   image_url?: string;
-  created_at: string;
   sort_order: number;
 }
 
@@ -33,9 +31,9 @@ export interface MealFormData {
   shelf_life_days: number;
 }
 
-export interface MealFilters {
+export interface MealFilters extends Omit<BaseFilters, 'searchTerm'> {
   searchQuery: string;
-  statusFilter: 'all' | 'active' | 'inactive';
+  statusFilter: EntityStatus;
   categoryFilter: string;
   viewMode: 'grid' | 'list';
 }

@@ -1,26 +1,22 @@
 // Shared types for fulfillment system
+import type { BaseEntity } from './common';
 
-export interface FulfillmentSetting {
-  id: string;
+export interface FulfillmentSetting extends BaseEntity {
   setting_type: string;
   setting_key: string;
   setting_value: any;
-  is_active: boolean;
 }
 
-export interface GlobalSchedule {
-  id: string;
+export interface GlobalSchedule extends BaseEntity {
   day_of_week: string;
   default_cutoff_time: string;
   default_cutoff_day?: string;
   default_production_lead_days: number;
   default_production_same_day: boolean;
   is_business_open: boolean;
-  is_active: boolean;
 }
 
-export interface DeliveryZone {
-  id: string;
+export interface DeliveryZone extends BaseEntity {
   zone_name: string;
   postcodes: string[];
   postcode_prefixes?: string[];
@@ -35,11 +31,9 @@ export interface DeliveryZone {
   production_notes?: string | null;
   order_cutoffs?: Record<string, { cutoff_day: string; cutoff_time: string }> | any;
   business_hours_override?: Record<string, { is_open: boolean; override_reason?: string }> | null;
-  is_active: boolean;
 }
 
-export interface CollectionPoint {
-  id: string;
+export interface CollectionPoint extends BaseEntity {
   point_name: string;
   address: string;
   city: string;
@@ -55,7 +49,6 @@ export interface CollectionPoint {
   production_lead_days?: number;
   production_same_day?: boolean;
   production_notes?: string;
-  is_active: boolean;
 }
 
 export const DAYS_OF_WEEK = [

@@ -1,27 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface UseAbandonedCartProps {
-  cartItems: CartItem[];
-  total: number;
-  customerEmail?: string;
-  customerName?: string;
-}
+import type { AbandonedCartProps } from '@/types/cart';
 
 export const useAbandonedCart = ({ 
   cartItems, 
-  total, 
+  total,
   customerEmail, 
   customerName 
-}: UseAbandonedCartProps) => {
+}: AbandonedCartProps) => {
   const { user } = useAuth();
   const timeoutRef = useRef<NodeJS.Timeout>();
   const sessionId = useRef(crypto.randomUUID());

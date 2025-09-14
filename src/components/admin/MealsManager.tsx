@@ -23,7 +23,9 @@ const MealsManager = () => {
     searchQuery: "",
     statusFilter: 'active',
     categoryFilter: 'all',
-    viewMode: 'list'
+    viewMode: 'list',
+    sortBy: 'created_at',
+    sortOrder: 'desc'
   });
 
   // Dialog states

@@ -1,40 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useAbandonedCart } from '@/hooks/useAbandonedCart';
-
-export interface CartItem {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price: number;
-  total_calories: number;
-  total_protein: number;
-  total_carbs: number;
-  total_fat: number;
-  total_fiber: number;
-  shelf_life_days: number;
-  image_url?: string;
-  quantity: number;
-  type?: 'meal' | 'package';
-  packageData?: {
-    packageId: string;
-    packageName: string;
-    mealCount: number;
-    selectedMeals: Record<string, number>;
-  };
-}
-
-interface CartContextType {
-  items: CartItem[];
-  addToCart: (meal: Omit<CartItem, 'quantity'>) => void;
-  addPackageToCart: (packageItem: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (mealId: string) => void;
-  updateQuantity: (mealId: string, quantity: number) => void;
-  clearCart: () => void;
-  getTotalItems: () => number;
-  getTotalPrice: () => number;
-}
+import type { CartItem, CartContextType } from '@/types/cart';
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 

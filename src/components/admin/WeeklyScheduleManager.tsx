@@ -9,17 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Clock, ChefHat, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface GlobalSchedule {
-  id: string;
-  day_of_week: string;
-  default_cutoff_time: string;
-  default_cutoff_day?: string;
-  default_production_lead_days: number;
-  default_production_same_day: boolean;
-  is_business_open: boolean;
-  is_active: boolean;
-}
+import type { GlobalSchedule } from "@/types/fulfillment";
 
 interface WeeklyScheduleManagerProps {
   globalSchedule: GlobalSchedule[];
