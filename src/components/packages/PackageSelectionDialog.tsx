@@ -285,9 +285,9 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto pointer-events-auto">
-        <DialogHeader className="mb-8">
-          <DialogTitle className="text-center text-8xl font-inter font-bold bg-gradient-to-r from-green-600 via-emerald-500 to-green-700 bg-clip-text text-transparent animate-fade-in tracking-tight leading-tight">
+      <DialogContent className="w-[96vw] max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-6xl max-h-[95vh] overflow-y-auto pointer-events-auto">
+        <DialogHeader className="mb-6 sm:mb-8">
+          <DialogTitle className="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-500 to-green-700 bg-clip-text text-transparent animate-fade-in tracking-tight leading-tight">
             {pkg ? `Choose ${pkg.meal_count} meals` : 'Choose Meals'}
           </DialogTitle>
         </DialogHeader>
@@ -299,40 +299,46 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
             placeholder="Search meals..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-12 text-base"
           />
         </div>
 
         {/* Selection status */}
-        <div className="flex items-center justify-between mb-4 mt-2">
-          <div className="text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 mt-2">
+          <div className="text-muted-foreground text-center sm:text-left">
             Selected: <span className="font-semibold text-foreground">{totalSelected}</span> / {pkg?.meal_count ?? 0}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-2">
             {totalSelected === (pkg?.meal_count ?? 0) ? (
-              <div className="text-green-600 flex items-center gap-1">
+              <div className="text-green-600 flex items-center gap-1 text-sm">
                 <CheckCircle2 size={16} /> Ready to add
               </div>
             ) : (
-              <div className="text-muted-foreground">Pick {((pkg?.meal_count ?? 0) - totalSelected)} more</div>
+              <div className="text-muted-foreground text-sm">Pick {((pkg?.meal_count ?? 0) - totalSelected)} more</div>
             )}
-            <Button 
-              variant="outline" 
-              onClick={handleAddToCart} 
-              disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
-              className="flex items-center gap-2"
-            >
-              <ShoppingCart size={16} />
-              Add to Cart
-            </Button>
-            <Button onClick={handleCheckout} disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}>
-              Proceed to Checkout
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={handleAddToCart} 
+                disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                className="flex items-center gap-2 h-12 min-w-[120px] touch-manipulation"
+              >
+                <ShoppingCart size={16} />
+                Add to Cart
+              </Button>
+              <Button 
+                onClick={handleCheckout} 
+                disabled={!pkg || totalSelected !== (pkg?.meal_count ?? 0)}
+                className="h-12 min-w-[140px] touch-manipulation"
+              >
+                Proceed to Checkout
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Meals grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {loading && Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="h-40" />
           ))}
@@ -351,15 +357,15 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                   </div>
                 )}
                 <CardHeader className="pb-2 text-center">
-                  <CardTitle className="text-base">{meal.name}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">{meal.name}</CardTitle>
                   
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleIngredientsToggle(meal.id)}
-                    className="mt-2 mx-auto w-fit h-6 px-2 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="mt-2 mx-auto w-fit h-8 sm:h-6 px-3 sm:px-2 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md touch-manipulation"
                   >
-                    {expandedIngredients[meal.id] ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                    {expandedIngredients[meal.id] ? <ChevronUp size={12} className="sm:w-[10px] sm:h-[10px]" /> : <ChevronDown size={12} className="sm:w-[10px] sm:h-[10px]" />}
                     <span className="ml-1 text-xs font-medium tracking-wide">INGREDIENTS</span>
                   </Button>
                   
@@ -383,12 +389,12 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                     </div>
                   )}
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4">
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{meal.description}</p>
                   
                   {/* Macro Information */}
                   <div className="bg-gradient-to-br from-muted/30 to-muted/60 rounded-lg p-3 mb-3 border border-border/50">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Calories</span>
                         <div className="flex items-center gap-1">
@@ -435,13 +441,24 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
                   )}
                   
                   <div className="flex items-center justify-end">
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => dec(meal.id)} disabled={qty === 0}>
-                        <Minus size={16} />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => dec(meal.id)} 
+                        disabled={qty === 0}
+                        className="h-10 w-10 sm:h-8 sm:w-8 p-0 touch-manipulation"
+                      >
+                        <Minus size={16} className="sm:w-4 sm:h-4" />
                       </Button>
-                      <span className="w-6 text-center font-medium">{qty}</span>
-                      <Button size="sm" onClick={() => inc(meal.id)} disabled={pkg ? totalSelected >= pkg.meal_count : true}>
-                        <Plus size={16} />
+                      <span className="w-8 sm:w-6 text-center font-medium text-base sm:text-sm">{qty}</span>
+                      <Button 
+                        size="sm" 
+                        onClick={() => inc(meal.id)} 
+                        disabled={pkg ? totalSelected >= pkg.meal_count : true}
+                        className="h-10 w-10 sm:h-8 sm:w-8 p-0 touch-manipulation"
+                      >
+                        <Plus size={16} className="sm:w-4 sm:h-4" />
                       </Button>
                     </div>
                   </div>
