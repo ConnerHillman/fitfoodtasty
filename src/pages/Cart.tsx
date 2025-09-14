@@ -21,7 +21,7 @@ import { stripePromise } from "@/lib/stripe";
 import PaymentForm from "@/components/PaymentForm";
 
 const Cart = () => {
-  const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
+  const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart, addToCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -548,45 +548,57 @@ const Cart = () => {
         setCouponApplied(true);
         setCouponCode(""); // Clear input
         
-        // Add free item to cart if applicable
+        // Handle free item addition
         if (data.coupon.free_item_id && !freeItemAdded) {
           try {
-            const { data: mealData, error: mealError } = await supabase
-              .from('meals')
-              .select('*')
-              .eq('id', data.coupon.free_item_id)
-              .single();
+            // Check if free item already exists in cart
+            const freeItemId = `free-${data.coupon.free_item_id}`;
+            const existingFreeItem = items.find(item => item.id === freeItemId);
+            
+            if (!existingFreeItem) {
+              // Fetch meal details
+              const { data: mealData, error: mealError } = await supabase
+                .from('meals')
+                .select('*')
+                .eq('id', data.coupon.free_item_id)
+                .single();
 
-            if (!mealError && mealData) {
-              // Add free item to cart
-              const freeItem = {
-                id: `free-${mealData.id}`,
-                name: `FREE: ${mealData.name}`,
-                description: mealData.description,
-                category: mealData.category,
-                price: 0,
-                total_calories: mealData.total_calories,
-                total_protein: mealData.total_protein,
-                total_carbs: mealData.total_carbs,
-                total_fat: mealData.total_fat,
-                total_fiber: mealData.total_fiber,
-                shelf_life_days: mealData.shelf_life_days,
-                image_url: mealData.image_url,
-                quantity: 1
-              };
-              
-              // Use existing cart context method if available
-              if (typeof window !== 'undefined') {
-                const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-                cartItems.push(freeItem);
-                localStorage.setItem('cart', JSON.stringify(cartItems));
-                window.location.reload(); // Force refresh to update cart
+              if (!mealError && mealData) {
+                // Create free item object
+                const freeItem = {
+                  id: freeItemId,
+                  name: `🎁 FREE: ${mealData.name}`,
+                  description: `${mealData.description} (Free with coupon)`,
+                  category: mealData.category,
+                  price: 0,
+                  total_calories: mealData.total_calories || 0,
+                  total_protein: mealData.total_protein || 0,
+                  total_carbs: mealData.total_carbs || 0,
+                  total_fat: mealData.total_fat || 0,
+                  total_fiber: mealData.total_fiber || 0,
+                  shelf_life_days: mealData.shelf_life_days || 5,
+                  image_url: mealData.image_url,
+                };
+                
+                // Add to cart using CartContext
+                addToCart(freeItem);
+                setFreeItemAdded(true);
+                
+                toast({
+                  title: "Free Item Added!",
+                  description: `${mealData.name} has been added to your cart for free!`,
+                });
               }
-              
+            } else {
               setFreeItemAdded(true);
             }
           } catch (err) {
             console.error("Error adding free item:", err);
+            toast({
+              title: "Warning",
+              description: "Coupon applied but free item could not be added. Contact support if needed.",
+              variant: "destructive",
+            });
           }
         }
         
@@ -694,6 +706,14 @@ const Cart = () => {
                     <span>£{(collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0).toFixed(2)}</span>
                   </div>
                 )}
+                
+                {/* Show free items separately */}
+                {items.filter(item => item.id.startsWith('free-')).map(freeItem => (
+                  <div key={freeItem.id} className="flex justify-between text-green-600 font-medium">
+                    <span>🎁 {freeItem.name.replace('🎁 FREE: ', '')}</span>
+                    <span>FREE</span>
+                  </div>
+                ))}
                 
                 {/* Original Total (crossed out if discount applied) */}
                 <div className="border-t pt-4">
@@ -815,6 +835,14 @@ const Cart = () => {
                   <span>£{(collectionPoints.find(cp => cp.id === selectedCollectionPoint)?.collection_fee || 0).toFixed(2)}</span>
                 </div>
               )}
+              
+              {/* Show free items separately */}
+              {items.filter(item => item.id.startsWith('free-')).map(freeItem => (
+                <div key={freeItem.id} className="flex justify-between text-green-600 font-medium">
+                  <span>🎁 {freeItem.name.replace('🎁 FREE: ', '')}</span>
+                  <span>FREE</span>
+                </div>
+              ))}
               
               {/* Original Total (crossed out if discount applied) */}
               {couponApplied && getDiscountAmount() > 0 ? (
@@ -1018,6 +1046,12 @@ const Cart = () => {
                           size="sm"
                           className="ml-2 h-8"
                           onClick={() => {
+                            // Remove free item from cart if it was added
+                            if (appliedCoupon?.free_item_id && freeItemAdded) {
+                              const freeItemId = `free-${appliedCoupon.free_item_id}`;
+                              removeFromCart(freeItemId);
+                            }
+                            
                             setCouponApplied(false);
                             setAppliedCoupon(null);
                             setCouponMessage("");
@@ -1271,6 +1305,12 @@ const Cart = () => {
                           size="sm"
                           className="ml-2 h-8"
                           onClick={() => {
+                            // Remove free item from cart if it was added
+                            if (appliedCoupon?.free_item_id && freeItemAdded) {
+                              const freeItemId = `free-${appliedCoupon.free_item_id}`;
+                              removeFromCart(freeItemId);
+                            }
+                            
                             setCouponApplied(false);
                             setAppliedCoupon(null);
                             setCouponMessage("");
