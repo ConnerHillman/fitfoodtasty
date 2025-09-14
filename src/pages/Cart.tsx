@@ -358,6 +358,38 @@ const Cart = () => {
     return 0;
   };
 
+  // Check if coupon expires within 3 days and show warning
+  const checkExpiryWarning = (coupon: any) => {
+    if (!coupon?.expires_at) return;
+    
+    const now = new Date();
+    const expiryDate = new Date(coupon.expires_at);
+    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry <= 3 && daysUntilExpiry > 0) {
+      const warningMessage = daysUntilExpiry === 1 ? "Expires tomorrow!" : `Expires in ${daysUntilExpiry} days!`;
+      toast({
+        title: "⚠️ Coupon Expires Soon!",
+        description: warningMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Get expiry warning text for display
+  const getExpiryWarning = () => {
+    if (!couponApplied || !appliedCoupon?.expires_at) return null;
+    
+    const now = new Date();
+    const expiryDate = new Date(appliedCoupon.expires_at);
+    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry <= 3 && daysUntilExpiry > 0) {
+      return daysUntilExpiry === 1 ? "⚠️ Expires tomorrow!" : `⚠️ Expires in ${daysUntilExpiry} days!`;
+    }
+    return null;
+  };
+
   // Create free order for 100% off coupons
   const createFreeOrder = async () => {
     try {
@@ -718,6 +750,9 @@ const Cart = () => {
         }
         
         setCouponMessage(message);
+        
+        // Check for expiry warning
+        checkExpiryWarning(data.coupon);
         
         toast({
           title: "Coupon Applied!",
@@ -1166,13 +1201,18 @@ const Cart = () => {
                       couponApplied 
                         ? "text-green-600 font-medium" 
                         : "text-red-600"
-                    }`}>
-                      {couponMessage}
-                      {couponApplied && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="ml-2 h-8"
+                     }`}>
+                       {couponMessage}
+                       {getExpiryWarning() && (
+                         <div className="mt-2 text-amber-600 font-medium text-xs bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                           {getExpiryWarning()}
+                         </div>
+                       )}
+                       {couponApplied && (
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           className="ml-2 h-8"
                           onClick={() => {
                             // Remove free item from cart if it was added
                             if (appliedCoupon?.free_item_id && freeItemAdded) {
@@ -1425,13 +1465,18 @@ const Cart = () => {
                       couponApplied 
                         ? "text-green-600 font-medium" 
                         : "text-red-600"
-                    }`}>
-                      {couponMessage}
-                      {couponApplied && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="ml-2 h-8"
+                     }`}>
+                       {couponMessage}
+                       {getExpiryWarning() && (
+                         <div className="mt-2 text-amber-600 font-medium text-xs bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                           {getExpiryWarning()}
+                         </div>
+                       )}
+                       {couponApplied && (
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           className="ml-2 h-8"
                           onClick={() => {
                             // Remove free item from cart if it was added
                             if (appliedCoupon?.free_item_id && freeItemAdded) {
