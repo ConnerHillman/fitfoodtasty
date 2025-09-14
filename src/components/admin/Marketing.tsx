@@ -22,7 +22,8 @@ import {
   MessageSquare, 
   Mail,
   Clock,
-  DollarSign
+  DollarSign,
+  Download
 } from "lucide-react";
 
 const Marketing = () => {
@@ -353,6 +354,49 @@ const Marketing = () => {
       }
     };
 
+    const exportToCsv = () => {
+      // Prepare CSV data
+      const csvData = filteredCoupons.map(coupon => ({
+        Code: coupon.code,
+        'Discount %': coupon.discount_percentage,
+        Status: coupon.active ? 'Active' : 'Inactive',
+        'Usage Count': usageStats[coupon.code] || 0,
+        'Created Date': new Date(coupon.created_at).toLocaleDateString('en-GB'),
+        'Created Time': new Date(coupon.created_at).toLocaleTimeString('en-GB', { hour12: false })
+      }));
+
+      // Convert to CSV string
+      const headers = Object.keys(csvData[0] || {});
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => 
+          headers.map(header => {
+            const value = row[header as keyof typeof row];
+            // Escape values that contain commas or quotes
+            return typeof value === 'string' && (value.includes(',') || value.includes('"'))
+              ? `"${value.replace(/"/g, '""')}"` 
+              : value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `coupon-usage-data-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Export Complete",
+        description: `Exported ${csvData.length} coupon records to CSV`,
+      });
+    };
+
     // Modal Component
     const CouponModal = ({ isEdit = false }) => (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -483,9 +527,20 @@ const Marketing = () => {
           <div className="space-y-4">
             {/* Action Bar */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-              <Button onClick={openCreateModal}>
-                Create New Coupon
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={openCreateModal}>
+                  Create New Coupon
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={exportToCsv}
+                  className="flex items-center gap-2"
+                  disabled={filteredCoupons.length === 0}
+                >
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </Button>
+              </div>
               
               {/* Filters */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
