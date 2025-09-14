@@ -107,8 +107,10 @@ const Marketing = () => {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [selectedCoupon, setSelectedCoupon] = useState<any>(null);
     const [searchFilter, setSearchFilter] = useState("");
+    const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [usageStats, setUsageStats] = useState<Record<string, number>>({});
     const { toast } = useToast();
 
     // Form state
@@ -118,9 +120,10 @@ const Marketing = () => {
       active: true
     });
 
-    // Fetch coupons on component load
+    // Fetch coupons and usage stats on component load
     useEffect(() => {
       fetchCoupons();
+      fetchUsageStats();
     }, []);
 
     const fetchCoupons = async () => {
@@ -144,11 +147,42 @@ const Marketing = () => {
       }
     };
 
+    const fetchUsageStats = async () => {
+      try {
+        // Get usage count for each coupon from orders table
+        const { data: orderStats, error } = await supabase
+          .from('orders')
+          .select('referral_code_used')
+          .not('referral_code_used', 'is', null);
+
+        if (error) {
+          console.error('Error fetching usage stats:', error);
+          return;
+        }
+
+        // Count usage by coupon code
+        const stats: Record<string, number> = {};
+        orderStats?.forEach(order => {
+          if (order.referral_code_used) {
+            stats[order.referral_code_used] = (stats[order.referral_code_used] || 0) + 1;
+          }
+        });
+
+        setUsageStats(stats);
+      } catch (err) {
+        console.error('Error calculating usage stats:', err);
+      }
+    };
+
     // Filter and sort coupons
     const filteredCoupons = coupons
-      .filter(coupon => 
-        coupon.code.toLowerCase().includes(searchFilter.toLowerCase())
-      )
+      .filter(coupon => {
+        const matchesSearch = coupon.code.toLowerCase().includes(searchFilter.toLowerCase());
+        const matchesActive = activeFilter === 'all' || 
+          (activeFilter === 'active' && coupon.active) ||
+          (activeFilter === 'inactive' && !coupon.active);
+        return matchesSearch && matchesActive;
+      })
       .sort((a, b) => {
         const aDate = new Date(a.created_at).getTime();
         const bDate = new Date(b.created_at).getTime();
@@ -188,6 +222,7 @@ const Marketing = () => {
     };
 
     const handleSubmit = async (isEdit: boolean = false) => {
+      // Validation
       if (!formData.code.trim()) {
         toast({
           title: "Error",
@@ -209,33 +244,18 @@ const Marketing = () => {
       setIsSubmitting(true);
 
       try {
+        const couponCode = formData.code.trim().toUpperCase();
+
         if (isEdit && selectedCoupon) {
           // Update existing coupon
           const { error } = await supabase
             .from('coupons')
             .update({
-              code: formData.code.trim().toUpperCase(),
+              code: couponCode,
               discount_percentage: formData.discount_percentage,
               active: formData.active
             })
             .eq('id', selectedCoupon.id);
-
-          if (error) throw error;
-
-          toast({
-            title: "Success",
-            description: "Coupon updated successfully",
-          });
-          setShowEditModal(false);
-        } else {
-          // Create new coupon
-          const { error } = await supabase
-            .from('coupons')
-            .insert({
-              code: formData.code.trim().toUpperCase(),
-              discount_percentage: formData.discount_percentage,
-              active: formData.active
-            });
 
           if (error) {
             if (error.code === '23505') { // Unique constraint violation
@@ -246,13 +266,45 @@ const Marketing = () => {
 
           toast({
             title: "Success",
+            description: "Coupon updated successfully",
+          });
+          setShowEditModal(false);
+        } else {
+          // Create new coupon - check for duplicates first
+          const { data: existingCoupon } = await supabase
+            .from('coupons')
+            .select('id')
+            .eq('code', couponCode)
+            .single();
+
+          if (existingCoupon) {
+            toast({
+              title: "Error",
+              description: "A coupon with this code already exists",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          const { error } = await supabase
+            .from('coupons')
+            .insert({
+              code: couponCode,
+              discount_percentage: formData.discount_percentage,
+              active: formData.active
+            });
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
             description: "Coupon created successfully",
           });
           setShowCreateModal(false);
         }
 
-        // Refresh the table
-        await fetchCoupons();
+        // Refresh the table and stats
+        await Promise.all([fetchCoupons(), fetchUsageStats()]);
         resetForm();
       } catch (err: any) {
         console.error('Error saving coupon:', err);
@@ -287,8 +339,8 @@ const Marketing = () => {
         setShowDeleteDialog(false);
         setSelectedCoupon(null);
         
-        // Refresh the table
-        await fetchCoupons();
+        // Refresh the table and stats
+        await Promise.all([fetchCoupons(), fetchUsageStats()]);
       } catch (err: any) {
         console.error('Error deleting coupon:', err);
         toast({
@@ -322,7 +374,11 @@ const Marketing = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
                   className="mt-1"
                   disabled={isSubmitting}
+                  maxLength={20}
                 />
+                <div className="text-xs text-muted-foreground mt-1">
+                  Will be converted to uppercase
+                </div>
               </div>
 
               {/* Discount Percentage */}
@@ -337,7 +393,7 @@ const Marketing = () => {
                   value={formData.discount_percentage}
                   onChange={(e) => setFormData(prev => ({ 
                     ...prev, 
-                    discount_percentage: parseInt(e.target.value) || 0 
+                    discount_percentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
                   }))}
                   className="mt-1"
                   disabled={isSubmitting}
@@ -371,7 +427,7 @@ const Marketing = () => {
               </Button>
               <Button 
                 onClick={() => handleSubmit(isEdit)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !formData.code.trim()}
               >
                 {isSubmitting ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
               </Button>
@@ -426,19 +482,34 @@ const Marketing = () => {
         <CardContent>
           <div className="space-y-4">
             {/* Action Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <Button onClick={openCreateModal}>
                 Create New Coupon
               </Button>
               
-              {/* Search Filter */}
-              <div className="flex items-center gap-2">
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
+                {/* Search Filter */}
                 <Input
                   placeholder="Search by code..."
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  className="w-48"
+                  className="w-full sm:w-48"
                 />
+                
+                {/* Active Filter */}
+                <Select value={activeFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setActiveFilter(value)}>
+                  <SelectTrigger className="w-full sm:w-32">
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {/* Sort */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -477,6 +548,7 @@ const Marketing = () => {
                         <th className="text-left p-3 font-medium">Code</th>
                         <th className="text-left p-3 font-medium">Discount %</th>
                         <th className="text-left p-3 font-medium">Active</th>
+                        <th className="text-left p-3 font-medium">Usage</th>
                         <th className="text-left p-3 font-medium">Created At</th>
                         <th className="text-left p-3 font-medium">Actions</th>
                       </tr>
@@ -484,8 +556,8 @@ const Marketing = () => {
                     <tbody>
                       {filteredCoupons.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="text-center p-8 text-muted-foreground">
-                            {searchFilter ? 'No coupons match your search' : 'No coupons created yet'}
+                          <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                            {searchFilter || activeFilter !== 'all' ? 'No coupons match your filters' : 'No coupons created yet'}
                           </td>
                         </tr>
                       ) : (
@@ -506,6 +578,11 @@ const Marketing = () => {
                               >
                                 {coupon.active ? 'Active' : 'Inactive'}
                               </Badge>
+                            </td>
+                            <td className="p-3">
+                              <span className="text-sm">
+                                {usageStats[coupon.code] || 0} uses
+                              </span>
                             </td>
                             <td className="p-3 text-sm text-muted-foreground">
                               {new Date(coupon.created_at).toLocaleDateString('en-GB', {
@@ -546,9 +623,14 @@ const Marketing = () => {
             )}
 
             {/* Results Count */}
-            {!loading && !error && filteredCoupons.length > 0 && (
+            {!loading && !error && (
               <div className="text-sm text-muted-foreground">
                 Showing {filteredCoupons.length} of {coupons.length} coupons
+                {(searchFilter || activeFilter !== 'all') && (
+                  <span className="ml-2 text-blue-600">
+                    (filtered)
+                  </span>
+                )}
               </div>
             )}
           </div>
