@@ -290,6 +290,7 @@ export type Database = {
           created_at: string
           discount_amount: number | null
           discount_percentage: number
+          expires_at: string | null
           free_delivery: boolean
           free_item_id: string | null
           id: string
@@ -301,6 +302,7 @@ export type Database = {
           created_at?: string
           discount_amount?: number | null
           discount_percentage: number
+          expires_at?: string | null
           free_delivery?: boolean
           free_item_id?: string | null
           id?: string
@@ -312,6 +314,7 @@ export type Database = {
           created_at?: string
           discount_amount?: number | null
           discount_percentage?: number
+          expires_at?: string | null
           free_delivery?: boolean
           free_item_id?: string | null
           id?: string
