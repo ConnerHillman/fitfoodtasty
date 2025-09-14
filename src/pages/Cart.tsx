@@ -216,7 +216,7 @@ const Cart = () => {
     fetchDeliveryFee();
   }, []);
 
-  // Auto-create Stripe PaymentIntent when requirements are met
+  // Auto-create Stripe PaymentIntent when requirements are met (skip for 100% off)
   useEffect(() => {
     const createPI = async () => {
       try {
@@ -231,6 +231,12 @@ const Cart = () => {
           if (!selectedCollectionPoint) return;
         } else {
           if (!deliveryZone) return;
+        }
+
+        // Skip payment intent creation for 100% off coupons
+        if (couponApplied && couponDiscount === 100) {
+          setClientSecret("");
+          return;
         }
 
         const collectionPoint = deliveryMethod === 'pickup' ? collectionPoints.find(cp => cp.id === selectedCollectionPoint) : null;
@@ -268,7 +274,7 @@ const Cart = () => {
     };
 
     createPI();
-  }, [requestedDeliveryDate, deliveryMethod, selectedCollectionPoint, deliveryZone, items, deliveryFee]);
+  }, [requestedDeliveryDate, deliveryMethod, selectedCollectionPoint, deliveryZone, items, deliveryFee, couponApplied, couponDiscount]);
 
   // Calculate minimum delivery date (tomorrow)
   const getMinDeliveryDate = () => {
