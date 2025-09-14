@@ -119,18 +119,18 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
   };
 
   return (
-    <Card className="h-full hover:shadow-lg transition-all duration-300 relative overflow-hidden bg-white border border-gray-200 hover:border-emerald-300">
+    <Card className="h-full hover:shadow-lg transition-all duration-300 relative overflow-hidden bg-card border hover:border-primary/20">
       {/* Image section */}
       {meal.image_url && (
-        <div className="aspect-[4/3] w-full overflow-hidden relative">
+        <div className="aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden relative">
           <img 
             src={meal.image_url} 
             alt={meal.name}
             className="w-full h-full object-cover"
           />
           {isNew && (
-            <div className="absolute top-2 right-2">
-              <Badge className="bg-green-500 text-white shadow-md animate-pulse">
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+              <Badge className="bg-green-500 text-white shadow-md animate-pulse text-xs">
                 NEW
               </Badge>
             </div>
@@ -138,56 +138,56 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
         </div>
       )}
       
-      <CardContent className="p-3">
+      <CardContent className="p-4 sm:p-6">
         {/* Meal name and description */}
-        <div className="mb-3">
-          <h3 className="font-bold text-base leading-tight mb-1">{meal.name}</h3>
-          <p className="text-sm text-gray-600 line-clamp-2">{meal.description}</p>
+        <div className="mb-4">
+          <h3 className="font-semibold text-lg sm:text-xl leading-tight mb-2 text-foreground">{meal.name}</h3>
+          <p className="text-sm sm:text-base text-muted-foreground line-clamp-2 leading-relaxed">{meal.description}</p>
         </div>
 
-        {/* Quick nutrition view */}
+        {/* Quick nutrition view - Stack vertically on mobile */}
         {(meal.total_calories >= 0 || meal.total_protein >= 0 || meal.total_carbs >= 0 || meal.total_fat >= 0) && (
-          <div className="mb-3 px-2 py-1.5 bg-muted/30 rounded-md">
-            <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:text-xs text-muted-foreground leading-tight">
-              <li className="whitespace-nowrap">
-                <span className="text-muted-foreground">Calories:</span>{" "}
-                <span className="font-bold text-foreground">{Math.round(meal.total_calories || 0)}</span>
-              </li>
-              <li className="whitespace-nowrap">
-                <span className="text-muted-foreground">Protein:</span>{" "}
-                <span className="font-bold text-foreground">{(meal.total_protein || 0).toFixed(1)}g</span>
-              </li>
-              <li className="whitespace-nowrap">
-                <span className="text-muted-foreground">Carbs:</span>{" "}
-                <span className="font-bold text-foreground">{(meal.total_carbs || 0).toFixed(1)}g</span>
-              </li>
-              <li className="whitespace-nowrap">
-                <span className="text-muted-foreground">Fat:</span>{" "}
-                <span className="font-bold text-foreground">{(meal.total_fat || 0).toFixed(1)}g</span>
-              </li>
-            </ul>
+          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-x-4 sm:gap-y-1 text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center">
+                <span className="text-muted-foreground text-xs sm:text-sm">Calories:</span>
+                <span className="font-semibold text-foreground text-sm sm:ml-1">{Math.round(meal.total_calories || 0)}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center">
+                <span className="text-muted-foreground text-xs sm:text-sm">Protein:</span>
+                <span className="font-semibold text-foreground text-sm sm:ml-1">{(meal.total_protein || 0).toFixed(1)}g</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center">
+                <span className="text-muted-foreground text-xs sm:text-sm">Carbs:</span>
+                <span className="font-semibold text-foreground text-sm sm:ml-1">{(meal.total_carbs || 0).toFixed(1)}g</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center">
+                <span className="text-muted-foreground text-xs sm:text-sm">Fat:</span>
+                <span className="font-semibold text-foreground text-sm sm:ml-1">{(meal.total_fat || 0).toFixed(1)}g</span>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Info buttons */}
-        <div className="mb-3">
-          <div className="flex flex-col items-center gap-2">
+        {/* Info buttons - Larger touch targets */}
+        <div className="mb-4">
+          <div className="flex flex-col gap-3">
             {/* Ingredients dialog */}
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
-                  size="sm" 
+                  size="default"
                   onClick={handleIngredientsClick}
-                  className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[11px] font-medium rounded-lg flex items-center justify-center"
+                  className="w-full min-h-[44px] bg-muted/50 border-muted-foreground/20 text-foreground hover:bg-muted text-sm font-medium rounded-lg flex items-center justify-center touch-manipulation"
                 >
-                  <Info className="w-3 h-3 mr-1" />
+                  <Info className="w-4 h-4 mr-2" />
                   INGREDIENTS
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="w-[95vw] max-w-md max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="text-base">Ingredients</DialogTitle>
+                  <DialogTitle className="text-lg font-semibold">Ingredients</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 text-sm">
                   {loadingIngredients ? (
@@ -227,18 +227,18 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
                 <DialogTrigger asChild>
                   <Button 
                     variant="outline" 
-                    size="sm" 
-                    className="w-full h-8 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[11px] font-medium rounded-lg flex items-center justify-center"
+                    size="default"
+                    className="w-full min-h-[44px] bg-muted/50 border-muted-foreground/20 text-foreground hover:bg-muted text-sm font-medium rounded-lg flex items-center justify-center touch-manipulation"
                   >
-                    <Info className="w-3 h-3 mr-1" />
+                    <Info className="w-4 h-4 mr-2" />
                     NUTRITION
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="w-[95vw] max-w-md max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-base">Nutrition</DialogTitle>
+                    <DialogTitle className="text-lg font-semibold">Nutrition</DialogTitle>
                   </DialogHeader>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base sm:text-sm">
                     <div className="flex justify-between items-center py-1 border-b border-gray-100">
                       <span className="text-gray-600">Calories</span>
                       <span className="font-semibold">{Math.round(meal.total_calories)}</span>
@@ -282,13 +282,14 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
 
         {/* Price and Add to cart button */}
         {onAddToCart && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="text-center">
-              <span className="text-lg font-bold text-emerald-600">£{meal.price.toFixed(2)}</span>
+              <span className="text-xl sm:text-2xl font-bold text-primary">£{meal.price.toFixed(2)}</span>
             </div>
             <Button 
               onClick={() => onAddToCart(meal)}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg"
+              size="lg"
+              className="w-full min-h-[48px] bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base rounded-lg touch-manipulation"
             >
               Add to Cart
             </Button>
