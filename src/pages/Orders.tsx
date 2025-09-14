@@ -7,10 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Package, Truck, RotateCcw, ChevronRight } from "lucide-react";
+import { Calendar, Package, Truck, RotateCcw, ChevronRight, Star, StarIcon, Zap, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import MealReplacementDialog from "@/components/packages/MealReplacementDialog";
 import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface OrderItem {
   id: string;
@@ -82,6 +83,9 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | PackageOrder | null>(null);
   const [selectedOrderType, setSelectedOrderType] = useState<'regular' | 'package'>('regular');
   const [showReorderModal, setShowReorderModal] = useState(false);
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [isQuickReordering, setIsQuickReordering] = useState(false);
 
   const [showReplacementDialog, setShowReplacementDialog] = useState(false);
   const { startReorder } = useCart();
@@ -89,8 +93,180 @@ const Orders = () => {
   useEffect(() => {
     if (user) {
       fetchOrders();
+      fetchFavorites();
     }
   }, [user]);
+
+  const fetchFavorites = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_order_favorites")
+        .select("order_id, order_type")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        const favMap: Record<string, boolean> = {};
+        data.forEach(fav => {
+          favMap[`${fav.order_type}-${fav.order_id}`] = true;
+        });
+        setFavorites(favMap);
+      }
+    } catch (error) {
+      console.error("Error fetching favorites:", error);
+    }
+  };
+
+  const toggleFavorite = async (orderId: string, orderType: 'package' | 'regular') => {
+    if (!user) return;
+
+    const favKey = `${orderType}-${orderId}`;
+    const isFavorited = favorites[favKey];
+
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        await supabase
+          .from("user_order_favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("order_id", orderId)
+          .eq("order_type", orderType);
+        
+        setFavorites(prev => {
+          const updated = { ...prev };
+          delete updated[favKey];
+          return updated;
+        });
+
+        toast({
+          title: "Removed from Favorites",
+          description: "Order removed from your favorites",
+        });
+      } else {
+        // Add to favorites
+        await supabase
+          .from("user_order_favorites")
+          .insert({
+            user_id: user.id,
+            order_id: orderId,
+            order_type: orderType
+          });
+
+        setFavorites(prev => ({ ...prev, [favKey]: true }));
+
+        toast({
+          title: "Added to Favorites",
+          description: "Order saved to your favorites",
+          variant: "success" as any,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorites",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleQuickReorder = async (orderId: string, orderType: 'package' | 'regular') => {
+    setIsQuickReordering(true);
+    
+    const result = await startReorder(orderId, orderType);
+    
+    if (result.success) {
+      if (result.needsReplacements) {
+        // Show replacement dialog
+        setShowReplacementDialog(true);
+        setIsQuickReordering(false);
+        toast({
+          title: "Replacement Needed",
+          description: result.message || "Some meals need replacement.",
+          variant: "default",
+        });
+      } else {
+        // All meals available, direct to cart
+        setIsQuickReordering(false);
+        toast({
+          title: "Quick Reorder Success!",
+          description: result.message || "All items added to cart successfully.",
+          variant: "success" as any,
+        });
+        navigate("/cart");
+      }
+    } else {
+      setIsQuickReordering(false);
+      toast({
+        title: "Error",
+        description: result.error || "Failed to process quick reorder.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkReorder = async () => {
+    if (selectedOrderIds.size === 0) return;
+
+    setIsQuickReordering(true);
+    let successCount = 0;
+    let needsReplacementCount = 0;
+
+    for (const orderId of selectedOrderIds) {
+      // Determine order type by checking if it exists in packageOrders or orders
+      const orderType = packageOrders.some(o => o.id === orderId) ? 'package' : 'regular';
+      
+      const result = await startReorder(orderId, orderType);
+      if (result.success) {
+        successCount++;
+        if (result.needsReplacements) {
+          needsReplacementCount++;
+        }
+      }
+    }
+
+    setIsQuickReordering(false);
+    setSelectedOrderIds(new Set());
+
+    if (needsReplacementCount > 0) {
+      setShowReplacementDialog(true);
+      toast({
+        title: "Bulk Reorder Partial",
+        description: `${successCount} orders processed. ${needsReplacementCount} need meal replacements.`,
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Bulk Reorder Success!",
+        description: `${successCount} orders added to cart successfully.`,
+        variant: "success" as any,
+      });
+      navigate("/cart");
+    }
+  };
+
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrderIds(prev => {
+      const updated = new Set(prev);
+      if (updated.has(orderId)) {
+        updated.delete(orderId);
+      } else {
+        updated.add(orderId);
+      }
+      return updated;
+    });
+  };
+
+  const selectAllOrders = () => {
+    const allOrderIds = [...packageOrders.map(o => o.id), ...orders.map(o => o.id)];
+    setSelectedOrderIds(new Set(allOrderIds));
+  };
+
+  const clearAllSelections = () => {
+    setSelectedOrderIds(new Set());
+  };
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -458,10 +634,57 @@ const Orders = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Orders</h1>
-        <p className="text-muted-foreground">
-          Track your order history and delivery status
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">My Orders</h1>
+            <p className="text-muted-foreground">
+              Track your order history and delivery status
+            </p>
+          </div>
+          
+          {/* Bulk Selection Controls */}
+          {(orders.length > 0 || packageOrders.length > 0) && (
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllOrders}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Select All
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllSelections}
+                  disabled={selectedOrderIds.size === 0}
+                >
+                  Clear
+                </Button>
+              </div>
+              
+              {selectedOrderIds.size > 0 && (
+                <Button
+                  onClick={handleBulkReorder}
+                  disabled={isQuickReordering}
+                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                  size="sm"
+                >
+                  {isQuickReordering ? (
+                    <>Processing...</>
+                  ) : (
+                    <>
+                      <RotateCcw className="h-4 w-4" />
+                      Reorder Selected ({selectedOrderIds.size})
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -476,11 +699,24 @@ const Orders = () => {
                   <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors group">
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-4 flex-1">
-                        <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
+                        <div 
+                          className="flex items-center gap-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedOrderIds.has(order.id)}
+                            onCheckedChange={() => toggleOrderSelection(order.id)}
+                            aria-label="Select order for bulk reorder"
+                          />
+                          <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
+                        </div>
                         <div className="space-y-1 flex-1">
                           <CardTitle className="text-lg flex items-center gap-2">
                             <Package className="h-5 w-5" />
                             Order #{order.id.slice(-8)}
+                            {favorites[`package-${order.id}`] && (
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            )}
                           </CardTitle>
                           <CardDescription className="flex items-center gap-4">
                             <span className="flex items-center gap-1">
@@ -491,7 +727,23 @@ const Orders = () => {
                           </CardDescription>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {/* Quick Reorder Button */}
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickReorder(order.id, 'package');
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                          size="sm"
+                          title="Quick reorder - add directly to cart"
+                          disabled={isQuickReordering}
+                        >
+                          <Zap className="h-4 w-4 mr-1" />
+                          Quick
+                        </Button>
+                        
+                        {/* Regular Reorder Button */}
                         <Button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -504,6 +756,21 @@ const Orders = () => {
                           <RotateCcw className="h-4 w-4 mr-1" />
                           Reorder
                         </Button>
+                        
+                        {/* Favorites Button */}
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(order.id, 'package');
+                          }}
+                          variant={favorites[`package-${order.id}`] ? "default" : "outline"}
+                          className={favorites[`package-${order.id}`] ? "bg-blue-500 hover:bg-blue-600 text-white" : "border-blue-500 text-blue-500 hover:bg-blue-50"}
+                          size="sm"
+                          title="Save to favorites"
+                        >
+                          <Star className={`h-4 w-4 ${favorites[`package-${order.id}`] ? 'fill-current' : ''}`} />
+                        </Button>
+                        
                         <div className="flex flex-col items-end gap-1">
                           <Badge className={getStatusColor(order.status)}>
                             {order.status.replace("_", " ")}
@@ -596,10 +863,23 @@ const Orders = () => {
                   <CardHeader className="border-b bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors group">
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-4 flex-1">
-                        <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
+                        <div 
+                          className="flex items-center gap-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedOrderIds.has(order.id)}
+                            onCheckedChange={() => toggleOrderSelection(order.id)}
+                            aria-label="Select order for bulk reorder"
+                          />
+                          <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
+                        </div>
                         <div className="space-y-1 flex-1">
-                          <CardTitle className="text-lg">
+                          <CardTitle className="text-lg flex items-center gap-2">
                             Order #{order.id.slice(-8)}
+                            {favorites[`regular-${order.id}`] && (
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            )}
                           </CardTitle>
                           <CardDescription className="flex items-center gap-4">
                             <span className="flex items-center gap-1">
@@ -610,7 +890,23 @@ const Orders = () => {
                           </CardDescription>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {/* Quick Reorder Button */}
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickReorder(order.id, 'regular');
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                          size="sm"
+                          title="Quick reorder - add directly to cart"
+                          disabled={isQuickReordering}
+                        >
+                          <Zap className="h-4 w-4 mr-1" />
+                          Quick
+                        </Button>
+                        
+                        {/* Regular Reorder Button */}
                         <Button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -623,6 +919,21 @@ const Orders = () => {
                           <RotateCcw className="h-4 w-4 mr-1" />
                           Reorder
                         </Button>
+                        
+                        {/* Favorites Button */}
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(order.id, 'regular');
+                          }}
+                          variant={favorites[`regular-${order.id}`] ? "default" : "outline"}
+                          className={favorites[`regular-${order.id}`] ? "bg-blue-500 hover:bg-blue-600 text-white" : "border-blue-500 text-blue-500 hover:bg-blue-50"}
+                          size="sm"
+                          title="Save to favorites"
+                        >
+                          <Star className={`h-4 w-4 ${favorites[`regular-${order.id}`] ? 'fill-current' : ''}`} />
+                        </Button>
+                        
                         <div className="flex flex-col items-end gap-1">
                           <Badge className={getStatusColor(order.status)}>
                             {order.status.replace("_", " ")}

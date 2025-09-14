@@ -297,38 +297,49 @@ const MealReplacementDialog = ({ open, onOpenChange }: Props) => {
             </div>
           </div>
 
-          {/* Desktop Progress */}
-          <div className="hidden sm:flex sm:items-center sm:justify-between gap-4 mb-4 mt-2">
-            <div className="text-muted-foreground">
-              Replacements: <span className="font-semibold text-foreground">{currentReplacements}</span> / {totalReplacements}
-            </div>
-            <div className="flex items-center gap-2">
-              {allReplacementsMade ? (
-                <div className="text-green-600 flex items-center gap-1 text-sm">
-                  <CheckCircle2 size={16} /> Ready to add
-                </div>
-              ) : (
-                <div className="text-muted-foreground text-sm">Pick {totalReplacements - currentReplacements} more</div>
-              )}
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleCompleteReorder} 
-                  disabled={!allReplacementsMade}
-                  className="flex items-center gap-2 h-12 min-w-[120px] touch-manipulation"
-                >
-                  <ShoppingCart size={16} />
-                  Add to Cart
-                </Button>
-                <Button 
-                  onClick={handleCheckout} 
-                  disabled={!allReplacementsMade}
-                  className="h-12 min-w-[140px] touch-manipulation"
-                >
-                  Proceed to Checkout
-                </Button>
+          {/* Progress Bar and Status */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-muted-foreground">
+                Replacements: <span className="font-semibold text-foreground">{currentReplacements}</span> / {totalReplacements}
+              </div>
+              <div className="text-sm">
+                {allReplacementsMade ? (
+                  <div className="text-green-600 flex items-center gap-1">
+                    <CheckCircle2 size={16} /> Ready to add
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground">Pick {totalReplacements - currentReplacements} more</div>
+                )}
               </div>
             </div>
+            <Progress 
+              value={progressPercentage} 
+              className="h-2 bg-green-100"
+              style={{
+                background: 'linear-gradient(to right, #16a34a 0%, #16a34a 100%)'
+              }}
+            />
+          </div>
+
+          {/* Desktop Action Buttons */}
+          <div className="hidden sm:flex sm:items-center sm:justify-end gap-2 mb-4">
+            <Button 
+              variant="outline" 
+              onClick={handleCompleteReorder} 
+              disabled={!allReplacementsMade}
+              className="flex items-center gap-2 h-12 min-w-[120px] touch-manipulation"
+            >
+              <ShoppingCart size={16} />
+              Add to Cart
+            </Button>
+            <Button 
+              onClick={handleCheckout} 
+              disabled={!allReplacementsMade}
+              className="bg-green-500 hover:bg-green-600 h-12 min-w-[140px] touch-manipulation"
+            >
+              Proceed to Checkout
+            </Button>
           </div>
 
           {/* Meals grid */}
@@ -515,6 +526,33 @@ const MealReplacementDialog = ({ open, onOpenChange }: Props) => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Action Bar */}
+      {open && (
+        <div 
+          className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-lg z-50 p-4"
+          style={{ paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 1rem)` }}
+        >
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleCompleteReorder} 
+              disabled={!allReplacementsMade}
+              className="flex-1 h-12 touch-manipulation"
+            >
+              <ShoppingCart size={16} className="mr-2" />
+              Add to Cart
+            </Button>
+            <Button 
+              onClick={handleCheckout} 
+              disabled={!allReplacementsMade}
+              className="flex-1 bg-green-500 hover:bg-green-600 h-12 touch-manipulation"
+            >
+              Checkout
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
