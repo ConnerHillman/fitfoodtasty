@@ -393,7 +393,8 @@ const Cart = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Continue Shopping Button */}
       <div className="mb-4 sm:mb-6">
         <Button asChild size="lg" className="w-full sm:w-auto h-12 sm:h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
@@ -678,8 +679,7 @@ const Cart = () => {
                 )}
                 
                 {/* Desktop Calendar Button */}
-                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                  <PopoverTrigger asChild>
+                <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
@@ -693,9 +693,8 @@ const Cart = () => {
                       ) : (
                         <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
                       )}
-                    </Button>
-                  </PopoverTrigger>
-                </Popover>
+                     </Button>
+                </PopoverTrigger>
               </div>
 
               {/* Payment Form - Only for authenticated users */}
@@ -918,10 +917,11 @@ const Cart = () => {
               </Button>
             </CardContent>
           </Card>
-        </div>
-        
-      </div>
-
+         </div>
+         
+       </div>
+       </div>
+      
       {/* Single Shared Calendar Popover */}
       <PopoverContent className="w-auto p-0" side="bottom" align="center" sideOffset={4}>
         <Calendar
@@ -949,8 +949,7 @@ const Cart = () => {
           className={cn("p-3 pointer-events-auto")}
         />
       </PopoverContent>
-
-    </div>
+    </Popover>
   );
 };
 
