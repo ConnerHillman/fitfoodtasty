@@ -117,7 +117,7 @@ const Reports = () => {
     orders.forEach(order => {
       order.order_items?.forEach(item => {
         const key = item.meal_name;
-        const current = production.get(key) || { quantity: 0, orders: [], specialInstructions: [] };
+        const current = production.get(key) || { quantity: 0, orders: [] };
         production.set(key, {
           ...current,
           quantity: current.quantity + item.quantity,
@@ -132,7 +132,7 @@ const Reports = () => {
         const meal = meals.find(m => m.id === selection.meal_id);
         if (meal) {
           const key = meal.name;
-          const current = production.get(key) || { quantity: 0, orders: [], specialInstructions: [] };
+          const current = production.get(key) || { quantity: 0, orders: [] };
           production.set(key, {
             ...current,
             quantity: current.quantity + selection.quantity,
@@ -146,8 +146,7 @@ const Reports = () => {
       .map(([name, data]) => ({ 
         name, 
         quantity: data.quantity,
-        orders: data.orders.length,
-        specialInstructions: data.specialInstructions || []
+        orders: data.orders.length
       }))
       .sort((a, b) => b.quantity - a.quantity);
   };
@@ -211,7 +210,7 @@ const Reports = () => {
                     <td>-</td>
                     <td>${item.name}</td>
                     <td>-</td>
-                    <td>${item.specialInstructions.join('; ') || '-'}</td>
+                    <td>-</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -235,13 +234,12 @@ const Reports = () => {
     }
 
     const reportDataWithHeaders = [
-      ['Orders', 'Size', 'Title', 'Variations', 'Special Instructions'],
+      ['Orders', 'Size', 'Title', 'Variations'],
       ...reportData.map(item => [
         item.quantity.toString(),
         '', // Size column - empty for now
         item.name,
-        '', // Variations column - empty for now  
-        item.specialInstructions.join('; ') || ''
+        '' // Variations column - empty for now  
       ])
     ];
     
