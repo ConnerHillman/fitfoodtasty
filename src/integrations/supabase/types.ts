@@ -1234,33 +1234,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_order_favorites: {
-        Row: {
-          created_at: string | null
-          favorited_at: string | null
-          id: string
-          order_id: string
-          order_type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          favorited_at?: string | null
-          id?: string
-          order_id: string
-          order_type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          favorited_at?: string | null
-          id?: string
-          order_id?: string
-          order_type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
