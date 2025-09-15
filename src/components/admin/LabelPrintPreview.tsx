@@ -89,7 +89,14 @@ const SingleLabel: React.FC<{
       {/* Ingredients */}
       <div className="leading-tight" style={{ fontSize: '6px' }}>
         <span className="font-semibold text-foreground">Ingredients:</span>{' '}
-        <span className="text-muted-foreground">{ingredients || 'Not specified'}</span>
+        <span className="text-muted-foreground">
+          {ingredients ? ingredients.split(',').map((ingredient, index) => (
+            <span key={index}>
+              {ingredient.trim()}
+              {index < ingredients.split(',').length - 1 && ', '}
+            </span>
+          )) : 'Not specified'}
+        </span>
       </div>
 
       {/* Allergens */}
