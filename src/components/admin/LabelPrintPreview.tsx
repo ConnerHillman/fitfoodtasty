@@ -82,14 +82,14 @@ const SingleLabel: React.FC<{
       </div>
 
       {/* Storage Instructions */}
-      <div className="text-muted-foreground leading-tight" style={{ fontSize: '6px' }}>
+      <div className="text-foreground leading-tight" style={{ fontSize: '6px' }}>
         Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.
       </div>
 
       {/* Ingredients */}
       <div className="leading-tight" style={{ fontSize: '6px' }}>
         <span className="font-semibold text-foreground">Ingredients:</span>{' '}
-        <span className="text-muted-foreground">
+        <span className="text-foreground">
           {ingredients ? ingredients.split(',').map((ingredient, index) => (
             <span key={index}>
               {ingredient.trim()}
