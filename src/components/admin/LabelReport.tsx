@@ -243,8 +243,15 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       container.style.pointerEvents = 'none'; // No interaction
       container.style.opacity = '0'; // Completely transparent to users
       
-      // Minimal wait for DOM update (reduced from 1000ms to 100ms)
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for fonts and layout to be ready
+      await document.fonts.ready;
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      
+      // Additional 300ms for complete layout settling
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Ensure white background on container for proper rendering
+      container.style.backgroundColor = '#ffffff';
 
       // Batch check for images that need loading
       const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
@@ -280,58 +287,38 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       const pdf = new jsPDF('p', 'mm', 'a4');
 
-      // Process pages in parallel batches for better performance
-      const batchSize = 3; // Process 3 pages at a time
-      const pagePromises: Promise<{ canvas: HTMLCanvasElement; index: number }>[] = [];
-      
+      // Process pages sequentially for stability (no parallel batching)
       for (let i = 0; i < pages.length; i++) {
         const el = pages[i];
+        console.log(`Capturing page ${i + 1}/${pages.length}`);
         
-        const promise = html2canvas(el, { 
-          scale: 1.5, // Reduced from 2 to 1.5 for faster processing
+        // Ensure each page has white background
+        el.style.backgroundColor = '#ffffff';
+        
+        const canvas = await html2canvas(el, { 
+          scale: 2, // Back to high quality
           useCORS: true, 
           backgroundColor: '#ffffff',
           logging: false,
           allowTaint: true,
           height: el.offsetHeight,
           width: el.offsetWidth,
-          removeContainer: true, // Clean up faster
-          foreignObjectRendering: true, // Better performance for complex layouts
-          imageTimeout: 1000, // Faster image timeout
-          onclone: (clonedDoc, element) => {
-            // Optimize cloned elements for faster rendering
-            const style = clonedDoc.createElement('style');
-            style.textContent = `
-              * { 
-                animation: none !important; 
-                transition: none !important; 
-                transform: none !important; 
-              }
-            `;
-            clonedDoc.head.appendChild(style);
-          }
-        }).then(canvas => ({ canvas, index: i }));
+          // Remove problematic options that caused iframe errors
+          foreignObjectRendering: false,
+          removeContainer: false,
+          imageTimeout: 1000
+        });
         
-        pagePromises.push(promise);
+        console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
         
-        // Process in batches to avoid overwhelming the browser
-        if ((i + 1) % batchSize === 0 || i === pages.length - 1) {
-          const currentBatch = pagePromises.splice(0);
-          const results = await Promise.all(currentBatch);
-          
-          // Add results to PDF in correct order
-          results
-            .sort((a, b) => a.index - b.index)
-            .forEach(({ canvas, index }) => {
-              const imgData = canvas.toDataURL('image/jpeg', 0.85); // JPEG with 85% quality for smaller files
-              if (index > 0) pdf.addPage();
-              
-              // Scale to fit A4 (210x297mm)
-              const imgWidth = 210;
-              const imgHeight = 297;
-              pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-            });
-        }
+        // Back to PNG for transparency support
+        const imgData = canvas.toDataURL('image/png');
+        if (i > 0) pdf.addPage();
+        
+        // Scale to fit A4 (210x297mm)
+        const imgWidth = 210;
+        const imgHeight = 297;
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       }
 
       // Reset container to hidden state

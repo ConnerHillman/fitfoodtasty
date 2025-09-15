@@ -111,7 +111,8 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             width: ${LABEL_DIMENSIONS.pageWidth};
             height: ${LABEL_DIMENSIONS.pageHeight};
             margin: 0 auto 20px auto;
-            background: white;
+            background: white !important;
+            background-color: #ffffff !important;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             position: relative;
             display: grid;
