@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { KitchenPrintStyles } from './KitchenPrintStyles';
+import { IngredientsProductionView } from './IngredientsProductionView';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
@@ -468,19 +469,12 @@ export const KitchenProductionDashboard: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="ingredients" className="mt-6">
-                <Card className="print:shadow-none print:border-none">
-                  <CardHeader className="pb-4 print:hidden">
-                    <CardTitle className="text-xl font-bold flex items-center gap-2">
-                      <ChefHat className="h-5 w-5" />
-                      {formatDate(productionData.productionDate, 'EEEE do MMMM')} Ingredient Requirements
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 print:p-0">
-                    <div className="text-center py-12 text-muted-foreground">
-                      <p>Ingredients view coming soon...</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <IngredientsProductionView 
+                  productionData={productionData}
+                  loading={loading}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                />
               </TabsContent>
             </Tabs>
 
