@@ -64,31 +64,15 @@ export const LabelGenerator: React.FC = () => {
 
   const loadSavedMeals = async () => {
     try {
-      // Try Supabase first, fallback to localStorage for backwards compatibility
+      // Query Supabase first
       const { data: supabaseMeals, error } = await supabase
         .from('saved_meal_labels')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.warn('Supabase load failed, trying localStorage:', error);
-        
-        // Fallback to localStorage
-        const saved = localStorage.getItem('fitfoodtasty_saved_meals');
-        if (saved) {
-          const localMeals = JSON.parse(saved);
-          // Normalize local storage data to use storageHeatingInstructions
-          const normalizedMeals = localMeals.map((meal: any) => ({
-            ...meal,
-            storageHeatingInstructions: normalizeStorageInstructions(meal)
-          }));
-          setSavedMeals(normalizedMeals);
-        } else {
-          setSavedMeals([]);
-        }
-      } else {
-        // Convert Supabase data to local format and normalize field names
-        const formattedMeals = (supabaseMeals || []).map(meal => ({
+      if (!error && supabaseMeals) {
+        // Successfully loaded from Supabase - normalize all instruction fields
+        const formattedMeals = supabaseMeals.map(meal => ({
           id: meal.id,
           name: meal.name,
           calories: meal.calories,
@@ -100,11 +84,48 @@ export const LabelGenerator: React.FC = () => {
           storageHeatingInstructions: normalizeStorageInstructions(meal)
         }));
         setSavedMeals(formattedMeals);
+        return;
       }
+
+      // Supabase failed, fallback to localStorage
+      console.warn('Supabase query failed, falling back to localStorage:', error);
+      toast.info('Loading meals from local storage');
+      
+      const saved = localStorage.getItem('fitfoodtasty_saved_meals');
+      if (saved) {
+        const localMeals = JSON.parse(saved);
+        // Normalize all local storage data to use storageHeatingInstructions
+        const normalizedMeals = localMeals.map((meal: any) => ({
+          ...meal,
+          storageHeatingInstructions: normalizeStorageInstructions(meal)
+        }));
+        setSavedMeals(normalizedMeals);
+      } else {
+        setSavedMeals([]);
+      }
+      
     } catch (error) {
       console.error('Error loading saved meals:', error);
-      toast.error('Failed to load saved meals');
-      setSavedMeals([]);
+      toast.error('Failed to load saved meals from both database and local storage');
+      
+      // Final fallback - try localStorage even if parsing failed
+      try {
+        const saved = localStorage.getItem('fitfoodtasty_saved_meals');
+        if (saved) {
+          const localMeals = JSON.parse(saved);
+          const normalizedMeals = localMeals.map((meal: any) => ({
+            ...meal,
+            storageHeatingInstructions: normalizeStorageInstructions(meal)
+          }));
+          setSavedMeals(normalizedMeals);
+          toast.success('Recovered saved meals from local storage');
+        } else {
+          setSavedMeals([]);
+        }
+      } catch (localError) {
+        console.error('Local storage fallback also failed:', localError);
+        setSavedMeals([]);
+      }
     }
   };
 
