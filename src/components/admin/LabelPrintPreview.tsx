@@ -150,37 +150,49 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
       {pages.map(({ pageLabels, pageIndex }) => (
         <div key={pageIndex} className={`print-page ${pageIndex < pages.length - 1 ? 'page-break' : ''}`} role="region" aria-label={`Label page ${pageIndex + 1}`}>
 
-          {pageLabels.map(({ meal }, labelIndex) => (
-            <div key={`${meal?.mealId || 'empty'}-${labelIndex}`}>
-              {meal ? (
-                <SingleLabel
-                  mealName={meal.mealName}
-                  calories={meal.totalCalories}
-                  protein={meal.totalProtein}
-                  fat={meal.totalFat}
-                  carbs={meal.totalCarbs}
-                  ingredients={meal.ingredients}
-                  allergens={meal.allergens}
-                  useByDate={useByDate}
-                />
-              ) : (
-                <div style={{ 
-                  width: '96mm', 
-                  height: '50.8mm',
-                  border: '1px dashed #ccc', 
-                  opacity: 0.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#999',
-                  fontSize: '10px',
-                  position: 'relative'
-                }}>
-                  <div style={{position:'absolute', left:'6px', right:'6px', bottom:'6px', borderTop:'1px dashed #ccc', paddingTop: '4px', textAlign:'center'}}>Empty</div>
-                </div>
-              )}
-            </div>
-          ))}
+          {pageLabels.map(({ meal }, labelIndex) => {
+            // Debug log for ingredients data flow
+            if (meal) {
+              console.log(`Label ${labelIndex + 1} - Meal: ${meal.mealName}`, {
+                ingredients: meal.ingredients,
+                allergens: meal.allergens,
+                hasIngredients: !!meal.ingredients,
+                ingredientsLength: meal.ingredients?.length || 0
+              });
+            }
+            
+            return (
+              <div key={`${meal?.mealId || 'empty'}-${labelIndex}`}>
+                {meal ? (
+                  <SingleLabel
+                    mealName={meal.mealName}
+                    calories={meal.totalCalories}
+                    protein={meal.totalProtein}
+                    fat={meal.totalFat}
+                    carbs={meal.totalCarbs}
+                    ingredients={meal.ingredients}
+                    allergens={meal.allergens}
+                    useByDate={useByDate}
+                  />
+                ) : (
+                  <div style={{ 
+                    width: '96mm', 
+                    height: '50.8mm',
+                    border: '1px dashed #ccc', 
+                    opacity: 0.25,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#999',
+                    fontSize: '10px',
+                    position: 'relative'
+                  }}>
+                    <div style={{position:'absolute', left:'6px', right:'6px', bottom:'6px', borderTop:'1px dashed #ccc', paddingTop: '4px', textAlign:'center'}}>Empty</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ))}
       

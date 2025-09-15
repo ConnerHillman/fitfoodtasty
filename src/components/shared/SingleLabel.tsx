@@ -44,12 +44,15 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
     heatingInstructions: props.heatingInstructions
   };
 
-  // Enhanced formatting for ingredients with better readability
+  // Enhanced formatting for ingredients with better readability  
   const formatIngredients = (ingredientsList: string, allergensList: string) => {
-    if (!ingredientsList) return 'Not specified';
+    console.log('Formatting ingredients:', { ingredientsList, allergensList }); // Debug log
+    if (!ingredientsList || ingredientsList.trim() === '') return 'Ingredients not specified';
     
-    const ingredients = ingredientsList.split(', ').map(ing => ing.trim());
-    const allergens = allergensList.split(', ').map(all => all.trim().toLowerCase());
+    const ingredients = ingredientsList.split(', ').map(ing => ing.trim()).filter(ing => ing.length > 0);
+    const allergens = (allergensList || '').split(', ').map(all => all.trim().toLowerCase()).filter(all => all.length > 0);
+    
+    console.log('Processed:', { ingredients, allergens }); // Debug log
     
     return ingredients.map(ingredient => {
       const isAllergen = allergens.some(allergen => 
@@ -161,16 +164,24 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
         <div 
           className="text-gray-800 whitespace-pre-line" 
           style={{ 
-            fontSize: '10px', // Increased to 10px for much better readability
-            lineHeight: '1.6', // Increased line spacing for better visibility
-            paddingLeft: '4px', // More padding for bullet points
-            fontWeight: '500' // Medium weight for better readability
+            fontSize: '12px', // Increased to 12px for premium readability (10-12pt as requested)
+            lineHeight: '1.5', // Optimal line spacing
+            paddingLeft: '6px', // More padding for bullet points
+            fontWeight: '500', // Medium weight for better readability
+            minHeight: '20px' // Ensure space even if ingredients are missing
           }}
-          dangerouslySetInnerHTML={{
-            __html: formatIngredients(data.ingredients, data.allergens || '')
-              .replace(/\*\*(.*?)\*\*/g, '<span style="background: #fef2f2; color: #dc2626; font-weight: bold; padding: 1px 3px; border-radius: 3px;">$1</span>')
-          }}
-        />
+        >
+          {data.ingredients && data.ingredients.trim() ? (
+            <div dangerouslySetInnerHTML={{
+              __html: formatIngredients(data.ingredients, data.allergens || '')
+                .replace(/\*\*(.*?)\*\*/g, '<span style="background: #fef2f2; color: #dc2626; font-weight: bold; padding: 1px 3px; border-radius: 3px;">$1</span>')
+            }} />
+          ) : (
+            <div style={{ color: '#666', fontStyle: 'italic' }}>
+              • Ingredients not available
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Prominent Allergens Section with enhanced styling */}
