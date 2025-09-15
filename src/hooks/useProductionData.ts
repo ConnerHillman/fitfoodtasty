@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
@@ -10,6 +10,19 @@ export const useProductionData = () => {
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [ingredientsError, setIngredientsError] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Request tracking to prevent race conditions
+  const currentRequestRef = useRef<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // Process meals as individual line items
   const processMealLineItems = useCallback((orders: any[]): MealLineItem[] => {
@@ -41,7 +54,11 @@ export const useProductionData = () => {
   }, []);
 
   // Process ingredients from meal line items with retry capability
-  const processIngredientLineItems = useCallback(async (mealLineItems: MealLineItem[], retryCount = 0): Promise<IngredientLineItem[]> => {
+  const processIngredientLineItems = useCallback(async (
+    mealLineItems: MealLineItem[], 
+    requestId: string,
+    retryCount = 0
+  ): Promise<IngredientLineItem[]> => {
     const ingredientMap: { [key: string]: IngredientLineItem } = {};
     const mealNames = Array.from(new Set(mealLineItems.map(item => item.mealName)));
     
@@ -120,7 +137,7 @@ export const useProductionData = () => {
         // Exponential backoff: wait 1s, then 2s, then 4s
         const delay = Math.pow(2, retryCount) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
-        return processIngredientLineItems(mealLineItems, retryCount + 1);
+        return processIngredientLineItems(mealLineItems, requestId, retryCount + 1);
       } else {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         setIngredientsError(errorMessage);
@@ -131,6 +148,16 @@ export const useProductionData = () => {
 
   const loadProductionData = useCallback(async (selectedDate: Date) => {
     if (!selectedDate) return;
+    
+    // Cancel previous request if running
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new request ID and abort controller
+    const requestId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    currentRequestRef.current = requestId;
+    abortControllerRef.current = new AbortController();
     
     setLoading(true);
     try {
@@ -255,7 +282,18 @@ export const useProductionData = () => {
       // Process ingredients separately to avoid blocking the UI
       setIngredientsLoading(true);
       try {
-        const ingredientLineItems = await processIngredientLineItems(mealLineItems);
+        // Check if this request is still current before processing
+        if (currentRequestRef.current !== requestId) {
+          return; // Silently exit if request was superseded
+        }
+        
+        const ingredientLineItems = await processIngredientLineItems(mealLineItems, requestId);
+        
+        // Double-check request is still current before updating state
+        if (currentRequestRef.current !== requestId) {
+          return; // Silently exit if request was superseded during processing
+        }
+        
         const totalIngredients = ingredientLineItems.reduce((sum, ingredient) => sum + ingredient.totalQuantity, 0);
 
         setProductionData(prev => prev ? {
@@ -265,14 +303,20 @@ export const useProductionData = () => {
           uniqueIngredientTypes: ingredientLineItems.length
         } : null);
       } catch (ingredientError) {
-        console.error('Error processing ingredients:', ingredientError);
-        toast({
-          title: "Ingredient Processing Failed",
-          description: "Failed to load ingredient requirements. Meal data is still available.",
-          variant: "destructive",
-        });
+        // Only show error if this is still the current request
+        if (currentRequestRef.current === requestId) {
+          console.error('Error processing ingredients:', ingredientError);
+          toast({
+            title: "Ingredient Processing Failed",
+            description: "Failed to load ingredient requirements. Meal data is still available.",
+            variant: "destructive",
+          });
+        }
       } finally {
-        setIngredientsLoading(false);
+        // Only update loading state if this is still the current request
+        if (currentRequestRef.current === requestId) {
+          setIngredientsLoading(false);
+        }
       }
 
     } catch (error) {
@@ -290,11 +334,21 @@ export const useProductionData = () => {
   const retryIngredientProcessing = useCallback(async () => {
     if (!productionData?.mealLineItems.length) return;
     
+    // Create new request ID for retry
+    const requestId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    currentRequestRef.current = requestId;
+    
     setIngredientsLoading(true);
     setIngredientsError(null);
     
     try {
-      const ingredientLineItems = await processIngredientLineItems(productionData.mealLineItems);
+      const ingredientLineItems = await processIngredientLineItems(productionData.mealLineItems, requestId);
+      
+      // Check if request is still current before updating state
+      if (currentRequestRef.current !== requestId) {
+        return; // Silently exit if request was superseded
+      }
+      
       const totalIngredients = ingredientLineItems.reduce((sum, ingredient) => sum + ingredient.totalQuantity, 0);
 
       setProductionData(prev => prev ? {
@@ -309,14 +363,20 @@ export const useProductionData = () => {
         description: "Ingredient requirements loaded successfully.",
       });
     } catch (error) {
-      console.error('Retry failed:', error);
-      toast({
-        title: "Retry Failed",
-        description: "Still unable to load ingredient requirements. Please try again later.",
-        variant: "destructive",
-      });
+      // Only show error if this is still the current request
+      if (currentRequestRef.current === requestId) {
+        console.error('Retry failed:', error);
+        toast({
+          title: "Retry Failed",
+          description: "Still unable to load ingredient requirements. Please try again later.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIngredientsLoading(false);
+      // Only update loading state if this is still the current request
+      if (currentRequestRef.current === requestId) {
+        setIngredientsLoading(false);
+      }
     }
   }, [productionData?.mealLineItems, processIngredientLineItems, toast]);
 
