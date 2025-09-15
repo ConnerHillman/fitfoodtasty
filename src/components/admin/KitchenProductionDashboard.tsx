@@ -13,7 +13,10 @@ import {
   Printer,
   CheckCircle,
   AlertCircle,
-  Users
+  Users,
+  ArrowUpDown,
+  Hash,
+  ArrowDownAZ
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +47,7 @@ export const KitchenProductionDashboard: React.FC = () => {
   const [productionData, setProductionData] = useState<ProductionSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [sortBy, setSortBy] = useState<'alphabetical' | 'quantity'>('alphabetical');
   const { toast } = useToast();
 
   // Process meals as individual line items without grouping by base name
@@ -71,8 +75,12 @@ export const KitchenProductionDashboard: React.FC = () => {
       });
     });
 
-    // Sort alphabetically by default
-    return Object.values(mealLineItems).sort((a, b) => a.mealName.localeCompare(b.mealName));
+    // Sort based on current sort preference
+    const sortedItems = Object.values(mealLineItems);
+    if (sortBy === 'quantity') {
+      return sortedItems.sort((a, b) => b.totalQuantity - a.totalQuantity);
+    }
+    return sortedItems.sort((a, b) => a.mealName.localeCompare(b.mealName));
   };
 
   const loadProductionData = async () => {
@@ -220,7 +228,7 @@ export const KitchenProductionDashboard: React.FC = () => {
 
   useEffect(() => {
     loadProductionData();
-  }, [selectedDate]);
+  }, [selectedDate, sortBy]);
 
   const handlePrint = () => {
     window.print();
@@ -331,35 +339,70 @@ export const KitchenProductionDashboard: React.FC = () => {
 
             {/* Main Production List */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                  <ChefHat className="h-6 w-6" />
-                  {formatDate(productionData.productionDate, 'EEEE do MMMM')} Production List
-                </CardTitle>
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <ChefHat className="h-5 w-5" />
+                    {formatDate(productionData.productionDate, 'EEEE do MMMM')} Production List
+                  </CardTitle>
+                  
+                  {/* Sorting Controls */}
+                  <div className="flex gap-2 print:hidden">
+                    <Button
+                      variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSortBy('alphabetical')}
+                      className="text-xs"
+                    >
+                      <ArrowDownAZ className="h-3 w-3 mr-1" />
+                      A-Z
+                    </Button>
+                    <Button
+                      variant={sortBy === 'quantity' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSortBy('quantity')}
+                      className="text-xs"
+                    >
+                      <Hash className="h-3 w-3 mr-1" />
+                      Qty
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="kitchen-meal-list space-y-1">
-                  {productionData.mealLineItems.map((meal, index) => (
-                    <div key={index} className="kitchen-meal-row flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 print:table-row">
-                      <div className="flex items-center gap-3">
-                        <Badge variant="secondary" className="kitchen-meal-quantity text-lg font-bold px-3 py-1 print:bg-white print:border print:border-black">
-                          {meal.totalQuantity}
-                        </Badge>
-                        <span className="kitchen-meal-name text-lg font-medium">
-                          {meal.mealName}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+              <CardContent className="pt-0">
+                {/* Compact Table Layout */}
+                <div className="kitchen-table-container">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b-2 border-gray-300 print:border-black">
+                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-16">Qty</th>
+                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground">Meal Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productionData.mealLineItems.map((meal, index) => (
+                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 print:hover:bg-transparent">
+                          <td className="py-2 px-3 text-center">
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-black print:text-white">
+                              {meal.totalQuantity}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-sm font-medium text-foreground">
+                            {meal.mealName}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
                 
                 <Separator className="my-4" />
                 
-                <div className="kitchen-total flex items-center justify-between print:text-center print:text-white print:bg-black print:p-3 print:border-2 print:border-black">
-                  <span className="text-xl font-bold">TOTAL MEALS:</span>
-                  <Badge variant="default" className="text-2xl font-bold px-4 py-2 print:bg-transparent print:text-white print:border-0">
+                <div className="kitchen-total flex items-center justify-between bg-gray-100 p-3 rounded print:text-center print:text-white print:bg-black print:border-2 print:border-black">
+                  <span className="text-lg font-bold">TOTAL MEALS:</span>
+                  <span className="text-2xl font-bold text-primary print:text-white">
                     {productionData.totalMeals}
-                  </Badge>
+                  </span>
                 </div>
               </CardContent>
             </Card>
