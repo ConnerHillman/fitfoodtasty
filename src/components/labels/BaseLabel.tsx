@@ -185,7 +185,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         width: LABEL_DIMENSIONS.width,
         height: LABEL_DIMENSIONS.height,
         boxSizing: 'border-box',
-        padding: '3mm 3mm 8mm 3mm', // Extra bottom padding for URL space
+        padding: '3mm', // Reset to normal padding since URL is no longer at bottom
         display: 'flex',
         flexDirection: 'column',
         fontSize: '6px',
@@ -263,8 +263,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         <div style={{ 
           flex: 1, 
           display: 'flex', 
-          flexDirection: 'column',
-          paddingBottom: '2mm' // Ensure content stops before URL
+          flexDirection: 'column'
         }}>
           
           {/* Ingredients - Dynamic sizing based on content length */}
@@ -360,7 +359,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               fontSize: `${dynamicSizes.useBy * 0.7}mm`, // Make it smaller
               fontWeight: '650',
               lineHeight: '1.0',
-              marginBottom: '2mm',
+              marginBottom: '1mm',
               letterSpacing: '0.01em'
             }}
           >
@@ -371,28 +370,24 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               year: 'numeric'
             }) : 'Fri, 19/09/2025'}
           </div>
+
+          {/* Website URL - Positioned directly under USE BY date */}
+          <div 
+            className="text-center font-medium text-primary" 
+            style={{ 
+              fontSize: `${dynamicSizes.footer}mm`,
+              fontWeight: '550',
+              lineHeight: '1.0',
+              letterSpacing: '0.03em',
+              borderTop: '0.15mm solid rgba(var(--primary), 0.25)',
+              paddingTop: '1mm',
+              marginBottom: '1mm'
+            }}
+          >
+            www.fitfoodtasty.co.uk
+          </div>
         </div>
 
-      </div>
-
-      {/* Footer URL - Fixed at bottom, centered */}
-      <div 
-        className="text-center font-medium text-primary" 
-        style={{ 
-          position: 'absolute',
-          bottom: '1.5mm',
-          left: '0',
-          right: '0',
-          fontSize: `${dynamicSizes.footer}mm`,
-          fontWeight: '550',
-          lineHeight: '1.0',
-          letterSpacing: '0.03em',
-          borderTop: '0.15mm solid rgba(var(--primary), 0.25)',
-          paddingTop: '1mm',
-          margin: '0 3mm'
-        }}
-      >
-        www.fitfoodtasty.co.uk
       </div>
     </div>
   );
