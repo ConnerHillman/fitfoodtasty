@@ -44,33 +44,27 @@ export const KitchenPrintStyles: React.FC = () => {
         .kitchen-meal-list {
           border-collapse: collapse;
           width: 100%;
-          margin-bottom: 5mm;
+          margin-bottom: 3mm;
         }
         
         .kitchen-meal-row {
-          border-bottom: 1px solid #ccc;
+          border-bottom: 1px solid #ddd;
           page-break-inside: avoid;
         }
         
         .kitchen-meal-quantity {
-          font-size: 14pt;
+          font-size: 12pt;
           font-weight: bold;
-          padding: 2mm;
+          padding: 1mm;
           text-align: center;
-          border-right: 1px solid #ccc;
-          width: 15mm;
+          border-right: 1px solid #ddd;
+          width: 12mm;
         }
         
         .kitchen-meal-name {
-          font-size: 12pt;
-          padding: 2mm;
-          font-weight: 500;
-        }
-        
-        .kitchen-meal-variations {
-          font-size: 10pt;
-          color: #666;
+          font-size: 11pt;
           padding: 1mm 2mm;
+          font-weight: 500;
         }
         
         .kitchen-total {

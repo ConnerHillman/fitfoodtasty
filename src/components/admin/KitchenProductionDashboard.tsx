@@ -382,8 +382,14 @@ export const KitchenProductionDashboard: React.FC = () => {
 
 
             {/* Main Production List */}
-            <Card>
-              <CardHeader className="pb-4">
+            <div className="print:block hidden">
+              <h2 className="text-lg font-bold mb-2">
+                {formatDate(productionData.productionDate, 'EEEE do MMMM')} Production List
+              </h2>
+            </div>
+
+            <Card className="print:shadow-none print:border-none">
+              <CardHeader className="pb-4 print:hidden">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
                     <ChefHat className="h-5 w-5" />
@@ -415,26 +421,26 @@ export const KitchenProductionDashboard: React.FC = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 print:p-0">
                 {/* Compact Table Layout */}
                 <div className="kitchen-table-container overflow-x-auto" role="region" aria-label="Kitchen production list">
-                  <table className="w-full border-collapse min-w-full">
+                  <table className="w-full border-collapse min-w-full kitchen-meal-list">
                     <thead className="print:break-before-avoid">
                       <tr className="border-b-2 border-border">
-                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-20">Qty</th>
-                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground">Meal Description</th>
+                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-20 kitchen-meal-quantity">Qty</th>
+                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground kitchen-meal-name">Meal Description</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sortedMealLineItems.length > 0 ? (
                         sortedMealLineItems.map((meal, index) => (
-                          <tr key={`${meal.mealName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid">
-                            <td className="py-2 px-3 text-center align-middle">
-                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-black print:text-white">
+                          <tr key={`${meal.mealName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid kitchen-meal-row">
+                            <td className="py-2 px-3 text-center align-middle kitchen-meal-quantity">
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-transparent print:text-black print:w-auto print:h-auto print:rounded-none">
                                 {meal.totalQuantity}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-sm font-medium text-foreground align-middle">
+                            <td className="py-2 px-3 text-sm font-medium text-foreground align-middle kitchen-meal-name">
                               {meal.mealName}
                             </td>
                           </tr>
