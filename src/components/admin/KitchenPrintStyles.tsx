@@ -19,7 +19,7 @@ export const KitchenPrintStyles: React.FC = () => {
         .kitchen-production-container {
           max-width: none;
           margin: 0;
-          padding: 10mm;
+          padding: 5mm;
         }
         
         .kitchen-header {
@@ -39,8 +39,6 @@ export const KitchenPrintStyles: React.FC = () => {
           text-align: center;
           margin: 1mm 0 0 0;
         }
-        
-        
         .kitchen-meal-list {
           border-collapse: collapse;
           width: 100%;
@@ -76,7 +74,6 @@ export const KitchenPrintStyles: React.FC = () => {
           background: #000;
           color: white;
         }
-        
         
         /* Force page breaks */
         .page-break {
