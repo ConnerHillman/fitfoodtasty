@@ -703,7 +703,6 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
-          heating_instructions: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -712,7 +711,6 @@ export type Database = {
           shelf_life_days: number
           sort_order: number | null
           storage_heating_instructions: string | null
-          storage_instructions: string | null
           total_calories: number | null
           total_carbs: number | null
           total_fat: number | null
@@ -729,7 +727,6 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
-          heating_instructions?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -738,7 +735,6 @@ export type Database = {
           shelf_life_days?: number
           sort_order?: number | null
           storage_heating_instructions?: string | null
-          storage_instructions?: string | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
@@ -755,7 +751,6 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
-          heating_instructions?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -764,7 +759,6 @@ export type Database = {
           shelf_life_days?: number
           sort_order?: number | null
           storage_heating_instructions?: string | null
-          storage_instructions?: string | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
