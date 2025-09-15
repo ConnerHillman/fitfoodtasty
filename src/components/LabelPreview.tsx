@@ -20,49 +20,85 @@ interface LabelPreviewProps {
   showSingle?: boolean;
 }
 
-const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
-  <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
-    width: '99.1mm',
-    height: '57.3mm', // EU30009BM specification
-    boxSizing: 'border-box',
-    padding: '6px',
-    display: 'flex',
-    flexDirection: 'column',
-    fontSize: '6px',
-    lineHeight: '1.2'
-  }}>
-    {/* Header Section */}
-    <div className="flex flex-col items-center">
-      {/* Logo */}
-      <div className="mb-2">
-        <img 
-          src={logoImage} 
-          alt="Fit Food Tasty" 
-          className="h-8 w-auto object-contain"
-        />
-      </div>
-      
-      {/* Meal Name */}
-      <h1 className="text-center font-bold text-foreground leading-tight mb-2" style={{ fontSize: '14px' }}>
-        {data.mealName}
-      </h1>
-      
-      {/* Separator */}
-      <div className="w-8 h-px bg-primary/30 mb-2"></div>
-    </div>
+const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => {
+  // Format ingredients with bullet points and highlight allergens
+  const formatIngredients = (ingredientsList: string, allergensList: string) => {
+    if (!ingredientsList) return 'Not specified';
+    
+    const ingredients = ingredientsList.split(', ').map(ing => ing.trim());
+    const allergens = allergensList.split(', ').map(all => all.trim().toLowerCase());
+    
+    return ingredients.map(ingredient => {
+      const isAllergen = allergens.some(allergen => 
+        ingredient.toLowerCase().includes(allergen) || 
+        allergen.includes(ingredient.toLowerCase())
+      );
+      return isAllergen ? `**${ingredient}**` : ingredient;
+    }).map(ing => `• ${ing}`).join('\n');
+  };
 
-    {/* Nutrition Section */}
-    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-2 py-1.5 mb-2">
-      <div className="text-center font-bold text-primary leading-tight" style={{ fontSize: '8px' }}>
-        {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
+  return (
+    <div 
+      className="w-full h-full font-inter relative overflow-hidden"
+      style={{
+        width: '96mm',
+        height: '50.8mm',
+        boxSizing: 'border-box',
+        background: 'linear-gradient(135deg, #e6ffe6 0%, #ffffff 50%, #f0fff0 100%)',
+        border: '1px solid #d4d4d8',
+        borderRadius: '2px',
+        display: 'flex',
+        flexDirection: 'column',
+        fontSize: '6px',
+        lineHeight: '1.3',
+        position: 'relative'
+      }}
+    >
+      {/* Premium Header with larger logo */}
+      <div className="text-center px-3 py-2" style={{ backgroundColor: 'rgba(34, 197, 94, 0.05)' }}>
+        <div className="flex justify-center mb-1">
+          <img 
+            src={logoImage} 
+            alt="Fit Food Tasty"
+            style={{ height: '12mm', width: 'auto', objectFit: 'contain' }}
+          />
+        </div>
+        <h1 className="font-bold text-gray-800 leading-tight mb-1" style={{ fontSize: '11px', fontFamily: 'serif' }}>
+          {data.mealName}
+        </h1>
+        <div className="text-center text-green-600 font-medium italic" style={{ fontSize: '5px', fontFamily: 'serif' }}>
+          Fresh, Fit, Flavorful
+        </div>
       </div>
-    </div>
 
-    {/* Main Content */}
-    <div className="flex-1 space-y-1.5">
-      {/* Use By Date - Most Important */}
-      <div className="bg-muted/50 rounded px-2 py-1">
-        <div className="font-bold text-foreground leading-tight" style={{ fontSize: '7px' }}>
+      {/* Premium Nutrition Box */}
+      <div className="mx-2 mb-2 bg-green-50 border border-green-200 rounded px-2 py-1.5">
+        <div className="grid grid-cols-2 gap-1 text-center">
+          <div>
+            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.calories}**</div>
+            <div className="text-gray-600" style={{ fontSize: '5px' }}>CALORIES</div>
+          </div>
+          <div>
+            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.protein}g**</div>
+            <div className="text-gray-600" style={{ fontSize: '5px' }}>PROTEIN</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-1 text-center mt-1">
+          <div>
+            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.fat}g**</div>
+            <div className="text-gray-600" style={{ fontSize: '5px' }}>FAT</div>
+          </div>
+          <div>
+            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.carbs}g**</div>
+            <div className="text-gray-600" style={{ fontSize: '5px' }}>CARBS</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Use By Date with Icon */}
+      <div className="mx-2 mb-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-1 flex items-center gap-1">
+        <div style={{ fontSize: '6px' }}>📅</div>
+        <div className="font-bold text-gray-800 leading-tight" style={{ fontSize: '6px' }}>
           USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
             weekday: 'short',
             day: '2-digit',
@@ -72,34 +108,47 @@ const SingleLabel: React.FC<{ data: LabelData }> = ({ data }) => (
         </div>
       </div>
 
-      {/* Storage Instructions */}
-      <div className="text-muted-foreground leading-tight" style={{ fontSize: '6px' }}>
-        {data.storageInstructions}
+      {/* Storage & Heating Instructions with Icon */}
+      <div className="mx-2 mb-1 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+        <div className="flex items-center gap-1 mb-1">
+          <div style={{ fontSize: '6px' }}>🔥</div>
+          <div className="text-gray-700 font-medium" style={{ fontSize: '5px' }}>HEATING</div>
+        </div>
+        <div className="text-gray-600 leading-tight" style={{ fontSize: '5px' }}>
+          {data.heatingInstructions || 'Microwave 3-4 mins until piping hot'}
+        </div>
+        <div className="text-gray-600 leading-tight" style={{ fontSize: '5px' }}>
+          {data.storageInstructions || 'Store refrigerated below 5°C'}
+        </div>
       </div>
 
-      {/* Ingredients */}
-      <div className="leading-tight" style={{ fontSize: '6px' }}>
-        <span className="font-semibold text-foreground">Ingredients:</span>{' '}
-        <span className="text-muted-foreground">{data.ingredients || 'Not specified'}</span>
+      {/* Ingredients Section */}
+      <div className="mx-2 mb-1 bg-green-50 border border-green-200 rounded px-2 py-1 flex-1">
+        <div className="font-semibold text-gray-800 mb-1" style={{ fontSize: '5px' }}>INGREDIENTS:</div>
+        <div className="text-gray-700 leading-tight whitespace-pre-line" style={{ fontSize: '5px', lineHeight: '1.2' }}>
+          {formatIngredients(data.ingredients, data.allergens || '')}
+        </div>
       </div>
 
-      {/* Allergens */}
+      {/* Allergens Section - Prominent */}
       {data.allergens && (
-        <div className="leading-tight" style={{ fontSize: '6px' }}>
-          <span className="font-semibold text-foreground">Allergens:</span>{' '}
-          <span className="font-bold text-foreground">{data.allergens}</span>
+        <div className="mx-2 mb-1 bg-red-50 border border-red-300 rounded px-2 py-1">
+          <div className="font-bold text-red-800 mb-1" style={{ fontSize: '5px' }}>⚠️ ALLERGENS:</div>
+          <div className="font-bold text-red-700 leading-tight" style={{ fontSize: '6px' }}>
+            {data.allergens.split(', ').map(allergen => allergen.trim().toUpperCase()).join(' • ')}
+          </div>
         </div>
       )}
-    </div>
 
-    {/* Footer */}
-    <div className="border-t border-border/30 pt-1 mt-2">
-      <div className="text-center font-medium text-primary leading-tight" style={{ fontSize: '6px' }}>
-        www.fitfoodtasty.co.uk
+      {/* Premium Footer */}
+      <div className="mt-auto bg-gray-50 border-t border-gray-200 px-2 py-1">
+        <div className="text-center font-medium text-green-700 leading-tight" style={{ fontSize: '5px' }}>
+          www.fitfoodtasty.co.uk
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = false }) => {
   if (showSingle) {
@@ -127,8 +176,8 @@ export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = f
     while (pageLabels.length < labelsPerPage) {
       pageLabels.push(
         <div key={`empty-${pageLabels.length}`} className="w-full h-full" style={{
-          width: '99.1mm',
-          height: '57.3mm'
+          width: '96mm',
+          height: '50.8mm'
         }} />
       );
     }
@@ -140,13 +189,16 @@ export const LabelPreview: React.FC<LabelPreviewProps> = ({ data, showSingle = f
         style={{
           width: '210mm',  // A4 width
           height: '297mm', // A4 height
-          padding: '8.5mm', // EU30009BM margins - equal on all sides for 10-label layout
+          padding: '11.5mm 6.5mm', // Correct margins for 96x50.8mm labels
           backgroundColor: 'white',
           boxSizing: 'border-box',
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 99.1mm)', // 2 columns
-          gridTemplateRows: 'repeat(5, 57.3mm)',    // 5 rows (EU30009BM spec)
-          gap: '0',
+          gridTemplateColumns: 'repeat(2, 96mm)', // 2 columns
+          gridTemplateRows: 'repeat(5, 50.8mm)',    // 5 rows
+          columnGap: '5mm',
+          rowGap: '5mm',
+          alignContent: 'start',
+          justifyContent: 'center',
           pageBreakAfter: pageNum < totalPages - 1 ? 'always' : 'auto'
         }}
       >
