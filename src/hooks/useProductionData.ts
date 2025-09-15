@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
 import type { MealLineItem, IngredientLineItem, ProductionSummary } from '@/types/kitchen';
 import { aggregateQuantities, canAggregateUnits, formatQuantity, convertToBaseUnit } from '@/lib/unitConversion';
+import { filterOrdersByProductionDate, isValidProductionDate } from '@/lib/dateUtils';
 
 export const useProductionData = () => {
   const [productionData, setProductionData] = useState<ProductionSummary | null>(null);
@@ -13,17 +14,39 @@ export const useProductionData = () => {
   const [dataValidationWarnings, setDataValidationWarnings] = useState<string[]>([]);
   const { toast } = useToast();
   
-  // Request tracking to prevent race conditions
+  // Request tracking to prevent race conditions and memory leaks
   const currentRequestRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
-  // Cleanup on unmount
+  // Cleanup on unmount and prevent memory leaks
   useEffect(() => {
+    isMountedRef.current = true;
+    
     return () => {
+      // Mark as unmounted
+      isMountedRef.current = false;
+      
+      // Cancel pending requests
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      
+      // Clear all timeouts
+      timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+      timeoutRefs.current.clear();
+      
+      // Reset request tracking
+      currentRequestRef.current = null;
     };
+  }, []);
+
+  // Safe state update - only if component is still mounted
+  const safeSetState = useCallback(<T>(setter: (prev: T) => T, currentValue: T): void => {
+    if (isMountedRef.current) {
+      setter(currentValue);
+    }
   }, []);
 
   // Validate meal data completeness and integrity
@@ -238,18 +261,48 @@ export const useProductionData = () => {
       if (retryCount < maxRetries) {
         // Exponential backoff: wait 1s, then 2s, then 4s
         const delay = Math.pow(2, retryCount) * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Use timeout with cleanup tracking
+        const timeoutPromise = new Promise<void>(resolve => {
+          const timeout = setTimeout(() => {
+            timeoutRefs.current.delete(timeout);
+            resolve();
+          }, delay);
+          timeoutRefs.current.add(timeout);
+        });
+        
+        await timeoutPromise;
+        
+        // Check if still mounted before retry
+        if (!isMountedRef.current) {
+          throw new Error('Component unmounted during retry');
+        }
+        
         return processIngredientLineItems(mealLineItems, requestId, retryCount + 1);
       } else {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        setIngredientsError(errorMessage);
+        
+        // Safe state update
+        if (isMountedRef.current) {
+          setIngredientsError(errorMessage);
+        }
+        
         throw error;
       }
     }
   }, []);
 
   const loadProductionData = useCallback(async (selectedDate: Date) => {
-    if (!selectedDate) return;
+    // Validate input date first
+    if (!selectedDate || !isValidProductionDate(selectedDate)) {
+      console.error('[Production Data] Invalid date provided:', selectedDate);
+      toast({
+        title: "Invalid Date",
+        description: "Please select a valid date for production data.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Cancel previous request if running
     if (abortControllerRef.current) {
@@ -305,36 +358,11 @@ export const useProductionData = () => {
       const orders = ordersRes.data || [];
       const packageOrders = packageOrdersRes.data || [];
 
-      // Filter orders for the selected production date
-      const filteredOrders = orders.filter(order => {
-        if (order.production_date) {
-          const orderProductionDate = new Date(order.production_date);
-          return orderProductionDate.toDateString() === selectedDate.toDateString();
-        }
-        
-        try {
-          const createdDate = new Date(order.created_at);
-          return createdDate.toDateString() === selectedDate.toDateString();
-        } catch (error) {
-          console.error('Error parsing date for order:', order.id, error);
-          return false;
-        }
-      });
-
-      const filteredPackageOrders = packageOrders.filter(order => {
-        if (order.production_date) {
-          const orderProductionDate = new Date(order.production_date);
-          return orderProductionDate.toDateString() === selectedDate.toDateString();
-        }
-        
-        try {
-          const createdDate = new Date(order.created_at);
-          return createdDate.toDateString() === selectedDate.toDateString();
-        } catch (error) {
-          console.error('Error parsing package order date:', order.id, error);
-          return false;
-        }
-      });
+      // Use enhanced date filtering with proper validation
+      console.log(`[Production Data] Filtering ${orders.length} orders and ${packageOrders.length} package orders for date ${selectedDate.toISOString().split('T')[0]}`);
+      
+      const filteredOrders = filterOrdersByProductionDate(orders, selectedDate);
+      const filteredPackageOrders = filterOrdersByProductionDate(packageOrders, selectedDate);
 
       // Fetch actual meal names for package orders with validation
       const packageMealIds = filteredPackageOrders.flatMap(pkg => 
@@ -418,20 +446,26 @@ export const useProductionData = () => {
         uniqueIngredientTypes: 0
       };
 
-      setProductionData(initialData);
+      // Safe state updates with mount check
+      if (isMountedRef.current) {
+        setProductionData(initialData);
 
-      // Show validation warnings to user if any
-      if (dataValidationWarnings.length > 0) {
-        toast({
-          title: "Data Validation Warnings",
-          description: `${dataValidationWarnings.length} issues found. Check console for details.`,
-          variant: "destructive",
-        });
+        // Show validation warnings to user if any
+        if (dataValidationWarnings.length > 0) {
+          toast({
+            title: "Data Validation Warnings",
+            description: `${dataValidationWarnings.length} issues found. Check console for details.`,
+            variant: "destructive",
+          });
+        }
       }
 
       // Process ingredients separately to avoid blocking the UI
-      setIngredientsLoading(true);
-      setDataValidationWarnings([]); // Reset warnings for new ingredient processing
+      if (isMountedRef.current) {
+        setIngredientsLoading(true);
+        setDataValidationWarnings([]); // Reset warnings for new ingredient processing
+      }
+      
       try {
         // Check if this request is still current before processing
         if (currentRequestRef.current !== requestId) {
@@ -447,15 +481,18 @@ export const useProductionData = () => {
         
         const totalIngredients = ingredientLineItems.reduce((sum, ingredient) => sum + ingredient.totalQuantity, 0);
 
-        setProductionData(prev => prev ? {
-          ...prev,
-          ingredientLineItems,
-          totalIngredients,
-          uniqueIngredientTypes: ingredientLineItems.length
-        } : null);
+        // Safe state update with mount check
+        if (isMountedRef.current) {
+          setProductionData(prev => prev ? {
+            ...prev,
+            ingredientLineItems,
+            totalIngredients,
+            uniqueIngredientTypes: ingredientLineItems.length
+          } : null);
+        }
       } catch (ingredientError) {
-        // Only show error if this is still the current request
-        if (currentRequestRef.current === requestId) {
+        // Only show error if this is still the current request and component is mounted
+        if (currentRequestRef.current === requestId && isMountedRef.current) {
           console.error('Error processing ingredients:', ingredientError);
           toast({
             title: "Ingredient Processing Failed",
@@ -464,23 +501,30 @@ export const useProductionData = () => {
           });
         }
       } finally {
-        // Only update loading state if this is still the current request
-        if (currentRequestRef.current === requestId) {
+        // Only update loading state if this is still the current request and component is mounted
+        if (currentRequestRef.current === requestId && isMountedRef.current) {
           setIngredientsLoading(false);
         }
       }
 
     } catch (error) {
       console.error('Error loading production data:', error);
-      toast({
-        title: "Error Loading Data",
-        description: "Failed to load production data for the selected date.",
-        variant: "destructive",
-      });
+      
+      // Safe error handling with mount check
+      if (isMountedRef.current) {
+        toast({
+          title: "Error Loading Data",
+          description: "Failed to load production data for the selected date.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setLoading(false);
+      // Safe loading state update
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  }, [processMealLineItems, processIngredientLineItems, toast]);
+  }, [processMealLineItems, processIngredientLineItems, toast, safeSetState]);
 
   const retryIngredientProcessing = useCallback(async () => {
     if (!productionData?.mealLineItems.length) {
@@ -494,8 +538,11 @@ export const useProductionData = () => {
     const requestId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     currentRequestRef.current = requestId;
     
-    setIngredientsLoading(true);
-    setIngredientsError(null);
+    // Safe state updates with mount check
+    if (isMountedRef.current) {
+      setIngredientsLoading(true);
+      setIngredientsError(null);
+    }
     
     try {
       const ingredientLineItems = await processIngredientLineItems(productionData.mealLineItems, requestId);
@@ -507,20 +554,23 @@ export const useProductionData = () => {
       
       const totalIngredients = ingredientLineItems.reduce((sum, ingredient) => sum + ingredient.totalQuantity, 0);
 
-      setProductionData(prev => prev ? {
-        ...prev,
-        ingredientLineItems,
-        totalIngredients,
-        uniqueIngredientTypes: ingredientLineItems.length
-      } : null);
+      // Safe state updates with mount check
+      if (isMountedRef.current) {
+        setProductionData(prev => prev ? {
+          ...prev,
+          ingredientLineItems,
+          totalIngredients,
+          uniqueIngredientTypes: ingredientLineItems.length
+        } : null);
 
-      toast({
-        title: "Success",
-        description: "Ingredient requirements loaded successfully.",
-      });
+        toast({
+          title: "Success",
+          description: "Ingredient requirements loaded successfully.",
+        });
+      }
     } catch (error) {
-      // Only show error if this is still the current request
-      if (currentRequestRef.current === requestId) {
+      // Only show error if this is still the current request and component is mounted
+      if (currentRequestRef.current === requestId && isMountedRef.current) {
         console.error('Retry failed:', error);
         toast({
           title: "Retry Failed",
@@ -529,8 +579,8 @@ export const useProductionData = () => {
         });
       }
     } finally {
-      // Only update loading state if this is still the current request
-      if (currentRequestRef.current === requestId) {
+      // Only update loading state if this is still the current request and component is mounted
+      if (currentRequestRef.current === requestId && isMountedRef.current) {
         setIngredientsLoading(false);
       }
     }

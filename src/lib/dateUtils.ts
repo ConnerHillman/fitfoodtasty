@@ -1,6 +1,6 @@
 // Centralized date utilities for business logic
 
-import { addDays, format, startOfDay, endOfDay } from 'date-fns';
+import { addDays, format, startOfDay, endOfDay, isValid, parseISO } from 'date-fns';
 
 /**
  * Date generation utilities
@@ -146,3 +146,128 @@ export const isRecentDate = (date: Date | string, daysThreshold = 30): boolean =
   const daysDiff = daysBetween(new Date(), date);
   return daysDiff <= daysThreshold;
 };
+
+/**
+ * Kitchen production date utilities with timezone awareness
+ */
+
+/**
+ * Validates if a date string or Date object is valid
+ */
+export function isValidProductionDate(date: string | Date | null | undefined): boolean {
+  if (!date) return false;
+  
+  try {
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    return isValid(dateObj);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Safely converts a date string to Date object with validation
+ */
+export function safeParseDate(dateString: string | null | undefined, fallback?: Date): Date | null {
+  if (!dateString) return fallback || null;
+  
+  try {
+    // Try parsing as ISO string first
+    let parsed = parseISO(dateString);
+    if (isValid(parsed)) return parsed;
+    
+    // Try parsing as Date constructor
+    parsed = new Date(dateString);
+    if (isValid(parsed)) return parsed;
+    
+    return fallback || null;
+  } catch (error) {
+    console.warn(`[DateUtils] Failed to parse date: ${dateString}`, error);
+    return fallback || null;
+  }
+}
+
+/**
+ * Compares two dates for same day using UTC to avoid timezone issues
+ */
+export function isSameDay(date1: Date, date2: Date): boolean {
+  if (!isValid(date1) || !isValid(date2)) return false;
+  
+  // Convert to UTC strings for comparison to avoid timezone issues
+  const utc1 = date1.toISOString().split('T')[0];
+  const utc2 = date2.toISOString().split('T')[0];
+  
+  return utc1 === utc2;
+}
+
+/**
+ * Checks if an order matches a specific production date with fallback logic
+ */
+export function matchesProductionDate(
+  order: { production_date?: string | null; created_at: string; id: string },
+  targetDate: Date
+): boolean {
+  // Validate target date
+  if (!isValid(targetDate)) {
+    console.warn(`[DateUtils] Invalid target date provided`);
+    return false;
+  }
+
+  // Primary: Use production_date if available and valid
+  if (order.production_date) {
+    const productionDate = safeParseDate(order.production_date);
+    if (productionDate) {
+      const matches = isSameDay(productionDate, targetDate);
+      if (matches) {
+        console.log(`[DateUtils] Order ${order.id} matched by production_date`);
+      }
+      return matches;
+    } else {
+      console.warn(`[DateUtils] Order ${order.id} has invalid production_date: ${order.production_date}`);
+    }
+  }
+
+  // Fallback: Use created_at if production_date is missing or invalid
+  const createdDate = safeParseDate(order.created_at);
+  if (createdDate) {
+    const matches = isSameDay(createdDate, targetDate);
+    if (matches) {
+      console.log(`[DateUtils] Order ${order.id} matched by created_at fallback`);
+    }
+    return matches;
+  } else {
+    console.error(`[DateUtils] Order ${order.id} has invalid created_at: ${order.created_at}`);
+    return false;
+  }
+}
+
+/**
+ * Filters orders by production date with comprehensive validation
+ */
+export function filterOrdersByProductionDate<T extends { 
+  production_date?: string | null; 
+  created_at: string; 
+  id: string 
+}>(orders: T[], targetDate: Date): T[] {
+  if (!isValid(targetDate)) {
+    console.error(`[DateUtils] Invalid target date for filtering orders`);
+    return [];
+  }
+
+  const validOrders = orders.filter(order => {
+    if (!order.id) {
+      console.warn(`[DateUtils] Order missing ID, skipping`);
+      return false;
+    }
+    
+    if (!order.created_at) {
+      console.warn(`[DateUtils] Order ${order.id} missing created_at, skipping`);
+      return false;
+    }
+
+    return matchesProductionDate(order, targetDate);
+  });
+
+  console.log(`[DateUtils] Filtered ${validOrders.length}/${orders.length} orders for date ${targetDate.toISOString().split('T')[0]}`);
+  return validOrders;
+}
