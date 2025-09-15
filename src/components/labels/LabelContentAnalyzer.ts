@@ -118,11 +118,11 @@ export class LabelContentAnalyzer {
 
   private static enforceQualityThresholds(factors: ScalingFactors): ScalingFactors {
     const minimums = {
-      mealName: 2.8,
-      nutrition: 1.8,
-      instructions: 1.4,
-      ingredients: 1.2,
-      footer: 1.2
+      mealName: 3.0,
+      nutrition: 2.0,
+      instructions: 1.6,
+      ingredients: 1.4,
+      footer: 1.3
     };
 
     return {

@@ -94,14 +94,14 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data, debugMode = false })
       {/* Nutrition Information */}
       {contentVisibility.showNutritionDetails && (
         <div 
-          className="text-center font-medium text-muted-foreground" 
+          className="text-center font-medium text-foreground" 
           style={{ 
             fontSize: `${dynamicSizes.nutrition}mm`,
             fontWeight: '600',
             lineHeight: '1.1',
             marginBottom: `${spacing.nutritionMargin}mm`,
             padding: '0.8mm 2mm',
-            background: 'linear-gradient(90deg, transparent, rgba(var(--primary), 0.08) 20%, rgba(var(--primary), 0.08) 80%, transparent)',
+            background: 'linear-gradient(90deg, transparent, hsl(var(--primary) / 0.08) 20%, hsl(var(--primary) / 0.08) 80%, transparent)',
             letterSpacing: '0.01em'
           }}
         >
@@ -148,7 +148,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data, debugMode = false })
           {/* Heating Instructions */}
           {contentVisibility.showDetailedInstructions && heatingInstructions && (
             <div 
-              className="text-center font-medium text-muted-foreground" 
+              className="text-center font-medium text-foreground" 
               style={{ 
                 fontSize: `${dynamicSizes.instructions * 0.95}mm`,
                 fontWeight: '550',
@@ -166,7 +166,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data, debugMode = false })
         {/* Ingredients Section */}
         <div style={{ marginBottom: `${spacing.ingredientsMargin}mm` }}>
           <div 
-            className="text-left font-medium text-muted-foreground" 
+            className="text-left font-medium text-foreground" 
             style={{ 
               fontSize: `${dynamicSizes.ingredients}mm`,
               fontWeight: '500',
@@ -186,7 +186,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data, debugMode = false })
           {/* Allergens */}
           {contentVisibility.showAllergens && data.allergens && (
             <div 
-              className="text-left font-medium text-muted-foreground mt-1" 
+              className="text-left font-medium text-foreground mt-1" 
               style={{ 
                 fontSize: `${dynamicSizes.ingredients}mm`,
                 fontWeight: '500',
@@ -222,7 +222,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data, debugMode = false })
           lineHeight: '1.0',
           marginTop: `${spacing.footerMargin}mm`,
           paddingTop: `${spacing.footerMargin}mm`,
-          borderTop: '0.15mm solid rgba(var(--primary), 0.25)',
+          borderTop: '0.15mm solid hsl(var(--primary) / 0.25)',
           letterSpacing: '0.03em'
         }}
       >
