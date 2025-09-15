@@ -151,38 +151,33 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
         <div key={pageIndex} className={`print-page ${pageIndex < pages.length - 1 ? 'page-break' : ''}`} role="region" aria-label={`Label page ${pageIndex + 1}`}>
 
           {pageLabels.map(({ meal }, labelIndex) => (
-            <div key={`${meal?.mealId || 'empty'}-${labelIndex}`}>
-              {meal ? (
-                <BaseLabel
-                  data={{
-                    mealName: meal.mealName,
-                    calories: meal.totalCalories,
-                    protein: meal.totalProtein,
-                    fat: meal.totalFat,
-                    carbs: meal.totalCarbs,
-                    ingredients: meal.ingredients,
-                    allergens: meal.allergens,
-                    useByDate: useByDate,
-                    storageHeatingInstructions: DEFAULT_INSTRUCTIONS.storageHeating
-                  }}
-                />
-              ) : (
-                <div style={{ 
+            meal ? (
+              <BaseLabel
+                key={`${meal.mealId}-${labelIndex}`}
+                data={{
+                  mealName: meal.mealName,
+                  calories: meal.totalCalories,
+                  protein: meal.totalProtein,
+                  fat: meal.totalFat,
+                  carbs: meal.totalCarbs,
+                  ingredients: meal.ingredients,
+                  allergens: meal.allergens,
+                  useByDate: useByDate,
+                  storageHeatingInstructions: DEFAULT_INSTRUCTIONS.storageHeating
+                }}
+              />
+            ) : (
+              <div 
+                key={`empty-${labelIndex}`}
+                style={{ 
                   width: LABEL_DIMENSIONS.width, 
                   height: LABEL_DIMENSIONS.height,
                   border: '1px dashed #ccc', 
                   opacity: 0.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#999',
-                  fontSize: '10px',
-                  position: 'relative'
-                }}>
-                  <div style={{position:'absolute', left:'6px', right:'6px', bottom:'6px', borderTop:'1px dashed #ccc', paddingTop: '4px', textAlign:'center'}}>Empty</div>
-                </div>
-              )}
-            </div>
+                  backgroundColor: '#fafafa'
+                }}
+              />
+            )
           ))}
         </div>
       ))}

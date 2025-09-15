@@ -243,32 +243,31 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       container.style.pointerEvents = 'none'; // No interaction
       container.style.opacity = '0'; // Completely transparent to users
       
-      // Wait for next render cycle
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Minimal wait for DOM update (reduced from 1000ms to 100ms)
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Wait for images (logo) to load
+      // Batch check for images that need loading
       const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
-      console.log('Found images:', images.length);
+      const unloadedImages = images.filter(img => !img.complete);
       
-      await Promise.all(
-        images.map(
-          (img) =>
-            new Promise<void>((resolve) => {
-              if (img.complete) {
-                console.log('Image already loaded:', img.src.substring(0, 50) + '...');
-                return resolve();
-              }
-              img.onload = () => {
-                console.log('Image loaded successfully');
-                resolve();
-              };
-              img.onerror = () => {
-                console.log('Image failed to load');
-                resolve();
-              };
-            })
-        )
-      );
+      if (unloadedImages.length > 0) {
+        await Promise.all(
+          unloadedImages.map(
+            (img) =>
+              new Promise<void>((resolve) => {
+                const timeout = setTimeout(() => resolve(), 500); // 500ms timeout per image
+                img.onload = () => {
+                  clearTimeout(timeout);
+                  resolve();
+                };
+                img.onerror = () => {
+                  clearTimeout(timeout);
+                  resolve();
+                };
+              })
+          )
+        );
+      }
 
       const pages = Array.from(container.querySelectorAll('.print-page')) as HTMLElement[];
       console.log('Found pages:', pages.length);
@@ -281,33 +280,58 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       const pdf = new jsPDF('p', 'mm', 'a4');
 
+      // Process pages in parallel batches for better performance
+      const batchSize = 3; // Process 3 pages at a time
+      const pagePromises: Promise<{ canvas: HTMLCanvasElement; index: number }>[] = [];
+      
       for (let i = 0; i < pages.length; i++) {
         const el = pages[i];
-        console.log(`Capturing page ${i + 1}/${pages.length}`);
         
-        const canvas = await html2canvas(el, { 
-          scale: 2, 
+        const promise = html2canvas(el, { 
+          scale: 1.5, // Reduced from 2 to 1.5 for faster processing
           useCORS: true, 
           backgroundColor: '#ffffff',
-          logging: false, // Reduce console noise
+          logging: false,
           allowTaint: true,
           height: el.offsetHeight,
           width: el.offsetWidth,
-          ignoreElements: (element) => {
-            // Don't ignore any elements since we're off-screen
-            return false;
+          removeContainer: true, // Clean up faster
+          foreignObjectRendering: true, // Better performance for complex layouts
+          imageTimeout: 1000, // Faster image timeout
+          onclone: (clonedDoc, element) => {
+            // Optimize cloned elements for faster rendering
+            const style = clonedDoc.createElement('style');
+            style.textContent = `
+              * { 
+                animation: none !important; 
+                transition: none !important; 
+                transform: none !important; 
+              }
+            `;
+            clonedDoc.head.appendChild(style);
           }
-        });
+        }).then(canvas => ({ canvas, index: i }));
         
-        console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
+        pagePromises.push(promise);
         
-        const imgData = canvas.toDataURL('image/png');
-        if (i > 0) pdf.addPage();
-        
-        // Scale to fit A4 (210x297mm)
-        const imgWidth = 210;
-        const imgHeight = 297;
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        // Process in batches to avoid overwhelming the browser
+        if ((i + 1) % batchSize === 0 || i === pages.length - 1) {
+          const currentBatch = pagePromises.splice(0);
+          const results = await Promise.all(currentBatch);
+          
+          // Add results to PDF in correct order
+          results
+            .sort((a, b) => a.index - b.index)
+            .forEach(({ canvas, index }) => {
+              const imgData = canvas.toDataURL('image/jpeg', 0.85); // JPEG with 85% quality for smaller files
+              if (index > 0) pdf.addPage();
+              
+              // Scale to fit A4 (210x297mm)
+              const imgWidth = 210;
+              const imgHeight = 297;
+              pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+            });
+        }
       }
 
       // Reset container to hidden state
