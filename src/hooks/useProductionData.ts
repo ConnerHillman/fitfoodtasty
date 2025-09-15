@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
 import type { MealLineItem, IngredientLineItem, ProductionSummary } from '@/types/kitchen';
+import { aggregateQuantities, canAggregateUnits, formatQuantity, convertToBaseUnit } from '@/lib/unitConversion';
 
 export const useProductionData = () => {
   const [productionData, setProductionData] = useState<ProductionSummary | null>(null);
@@ -69,6 +70,8 @@ export const useProductionData = () => {
     try {
       setIngredientsError(null);
       
+      console.log(`[Kitchen Production] Processing ingredients for ${mealLineItems.length} meal types`);
+      
       // Fetch meal ingredients for all meals
       const { data: mealsWithIngredients, error } = await supabase
         .from('meals')
@@ -87,7 +90,9 @@ export const useProductionData = () => {
 
       if (error) throw error;
 
-      // Process each meal's ingredients
+      // Process each meal's ingredients with unit conversion
+      const ingredientAggregations: { [key: string]: Array<{ quantity: number; unit: string; mealData: any }> } = {};
+      
       mealLineItems.forEach(mealItem => {
         const mealData = mealsWithIngredients?.find(m => m.name === mealItem.mealName);
         
@@ -100,34 +105,58 @@ export const useProductionData = () => {
             const unit = mealIngredient.unit || mealIngredient.ingredients.default_unit || 'g';
             const totalQuantityForThisIngredient = quantityPerMeal * mealItem.totalQuantity;
 
-            if (!ingredientMap[ingredientName]) {
-              ingredientMap[ingredientName] = {
-                ingredientName,
-                totalQuantity: 0,
-                unit,
-                mealBreakdown: []
-              };
+            if (!ingredientAggregations[ingredientName]) {
+              ingredientAggregations[ingredientName] = [];
             }
-
-            ingredientMap[ingredientName].totalQuantity += totalQuantityForThisIngredient;
-
-            const existingBreakdown = ingredientMap[ingredientName].mealBreakdown
-              .find(breakdown => breakdown.mealName === mealItem.mealName);
-
-            if (existingBreakdown) {
-              existingBreakdown.quantity += totalQuantityForThisIngredient;
-              existingBreakdown.orderCount = mealItem.orders.length;
-            } else {
-              ingredientMap[ingredientName].mealBreakdown.push({
+            
+            ingredientAggregations[ingredientName].push({
+              quantity: totalQuantityForThisIngredient,
+              unit,
+              mealData: {
                 mealName: mealItem.mealName,
-                quantity: totalQuantityForThisIngredient,
-                unit,
-                orderCount: mealItem.orders.length
-              });
-            }
+                orderCount: mealItem.orders.length,
+                quantityPerMeal,
+                totalMealQuantity: mealItem.totalQuantity
+              }
+            });
           });
         }
       });
+
+      // Convert aggregations to ingredient line items with proper unit handling
+      Object.entries(ingredientAggregations).forEach(([ingredientName, quantities]) => {
+        // Validate unit compatibility
+        const units = quantities.map(q => q.unit);
+        const unitCheck = canAggregateUnits(units);
+        
+        // Aggregate quantities using unit conversion
+        const aggregated = aggregateQuantities(quantities);
+        
+        if (!unitCheck.canAggregate) {
+          console.warn(`[Unit Conversion] Incompatible units for ${ingredientName}: ${unitCheck.reason}. Units found: ${units.join(', ')}`);
+          // Continue processing with warning - use unit conversion to normalize
+        } else if (units.length > 1) {
+          console.log(`[Unit Conversion] Converting mixed units for ${ingredientName}: ${units.join(', ')} → ${aggregated.baseUnit}`);
+        }
+        
+        ingredientMap[ingredientName] = {
+          ingredientName,
+          totalQuantity: Number(aggregated.baseValue.toFixed(1)),
+          unit: aggregated.baseUnit,
+          mealBreakdown: quantities.map(q => {
+            const converted = convertToBaseUnit(q.quantity, q.unit);
+            return {
+              mealName: q.mealData.mealName,
+              quantity: Number(converted.baseValue.toFixed(1)),
+              unit: converted.baseUnit,
+              orderCount: q.mealData.orderCount
+            };
+          })
+        };
+      });
+
+      const ingredientCount = Object.keys(ingredientMap).length;
+      console.log(`[Kitchen Production] Successfully processed ${ingredientCount} unique ingredients with unit normalization`);
 
       return Object.values(ingredientMap);
     } catch (error) {
