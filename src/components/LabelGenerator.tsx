@@ -256,8 +256,11 @@ export const LabelGenerator: React.FC = () => {
 
   const deleteSavedMeal = async (id: string) => {
     try {
-      // Try Supabase first (if the ID is a UUID, it's from Supabase)
-      if (id.length > 20) { // UUID format from Supabase
+      // Check if ID is a UUID (from Supabase) vs timestamp-based ID (from localStorage)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      if (isUUID) {
+        // Delete from Supabase
         const { error: supabaseError } = await supabase
           .from('saved_meal_labels')
           .delete()
@@ -265,24 +268,31 @@ export const LabelGenerator: React.FC = () => {
 
         if (supabaseError) {
           console.warn('Supabase delete failed:', supabaseError);
-          toast.error('Failed to delete meal from database');
+          toast.error('Failed to delete meal from database. Please try again.');
           return;
         }
+        
+        toast.success('Meal deleted from database successfully');
       } else {
-        // Handle localStorage meals (shorter timestamp-based IDs)
+        // Delete from localStorage (timestamp-based ID)
         const existing = localStorage.getItem('fitfoodtasty_saved_meals');
         if (existing) {
           const meals = JSON.parse(existing);
           const filtered = meals.filter((meal: SavedMeal) => meal.id !== id);
           localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(filtered));
+          toast.success('Meal deleted from local storage successfully');
+        } else {
+          toast.warning('No saved meals found in local storage');
+          return;
         }
       }
       
-      toast.success('Meal deleted');
+      // Reload meals after successful deletion
       loadSavedMeals();
+      
     } catch (error) {
       console.error('Error deleting meal:', error);
-      toast.error('Failed to delete meal');
+      toast.error('Failed to delete meal - please try again');
     }
   };
 
