@@ -333,7 +333,7 @@ export const useProductionData = () => {
             meal_name,
             quantity
           )
-        `).in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery']),
+        `).in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'completed']),
         
         supabase.from("package_orders").select(`
           id,
@@ -349,7 +349,7 @@ export const useProductionData = () => {
           packages (
             name
           )
-        `).in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery'])
+        `).in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'completed'])
       ]);
 
       if (ordersRes.error) throw ordersRes.error;

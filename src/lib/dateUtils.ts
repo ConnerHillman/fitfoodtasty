@@ -188,16 +188,15 @@ export function safeParseDate(dateString: string | null | undefined, fallback?: 
 }
 
 /**
- * Compares two dates for same day using UTC to avoid timezone issues
+ * Compares two dates for same day using local comparison to avoid timezone issues
  */
 export function isSameDay(date1: Date, date2: Date): boolean {
   if (!isValid(date1) || !isValid(date2)) return false;
   
-  // Convert to UTC strings for comparison to avoid timezone issues
-  const utc1 = date1.toISOString().split('T')[0];
-  const utc2 = date2.toISOString().split('T')[0];
-  
-  return utc1 === utc2;
+  // Compare local dates to avoid timezone shifting midnight to previous day
+  return date1.getFullYear() === date2.getFullYear() &&
+         date1.getMonth() === date2.getMonth() &&
+         date1.getDate() === date2.getDate();
 }
 
 /**
