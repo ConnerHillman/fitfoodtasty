@@ -22,23 +22,6 @@ export const KitchenPrintStyles: React.FC = () => {
           padding: 5mm;
         }
         
-        .kitchen-header {
-          padding-bottom: 2mm;
-          margin-bottom: 3mm;
-        }
-        
-        .kitchen-title {
-          font-size: 14pt;
-          font-weight: bold;
-          text-align: center;
-          margin: 0;
-        }
-        
-        .kitchen-date {
-          font-size: 12pt;
-          text-align: center;
-          margin: 1mm 0 0 0;
-        }
         .kitchen-meal-list {
           border-collapse: collapse;
           width: 100%;
