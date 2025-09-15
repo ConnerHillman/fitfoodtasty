@@ -177,13 +177,16 @@ export const KitchenProductionDashboard: React.FC = () => {
           const orderProductionDate = new Date(order.production_date);
           return orderProductionDate.toDateString() === selectedDate.toDateString();
         }
-        // Fallback: calculate production date (2 days before delivery or created date)
-        const deliveryDate = order.requested_delivery_date ? 
-          new Date(order.requested_delivery_date) : 
-          new Date(order.created_at);
-        const calculatedProductionDate = new Date(deliveryDate);
-        calculatedProductionDate.setDate(calculatedProductionDate.getDate() - 2);
-        return calculatedProductionDate.toDateString() === selectedDate.toDateString();
+        
+        // For orders without explicit production_date, use creation date as production date
+        // (assuming same-day production for testing purposes)
+        try {
+          const createdDate = new Date(order.created_at);
+          return createdDate.toDateString() === selectedDate.toDateString();
+        } catch (error) {
+          console.error('Error parsing date for order:', order.id, error);
+          return false;
+        }
       });
 
       const filteredPackageOrders = packageOrders.filter(order => {
@@ -191,13 +194,15 @@ export const KitchenProductionDashboard: React.FC = () => {
           const orderProductionDate = new Date(order.production_date);
           return orderProductionDate.toDateString() === selectedDate.toDateString();
         }
-        // Fallback calculation
-        const deliveryDate = order.requested_delivery_date ? 
-          new Date(order.requested_delivery_date) : 
-          new Date(order.created_at);
-        const calculatedProductionDate = new Date(deliveryDate);
-        calculatedProductionDate.setDate(calculatedProductionDate.getDate() - 2);
-        return calculatedProductionDate.toDateString() === selectedDate.toDateString();
+        
+        // For orders without explicit production_date, use creation date as production date
+        try {
+          const createdDate = new Date(order.created_at);
+          return createdDate.toDateString() === selectedDate.toDateString();
+        } catch (error) {
+          console.error('Error parsing package order date:', order.id, error);
+          return false;
+        }
       });
 
       // Convert package orders to same format as regular orders
@@ -300,6 +305,7 @@ export const KitchenProductionDashboard: React.FC = () => {
                     }
                   }}
                   initialFocus
+                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
