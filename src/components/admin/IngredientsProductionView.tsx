@@ -3,40 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
-  ChefHat, 
   Hash,
   ArrowDownAZ,
   Package
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
-
-interface MealBreakdown {
-  mealName: string;
-  quantity: number;
-  unit: string;
-  orderCount: number;
-}
-
-interface IngredientLineItem {
-  ingredientName: string;
-  totalQuantity: number;
-  unit: string;
-  mealBreakdown: MealBreakdown[];
-}
-
-interface IngredientsProductionSummary {
-  productionDate: Date;
-  totalIngredients: number;
-  uniqueIngredientTypes: number;
-  ingredientLineItems: IngredientLineItem[];
-}
+import type { ProductionSummary, IngredientLineItem, SortBy } from '@/types/kitchen';
 
 interface IngredientsProductionViewProps {
-  productionData: any;
+  productionData: ProductionSummary | null;
   sortedIngredientLineItems: IngredientLineItem[];
   loading: boolean;
-  sortBy: 'alphabetical' | 'quantity';
-  setSortBy: (sortBy: 'alphabetical' | 'quantity') => void;
+  sortBy: SortBy;
+  setSortBy: (sortBy: SortBy) => void;
 }
 
 export const IngredientsProductionView: React.FC<IngredientsProductionViewProps> = ({

@@ -21,45 +21,16 @@ import { IngredientsProductionView } from './IngredientsProductionView';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
+import type { MealLineItem, IngredientLineItem, ProductionSummary, SortBy } from '@/types/kitchen';
 
-interface MealLineItem {
-  mealName: string;
-  totalQuantity: number;
-  orders: Array<{
-    orderId: string;
-    quantity: number;
-    customerName?: string;
-  }>;
-}
-
-interface IngredientLineItem {
-  ingredientName: string;
-  totalQuantity: number;
-  unit: string;
-  mealBreakdown: Array<{
-    mealName: string;
-    quantity: number;
-    unit: string;
-    orderCount: number;
-  }>;
-}
-
-interface ProductionSummary {
-  productionDate: Date;
-  totalMeals: number;
-  uniqueMealTypes: number;
-  mealLineItems: MealLineItem[];
-  ingredientLineItems: IngredientLineItem[];
-  totalIngredients: number;
-  uniqueIngredientTypes: number;
-}
 
 export const KitchenProductionDashboard: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [productionData, setProductionData] = useState<ProductionSummary | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [sortBy, setSortBy] = useState<'alphabetical' | 'quantity'>('alphabetical');
+  const [sortBy, setSortBy] = useState<SortBy>('alphabetical');
   const [activeTab, setActiveTab] = useState<'meals' | 'ingredients'>('meals');
   const { toast } = useToast();
 
@@ -306,21 +277,43 @@ export const KitchenProductionDashboard: React.FC = () => {
       const allOrders = [...filteredOrders, ...normalizedPackageOrders];
       const mealLineItems = processMealLineItems(allOrders);
       
-      // Process ingredients from the meal line items
-      const ingredientLineItems = await processIngredientLineItems(mealLineItems);
-      
       const totalMeals = mealLineItems.reduce((sum, meal) => sum + meal.totalQuantity, 0);
-      const totalIngredients = ingredientLineItems.reduce((sum, ingredient) => sum + ingredient.totalQuantity, 0);
 
-      setProductionData({
+      // Initialize production data with meals first
+      const initialData: ProductionSummary = {
         productionDate: selectedDate,
         totalMeals,
         uniqueMealTypes: mealLineItems.length,
         mealLineItems,
-        ingredientLineItems,
-        totalIngredients,
-        uniqueIngredientTypes: ingredientLineItems.length
-      });
+        ingredientLineItems: [],
+        totalIngredients: 0,
+        uniqueIngredientTypes: 0
+      };
+
+      setProductionData(initialData);
+
+      // Process ingredients separately to avoid blocking the UI
+      setIngredientsLoading(true);
+      try {
+        const ingredientLineItems = await processIngredientLineItems(mealLineItems);
+        const totalIngredients = ingredientLineItems.reduce((sum, ingredient) => sum + ingredient.totalQuantity, 0);
+
+        setProductionData(prev => prev ? {
+          ...prev,
+          ingredientLineItems,
+          totalIngredients,
+          uniqueIngredientTypes: ingredientLineItems.length
+        } : null);
+      } catch (ingredientError) {
+        console.error('Error processing ingredients:', ingredientError);
+        toast({
+          title: "Ingredient Processing Failed",
+          description: "Failed to load ingredient requirements. Meal data is still available.",
+          variant: "destructive",
+        });
+      } finally {
+        setIngredientsLoading(false);
+      }
 
     } catch (error) {
       console.error('Error loading production data:', error);
@@ -584,7 +577,7 @@ export const KitchenProductionDashboard: React.FC = () => {
                 <IngredientsProductionView 
                   productionData={productionData}
                   sortedIngredientLineItems={sortedIngredientLineItems}
-                  loading={loading}
+                  loading={loading || ingredientsLoading}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
                 />
