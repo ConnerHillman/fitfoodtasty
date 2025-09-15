@@ -13,7 +13,7 @@ import { LabelSheet } from './labels/LabelSheet';
 import { LabelEditor } from './LabelEditor';
 import { MealSelector } from './MealSelector';
 import { LabelReport } from './admin/LabelReport';
-import type { FullLabelData as LabelData } from '@/types/label';
+import type { FullLabelData } from '@/types/label';
 import { DEFAULT_INSTRUCTIONS } from '@/types/label';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -32,7 +32,7 @@ interface SavedMeal {
 }
 
 export const LabelGenerator: React.FC = () => {
-  const [labelData, setLabelData] = useState<LabelData>({
+  const [labelData, setLabelData] = useState<FullLabelData>({
     mealName: '',
     calories: 0,
     protein: 0,
@@ -70,7 +70,7 @@ export const LabelGenerator: React.FC = () => {
     }
   };
 
-  const handleInputChange = (field: keyof LabelData, value: string | number) => {
+  const handleInputChange = (field: keyof FullLabelData, value: string | number) => {
     setLabelData(prev => ({
       ...prev,
       [field]: value
@@ -191,7 +191,7 @@ export const LabelGenerator: React.FC = () => {
     window.print();
   };
 
-  const handleSaveFromEditor = (updatedData: LabelData) => {
+  const handleSaveFromEditor = (updatedData: FullLabelData) => {
     setLabelData(updatedData);
     setIsEditMode(false);
   };

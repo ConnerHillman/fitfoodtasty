@@ -3,6 +3,7 @@ import { format as formatDate } from 'date-fns';
 import { BaseLabel } from '@/components/labels/BaseLabel';
 import { LABEL_DIMENSIONS } from '@/types/label';
 import type { LabelData } from '@/types/label';
+import { DEFAULT_INSTRUCTIONS } from '@/types/label';
 
 interface MealProduction {
   mealId: string;
@@ -161,7 +162,9 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
                     carbs: meal.totalCarbs,
                     ingredients: meal.ingredients,
                     allergens: meal.allergens,
-                    useByDate: useByDate
+                    useByDate: useByDate,
+                    storageInstructions: DEFAULT_INSTRUCTIONS.storage,
+                    heatingInstructions: DEFAULT_INSTRUCTIONS.heating
                   }}
                 />
               ) : (
