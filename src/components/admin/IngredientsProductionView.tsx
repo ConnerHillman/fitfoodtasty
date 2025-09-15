@@ -5,7 +5,8 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Hash,
   ArrowDownAZ,
-  Package
+  Package,
+  Clock
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
 import type { ProductionSummary, IngredientLineItem, SortBy } from '@/types/kitchen';
@@ -16,6 +17,8 @@ interface IngredientsProductionViewProps {
   loading: boolean;
   sortBy: SortBy;
   setSortBy: (sortBy: SortBy) => void;
+  ingredientsError?: string | null;
+  onRetryIngredients?: () => void;
 }
 
 export const IngredientsProductionView: React.FC<IngredientsProductionViewProps> = ({
@@ -23,7 +26,9 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
   sortedIngredientLineItems,
   loading,
   sortBy,
-  setSortBy
+  setSortBy,
+  ingredientsError,
+  onRetryIngredients
 }) => {
   // Use the processed ingredient data from parent
   const ingredientsData = useMemo(() => {
@@ -37,7 +42,7 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
     };
   }, [productionData, sortedIngredientLineItems]);
 
-  if (!ingredientsData) {
+  if (!ingredientsData && !ingredientsError) {
     return (
       <Card>
         <CardContent className="py-12">
@@ -47,6 +52,27 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
             <p className="mt-1 text-sm text-gray-500">
               Select a date with scheduled meals to view ingredient requirements.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state with retry option
+  if (ingredientsError && onRetryIngredients) {
+    return (
+      <Card>
+        <CardContent className="py-12">
+          <div className="text-center">
+            <Package className="mx-auto h-12 w-12 text-destructive" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Failed to load ingredients</h3>
+            <p className="mt-1 text-sm text-gray-500 mb-4">
+              {ingredientsError}
+            </p>
+            <Button onClick={onRetryIngredients} disabled={loading}>
+              <Clock className="h-4 w-4 mr-2" />
+              {loading ? 'Retrying...' : 'Retry'}
+            </Button>
           </div>
         </CardContent>
       </Card>
