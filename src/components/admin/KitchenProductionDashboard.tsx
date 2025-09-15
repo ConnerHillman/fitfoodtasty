@@ -370,8 +370,12 @@ export const KitchenProductionDashboard: React.FC = () => {
 
         {productionData ? (
           <div className="space-y-6">
-
-
+            {/* Print-only Production Date Header */}
+            <div className="hidden print:block text-center mb-8">
+              <h1 className="text-4xl font-bold text-black">
+                {formatDate(productionData.productionDate, 'EEEE do MMMM yyyy')} Production List
+              </h1>
+            </div>
 
             <Card className="print:shadow-none print:border-none">
               <CardHeader className="pb-4 print:hidden">
