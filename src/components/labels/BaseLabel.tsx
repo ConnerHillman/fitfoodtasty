@@ -185,12 +185,14 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         width: LABEL_DIMENSIONS.width,
         height: LABEL_DIMENSIONS.height,
         boxSizing: 'border-box',
-        padding: '3mm', // Reset to normal padding since URL is no longer at bottom
+        padding: '3mm',
         display: 'flex',
         flexDirection: 'column',
         fontSize: '6px',
         lineHeight: '1.2',
-        position: 'relative'
+        position: 'relative',
+        overflow: 'visible', // Allow content to be visible for debugging
+        backgroundColor: '#ffffff' // Ensure white background for PDF
       }}
     >
       {/* Header Zone - Dynamic spacing based on content density */}

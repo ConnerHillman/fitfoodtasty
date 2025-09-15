@@ -295,18 +295,28 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         // Ensure each page has white background
         el.style.backgroundColor = '#ffffff';
         
+        // Debug: Log page dimensions and label count
+        console.log(`Page ${i + 1} dimensions: ${el.offsetWidth}x${el.offsetHeight}`);
+        const labelsInPage = el.querySelectorAll('[style*="96mm"]').length;
+        console.log(`Page ${i + 1} contains ${labelsInPage} labels`);
+        
         const canvas = await html2canvas(el, { 
           scale: 2, // Back to high quality
           useCORS: true, 
           backgroundColor: '#ffffff',
-          logging: false,
+          logging: true, // Enable logging to see what's happening
           allowTaint: true,
           height: el.offsetHeight,
           width: el.offsetWidth,
           // Remove problematic options that caused iframe errors
           foreignObjectRendering: false,
           removeContainer: false,
-          imageTimeout: 1000
+          imageTimeout: 1000,
+          onclone: (clonedDoc, element) => {
+            // Debug: log cloned content
+            console.log('Cloned document head:', clonedDoc.head.innerHTML.substring(0, 500));
+            console.log('Cloned element height:', element.offsetHeight);
+          }
         });
         
         console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
