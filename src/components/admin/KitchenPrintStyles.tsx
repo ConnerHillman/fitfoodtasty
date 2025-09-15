@@ -16,6 +16,21 @@ export const KitchenPrintStyles: React.FC = () => {
           display: none !important;
         }
         
+        /* Hide everything except kitchen production content */
+        * {
+          visibility: hidden;
+        }
+        
+        .kitchen-production-container,
+        .kitchen-production-container * {
+          visibility: visible;
+        }
+        
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        
         .kitchen-production-container {
           max-width: none;
           margin: 0;
