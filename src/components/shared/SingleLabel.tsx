@@ -44,7 +44,7 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
     heatingInstructions: props.heatingInstructions
   };
 
-  // Format ingredients with bullet points and highlight allergens
+  // Enhanced formatting for ingredients with better readability
   const formatIngredients = (ingredientsList: string, allergensList: string) => {
     if (!ingredientsList) return 'Not specified';
     
@@ -56,8 +56,9 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
         ingredient.toLowerCase().includes(allergen) || 
         allergen.includes(ingredient.toLowerCase())
       );
+      // Enhanced allergen highlighting with better spacing
       return isAllergen ? `**${ingredient}**` : ingredient;
-    }).map(ing => `• ${ing}`).join('\n');
+    }).map(ing => `•  ${ing}`).join('\n'); // Added extra space for better readability
   };
 
   // Default instructions if not provided
@@ -69,66 +70,68 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
 
   return (
     <div 
-      className="w-full h-full font-inter relative overflow-hidden"
+      className="w-full h-full font-inter relative overflow-hidden border-2 border-green-200"
       style={{
         width: '96mm',
         height: '50.8mm',
         boxSizing: 'border-box',
-        background: 'linear-gradient(135deg, #e6ffe6 0%, #ffffff 50%, #f0fff0 100%)',
-        border: '1px solid #d4d4d8',
-        borderRadius: '2px',
+        // Enhanced premium gradient
+        background: 'linear-gradient(135deg, #e6ffe6 0%, #d4edda 50%, #f8f9f7 100%)',
+        borderRadius: '3px',
         display: 'flex',
         flexDirection: 'column',
-        fontSize: '6px',
-        lineHeight: '1.3',
-        position: 'relative'
+        fontSize: '7px', // Increased base font size
+        lineHeight: '1.4',
+        position: 'relative',
+        justifyContent: 'center', // Center content to reduce left-side waste
+        alignItems: 'stretch'
       }}
     >
-      {/* Premium Header with larger logo */}
-      <div className="text-center px-3 py-2" style={{ backgroundColor: 'rgba(34, 197, 94, 0.05)' }}>
+      {/* Premium Header with gold accents */}
+      <div className="text-center px-2 py-1.5" style={{ backgroundColor: 'rgba(34, 197, 94, 0.08)' }}>
         <div className="flex justify-center mb-1">
           <img 
             src={logoImage} 
             alt="Fit Food Tasty"
-            style={{ height: '12mm', width: 'auto', objectFit: 'contain' }}
+            style={{ height: '10mm', width: 'auto', objectFit: 'contain' }}
           />
         </div>
-        <h1 className="font-bold text-gray-800 leading-tight mb-1" style={{ fontSize: '11px', fontFamily: 'serif' }}>
+        <h1 className="font-bold text-gray-800 leading-tight mb-1 font-playfair" style={{ fontSize: '10px' }}>
           {data.mealName}
         </h1>
-        <div className="text-center text-green-600 font-medium italic" style={{ fontSize: '5px', fontFamily: 'serif' }}>
+        <div className="text-center text-yellow-700 font-medium italic font-playfair" style={{ fontSize: '6px' }}>
           Fresh, Fit, Flavorful
         </div>
       </div>
 
-      {/* Premium Nutrition Box */}
-      <div className="mx-2 mb-2 bg-green-50 border border-green-200 rounded px-2 py-1.5">
+      {/* Premium Nutrition Box with gold accents */}
+      <div className="mx-2 mb-1.5 bg-gradient-to-r from-green-50 to-yellow-50 border border-green-300 rounded-md px-2 py-1.5">
         <div className="grid grid-cols-2 gap-1 text-center">
           <div>
-            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.calories}**</div>
-            <div className="text-gray-600" style={{ fontSize: '5px' }}>CALORIES</div>
+            <div className="font-bold text-yellow-700" style={{ fontSize: '8px' }}>{data.calories}</div>
+            <div className="text-gray-600 font-medium" style={{ fontSize: '6px' }}>CALORIES</div>
           </div>
           <div>
-            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.protein}g**</div>
-            <div className="text-gray-600" style={{ fontSize: '5px' }}>PROTEIN</div>
+            <div className="font-bold text-yellow-700" style={{ fontSize: '8px' }}>{data.protein}g</div>
+            <div className="text-gray-600 font-medium" style={{ fontSize: '6px' }}>PROTEIN</div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-1 text-center mt-1">
           <div>
-            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.fat}g**</div>
-            <div className="text-gray-600" style={{ fontSize: '5px' }}>FAT</div>
+            <div className="font-bold text-yellow-700" style={{ fontSize: '8px' }}>{data.fat}g</div>
+            <div className="text-gray-600 font-medium" style={{ fontSize: '6px' }}>FAT</div>
           </div>
           <div>
-            <div className="font-bold text-gray-800" style={{ fontSize: '7px' }}>**{data.carbs}g**</div>
-            <div className="text-gray-600" style={{ fontSize: '5px' }}>CARBS</div>
+            <div className="font-bold text-yellow-700" style={{ fontSize: '8px' }}>{data.carbs}g</div>
+            <div className="text-gray-600 font-medium" style={{ fontSize: '6px' }}>CARBS</div>
           </div>
         </div>
       </div>
 
-      {/* Use By Date with Icon */}
-      <div className="mx-2 mb-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-1 flex items-center gap-1">
-        <div style={{ fontSize: '6px' }}>📅</div>
-        <div className="font-bold text-gray-800 leading-tight" style={{ fontSize: '6px' }}>
+      {/* Use By Date with enhanced styling */}
+      <div className="mx-2 mb-1 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-300 rounded px-2 py-1 flex items-center gap-1.5">
+        <div style={{ fontSize: '7px' }}>📅</div>
+        <div className="font-bold text-gray-800 leading-relaxed" style={{ fontSize: '7px' }}>
           USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
             weekday: 'short',
             day: '2-digit',
@@ -138,41 +141,53 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
         </div>
       </div>
 
-      {/* Storage & Heating Instructions with Icon */}
-      <div className="mx-2 mb-1 bg-blue-50 border border-blue-200 rounded px-2 py-1">
-        <div className="flex items-center gap-1 mb-1">
-          <div style={{ fontSize: '6px' }}>🔥</div>
-          <div className="text-gray-700 font-medium" style={{ fontSize: '5px' }}>HEATING</div>
+      {/* Storage & Heating Instructions with enhanced readability */}
+      <div className="mx-2 mb-1 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-300 rounded px-2 py-1">
+        <div className="flex items-center gap-1.5 mb-1">
+          <div style={{ fontSize: '7px' }}>🔥</div>
+          <div className="text-gray-700 font-bold" style={{ fontSize: '6px' }}>HEATING & STORAGE</div>
         </div>
-        <div className="text-gray-600 leading-tight" style={{ fontSize: '5px' }}>
+        <div className="text-gray-700 leading-relaxed" style={{ fontSize: '6px', lineHeight: '1.3' }}>
           {heatingText}
         </div>
-        <div className="text-gray-600 leading-tight" style={{ fontSize: '5px' }}>
+        <div className="text-gray-700 leading-relaxed" style={{ fontSize: '6px', lineHeight: '1.3' }}>
           {storageText}
         </div>
       </div>
 
-      {/* Ingredients Section */}
-      <div className="mx-2 mb-1 bg-green-50 border border-green-200 rounded px-2 py-1 flex-1">
-        <div className="font-semibold text-gray-800 mb-1" style={{ fontSize: '5px' }}>INGREDIENTS:</div>
-        <div className="text-gray-700 leading-tight whitespace-pre-line" style={{ fontSize: '5px', lineHeight: '1.2' }}>
-          {formatIngredients(data.ingredients, data.allergens || '')}
-        </div>
+      {/* Enhanced Ingredients Section with better readability */}
+      <div className="mx-2 mb-1 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded px-2 py-1 flex-1">
+        <div className="font-bold text-gray-800 mb-1" style={{ fontSize: '6px' }}>INGREDIENTS:</div>
+        <div 
+          className="text-gray-700 whitespace-pre-line" 
+          style={{ 
+            fontSize: '7px', // Increased from 5px to 7px for better readability
+            lineHeight: '1.5', // Increased line spacing
+            paddingLeft: '2px' // Small padding for bullet points
+          }}
+          dangerouslySetInnerHTML={{
+            __html: formatIngredients(data.ingredients, data.allergens || '')
+              .replace(/\*\*(.*?)\*\*/g, '<span style="background: #fef2f2; color: #dc2626; font-weight: bold; padding: 1px 2px; border-radius: 2px;">$1</span>')
+          }}
+        />
       </div>
 
-      {/* Allergens Section - Prominent */}
+      {/* Prominent Allergens Section with enhanced styling */}
       {data.allergens && (
-        <div className="mx-2 mb-1 bg-red-50 border border-red-300 rounded px-2 py-1">
-          <div className="font-bold text-red-800 mb-1" style={{ fontSize: '5px' }}>⚠️ ALLERGENS:</div>
-          <div className="font-bold text-red-700 leading-tight" style={{ fontSize: '6px' }}>
+        <div className="mx-2 mb-1 bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-400 rounded px-2 py-1">
+          <div className="font-bold text-red-800 mb-1 flex items-center gap-1" style={{ fontSize: '6px' }}>
+            <span style={{ fontSize: '7px' }}>⚠️</span>
+            <span>ALLERGENS:</span>
+          </div>
+          <div className="font-bold text-red-700 leading-relaxed" style={{ fontSize: '7px', lineHeight: '1.4' }}>
             {data.allergens.split(', ').map(allergen => allergen.trim().toUpperCase()).join(' • ')}
           </div>
         </div>
       )}
 
-      {/* Premium Footer */}
-      <div className="mt-auto bg-gray-50 border-t border-gray-200 px-2 py-1">
-        <div className="text-center font-medium text-green-700 leading-tight" style={{ fontSize: '5px' }}>
+      {/* Premium Footer with gold accent */}
+      <div className="mt-auto bg-gradient-to-r from-gray-50 to-green-50 border-t border-green-300 px-2 py-1">
+        <div className="text-center font-medium text-yellow-700 leading-tight font-playfair" style={{ fontSize: '6px' }}>
           www.fitfoodtasty.co.uk
         </div>
       </div>
