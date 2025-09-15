@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Printer, Download, Save, Plus, Trash2, Edit3, BookOpen, Calendar, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { LabelPreview } from './LabelPreview';
+import { LabelSheet } from './labels/LabelSheet';
 import { LabelEditor } from './LabelEditor';
 import { MealSelector } from './MealSelector';
 import { LabelReport } from './admin/LabelReport';
@@ -422,7 +422,7 @@ export const LabelGenerator: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg p-4 bg-white">
-              <LabelPreview data={labelData} showSingle />
+              <LabelSheet data={labelData} showSingle />
             </div>
           </CardContent>
         </Card>
@@ -431,7 +431,7 @@ export const LabelGenerator: React.FC = () => {
       {/* Hidden Print Area */}
       <div className="hidden print:block fixed inset-0 bg-white z-50">
         <div ref={printRef} className="w-full h-full">
-          <LabelPreview data={labelData} />
+          <LabelSheet data={labelData} />
         </div>
       </div>
 

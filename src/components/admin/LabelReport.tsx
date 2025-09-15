@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { LabelPreview } from '@/components/LabelPreview';
+import { LabelSheet } from '@/components/labels/LabelSheet';
 import { LabelPrintPreview } from '@/components/admin/LabelPrintPreview';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';

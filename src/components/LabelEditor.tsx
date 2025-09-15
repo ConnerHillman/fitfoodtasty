@@ -8,24 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Edit3, Save, RotateCcw, Type, Move, AlignCenter } from 'lucide-react';
 import { toast } from 'sonner';
 import logoImage from '@/assets/fit-food-tasty-logo.png';
-
-interface LabelData {
-  mealName: string;
-  calories: number;
-  protein: number;
-  fat: number;
-  carbs: number;
-  ingredients: string;
-  allergens: string;
-  useByDate: string;
-  storageInstructions: string;
-  heatingInstructions: string;
-  quantity: number;
-}
+import type { FullLabelData } from '@/types/label';
+import { LABEL_DIMENSIONS } from '@/types/label';
 
 interface LabelEditorProps {
-  data: LabelData;
-  onSave: (updatedData: LabelData) => void;
+  data: FullLabelData;
+  onSave: (updatedData: FullLabelData) => void;
   onClose: () => void;
 }
 
@@ -45,9 +33,13 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    // Use standardized label dimensions
+    const widthPx = mmToPx(parseFloat(LABEL_DIMENSIONS.width.replace('mm', '')));
+    const heightPx = mmToPx(parseFloat(LABEL_DIMENSIONS.height.replace('mm', '')));
+
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: mmToPx(99.1), // EU30009BM width
-      height: mmToPx(57.3), // EU30009BM height
+      width: widthPx,
+      height: heightPx,
       backgroundColor: '#ffffff',
       selection: true,
     });
@@ -414,8 +406,8 @@ export const LabelEditor: React.FC<LabelEditorProps> = ({ data, onSave, onClose 
             <div className="lg:col-span-3">
               <div className="border rounded-lg bg-white p-4 flex justify-center">
                 <div className="border border-gray-300" style={{
-                  width: mmToPx(99.1),
-                  height: mmToPx(57.3)
+                  width: mmToPx(parseFloat(LABEL_DIMENSIONS.width.replace('mm', ''))),
+                  height: mmToPx(parseFloat(LABEL_DIMENSIONS.height.replace('mm', '')))
                 }}>
                   <canvas 
                     ref={canvasRef}
