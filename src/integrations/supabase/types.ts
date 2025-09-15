@@ -1248,6 +1248,7 @@ export type Database = {
           ingredients: string | null
           name: string
           protein: number
+          storage_heating_instructions: string
           storage_instructions: string | null
           updated_at: string
         }
@@ -1262,6 +1263,7 @@ export type Database = {
           ingredients?: string | null
           name: string
           protein?: number
+          storage_heating_instructions?: string
           storage_instructions?: string | null
           updated_at?: string
         }
@@ -1276,6 +1278,7 @@ export type Database = {
           ingredients?: string | null
           name?: string
           protein?: number
+          storage_heating_instructions?: string
           storage_instructions?: string | null
           updated_at?: string
         }

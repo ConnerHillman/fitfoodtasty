@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Printer, Download, Save, Plus, Trash2, BookOpen, Calendar, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { LabelSheet } from './labels/LabelSheet';
+import { supabase } from '@/integrations/supabase/client';
 
 import { MealSelector } from './MealSelector';
 import { LabelReport } from './admin/LabelReport';
@@ -63,13 +64,47 @@ export const LabelGenerator: React.FC = () => {
 
   const loadSavedMeals = async () => {
     try {
-      // For now, use localStorage until Supabase types are updated
-      const saved = localStorage.getItem('fitfoodtasty_saved_meals');
-      if (saved) {
-        setSavedMeals(JSON.parse(saved));
+      // Try Supabase first, fallback to localStorage for backwards compatibility
+      const { data: supabaseMeals, error } = await supabase
+        .from('saved_meal_labels')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase load failed, trying localStorage:', error);
+        
+        // Fallback to localStorage
+        const saved = localStorage.getItem('fitfoodtasty_saved_meals');
+        if (saved) {
+          const localMeals = JSON.parse(saved);
+          // Normalize local storage data to use storageHeatingInstructions
+          const normalizedMeals = localMeals.map((meal: any) => ({
+            ...meal,
+            storageHeatingInstructions: normalizeStorageInstructions(meal)
+          }));
+          setSavedMeals(normalizedMeals);
+        } else {
+          setSavedMeals([]);
+        }
+      } else {
+        // Convert Supabase data to local format and normalize field names
+        const formattedMeals = (supabaseMeals || []).map(meal => ({
+          id: meal.id,
+          name: meal.name,
+          calories: meal.calories,
+          protein: meal.protein,
+          fat: meal.fat,
+          carbs: meal.carbs,
+          ingredients: meal.ingredients || '',
+          allergens: meal.allergens || '',
+          storageHeatingInstructions: normalizeStorageInstructions(meal)
+        }));
+        setSavedMeals(formattedMeals);
       }
     } catch (error) {
       console.error('Error loading saved meals:', error);
+      toast.error('Failed to load saved meals');
+      setSavedMeals([]);
     }
   };
 
@@ -98,8 +133,8 @@ export const LabelGenerator: React.FC = () => {
     }
 
     try {
-      const mealToSave: SavedMeal = {
-        id: Date.now().toString(),
+      // Try Supabase first
+      const mealData = {
         name: labelData.mealName,
         calories: labelData.calories,
         protein: labelData.protein,
@@ -107,14 +142,34 @@ export const LabelGenerator: React.FC = () => {
         carbs: labelData.carbs,
         ingredients: labelData.ingredients,
         allergens: labelData.allergens,
-        storageHeatingInstructions: labelData.storageHeatingInstructions
+        storage_heating_instructions: labelData.storageHeatingInstructions
       };
 
-      // Save to localStorage for now
-      const existing = localStorage.getItem('fitfoodtasty_saved_meals');
-      const meals = existing ? JSON.parse(existing) : [];
-      meals.push(mealToSave);
-      localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(meals));
+      const { error: supabaseError } = await supabase
+        .from('saved_meal_labels')
+        .insert([mealData]);
+
+      if (supabaseError) {
+        console.warn('Supabase save failed, using localStorage:', supabaseError);
+        
+        // Fallback to localStorage
+        const mealToSave: SavedMeal = {
+          id: Date.now().toString(),
+          name: labelData.mealName,
+          calories: labelData.calories,
+          protein: labelData.protein,
+          fat: labelData.fat,
+          carbs: labelData.carbs,
+          ingredients: labelData.ingredients,
+          allergens: labelData.allergens,
+          storageHeatingInstructions: labelData.storageHeatingInstructions
+        };
+
+        const existing = localStorage.getItem('fitfoodtasty_saved_meals');
+        const meals = existing ? JSON.parse(existing) : [];
+        meals.push(mealToSave);
+        localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(meals));
+      }
       
       toast.success('Meal saved successfully');
       loadSavedMeals();
@@ -142,11 +197,26 @@ export const LabelGenerator: React.FC = () => {
 
   const deleteSavedMeal = async (id: string) => {
     try {
-      const existing = localStorage.getItem('fitfoodtasty_saved_meals');
-      if (existing) {
-        const meals = JSON.parse(existing);
-        const filtered = meals.filter((meal: SavedMeal) => meal.id !== id);
-        localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(filtered));
+      // Try Supabase first (if the ID is a UUID, it's from Supabase)
+      if (id.length > 20) { // UUID format from Supabase
+        const { error: supabaseError } = await supabase
+          .from('saved_meal_labels')
+          .delete()
+          .eq('id', id);
+
+        if (supabaseError) {
+          console.warn('Supabase delete failed:', supabaseError);
+          toast.error('Failed to delete meal from database');
+          return;
+        }
+      } else {
+        // Handle localStorage meals (shorter timestamp-based IDs)
+        const existing = localStorage.getItem('fitfoodtasty_saved_meals');
+        if (existing) {
+          const meals = JSON.parse(existing);
+          const filtered = meals.filter((meal: SavedMeal) => meal.id !== id);
+          localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(filtered));
+        }
       }
       
       toast.success('Meal deleted');
