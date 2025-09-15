@@ -12,6 +12,8 @@ interface MealProduction {
   totalCarbs: number;
   ingredients: string;
   allergens: string;
+  storageInstructions?: string;
+  heatingInstructions?: string;
   orderCount: number;
 }
 
@@ -172,6 +174,8 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
                     carbs={meal.totalCarbs}
                     ingredients={meal.ingredients}
                     allergens={meal.allergens}
+                    storageInstructions={meal.storageInstructions}
+                    heatingInstructions={meal.heatingInstructions}
                     useByDate={useByDate}
                   />
                 ) : (
