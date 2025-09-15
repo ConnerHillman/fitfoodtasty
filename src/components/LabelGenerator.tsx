@@ -154,7 +154,7 @@ export const LabelGenerator: React.FC = () => {
     }
 
     try {
-      // Prepare meal data for Supabase with normalized field name
+      // Prepare meal data for Supabase with normalized field name and user_id
       const mealData = {
         name: labelData.mealName,
         calories: labelData.calories,
@@ -163,7 +163,8 @@ export const LabelGenerator: React.FC = () => {
         carbs: labelData.carbs,
         ingredients: labelData.ingredients,
         allergens: labelData.allergens,
-        storage_heating_instructions: labelData.storageHeatingInstructions
+        storage_heating_instructions: labelData.storageHeatingInstructions,
+        user_id: (await supabase.auth.getUser()).data.user?.id
       };
 
       // Insert into Supabase by default

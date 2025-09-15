@@ -1249,6 +1249,7 @@ export type Database = {
           protein: number
           storage_heating_instructions: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           allergens?: string | null
@@ -1262,6 +1263,7 @@ export type Database = {
           protein?: number
           storage_heating_instructions?: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           allergens?: string | null
@@ -1275,6 +1277,7 @@ export type Database = {
           protein?: number
           storage_heating_instructions?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
