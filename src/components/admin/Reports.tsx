@@ -200,7 +200,7 @@ const Reports = () => {
                   <th>Size</th>
                   <th>Title</th>
                   <th>Variations</th>
-                  <th>Special Instructions</th>
+                  
                 </tr>
               </thead>
               <tbody>

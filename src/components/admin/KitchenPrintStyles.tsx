@@ -106,28 +106,6 @@ export const KitchenPrintStyles: React.FC = () => {
           color: white;
         }
         
-        .kitchen-special-instructions {
-          border: 2px solid #ff6b35;
-          padding: 3mm;
-          margin-top: 5mm;
-          background: #fff5f5;
-        }
-        
-        .kitchen-special-title {
-          font-size: 12pt;
-          font-weight: bold;
-          color: #ff6b35;
-          margin-bottom: 2mm;
-        }
-        
-        .kitchen-instruction-item {
-          font-size: 10pt;
-          margin: 1mm 0;
-          padding: 1mm;
-          background: white;
-          border-left: 3px solid #ff6b35;
-          padding-left: 3mm;
-        }
         
         /* Force page breaks */
         .page-break {
