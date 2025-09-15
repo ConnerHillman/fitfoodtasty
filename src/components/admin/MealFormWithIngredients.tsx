@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import IngredientSelector from "./IngredientSelector";
 import { Upload, Image, DollarSign, ChefHat, Target, Clock } from "lucide-react";
+import { normalizeStorageInstructions } from '@/lib/storageInstructionsUtils';
 interface Ingredient {
   id: string;
   name: string;

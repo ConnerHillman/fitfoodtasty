@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { normalizeStorageInstructions } from '@/lib/storageInstructionsUtils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -101,7 +102,7 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
         total_protein: meal.total_protein || 0,
         total_fat: meal.total_fat || 0,
         total_carbs: meal.total_carbs || 0,
-        storage_heating_instructions: meal.storage_heating_instructions,
+        storageHeatingInstructions: normalizeStorageInstructions(meal),
         ingredients: meal.meal_ingredients?.map((mi: any) => 
           `${mi.ingredients.name} (${mi.quantity}${mi.unit})`
         ) || [],

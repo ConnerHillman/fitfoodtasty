@@ -15,6 +15,7 @@ import { MealSelector } from './MealSelector';
 import { LabelReport } from './admin/LabelReport';
 import type { FullLabelData } from '@/types/label';
 import { DEFAULT_INSTRUCTIONS } from '@/types/label';
+import { normalizeStorageInstructions, createStorageInstructionsSaveObject } from '@/lib/storageInstructionsUtils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -27,7 +28,11 @@ interface SavedMeal {
   carbs: number;
   ingredients: string;
   allergens: string;
-  storage_instructions: string;
+  storageHeatingInstructions: string;
+  // Legacy field support for backwards compatibility
+  storage_instructions?: string;
+  heating_instructions?: string;
+  storage_heating_instructions?: string;
 }
 
 export const LabelGenerator: React.FC = () => {
@@ -102,7 +107,7 @@ export const LabelGenerator: React.FC = () => {
         carbs: labelData.carbs,
         ingredients: labelData.ingredients,
         allergens: labelData.allergens,
-        storage_instructions: labelData.storageHeatingInstructions
+        storageHeatingInstructions: labelData.storageHeatingInstructions
       };
 
       // Save to localStorage for now
@@ -129,7 +134,7 @@ export const LabelGenerator: React.FC = () => {
       carbs: meal.carbs,
       ingredients: meal.ingredients,
       allergens: meal.allergens,
-      storageHeatingInstructions: meal.storage_instructions
+      storageHeatingInstructions: normalizeStorageInstructions(meal)
     }));
     setShowSavedMeals(false);
     toast.success('Meal loaded');
@@ -198,7 +203,7 @@ export const LabelGenerator: React.FC = () => {
       carbs: Math.round(meal.total_carbs),
       ingredients: meal.ingredients.join(', '),
       allergens: meal.allergens.join(', '),
-      storageHeatingInstructions: meal.storage_heating_instructions || DEFAULT_INSTRUCTIONS.storageHeating
+      storageHeatingInstructions: normalizeStorageInstructions(meal)
     }));
     toast.success(`Meal "${meal.name}" loaded into label generator`);
   };

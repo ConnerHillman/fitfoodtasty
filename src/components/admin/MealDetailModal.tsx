@@ -13,6 +13,7 @@ import { Edit, Save, X, ShoppingCart, DollarSign, Calendar, Users, TrendingUp, C
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CategoryTag from "../CategoryTag";
+import { normalizeStorageInstructions } from '@/lib/storageInstructionsUtils';
 
 interface MealDetailModalProps {
   mealId: string | null;
