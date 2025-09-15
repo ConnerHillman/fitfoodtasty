@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import IngredientSelector from "./IngredientSelector";
 import { Upload, Image, DollarSign, ChefHat, Target, Clock } from "lucide-react";
 import { normalizeStorageInstructions } from '@/lib/storageInstructionsUtils';
+import { DEFAULT_INSTRUCTIONS } from '@/types/label';
 interface Ingredient {
   id: string;
   name: string;
@@ -47,14 +48,22 @@ const MealFormWithIngredients = ({
   onCancel
 }: MealFormWithIngredientsProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    category: string;
+    price: string;
+    image_url: string;
+    shelf_life_days: number;
+    storage_heating_instructions: string;
+  }>({
     name: "",
     description: "",
     category: "lunch",
     price: "",
     image_url: "",
     shelf_life_days: 5,
-    storage_heating_instructions: "Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot."
+    storage_heating_instructions: DEFAULT_INSTRUCTIONS.storageHeating
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);

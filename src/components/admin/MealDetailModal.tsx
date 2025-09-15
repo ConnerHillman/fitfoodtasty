@@ -449,7 +449,7 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
   const cancelEdit = () => {
     setEditData({
       ...meal,
-      storage_heating_instructions: meal.storage_heating_instructions || 'Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.'
+      storage_heating_instructions: normalizeStorageInstructions(meal)
     });
     setEditMode('none');
   };
@@ -603,7 +603,7 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
                     </div>
                   ) : (
                     <p className="text-sm bg-muted/50 p-3 rounded border whitespace-pre-wrap">
-                      {meal.storage_heating_instructions || 'Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.'}
+                      {normalizeStorageInstructions(meal)}
                     </p>
                   )}
                 </div>

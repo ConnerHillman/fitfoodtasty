@@ -11,15 +11,20 @@ export interface LegacyStorageFields {
 
 /**
  * Normalizes storage instruction fields to the canonical storageHeatingInstructions
- * Provides backwards compatibility for old field names
+ * Provides backwards compatibility for old field names and handles edge cases
  */
 export function normalizeStorageInstructions(obj: LegacyStorageFields): string {
+  // Handle null/undefined objects
+  if (!obj) return DEFAULT_INSTRUCTIONS.storageHeating;
+  
   // Priority order: new canonical name first, then consolidated field, then legacy fields
-  return obj.storageHeatingInstructions || 
-         obj.storage_heating_instructions || 
-         obj.storage_instructions || 
-         obj.heating_instructions || 
-         DEFAULT_INSTRUCTIONS.storageHeating;
+  const instruction = obj.storageHeatingInstructions || 
+                     obj.storage_heating_instructions || 
+                     obj.storage_instructions || 
+                     obj.heating_instructions;
+  
+  // Return the instruction if it exists and is not empty, otherwise use default
+  return (instruction && instruction.trim()) ? instruction.trim() : DEFAULT_INSTRUCTIONS.storageHeating;
 }
 
 /**
