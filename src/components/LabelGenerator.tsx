@@ -13,23 +13,10 @@ import { LabelPreview } from './LabelPreview';
 import { LabelEditor } from './LabelEditor';
 import { MealSelector } from './MealSelector';
 import { LabelReport } from './admin/LabelReport';
+import type { FullLabelData as LabelData } from '@/types/label';
+import { DEFAULT_INSTRUCTIONS } from '@/types/label';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-
-interface LabelData {
-  id?: string;
-  mealName: string;
-  calories: number;
-  protein: number;
-  fat: number;
-  carbs: number;
-  ingredients: string;
-  allergens: string;
-  useByDate: string;
-  storageInstructions: string;
-  heatingInstructions: string;
-  quantity: number;
-}
 
 interface SavedMeal {
   id: string;
@@ -54,8 +41,8 @@ export const LabelGenerator: React.FC = () => {
     ingredients: '',
     allergens: '',
     useByDate: '',
-    storageInstructions: 'Store in a refrigerator below 5°c. Heat in a microwave for 3-4 minutes or until piping hot.',
-    heatingInstructions: 'Pierce film and heat for 3-4 minutes or until piping hot.',
+    storageInstructions: DEFAULT_INSTRUCTIONS.storage,
+    heatingInstructions: DEFAULT_INSTRUCTIONS.heating,
     quantity: 10
   });
 

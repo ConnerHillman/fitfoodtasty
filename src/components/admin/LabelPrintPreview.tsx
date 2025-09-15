@@ -1,6 +1,8 @@
 import React from 'react';
 import { format as formatDate } from 'date-fns';
-import logoImage from '@/assets/fit-food-tasty-logo.png';
+import { BaseLabel } from '@/components/labels/BaseLabel';
+import { LABEL_DIMENSIONS } from '@/types/label';
+import type { LabelData } from '@/types/label';
 
 interface MealProduction {
   mealId: string;
@@ -20,103 +22,6 @@ interface LabelPrintPreviewProps {
   useByDate?: string;
 }
 
-// Reuse the exact same SingleLabel component from LabelPreview
-const SingleLabel: React.FC<{ 
-  mealName: string;
-  calories: number;
-  protein: number;
-  fat: number;
-  carbs: number;
-  ingredients: string;
-  allergens: string;
-  useByDate: string;
-}> = ({ mealName, calories, protein, fat, carbs, ingredients, allergens, useByDate }) => (
-  <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
-    width: '96mm',
-    height: '50.8mm',
-    boxSizing: 'border-box',
-    padding: '6px',
-    display: 'flex',
-    flexDirection: 'column',
-    fontSize: '6px',
-    lineHeight: '1.2',
-    justifyContent: 'space-between'
-  }}>
-    {/* Header Section */}
-    <div className="flex flex-col items-center">
-      {/* Logo */}
-      <div className="mb-2">
-        <img 
-          src={logoImage} 
-          alt="Fit Food Tasty logo"
-          className="h-8 w-auto object-contain"
-        />
-      </div>
-      {/* Meal Name */}
-      <h1 className="text-center font-bold text-foreground leading-tight mb-2" style={{ fontSize: '14px' }}>
-        {mealName}
-      </h1>
-      {/* Separator */}
-      <div className="w-8 h-px bg-primary/30 mb-2" aria-hidden="true"></div>
-    </div>
-
-    {/* Nutrition Section */}
-    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-2 py-1.5 mb-2">
-      <div className="text-center font-bold text-primary leading-tight" style={{ fontSize: '8px' }}>
-        {calories} Calories • {protein}g Protein • {fat}g Fat • {carbs}g Carbs
-      </div>
-    </div>
-
-    {/* Main Content */}
-    <div className="flex-1 space-y-1.5 min-h-0">
-      {/* Use By Date - Most Important */}
-      <div className="bg-muted/50 rounded px-2 py-1">
-        <div className="font-bold text-foreground leading-tight" style={{ fontSize: '7px' }}>
-          USE BY: {useByDate ? new Date(useByDate).toLocaleDateString('en-GB', {
-            weekday: 'short',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          }) : 'Fri, 19/09/2025'}
-        </div>
-      </div>
-
-      {/* Storage Instructions */}
-      <div className="text-foreground leading-tight" style={{ fontSize: '6px' }}>
-        Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.
-      </div>
-
-      {/* Ingredients */}
-      <div className="leading-tight" style={{ fontSize: '6px' }}>
-        <span className="font-semibold text-foreground">Ingredients:</span>{' '}
-        <span className="text-foreground">
-          {ingredients ? ingredients.split(',').map((ingredient, index) => (
-            <span key={index}>
-              {ingredient.trim()}
-              {index < ingredients.split(',').length - 1 && ', '}
-            </span>
-          )) : 'Not specified'}
-        </span>
-      </div>
-
-      {/* Allergens */}
-      {allergens && (
-        <div className="leading-tight" style={{ fontSize: '6px' }}>
-          <span className="font-semibold text-foreground">Allergens:</span>{' '}
-          <span className="font-bold text-foreground">{allergens}</span>
-        </div>
-      )}
-    </div>
-
-    {/* Footer */}
-    <div className="border-t border-border/30 pt-1 mt-auto">
-      <div className="text-center font-medium text-primary leading-tight" style={{ fontSize: '6px' }}>
-        www.fitfoodtasty.co.uk
-      </div>
-    </div>
-  </div>
-);
-
 export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({ 
   mealProduction, 
   useByDate = formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
@@ -129,18 +34,17 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
     }
   });
 
-  // Calculate pages (10 labels per page - 2 across × 5 down)
-  const labelsPerPage = 10;
-  const totalPages = Math.ceil(allLabels.length / labelsPerPage);
+  // Calculate pages using standard dimensions
+  const totalPages = Math.ceil(allLabels.length / LABEL_DIMENSIONS.labelsPerPage);
   
   const pages = [];
   for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-    const startIndex = pageIndex * labelsPerPage;
-    const endIndex = Math.min(startIndex + labelsPerPage, allLabels.length);
+    const startIndex = pageIndex * LABEL_DIMENSIONS.labelsPerPage;
+    const endIndex = Math.min(startIndex + LABEL_DIMENSIONS.labelsPerPage, allLabels.length);
     const pageLabels = allLabels.slice(startIndex, endIndex);
     
     // Fill remaining slots with empty divs to maintain grid structure
-    while (pageLabels.length < labelsPerPage) {
+    while (pageLabels.length < LABEL_DIMENSIONS.labelsPerPage) {
       pageLabels.push({ meal: null, labelIndex: 0 } as any);
     }
 
@@ -188,15 +92,14 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             }
             .print-page {
               margin: 0 !important;
-              padding: 11.5mm 6.5mm !important;
+              padding: ${LABEL_DIMENSIONS.pagePadding} !important;
               background: white !important;
               display: grid !important;
-              grid-template-columns: repeat(2, 96mm) !important;
-              grid-template-rows: repeat(5, 50.8mm) !important;
-              column-gap: 5mm !important;
-              row-gap: 4.8mm !important; /* print-only fudge to prevent bottom cut-off */
-              width: 210mm !important;
-              height: 297mm !important;
+              grid-template-columns: repeat(${LABEL_DIMENSIONS.labelsPerRow}, ${LABEL_DIMENSIONS.width}) !important;
+              grid-template-rows: repeat(${LABEL_DIMENSIONS.labelsPerColumn}, ${LABEL_DIMENSIONS.height}) !important;
+              gap: ${LABEL_DIMENSIONS.labelGap} !important;
+              width: ${LABEL_DIMENSIONS.pageWidth} !important;
+              height: ${LABEL_DIMENSIONS.pageHeight} !important;
               box-sizing: border-box !important;
               align-content: start !important;
               justify-content: start !important;
@@ -204,18 +107,17 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
           }
           
           .print-page {
-            width: 210mm;
-            height: 297mm;
+            width: ${LABEL_DIMENSIONS.pageWidth};
+            height: ${LABEL_DIMENSIONS.pageHeight};
             margin: 0 auto 20px auto;
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             position: relative;
             display: grid;
-            grid-template-columns: repeat(2, 96mm);
-            grid-template-rows: repeat(5, 50.8mm);
-            column-gap: 5mm;
-            row-gap: 5mm;
-            padding: 11.5mm 6.5mm;
+            grid-template-columns: repeat(${LABEL_DIMENSIONS.labelsPerRow}, ${LABEL_DIMENSIONS.width});
+            grid-template-rows: repeat(${LABEL_DIMENSIONS.labelsPerColumn}, ${LABEL_DIMENSIONS.height});
+            gap: ${LABEL_DIMENSIONS.labelGap};
+            padding: ${LABEL_DIMENSIONS.pagePadding};
             box-sizing: border-box;
             align-content: start;
             justify-content: start;
@@ -223,15 +125,12 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
 
           /* Force exact label dimensions and positioning */
           .print-page > div > div {
-            width: 96mm !important;
-            height: 50.8mm !important;
+            width: ${LABEL_DIMENSIONS.width} !important;
+            height: ${LABEL_DIMENSIONS.height} !important;
             box-sizing: border-box !important;
             display: flex !important;
             flex-direction: column !important;
             overflow: hidden !important;
-          }
-          .print-page > div > div > div:last-child {
-            margin-top: auto;
           }
         `
       }} />
@@ -239,7 +138,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
       <div className="no-print mb-4 p-4 bg-white rounded border">
         <h3 className="text-lg font-semibold mb-2">Label Layout Preview</h3>
         <p className="text-sm text-gray-600 mb-2">
-          Preview shows exactly how labels will print on A4 paper (96mm × 50.8mm, 2×5 layout).
+          Preview shows exactly how labels will print on A4 paper ({LABEL_DIMENSIONS.width} × {LABEL_DIMENSIONS.height}, {LABEL_DIMENSIONS.labelsPerRow}×{LABEL_DIMENSIONS.labelsPerColumn} layout).
         </p>
         <div className="text-sm text-gray-500">
           <span className="font-medium">Total Labels:</span> {allLabels.length} • 
@@ -253,20 +152,22 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
           {pageLabels.map(({ meal }, labelIndex) => (
             <div key={`${meal?.mealId || 'empty'}-${labelIndex}`}>
               {meal ? (
-                <SingleLabel
-                  mealName={meal.mealName}
-                  calories={meal.totalCalories}
-                  protein={meal.totalProtein}
-                  fat={meal.totalFat}
-                  carbs={meal.totalCarbs}
-                  ingredients={meal.ingredients}
-                  allergens={meal.allergens}
-                  useByDate={useByDate}
+                <BaseLabel
+                  data={{
+                    mealName: meal.mealName,
+                    calories: meal.totalCalories,
+                    protein: meal.totalProtein,
+                    fat: meal.totalFat,
+                    carbs: meal.totalCarbs,
+                    ingredients: meal.ingredients,
+                    allergens: meal.allergens,
+                    useByDate: useByDate
+                  }}
                 />
               ) : (
                 <div style={{ 
-                  width: '96mm', 
-                  height: '50.8mm',
+                  width: LABEL_DIMENSIONS.width, 
+                  height: LABEL_DIMENSIONS.height,
                   border: '1px dashed #ccc', 
                   opacity: 0.25,
                   display: 'flex',
@@ -292,7 +193,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
           <li>• Disable margins or set to minimum</li>
           <li>• Disable browser headers and footers in the print dialog</li>
           <li>• Use portrait orientation</li>
-          <li>• For best results, use adhesive label sheets (96mm × 50.8mm, 2×5 layout)</li>
+          <li>• For best results, use adhesive label sheets ({LABEL_DIMENSIONS.width} × {LABEL_DIMENSIONS.height}, {LABEL_DIMENSIONS.labelsPerRow}×{LABEL_DIMENSIONS.labelsPerColumn} layout)</li>
         </ul>
       </div>
     </div>
