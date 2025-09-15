@@ -371,23 +371,23 @@ export const KitchenProductionDashboard: React.FC = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 {/* Compact Table Layout */}
-                <div className="kitchen-table-container">
-                  <table className="w-full border-collapse">
+                <div className="kitchen-table-container overflow-x-auto">
+                  <table className="w-full border-collapse min-w-full">
                     <thead>
-                      <tr className="border-b-2 border-gray-300 print:border-black">
-                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-16">Qty</th>
+                      <tr className="border-b-2 border-border">
+                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-20">Qty</th>
                         <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground">Meal Description</th>
                       </tr>
                     </thead>
                     <tbody>
                       {productionData.mealLineItems.map((meal, index) => (
-                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 print:hover:bg-transparent">
-                          <td className="py-2 px-3 text-center">
+                        <tr key={`${meal.mealName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent">
+                          <td className="py-2 px-3 text-center align-middle">
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-black print:text-white">
                               {meal.totalQuantity}
                             </span>
                           </td>
-                          <td className="py-2 px-3 text-sm font-medium text-foreground">
+                          <td className="py-2 px-3 text-sm font-medium text-foreground align-middle">
                             {meal.mealName}
                           </td>
                         </tr>
@@ -398,7 +398,7 @@ export const KitchenProductionDashboard: React.FC = () => {
                 
                 <Separator className="my-4" />
                 
-                <div className="kitchen-total flex items-center justify-between bg-gray-100 p-3 rounded print:text-center print:text-white print:bg-black print:border-2 print:border-black">
+                <div className="kitchen-total flex items-center justify-between bg-muted/30 p-3 rounded border print:text-center print:text-white print:bg-black print:border-black">
                   <span className="text-lg font-bold">TOTAL MEALS:</span>
                   <span className="text-2xl font-bold text-primary print:text-white">
                     {productionData.totalMeals}
