@@ -28,6 +28,7 @@ const FiltersManager = () => {
   // Modal states
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<Filter | null>(null);
 
   // Filter and sort data
@@ -115,9 +116,16 @@ const FiltersManager = () => {
 
   const confirmDelete = async () => {
     if (selectedFilter) {
-      await deleteFilter(selectedFilter.id);
-      setIsDeleteDialogOpen(false);
-      setSelectedFilter(null);
+      setIsDeleting(true);
+      try {
+        await deleteFilter(selectedFilter.id);
+        setIsDeleteDialogOpen(false);
+        setSelectedFilter(null);
+      } catch (error) {
+        console.error('Error deleting filter:', error);
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -369,11 +377,11 @@ const FiltersManager = () => {
       />
 
       <DeleteDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={() => setIsDeleteDialogOpen(false)}
+        isVisible={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Filter"
-        description={`Are you sure you want to delete "${selectedFilter?.name}"? This action cannot be undone.`}
+        selectedCoupon={selectedFilter}
+        isSubmitting={isDeleting}
       />
     </div>
   );
