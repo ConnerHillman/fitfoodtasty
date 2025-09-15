@@ -376,7 +376,7 @@ export const KitchenProductionDashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                  <Calendar className="h-6 w-6" />
+                  <ChefHat className="h-6 w-6" />
                   {formatDate(productionData.productionDate, 'EEEE do MMMM')} Production List
                 </CardTitle>
               </CardHeader>
