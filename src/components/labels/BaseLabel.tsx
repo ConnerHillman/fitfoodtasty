@@ -128,8 +128,8 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
     mealName: 5.2,
     nutrition: 3.0,
     useBy: 2.8,
-    storage: 2.0,
-    ingredients: 1.8,
+    storage: 2.2,
+    ingredients: 2.2,
     allergens: 1.9,
     logo: 10.0,
     footer: 1.9
