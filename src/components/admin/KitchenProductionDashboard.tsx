@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   CalendarIcon, 
   ChefHat, 
@@ -43,6 +44,7 @@ export const KitchenProductionDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [sortBy, setSortBy] = useState<'alphabetical' | 'quantity'>('alphabetical');
+  const [activeTab, setActiveTab] = useState<'meals' | 'ingredients'>('meals');
   const { toast } = useToast();
 
   // Memoized function to process meals as individual line items
@@ -373,88 +375,114 @@ export const KitchenProductionDashboard: React.FC = () => {
             {/* Print-only Production Date Header */}
             <div className="hidden print:block text-center mb-8">
               <h1 className="text-4xl font-bold text-center text-black">
-                {formatDate(productionData.productionDate, 'EEEE do MMMM yyyy')} Production List
+                {formatDate(productionData.productionDate, 'EEEE do MMMM yyyy')} {activeTab === 'meals' ? 'Production List' : 'Ingredient Requirements'}
               </h1>
             </div>
 
-            <Card className="print:shadow-none print:border-none">
-              <CardHeader className="pb-4 print:hidden">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <ChefHat className="h-5 w-5" />
-                    {formatDate(productionData.productionDate, 'EEEE do MMMM')} Production List
-                  </CardTitle>
-                  
-                  {/* Sorting Controls */}
-                  <div className="flex gap-2 print:hidden">
-                    <Button
-                      variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSortBy('alphabetical')}
-                      disabled={loading}
-                      className="text-xs"
-                    >
-                      <ArrowDownAZ className="h-3 w-3 mr-1" />
-                      A-Z
-                    </Button>
-                    <Button
-                      variant={sortBy === 'quantity' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSortBy('quantity')}
-                      disabled={loading}
-                      className="text-xs"
-                    >
-                      <Hash className="h-3 w-3 mr-1" />
-                      Qty
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 print:p-0">
-                {/* Compact Table Layout */}
-                <div className="kitchen-table-container overflow-x-auto" role="region" aria-label="Kitchen production list">
-                  <table className="w-full border-collapse min-w-full kitchen-meal-list">
-                    <thead className="print:break-before-avoid">
-                      <tr className="border-b-2 border-border">
-                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-20 kitchen-meal-quantity">Qty</th>
-                        <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground kitchen-meal-name">Meal Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedMealLineItems.length > 0 ? (
-                        sortedMealLineItems.map((meal, index) => (
-                          <tr key={`${meal.mealName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid kitchen-meal-row">
-                            <td className="py-2 px-3 text-center align-middle kitchen-meal-quantity">
-                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-transparent print:text-black print:w-auto print:h-auto print:rounded-none">
-                                {meal.totalQuantity}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3 text-sm font-medium text-foreground align-middle kitchen-meal-name">
-                              {meal.mealName}
-                            </td>
+            {/* Production Tabs */}
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'meals' | 'ingredients')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 max-w-md print:hidden">
+                <TabsTrigger value="meals">Meals</TabsTrigger>
+                <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="meals" className="mt-6">
+                <Card className="print:shadow-none print:border-none">
+                  <CardHeader className="pb-4 print:hidden">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl font-bold flex items-center gap-2">
+                        <ChefHat className="h-5 w-5" />
+                        {formatDate(productionData.productionDate, 'EEEE do MMMM')} Production List
+                      </CardTitle>
+                      
+                      {/* Sorting Controls */}
+                      <div className="flex gap-2 print:hidden">
+                        <Button
+                          variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSortBy('alphabetical')}
+                          disabled={loading}
+                          className="text-xs"
+                        >
+                          <ArrowDownAZ className="h-3 w-3 mr-1" />
+                          A-Z
+                        </Button>
+                        <Button
+                          variant={sortBy === 'quantity' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSortBy('quantity')}
+                          disabled={loading}
+                          className="text-xs"
+                        >
+                          <Hash className="h-3 w-3 mr-1" />
+                          Qty
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 print:p-0">
+                    {/* Compact Table Layout */}
+                    <div className="kitchen-table-container overflow-x-auto" role="region" aria-label="Kitchen production list">
+                      <table className="w-full border-collapse min-w-full kitchen-meal-list">
+                        <thead className="print:break-before-avoid">
+                          <tr className="border-b-2 border-border">
+                            <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-20 kitchen-meal-quantity">Qty</th>
+                            <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground kitchen-meal-name">Meal Description</th>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={2} className="py-8 text-center text-muted-foreground">
-                            No meals scheduled for this date
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <div className="kitchen-total flex items-center justify-between bg-muted/30 p-3 rounded border print:text-center print:text-white print:bg-black print:border-black">
-                  <span className="text-lg font-bold">TOTAL MEALS:</span>
-                  <span className="text-2xl font-bold text-primary print:text-white">
-                    {productionData.totalMeals}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                        </thead>
+                        <tbody>
+                          {sortedMealLineItems.length > 0 ? (
+                            sortedMealLineItems.map((meal, index) => (
+                              <tr key={`${meal.mealName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid kitchen-meal-row">
+                                <td className="py-2 px-3 text-center align-middle kitchen-meal-quantity">
+                                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-transparent print:text-black print:w-auto print:h-auto print:rounded-none">
+                                    {meal.totalQuantity}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-sm font-medium text-foreground align-middle kitchen-meal-name">
+                                  {meal.mealName}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={2} className="py-8 text-center text-muted-foreground">
+                                No meals scheduled for this date
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <Separator className="my-4" />
+                    
+                    <div className="kitchen-total flex items-center justify-between bg-muted/30 p-3 rounded border print:text-center print:text-white print:bg-black print:border-black">
+                      <span className="text-lg font-bold">TOTAL MEALS:</span>
+                      <span className="text-2xl font-bold text-primary print:text-white">
+                        {productionData.totalMeals}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="ingredients" className="mt-6">
+                <Card className="print:shadow-none print:border-none">
+                  <CardHeader className="pb-4 print:hidden">
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <ChefHat className="h-5 w-5" />
+                      {formatDate(productionData.productionDate, 'EEEE do MMMM')} Ingredient Requirements
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 print:p-0">
+                    <div className="text-center py-12 text-muted-foreground">
+                      <p>Ingredients view coming soon...</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
 
           </div>
         ) : (
