@@ -195,9 +195,9 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         backgroundColor: '#ffffff' // Ensure white background for PDF
       }}
     >
-      {/* Header Zone - Dynamic spacing based on content density */}
+      {/* Header Zone - Compressed spacing */}
       <div className="flex flex-col items-center" style={{ marginBottom: `${dynamicSpacing.headerMargin}mm` }}>
-        {/* Logo - Dynamic sizing */}
+        {/* Logo - Smaller for height constraint */}
         <div style={{ marginBottom: `${dynamicSpacing.logoMargin}mm` }}>
           <img 
             src={logoImage} 
@@ -206,20 +206,20 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
           />
         </div>
         
-        {/* Meal Name - Dynamic sizing based on content analysis with mandatory spacing */}
+        {/* Meal Name - Compressed sizing with minimal margins */}
         <h1 
           className="text-center font-bold text-foreground" 
           style={{ 
             fontSize: `${dynamicSizes.mealName}mm`,
             fontWeight: '800',
-            lineHeight: '0.95',
-            marginTop: `${Math.max(dynamicSpacing.mealNameMargin * 1.2, 1.0)}mm`, // Mandatory top spacing
-            marginBottom: `${Math.max(dynamicSpacing.mealNameMargin * 1.5, 1.2)}mm`, // Mandatory bottom spacing
-            paddingLeft: '2mm', // Mandatory side spacing
-            paddingRight: '2mm', // Mandatory side spacing
+            lineHeight: '0.9', // Tighter line height
+            marginTop: `${Math.max(dynamicSpacing.mealNameMargin * 0.8, 0.3)}mm`, // Reduced margins
+            marginBottom: `${Math.max(dynamicSpacing.mealNameMargin, 0.5)}mm`,
+            paddingLeft: '1.5mm', // Reduced padding
+            paddingRight: '1.5mm',
             width: '100%',
             wordWrap: 'break-word',
-            letterSpacing: '0.02em'
+            letterSpacing: '0.01em' // Reduced letter spacing
           }}
         >
           {data.mealName}
@@ -271,9 +271,9 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
           {/* Ingredients - Dynamic sizing based on content length */}
           <div style={{ marginBottom: `${dynamicSpacing.ingredientsMargin}mm` }}>
             <div className="text-center" style={{ 
-              fontSize: `${Math.max(dynamicSizes.ingredients + 0.2, 1.6)}mm`, // Slightly larger for labels
-              lineHeight: '1.1', 
-              marginBottom: '0.3mm' 
+              fontSize: `${Math.max(dynamicSizes.ingredients + 0.1, 1.3)}mm`, // Smaller header
+              lineHeight: '1.0', 
+              marginBottom: '0.2mm' // Reduced margin
             }}>
               <span 
                 className="font-semibold text-foreground" 
@@ -287,56 +287,44 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               style={{ 
                 fontWeight: '450', 
                 fontSize: `${dynamicSizes.ingredients}mm`,
-                lineHeight: '1.25',
+                lineHeight: '1.15', // Tighter line height
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word'
               }}
             >
               {data.ingredients ? (() => {
-                // Phase 2: Advanced intelligent processing based on density and quality mode
+                // Aggressive truncation for height constraint
                 let processedIngredients = data.ingredients;
                 
-                // Progressive abbreviation based on content density
-                if (contentDensity > 50) {
-                  processedIngredients = processedIngredients
-                    .replace(/\(Extra Virgin\)/g, '(EV)')
-                    .replace(/\(Light\)/g, '(Lt)')
-                    .replace(/Chicken Breast/g, 'Chicken');
-                }
-                
-                if (contentDensity > 65) {
-                  processedIngredients = processedIngredients
-                    .replace(/Sweet Chilli Sauce/g, 'Sweet Chilli')
-                    .replace(/Sriracha Sauce/g, 'Sriracha')
-                    .replace(/Smoked Paprika/g, 'Paprika');
-                }
-                
-                // Compact mode: Aggressive abbreviations for very long names
+                // Smart abbreviations for common terms when space is tight
                 if (scalingFactors.qualityMode === 'compact') {
                   processedIngredients = processedIngredients
-                    .replace(/Olive Oil/g, 'Oil')
-                    .replace(/Parsley/g, 'Parsley')
-                    .replace(/Lime Juice/g, 'Lime')
-                    .replace(/Chilli Flakes/g, 'Chilli')
-                    .replace(/\s+/g, ' ') // Remove extra spaces
-                    .replace(/\(\d+g\)/g, ''); // Remove weights in compact mode
+                    .replace(/\(Extra Virgin\)/g, '(EV)')
+                    .replace(/Olive Oil/g, 'Olive Oil')
+                    .replace(/Sea Salt/g, 'Salt')
+                    .replace(/Black Pepper/g, 'Pepper')
+                    .replace(/Garlic Powder/g, 'Garlic Pwd')
+                    .replace(/Onion Powder/g, 'Onion Pwd')
+                    .replace(/Coconut Oil/g, 'Coconut Oil')
+                    .replace(/\s+/g, ' ') // Clean up spaces
+                    .trim();
                 }
                 
-                return processedIngredients.split(',').map((ingredient, index) => (
-                  <span key={index}>
-                    {ingredient.trim()}
-                    {index < processedIngredients.split(',').length - 1 && ', '}
-                  </span>
-                ));
+                // Truncate if still too long for height constraint
+                if (scalingFactors.qualityMode === 'compact' && processedIngredients.length > 150) {
+                  processedIngredients = processedIngredients.substring(0, 147) + '...';
+                }
+                
+                return processedIngredients;
               })() : 'Not specified'}
             </div>
           </div>
 
-          {/* Allergens - Dynamic sizing for safety compliance */}
+          {/* Allergens - Compressed */}
           {data.allergens && (
             <div className="text-center" style={{ 
               fontSize: `${dynamicSizes.allergens}mm`, 
-              lineHeight: '1.2',
+              lineHeight: '1.1', // Tighter line height
               marginBottom: `${dynamicSpacing.useByMargin}mm`
             }}>
               <span 
@@ -354,14 +342,14 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             </div>
           )}
 
-          {/* USE BY Date - Smaller, positioned before URL */}
+          {/* USE BY Date - Compact */}
           <div 
             className="font-bold text-foreground text-center" 
             style={{ 
-              fontSize: `${dynamicSizes.useBy * 0.7}mm`, // Make it smaller
+              fontSize: `${dynamicSizes.useBy * 0.6}mm`, // Much smaller
               fontWeight: '650',
               lineHeight: '1.0',
-              marginBottom: '1mm',
+              marginBottom: '0.5mm', // Reduced margin
               letterSpacing: '0.01em'
             }}
           >
@@ -373,17 +361,17 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             }) : 'Fri, 19/09/2025'}
           </div>
 
-          {/* Website URL - Positioned directly under USE BY date */}
+          {/* Website URL - Compact */}
           <div 
             className="text-center font-medium text-primary" 
             style={{ 
               fontSize: `${dynamicSizes.footer}mm`,
               fontWeight: '550',
               lineHeight: '1.0',
-              letterSpacing: '0.03em',
-              borderTop: '0.15mm solid rgba(var(--primary), 0.25)',
-              paddingTop: '1mm',
-              marginBottom: '1mm'
+              letterSpacing: '0.02em', // Reduced letter spacing
+              borderTop: '0.1mm solid rgba(var(--primary), 0.2)', // Thinner border
+              paddingTop: '0.5mm', // Reduced padding
+              marginBottom: '0mm' // No bottom margin
             }}
           >
             www.fitfoodtasty.co.uk

@@ -304,19 +304,14 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
           scale: 2, // Back to high quality
           useCORS: true, 
           backgroundColor: '#ffffff',
-          logging: true, // Enable logging to see what's happening
+          logging: false, // Keep logging disabled for production
           allowTaint: true,
           height: el.offsetHeight,
           width: el.offsetWidth,
           // Remove problematic options that caused iframe errors
           foreignObjectRendering: false,
           removeContainer: false,
-          imageTimeout: 1000,
-          onclone: (clonedDoc, element) => {
-            // Debug: log cloned content
-            console.log('Cloned document head:', clonedDoc.head.innerHTML.substring(0, 500));
-            console.log('Cloned element height:', element.offsetHeight);
-          }
+          imageTimeout: 1000
         });
         
         console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
