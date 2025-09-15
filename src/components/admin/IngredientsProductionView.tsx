@@ -9,7 +9,8 @@ import {
   Clock
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
-import type { ProductionSummary, IngredientLineItem, SortBy } from '@/types/kitchen';
+import type { ProductionSummary, IngredientLineItem, SortBy, IngredientViewMode } from '@/types/kitchen';
+import { filterIngredientsByViewMode, getViewModeInfo, getFilterStatusText } from '@/lib/ingredientFilters';
 
 interface IngredientsProductionViewProps {
   productionData: ProductionSummary | null;
@@ -17,6 +18,8 @@ interface IngredientsProductionViewProps {
   loading: boolean;
   sortBy: SortBy;
   setSortBy: (sortBy: SortBy) => void;
+  ingredientViewMode: IngredientViewMode;
+  setIngredientViewMode: (mode: IngredientViewMode) => void;
   ingredientsError?: string | null;
   onRetryIngredients?: () => void;
 }
@@ -27,9 +30,16 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
   loading,
   sortBy,
   setSortBy,
+  ingredientViewMode,
+  setIngredientViewMode,
   ingredientsError,
   onRetryIngredients
 }) => {
+  // Filter ingredients based on view mode
+  const filteredIngredientLineItems = useMemo(() => {
+    return filterIngredientsByViewMode(sortedIngredientLineItems, ingredientViewMode);
+  }, [sortedIngredientLineItems, ingredientViewMode]);
+
   // Use the processed ingredient data from parent
   const ingredientsData = useMemo(() => {
     if (!productionData || !sortedIngredientLineItems.length) return null;
@@ -38,9 +48,10 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
       productionDate: productionData.productionDate,
       totalIngredients: productionData.totalIngredients || 0,
       uniqueIngredientTypes: productionData.uniqueIngredientTypes || 0,
-      ingredientLineItems: sortedIngredientLineItems
+      ingredientLineItems: filteredIngredientLineItems,
+      allIngredientLineItems: sortedIngredientLineItems
     };
-  }, [productionData, sortedIngredientLineItems]);
+  }, [productionData, sortedIngredientLineItems, filteredIngredientLineItems]);
 
   if (!ingredientsData && !ingredientsError) {
     return (
@@ -88,28 +99,58 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
             {formatDate(ingredientsData.productionDate, 'EEEE do MMMM')} Ingredient Requirements
           </CardTitle>
           
-          {/* Sorting Controls */}
-          <div className="flex gap-2 print:hidden">
-            <Button
-              variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSortBy('alphabetical')}
-              disabled={loading}
-              className="text-xs"
-            >
-              <ArrowDownAZ className="h-3 w-3 mr-1" />
-              A-Z
-            </Button>
-            <Button
-              variant={sortBy === 'quantity' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSortBy('quantity')}
-              disabled={loading}
-              className="text-xs"
-            >
-              <Hash className="h-3 w-3 mr-1" />
-              Qty
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+            {/* Filter Controls */}
+            <div className="flex gap-1 print:hidden">
+              {(['production', 'major', 'complete'] as const).map((mode) => {
+                const { label } = getViewModeInfo(mode);
+                return (
+                  <Button
+                    key={mode}
+                    variant={ingredientViewMode === mode ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setIngredientViewMode(mode)}
+                    disabled={loading}
+                    className="text-xs"
+                  >
+                    {label}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            {/* Sorting Controls */}
+            <div className="flex gap-2 print:hidden">
+              <Button
+                variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('alphabetical')}
+                disabled={loading}
+                className="text-xs"
+              >
+                <ArrowDownAZ className="h-3 w-3 mr-1" />
+                A-Z
+              </Button>
+              <Button
+                variant={sortBy === 'quantity' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('quantity')}
+                disabled={loading}
+                className="text-xs"
+              >
+                <Hash className="h-3 w-3 mr-1" />
+                Qty
+              </Button>
+            </div>
+          </div>
+          
+          {/* Filter Status */}
+          <div className="text-sm text-muted-foreground print:hidden">
+            {getFilterStatusText(
+              ingredientsData.ingredientLineItems.length,
+              ingredientsData.allIngredientLineItems.length,
+              ingredientViewMode
+            )}
           </div>
         </div>
       </CardHeader>
@@ -125,8 +166,8 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
               </tr>
             </thead>
             <tbody>
-              {sortedIngredientLineItems.length > 0 ? (
-                sortedIngredientLineItems.map((ingredient, index) => (
+              {ingredientsData.ingredientLineItems.length > 0 ? (
+                ingredientsData.ingredientLineItems.map((ingredient, index) => (
                   <tr key={`${ingredient.ingredientName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid">
                     <td className="py-3 px-3 text-center align-top">
                       <div className="flex flex-col items-center">
@@ -169,9 +210,11 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
         <Separator className="my-4" />
         
         <div className="kitchen-total flex items-center justify-between bg-muted/30 p-3 rounded border print:text-center print:text-white print:bg-black print:border-black">
-          <span className="text-lg font-bold">TOTAL INGREDIENT TYPES:</span>
+          <span className="text-lg font-bold">
+            {ingredientViewMode === 'complete' ? 'TOTAL INGREDIENT TYPES:' : 'FILTERED INGREDIENT TYPES:'}
+          </span>
           <span className="text-2xl font-bold text-primary print:text-white">
-            {ingredientsData.uniqueIngredientTypes}
+            {ingredientsData.ingredientLineItems.length}
           </span>
         </div>
       </CardContent>

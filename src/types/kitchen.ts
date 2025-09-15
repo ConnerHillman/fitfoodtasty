@@ -35,3 +35,9 @@ export interface ProductionSummary {
 }
 
 export type SortBy = 'alphabetical' | 'quantity';
+
+export type IngredientViewMode = 'production' | 'major' | 'complete';
+
+export interface IngredientFilter {
+  viewMode: IngredientViewMode;
+}

@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
-import type { MealLineItem, IngredientLineItem, ProductionSummary } from '@/types/kitchen';
+import type { MealLineItem, IngredientLineItem, ProductionSummary, IngredientViewMode } from '@/types/kitchen';
 import { aggregateQuantities, canAggregateUnits, formatQuantity, convertToBaseUnit } from '@/lib/unitConversion';
 import { filterOrdersByProductionDate, isValidProductionDate } from '@/lib/dateUtils';
 
@@ -12,6 +12,7 @@ export const useProductionData = () => {
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [ingredientsError, setIngredientsError] = useState<string | null>(null);
   const [dataValidationWarnings, setDataValidationWarnings] = useState<string[]>([]);
+  const [ingredientViewMode, setIngredientViewMode] = useState<IngredientViewMode>('production');
   const { toast } = useToast();
   
   // Request tracking to prevent race conditions and memory leaks
@@ -592,6 +593,8 @@ export const useProductionData = () => {
     ingredientsLoading,
     ingredientsError,
     dataValidationWarnings,
+    ingredientViewMode,
+    setIngredientViewMode,
     loadProductionData,
     retryIngredientProcessing
   };
