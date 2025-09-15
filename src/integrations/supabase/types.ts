@@ -1243,13 +1243,11 @@ export type Database = {
           carbs: number
           created_at: string
           fat: number
-          heating_instructions: string | null
           id: string
           ingredients: string | null
           name: string
           protein: number
           storage_heating_instructions: string
-          storage_instructions: string | null
           updated_at: string
         }
         Insert: {
@@ -1258,13 +1256,11 @@ export type Database = {
           carbs?: number
           created_at?: string
           fat?: number
-          heating_instructions?: string | null
           id?: string
           ingredients?: string | null
           name: string
           protein?: number
           storage_heating_instructions?: string
-          storage_instructions?: string | null
           updated_at?: string
         }
         Update: {
@@ -1273,13 +1269,11 @@ export type Database = {
           carbs?: number
           created_at?: string
           fat?: number
-          heating_instructions?: string | null
           id?: string
           ingredients?: string | null
           name?: string
           protein?: number
           storage_heating_instructions?: string
-          storage_instructions?: string | null
           updated_at?: string
         }
         Relationships: []
