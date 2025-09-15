@@ -234,12 +234,14 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       console.log('Container found, checking content...');
       
-      // Make the container temporarily positioned but completely hidden from view
+      // Make the container positioned for rendering but invisible to users
       container.style.position = 'fixed';
-      container.style.left = '-9999px'; // Move far off-screen
-      container.style.top = '-9999px';  // Move far off-screen
-      container.style.visibility = 'hidden'; // Hide from view
-      container.style.zIndex = '-9999';
+      container.style.left = '0';
+      container.style.top = '0';
+      container.style.visibility = 'visible'; // Must be visible for html2canvas
+      container.style.zIndex = '-9999'; // Behind everything
+      container.style.pointerEvents = 'none'; // No interaction
+      container.style.opacity = '0'; // Completely transparent to users
       
       // Wait for next render cycle
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -308,10 +310,12 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       }
 
-      // Hide the container again
+      // Reset container to hidden state
       container.style.position = 'absolute';
       container.style.left = '-10000px';
       container.style.visibility = 'hidden';
+      container.style.opacity = '1'; // Reset opacity
+      container.style.pointerEvents = 'auto'; // Reset pointer events
 
       const fileName = `Meal_Labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.pdf`;
       pdf.save(fileName);
