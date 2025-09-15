@@ -63,35 +63,45 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         ></div>
       </div>
 
-      {/* Nutrition Zone - Level 2: Prominent secondary information */}
+      {/* Nutrition Bar - Clean horizontal emphasis without containers */}
       <div 
-        className="bg-primary/10 text-center font-semibold text-primary" 
+        className="text-center font-semibold text-primary" 
         style={{ 
-          fontSize: '3.2mm', // Increased for better readability 
-          fontWeight: '650', // Perfect balance between regular and bold
+          fontSize: '3.2mm',
+          fontWeight: '650',
           lineHeight: '1.2',
-          padding: '2mm 2.5mm',
-          marginBottom: '2.5mm',
-          borderRadius: '1.5mm',
+          padding: '1.8mm 0', // Vertical padding only
+          marginBottom: '3mm',
+          background: 'linear-gradient(90deg, transparent, rgba(var(--primary), 0.08) 20%, rgba(var(--primary), 0.08) 80%, transparent)',
           letterSpacing: '0.01em'
         }}
       >
         {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
       </div>
 
-      {/* Main Content Zone - Structured information layout */}
-      <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: '1.5mm' }}>
+      {/* Main Content - Clean functional sections */}
+      <div className="flex-1" style={{ display: 'flex', flexDirection: 'column' }}>
         
-        {/* Safety Information Zone */}
-        <div>
+        {/* Safety Information Section - Logically grouped without containers */}
+        <div style={{ marginBottom: '3mm' }}>
+          {/* Critical safety info separator */}
+          <div 
+            style={{ 
+              width: '100%', 
+              height: '0.2mm', 
+              background: 'rgba(var(--primary), 0.2)',
+              marginBottom: '2mm' 
+            }}
+          ></div>
+          
           {/* USE BY Date - Level 3: Critical safety information */}
           <div 
             className="font-bold text-foreground text-center" 
             style={{ 
-              fontSize: '3mm', // Increased for critical safety info
-              fontWeight: '750', // Strong emphasis for safety
+              fontSize: '3mm',
+              fontWeight: '750',
               lineHeight: '1.1',
-              marginBottom: '1.5mm',
+              marginBottom: '2mm',
               letterSpacing: '0.02em'
             }}
           >
@@ -103,33 +113,52 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             }) : 'Fri, 19/09/2025'}
           </div>
 
-          {/* Storage Instructions - Level 4: Important but secondary */}
+          {/* Storage Instructions - Grouped with safety info */}
           <div 
             className="text-foreground text-center" 
             style={{ 
-              fontSize: '2.3mm', // Optimal readability size
-              fontWeight: '500', // Medium weight for good readability
-              lineHeight: '1.3', // Better line spacing for multi-line text
+              fontSize: '2.3mm',
+              fontWeight: '500',
+              lineHeight: '1.3',
               marginBottom: '2mm'
             }}
           >
             {storageInstructions}
           </div>
+          
+          {/* Safety section separator */}
+          <div 
+            style={{ 
+              width: '100%', 
+              height: '0.2mm', 
+              background: 'rgba(var(--primary), 0.2)',
+              marginBottom: '2mm' 
+            }}
+          ></div>
         </div>
 
-        {/* Product Information Zone */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1mm' }}>
-          {/* Ingredients - Level 4: Body text with clear hierarchy */}
-          <div style={{ fontSize: '2.2mm', lineHeight: '1.4', marginBottom: '1.5mm' }}>
-            <span 
-              className="font-semibold text-foreground" 
-              style={{ fontWeight: '650', fontSize: '2.3mm' }} // Slightly larger for labels
-            >
-              Ingredients:
-            </span>{' '}
-            <span 
+        {/* Product Details Section - Clean organization without containers */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          
+          {/* Ingredients - Clean layout without boxes */}
+          <div style={{ marginBottom: '2mm' }}>
+            <div style={{ fontSize: '2.2mm', lineHeight: '1.4' }}>
+              <span 
+                className="font-semibold text-foreground" 
+                style={{ fontWeight: '650', fontSize: '2.3mm' }}
+              >
+                Ingredients:
+              </span>
+            </div>
+            <div 
               className="text-foreground" 
-              style={{ fontWeight: '450', lineHeight: '1.4' }} // Optimized for readability
+              style={{ 
+                fontWeight: '450', 
+                fontSize: '2.2mm',
+                lineHeight: '1.4',
+                marginTop: '0.5mm',
+                paddingLeft: '1mm' // Subtle indentation for organization
+              }}
             >
               {data.ingredients ? data.ingredients.split(',').map((ingredient, index) => (
                 <span key={index}>
@@ -137,41 +166,51 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
                   {index < data.ingredients.split(',').length - 1 && ', '}
                 </span>
               )) : 'Not specified'}
-            </span>
+            </div>
           </div>
 
-          {/* Allergens - Level 3: Critical safety with visual emphasis */}
+          {/* Allergens - Functional emphasis without gaudy styling */}
           {data.allergens && (
-            <div style={{ fontSize: '2.2mm', lineHeight: '1.4' }}>
-              <span 
-                className="font-semibold text-foreground" 
-                style={{ fontWeight: '650', fontSize: '2.3mm' }}
-              >
-                Allergens:
-              </span>{' '}
-              <span 
-                className="font-bold text-foreground" 
-                style={{ fontWeight: '750' }} // Strong emphasis for safety
-              >
-                {data.allergens}
-              </span>
+            <div>
+              <div 
+                style={{ 
+                  width: '40%', 
+                  height: '0.1mm', 
+                  background: 'rgba(var(--primary), 0.3)',
+                  marginBottom: '1.5mm' 
+                }}
+              ></div>
+              <div style={{ fontSize: '2.2mm', lineHeight: '1.4' }}>
+                <span 
+                  className="font-semibold text-foreground" 
+                  style={{ fontWeight: '650', fontSize: '2.3mm' }}
+                >
+                  Allergens:
+                </span>{' '}
+                <span 
+                  className="font-bold text-foreground" 
+                  style={{ fontWeight: '750' }}
+                >
+                  {data.allergens}
+                </span>
+              </div>
             </div>
           )}
         </div>
 
       </div>
 
-      {/* Footer Zone - Level 5: Subtle brand presence */}
+      {/* Footer Section - Minimal, professional brand presence */}
       <div 
         className="text-center font-medium text-primary" 
         style={{ 
-          fontSize: '2mm', // Increased slightly for better readability
-          fontWeight: '550', // Refined weight for professional appearance
+          fontSize: '2mm',
+          fontWeight: '550',
           lineHeight: '1.2',
-          marginTop: '2mm',
-          paddingTop: '1.5mm',
-          borderTop: '0.1mm solid rgba(var(--border), 0.4)',
-          letterSpacing: '0.03em' // Professional letter spacing
+          marginTop: '2.5mm',
+          paddingTop: '2mm',
+          borderTop: '0.15mm solid rgba(var(--primary), 0.25)', // Slightly more prominent separator
+          letterSpacing: '0.03em'
         }}
       >
         www.fitfoodtasty.co.uk
