@@ -24,25 +24,25 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         justifyContent: 'space-between'
       }}
     >
-      {/* Header Zone - Optimized for space efficiency */}
-      <div className="flex flex-col items-center" style={{ marginBottom: '1.5mm' }}>
-        {/* Logo - Reduced size for more content space */}
-        <div style={{ marginBottom: '1mm' }}>
+      {/* Header Zone - Micro-optimized spacing */}
+      <div className="flex flex-col items-center" style={{ marginBottom: '0.8mm' }}> {/* Reduced from 1.5mm */}
+        {/* Logo - Tight spacing */}
+        <div style={{ marginBottom: '0.5mm' }}> {/* Reduced from 1mm */}
           <img 
             src={logoImage} 
             alt="Fit Food Tasty logo"
-            style={{ height: '10mm', width: 'auto', objectFit: 'contain' }} // Reduced from 12mm
+            style={{ height: '10mm', width: 'auto', objectFit: 'contain' }}
           />
         </div>
         
-        {/* Meal Name - Maintained dominance with optimized spacing */}
+        {/* Meal Name - Tight spacing for maximum content area */}
         <h1 
           className="text-center font-bold text-foreground" 
           style={{ 
-            fontSize: '5.2mm', // Slightly reduced for space efficiency
+            fontSize: '5.2mm',
             fontWeight: '800',
-            lineHeight: '1.0', // Tighter line height
-            marginBottom: '1.5mm', // Reduced spacing
+            lineHeight: '0.95', // Ultra-tight line height
+            marginBottom: '0.8mm', // Reduced from 1.5mm
             width: '100%',
             wordWrap: 'break-word',
             letterSpacing: '0.02em'
@@ -51,27 +51,27 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
           {data.mealName}
         </h1>
         
-        {/* Visual separator - Optimized */}
+        {/* Visual separator - Minimal spacing */}
         <div 
           className="bg-primary/50" 
           style={{ 
             width: '25%', 
             height: '0.4mm', 
-            marginBottom: '1.5mm' // Reduced spacing
+            marginBottom: '0.8mm' // Reduced from 1.5mm
           }} 
           aria-hidden="true"
         ></div>
       </div>
 
-      {/* Nutrition Bar - Compact but readable */}
+      {/* Nutrition Bar - Ultra-compact */}
       <div 
         className="text-center font-semibold text-primary" 
         style={{ 
-          fontSize: '3mm', // Slightly reduced for space
+          fontSize: '3mm',
           fontWeight: '650',
-          lineHeight: '1.1', // Tighter
-          padding: '1.5mm 0', // Reduced padding
-          marginBottom: '2mm', // Reduced margin
+          lineHeight: '1.0', // Ultra-tight
+          padding: '1mm 0', // Reduced from 1.5mm
+          marginBottom: '1mm', // Reduced from 2mm
           background: 'linear-gradient(90deg, transparent, rgba(var(--primary), 0.08) 20%, rgba(var(--primary), 0.08) 80%, transparent)',
           letterSpacing: '0.01em'
         }}
@@ -79,29 +79,20 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
       </div>
 
-      {/* Main Content - Optimized for space efficiency */}
+      {/* Main Content - Maximum density optimization */}
       <div className="flex-1" style={{ display: 'flex', flexDirection: 'column' }}>
         
-        {/* Safety Information Section - Compact layout */}
-        <div style={{ marginBottom: '2mm' }}> {/* Reduced from 3mm */}
-          {/* Critical safety info separator */}
-          <div 
-            style={{ 
-              width: '100%', 
-              height: '0.2mm', 
-              background: 'rgba(var(--primary), 0.2)',
-              marginBottom: '1.5mm' // Reduced spacing
-            }}
-          ></div>
+        {/* Safety Information Section - Consolidated block */}
+        <div style={{ marginBottom: '1mm' }}> {/* Reduced from 2mm */}
           
-          {/* USE BY Date - Maintained importance with better spacing */}
+          {/* USE BY Date - No decorative separators, rely on typography */}
           <div 
             className="font-bold text-foreground text-center" 
             style={{ 
-              fontSize: '2.8mm', // Slightly reduced for space
+              fontSize: '2.8mm',
               fontWeight: '750',
-              lineHeight: '1.0', // Tighter
-              marginBottom: '1.5mm', // Reduced spacing
+              lineHeight: '1.0',
+              marginBottom: '0.5mm', // Minimal spacing to storage
               letterSpacing: '0.02em'
             }}
           >
@@ -113,36 +104,26 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             }) : 'Fri, 19/09/2025'}
           </div>
 
-          {/* Storage Instructions - Optimized for space */}
+          {/* Storage Instructions - Grouped tightly with USE BY */}
           <div 
             className="text-foreground text-center" 
             style={{ 
-              fontSize: '2mm', // Reduced for space efficiency
+              fontSize: '2mm',
               fontWeight: '500',
-              lineHeight: '1.2', // Tighter line spacing
-              marginBottom: '1.5mm' // Reduced spacing
+              lineHeight: '1.15', // Optimized for multi-line
+              marginBottom: '0.8mm' // Minimal separation before next section
             }}
           >
             {storageInstructions}
           </div>
-          
-          {/* Safety section separator */}
-          <div 
-            style={{ 
-              width: '100%', 
-              height: '0.2mm', 
-              background: 'rgba(var(--primary), 0.2)',
-              marginBottom: '1.5mm' // Reduced spacing
-            }}
-          ></div>
         </div>
 
-        {/* Product Details Section - Space-optimized layout */}
+        {/* Product Details Section - Maximum density */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           
-          {/* Ingredients - Intelligent space management */}
-          <div style={{ marginBottom: '1.5mm' }}>
-            <div style={{ fontSize: '2mm', lineHeight: '1.2', marginBottom: '0.5mm' }}>
+          {/* Ingredients - Ultra-compact layout */}
+          <div style={{ marginBottom: '0.8mm' }}> {/* Reduced from 1.5mm */}
+            <div style={{ fontSize: '2mm', lineHeight: '1.1', marginBottom: '0.3mm' }}> {/* Reduced spacing */}
               <span 
                 className="font-semibold text-foreground" 
                 style={{ fontWeight: '650' }}
@@ -154,8 +135,8 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               className="text-foreground" 
               style={{ 
                 fontWeight: '450', 
-                fontSize: '1.8mm', // Reduced for space efficiency
-                lineHeight: '1.3', // Optimized for readability
+                fontSize: '1.8mm',
+                lineHeight: '1.25', // Optimized for density
                 paddingLeft: '1mm',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word'
@@ -164,8 +145,8 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               {data.ingredients ? (() => {
                 // Intelligent ingredient processing for space optimization
                 const processedIngredients = data.ingredients
-                  .replace(/\(Extra Virgin\)/g, '(EV)') // Abbreviate Extra Virgin
-                  .replace(/\(Light\)/g, '(Lt)') // Abbreviate Light
+                  .replace(/\(Extra Virgin\)/g, '(EV)')
+                  .replace(/\(Light\)/g, '(Lt)')
                   .replace(/Chicken Breast/g, 'Chicken')
                   .replace(/Sweet Chilli Sauce/g, 'Sweet Chilli')
                   .replace(/Sriracha Sauce/g, 'Sriracha')
@@ -182,46 +163,36 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             </div>
           </div>
 
-          {/* Allergens - Compact but prominent */}
+          {/* Allergens - No separator line, rely on typography */}
           {data.allergens && (
-            <div>
-              <div 
-                style={{ 
-                  width: '40%', 
-                  height: '0.1mm', 
-                  background: 'rgba(var(--primary), 0.3)',
-                  marginBottom: '1mm' // Reduced spacing
-                }}
-              ></div>
-              <div style={{ fontSize: '1.9mm', lineHeight: '1.3' }}> {/* Slightly reduced */}
-                <span 
-                  className="font-semibold text-foreground" 
-                  style={{ fontWeight: '650' }}
-                >
-                  Allergens:
-                </span>{' '}
-                <span 
-                  className="font-bold text-foreground" 
-                  style={{ fontWeight: '750' }}
-                >
-                  {data.allergens}
-                </span>
-              </div>
+            <div style={{ fontSize: '1.9mm', lineHeight: '1.2' }}>
+              <span 
+                className="font-semibold text-foreground" 
+                style={{ fontWeight: '650' }}
+              >
+                Allergens:
+              </span>{' '}
+              <span 
+                className="font-bold text-foreground" 
+                style={{ fontWeight: '750' }}
+              >
+                {data.allergens}
+              </span>
             </div>
           )}
         </div>
 
       </div>
 
-      {/* Footer Section - Compact brand presence */}
+      {/* Footer Section - Minimal spacing */}
       <div 
         className="text-center font-medium text-primary" 
         style={{ 
-          fontSize: '1.9mm', // Slightly reduced
+          fontSize: '1.9mm',
           fontWeight: '550',
-          lineHeight: '1.1', // Tighter
-          marginTop: '2mm', // Reduced spacing
-          paddingTop: '1.5mm', // Reduced padding
+          lineHeight: '1.0', // Ultra-tight
+          marginTop: '1mm', // Reduced from 2mm
+          paddingTop: '1mm', // Reduced from 1.5mm
           borderTop: '0.15mm solid rgba(var(--primary), 0.25)',
           letterSpacing: '0.03em'
         }}
