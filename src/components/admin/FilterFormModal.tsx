@@ -21,6 +21,7 @@ const FilterFormModal = ({ open, onOpenChange, filter }: FilterFormModalProps) =
   const [formData, setFormData] = useState<FilterFormData>({
     name: '',
     type: 'dietary',
+    category: 'Dietary',
     threshold: null,
     is_active: true,
   });
@@ -33,6 +34,7 @@ const FilterFormModal = ({ open, onOpenChange, filter }: FilterFormModalProps) =
       setFormData({
         name: filter.name,
         type: filter.type,
+        category: filter.category || 'Dietary',
         threshold: filter.threshold,
         is_active: filter.is_active,
       });
@@ -41,6 +43,7 @@ const FilterFormModal = ({ open, onOpenChange, filter }: FilterFormModalProps) =
       setFormData({
         name: '',
         type: 'dietary',
+        category: 'Dietary',
         threshold: null,
         is_active: true,
       });

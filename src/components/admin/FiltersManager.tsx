@@ -1,18 +1,15 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Power, Trash2, Filter as FilterIcon, Sliders, Tag, SortAsc } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Edit, Trash2, Plus, Tag, Sliders, FilterIcon, SortAsc, ToggleLeft, ToggleRight } from "lucide-react";
 import { useFiltersData } from "@/hooks/useFiltersData";
-import { useFilteredData } from "@/hooks/useFilteredData";
-
-// Import generic components
-import { GenericFiltersBar, StatsCardsGrid, GenericDataTable, GenericModal } from "@/components/common";
 import FilterFormModal from "./FilterFormModal";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-
+import DeleteDialog from "./DeleteDialog";
 import type { Filter, FilterFilters } from "@/types/filter";
-import type { StatCardData, ColumnDef, ActionItem } from "@/components/common";
 
 const FiltersManager = () => {
   const { toast } = useToast();
@@ -22,8 +19,9 @@ const FiltersManager = () => {
   const [filtersState, setFiltersState] = useState<FilterFilters>({
     searchQuery: "",
     typeFilter: 'all',
+    categoryFilter: 'all',
     statusFilter: 'all',
-    sortBy: 'name',
+    sortBy: 'category',
     sortOrder: 'asc'
   });
 
@@ -32,44 +30,62 @@ const FiltersManager = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<Filter | null>(null);
 
-  const filteredFilters = useFilteredData(filters, {
-    searchTerm: filtersState.searchQuery,
-    searchFields: ['name', 'type'] as (keyof Filter)[],
-    statusField: 'is_active' as keyof Filter,
-    statusFilter: filtersState.statusFilter,
-    sortBy: filtersState.sortBy,
-    sortOrder: filtersState.sortOrder,
-    customFilter: (filter: Filter) => {
-      if (filtersState.typeFilter !== 'all') {
-        return filter.type === filtersState.typeFilter;
+  // Filter and sort data
+  const filteredData = useMemo(() => {
+    let result = [...filters];
+
+    // Apply search filter
+    if (filtersState.searchQuery) {
+      result = result.filter(filter =>
+        filter.name.toLowerCase().includes(filtersState.searchQuery.toLowerCase()) ||
+        filter.type.toLowerCase().includes(filtersState.searchQuery.toLowerCase()) ||
+        (filter.category && filter.category.toLowerCase().includes(filtersState.searchQuery.toLowerCase()))
+      );
+    }
+
+    // Apply category filter
+    if (filtersState.categoryFilter !== 'all') {
+      result = result.filter(filter => {
+        if (filtersState.categoryFilter === 'uncategorized') {
+          return !filter.category;
+        }
+        return filter.category === filtersState.categoryFilter;
+      });
+    }
+
+    // Apply type filter
+    if (filtersState.typeFilter !== 'all') {
+      result = result.filter(filter => filter.type === filtersState.typeFilter);
+    }
+
+    // Apply status filter
+    if (filtersState.statusFilter !== 'all') {
+      const isActive = filtersState.statusFilter === 'active';
+      result = result.filter(filter => filter.is_active === isActive);
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      let aValue: any = a[filtersState.sortBy as keyof Filter];
+      let bValue: any = b[filtersState.sortBy as keyof Filter];
+
+      if (filtersState.sortBy === 'category') {
+        aValue = aValue || 'Uncategorized';
+        bValue = bValue || 'Uncategorized';
       }
-      return true;
-    }
-  });
 
-  // Convert filters to match GenericFiltersBar interface
-  const genericFilters = useMemo(() => ({
-    searchTerm: filtersState.searchQuery,
-    sortBy: filtersState.sortBy,
-    sortOrder: filtersState.sortOrder,
-    viewMode: 'list' as const,
-  }), [filtersState]);
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const comparison = aValue.localeCompare(bValue);
+        return filtersState.sortOrder === 'asc' ? comparison : -comparison;
+      }
 
-  const handleFiltersChange = (newFilters: any) => {
-    const updatedFilters: Partial<FilterFilters> = {};
-    
-    if ('searchTerm' in newFilters) {
-      updatedFilters.searchQuery = newFilters.searchTerm;
-    }
-    if ('sortBy' in newFilters) {
-      updatedFilters.sortBy = newFilters.sortBy;
-    }
-    if ('sortOrder' in newFilters) {
-      updatedFilters.sortOrder = newFilters.sortOrder;
-    }
-    
-    setFiltersState(prev => ({ ...prev, ...updatedFilters }));
-  };
+      if (aValue < bValue) return filtersState.sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return filtersState.sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [filters, filtersState]);
 
   const handleEditFilter = (filter: Filter) => {
     setSelectedFilter(filter);
@@ -79,6 +95,22 @@ const FiltersManager = () => {
   const handleDeleteFilter = (filter: Filter) => {
     setSelectedFilter(filter);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleToggleActive = async (filter: Filter) => {
+    try {
+      await toggleFilterActive(filter);
+      toast({
+        title: "Success",
+        description: `Filter ${filter.is_active ? 'deactivated' : 'activated'} successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update filter status",
+        variant: "destructive",
+      });
+    }
   };
 
   const confirmDelete = async () => {
@@ -101,11 +133,11 @@ const FiltersManager = () => {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'dietary': return 'bg-green-100 text-green-800 border-green-200';
-      case 'nutrition': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'calorie': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'sorting': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'dietary': return 'bg-green-100 text-green-800';
+      case 'nutrition': return 'bg-blue-100 text-blue-800';
+      case 'calorie': return 'bg-orange-100 text-orange-800';
+      case 'sorting': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -121,223 +153,228 @@ const FiltersManager = () => {
     }).join(', ');
   };
 
-  // Stats data
-  const statsData: StatCardData[] = useMemo(() => {
-    const activeFilters = filters.filter(f => f.is_active);
-    const inactiveFilters = filters.filter(f => !f.is_active);
-    const typeGroups = filters.reduce((acc, filter) => {
-      acc[filter.type] = (acc[filter.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return [
-      {
-        id: 'total',
-        title: 'Total Filters',
-        value: filters.length,
-        icon: FilterIcon,
-        iconColor: 'text-blue-500'
-      },
-      {
-        id: 'active',
-        title: 'Active Filters',
-        value: activeFilters.length,
-        icon: Power,
-        iconColor: 'text-green-500',
-        subtitle: `${inactiveFilters.length} inactive`
-      },
-      {
-        id: 'dietary',
-        title: 'Dietary Filters',
-        value: typeGroups.dietary || 0,
-        icon: Tag,
-        iconColor: 'text-green-500'
-      },
-      {
-        id: 'nutrition',
-        title: 'Nutrition Filters',
-        value: typeGroups.nutrition || 0,
-        icon: Sliders,
-        iconColor: 'text-blue-500'
-      }
-    ];
-  }, [filters]);
-
-  // Table columns
-  const columns: ColumnDef<Filter>[] = [
-    {
-      key: 'name',
-      header: 'Name',
-      accessor: (filter) => (
-        <div className="flex items-center gap-2">
-          {getTypeIcon(filter.type)}
-          <span className="font-medium">{filter.name}</span>
-        </div>
-      )
-    },
-    {
-      key: 'type',
-      header: 'Type',
-      accessor: (filter) => (
-        <Badge className={`border ${getTypeColor(filter.type)}`}>
-          {filter.type}
-        </Badge>
-      )
-    },
-    {
-      key: 'threshold',
-      header: 'Threshold',
-      accessor: (filter) => (
-        <span className="text-sm text-muted-foreground">
-          {formatThreshold(filter.threshold)}
-        </span>
-      )
-    },
-    {
-      key: 'is_active',
-      header: 'Status',
-      accessor: (filter) => (
-        <Badge variant={filter.is_active ? "default" : "secondary"}>
-          {filter.is_active ? "Active" : "Inactive"}
-        </Badge>
-      )
-    }
-  ];
-
-  // Table actions
-  const actions: ActionItem<Filter>[] = [
-    {
-      label: 'Edit',
-      icon: Edit,
-      onClick: handleEditFilter,
-      variant: 'outline'
-    },
-    {
-      label: 'Toggle Status',
-      icon: Power,
-      onClick: toggleFilterActive,
-      variant: 'outline'
-    },
-    {
-      label: 'Delete',
-      icon: Trash2,
-      onClick: handleDeleteFilter,
-      variant: 'outline'
-    }
-  ];
-
-  // Filter options
-  const typeFilterOptions = [
-    { value: 'all', label: 'All Types' },
-    { value: 'dietary', label: 'Dietary' },
-    { value: 'nutrition', label: 'Nutrition' },
-    { value: 'calorie', label: 'Calorie' },
-    { value: 'sorting', label: 'Sorting' }
-  ];
-
-  const statusFilterOptions = [
-    { value: 'all', label: 'All Status' },
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' }
-  ];
-
-  const sortOptions = [
-    { value: 'name', label: 'Name' },
-    { value: 'type', label: 'Type' },
-    { value: 'created_at', label: 'Date Created' }
-  ];
-
   if (loading) {
-    return <div>Loading filters...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Filters Manager</h2>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading filters...</div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Filters Management</h3>
-          <p className="text-muted-foreground">
-            Manage dynamic filters for the menu page
-          </p>
-        </div>
-        <Button onClick={() => { setSelectedFilter(null); setIsFormModalOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
+        <h2 className="text-2xl font-bold">Filters Manager</h2>
+        <Button 
+          onClick={() => setIsFormModalOpen(true)}
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
           Add Filter
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <StatsCardsGrid 
-        stats={statsData}
-        columns={4}
-        loading={loading}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Filters</CardTitle>
+            <FilterIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{filters.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Filters</CardTitle>
+            <ToggleRight className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{filters.filter(f => f.is_active).length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Categories</CardTitle>
+            <Tag className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{new Set(filters.map(f => f.category || 'Uncategorized')).size}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Types</CardTitle>
+            <Sliders className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{new Set(filters.map(f => f.type)).size}</div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Filters Bar */}
-      <GenericFiltersBar
-        filters={genericFilters}
-        onFiltersChange={handleFiltersChange}
-        totalCount={filters.length}
-        filteredCount={filteredFilters.length}
-        searchPlaceholder="Search filters by name or type..."
-        customFilters={[
-          ...statusFilterOptions,
-          ...typeFilterOptions
-        ]}
-        customFilterValue={filtersState.statusFilter}
-        onCustomFilterChange={(value) => {
-          if (['all', 'active', 'inactive'].includes(value)) {
-            setFiltersState(prev => ({ ...prev, statusFilter: value as any }));
-          } else {
-            setFiltersState(prev => ({ ...prev, typeFilter: value }));
-          }
-        }}
-        sortOptions={sortOptions}
-        onExport={() => toast({ title: "Export", description: "Export functionality coming soon" })}
-        entityName="filter"
-        entityNamePlural="filters"
-      />
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search filters..."
+                value={filtersState.searchQuery}
+                onChange={(e) => setFiltersState(prev => ({ ...prev, searchQuery: e.target.value }))}
+              />
+            </div>
+            <Select 
+              value={filtersState.categoryFilter} 
+              onValueChange={(value) => setFiltersState(prev => ({ ...prev, categoryFilter: value }))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="Dietary">Dietary</SelectItem>
+                <SelectItem value="Nutrition">Nutrition</SelectItem>
+                <SelectItem value="Preferences">Preferences</SelectItem>
+                <SelectItem value="Display">Display</SelectItem>
+                <SelectItem value="uncategorized">Uncategorized</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select 
+              value={filtersState.typeFilter} 
+              onValueChange={(value) => setFiltersState(prev => ({ ...prev, typeFilter: value }))}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="dietary">Dietary</SelectItem>
+                <SelectItem value="nutrition">Nutrition</SelectItem>
+                <SelectItem value="calorie">Calorie</SelectItem>
+                <SelectItem value="sorting">Sorting</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select 
+              value={filtersState.statusFilter} 
+              onValueChange={(value) => setFiltersState(prev => ({ ...prev, statusFilter: value as 'all' | 'active' | 'inactive' }))}
+            >
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Data Table */}
-      <GenericDataTable
-        data={filteredFilters}
-        columns={columns}
-        actions={actions}
-        loading={loading}
-        getRowId={(filter) => filter.id}
-        onRowClick={handleEditFilter}
-        emptyMessage="No filters found"
-        emptyDescription="Get started by adding your first filter"
-        emptyAction={{
-          label: "Add Filter",
-          onClick: () => { setSelectedFilter(null); setIsFormModalOpen(true); }
-        }}
-      />
+      {/* Filters Table */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2 font-medium">Name</th>
+                  <th className="text-left p-2 font-medium">Category</th>
+                  <th className="text-left p-2 font-medium">Type</th>
+                  <th className="text-left p-2 font-medium">Configuration</th>
+                  <th className="text-left p-2 font-medium">Status</th>
+                  <th className="text-left p-2 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((filter) => (
+                  <tr key={filter.id} className="border-b hover:bg-muted/50">
+                    <td className="p-2 font-medium">{filter.name}</td>
+                    <td className="p-2">
+                      <Badge variant="outline" className="capitalize">
+                        {filter.category || 'Uncategorized'}
+                      </Badge>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        {getTypeIcon(filter.type)}
+                        <Badge variant="secondary" className={`capitalize ${getTypeColor(filter.type)}`}>
+                          {filter.type}
+                        </Badge>
+                      </div>
+                    </td>
+                    <td className="p-2 text-sm text-muted-foreground max-w-[200px] truncate">
+                      {formatThreshold(filter.threshold)}
+                    </td>
+                    <td className="p-2">
+                      <Badge variant={filter.is_active ? "default" : "secondary"}>
+                        {filter.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditFilter(filter)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleActive(filter)}
+                        >
+                          {filter.is_active ? <ToggleLeft className="h-4 w-4" /> : <ToggleRight className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteFilter(filter)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredData.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No filters found. Create your first filter to get started.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Form Modal */}
+      {/* Modals */}
       <FilterFormModal
         open={isFormModalOpen}
-        onOpenChange={setIsFormModalOpen}
+        onOpenChange={(open) => {
+          setIsFormModalOpen(open);
+          if (!open) setSelectedFilter(null);
+        }}
         filter={selectedFilter}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Filter</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{selectedFilter?.name}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Filter"
+        description={`Are you sure you want to delete "${selectedFilter?.name}"? This action cannot be undone.`}
+      />
     </div>
   );
 };
