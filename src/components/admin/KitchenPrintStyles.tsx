@@ -16,19 +16,31 @@ export const KitchenPrintStyles: React.FC = () => {
           display: none !important;
         }
         
-        /* Hide everything except kitchen production content */
-        * {
+        /* Print only the kitchen production content (no blank top space) */
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+
+        /* Hide everything, then reveal the target container */
+        body * {
           visibility: hidden;
         }
-        
         .kitchen-production-container,
         .kitchen-production-container * {
           visibility: visible;
         }
-        
-        body {
-          margin: 0;
-          padding: 0;
+
+        /* Pull the container to the very top-left for print */
+        .kitchen-production-container {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          max-width: none !important;
+          background: white !important;
         }
         
         .kitchen-production-container {
@@ -85,6 +97,13 @@ export const KitchenPrintStyles: React.FC = () => {
         
         /* Hide navigation and other UI elements */
         nav, .nav, .tabs, .sidebar {
+          display: none !important;
+        }
+
+        /* Clean heading: hide decorative icons near title */
+        .kitchen-production-container h1 svg,
+        .kitchen-production-container h1 [role="img"],
+        .kitchen-production-container h1 .icon {
           display: none !important;
         }
       }
