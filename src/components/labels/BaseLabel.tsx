@@ -317,10 +317,6 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
       </div>
       
-      {/* Phase 2: Enhanced debug information */}
-      <div className="text-center text-xs text-gray-500" style={{ fontSize: '1mm', marginBottom: '1mm' }}>
-        Density: {contentDensity}% | Mode: {rawScalingFactors.qualityMode} | Scale: {rawScalingFactors.mealNameScale.toFixed(2)}x
-      </div>
 
       {/* Main Content - Dynamic density-aware layout */}
       <div className="flex-1" style={{ display: 'flex', flexDirection: 'column' }}>
