@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -13,8 +13,6 @@ import {
   Printer,
   CheckCircle,
   AlertCircle,
-  Users,
-  ArrowUpDown,
   Hash,
   ArrowDownAZ
 } from 'lucide-react';
@@ -50,13 +48,14 @@ export const KitchenProductionDashboard: React.FC = () => {
   const [sortBy, setSortBy] = useState<'alphabetical' | 'quantity'>('alphabetical');
   const { toast } = useToast();
 
-  // Process meals as individual line items without grouping by base name
-  const processMealLineItems = (orders: any[]) => {
+  // Memoized function to process meals as individual line items
+  const processMealLineItems = useCallback((orders: any[]) => {
     const mealLineItems: { [key: string]: MealLineItem } = {};
 
     orders.forEach(order => {
       order.order_items?.forEach((item: any) => {
-        const mealName = item.meal_name.trim();
+        const mealName = item.meal_name?.trim();
+        if (!mealName) return; // Skip items without meal names
         
         if (!mealLineItems[mealName]) {
           mealLineItems[mealName] = {
@@ -66,22 +65,28 @@ export const KitchenProductionDashboard: React.FC = () => {
           };
         }
 
-        mealLineItems[mealName].totalQuantity += item.quantity;
+        mealLineItems[mealName].totalQuantity += item.quantity || 0;
         mealLineItems[mealName].orders.push({
           orderId: order.id,
-          quantity: item.quantity,
+          quantity: item.quantity || 0,
           customerName: order.customer_name
         });
       });
     });
 
-    // Sort based on current sort preference
-    const sortedItems = Object.values(mealLineItems);
+    return Object.values(mealLineItems);
+  }, []);
+
+  // Memoized sorting logic
+  const sortedMealLineItems = useMemo(() => {
+    if (!productionData?.mealLineItems) return [];
+    
+    const items = [...productionData.mealLineItems];
     if (sortBy === 'quantity') {
-      return sortedItems.sort((a, b) => b.totalQuantity - a.totalQuantity);
+      return items.sort((a, b) => b.totalQuantity - a.totalQuantity);
     }
-    return sortedItems.sort((a, b) => a.mealName.localeCompare(b.mealName));
-  };
+    return items.sort((a, b) => a.mealName.localeCompare(b.mealName));
+  }, [productionData?.mealLineItems, sortBy]);
 
   const loadProductionData = async () => {
     if (!selectedDate) return;
@@ -228,7 +233,7 @@ export const KitchenProductionDashboard: React.FC = () => {
 
   useEffect(() => {
     loadProductionData();
-  }, [selectedDate, sortBy]);
+  }, [selectedDate]); // Removed sortBy dependency since sorting is now memoized
 
   const handlePrint = () => {
     window.print();
@@ -352,6 +357,7 @@ export const KitchenProductionDashboard: React.FC = () => {
                       variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSortBy('alphabetical')}
+                      disabled={loading}
                       className="text-xs"
                     >
                       <ArrowDownAZ className="h-3 w-3 mr-1" />
@@ -361,6 +367,7 @@ export const KitchenProductionDashboard: React.FC = () => {
                       variant={sortBy === 'quantity' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSortBy('quantity')}
+                      disabled={loading}
                       className="text-xs"
                     >
                       <Hash className="h-3 w-3 mr-1" />
@@ -371,27 +378,35 @@ export const KitchenProductionDashboard: React.FC = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 {/* Compact Table Layout */}
-                <div className="kitchen-table-container overflow-x-auto">
+                <div className="kitchen-table-container overflow-x-auto" role="region" aria-label="Kitchen production list">
                   <table className="w-full border-collapse min-w-full">
-                    <thead>
+                    <thead className="print:break-before-avoid">
                       <tr className="border-b-2 border-border">
                         <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground w-20">Qty</th>
                         <th className="text-left py-2 px-3 text-sm font-bold text-muted-foreground">Meal Description</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {productionData.mealLineItems.map((meal, index) => (
-                        <tr key={`${meal.mealName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent">
-                          <td className="py-2 px-3 text-center align-middle">
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-black print:text-white">
-                              {meal.totalQuantity}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3 text-sm font-medium text-foreground align-middle">
-                            {meal.mealName}
+                      {sortedMealLineItems.length > 0 ? (
+                        sortedMealLineItems.map((meal, index) => (
+                          <tr key={`${meal.mealName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid">
+                            <td className="py-2 px-3 text-center align-middle">
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold print:bg-black print:text-white">
+                                {meal.totalQuantity}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 text-sm font-medium text-foreground align-middle">
+                              {meal.mealName}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={2} className="py-8 text-center text-muted-foreground">
+                            No meals scheduled for this date
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
