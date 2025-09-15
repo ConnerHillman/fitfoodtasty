@@ -121,9 +121,9 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         {/* Product Details Section - Maximum density */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           
-          {/* Ingredients - Ultra-compact layout */}
-          <div style={{ marginBottom: '0.8mm' }}> {/* Reduced from 1.5mm */}
-            <div style={{ fontSize: '2mm', lineHeight: '1.1', marginBottom: '0.3mm' }}> {/* Reduced spacing */}
+          {/* Ingredients - Center-aligned for professional cohesion */}
+          <div style={{ marginBottom: '0.8mm' }}>
+            <div className="text-center" style={{ fontSize: '2mm', lineHeight: '1.1', marginBottom: '0.3mm' }}>
               <span 
                 className="font-semibold text-foreground" 
                 style={{ fontWeight: '650' }}
@@ -132,12 +132,11 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               </span>
             </div>
             <div 
-              className="text-foreground" 
+              className="text-foreground text-center" 
               style={{ 
                 fontWeight: '450', 
                 fontSize: '1.8mm',
-                lineHeight: '1.25', // Optimized for density
-                paddingLeft: '1mm',
+                lineHeight: '1.25',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word'
               }}
@@ -163,9 +162,9 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             </div>
           </div>
 
-          {/* Allergens - No separator line, rely on typography */}
+          {/* Allergens - Center-aligned for visual consistency */}
           {data.allergens && (
-            <div style={{ fontSize: '1.9mm', lineHeight: '1.2' }}>
+            <div className="text-center" style={{ fontSize: '1.9mm', lineHeight: '1.2' }}>
               <span 
                 className="font-semibold text-foreground" 
                 style={{ fontWeight: '650' }}
