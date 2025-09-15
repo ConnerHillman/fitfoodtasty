@@ -53,10 +53,11 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
 
   return (
     <div 
+      className="label-component"
       style={{
         width: '96mm',
         height: '50.8mm',
-        backgroundColor: 'white',
+        backgroundColor: '#ffffff',
         border: '1px solid #ddd',
         boxSizing: 'border-box',
         display: 'flex',
@@ -65,7 +66,9 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
         fontSize: '8px',
         lineHeight: '1.2',
         padding: '2mm',
-        position: 'relative'
+        position: 'relative',
+        backgroundImage: 'none',
+        background: '#ffffff'
       }}
     >
       {/* Logo */}
