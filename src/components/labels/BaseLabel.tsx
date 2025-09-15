@@ -273,14 +273,17 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
           />
         </div>
         
-        {/* Meal Name - Dynamic sizing based on content analysis */}
+        {/* Meal Name - Dynamic sizing based on content analysis with mandatory spacing */}
         <h1 
           className="text-center font-bold text-foreground" 
           style={{ 
             fontSize: `${dynamicSizes.mealName}mm`,
             fontWeight: '800',
             lineHeight: '0.95',
-            marginBottom: `${dynamicSpacing.mealNameMargin}mm`,
+            marginTop: `${Math.max(dynamicSpacing.mealNameMargin * 1.2, 1.0)}mm`, // Mandatory top spacing
+            marginBottom: `${Math.max(dynamicSpacing.mealNameMargin * 1.5, 1.2)}mm`, // Mandatory bottom spacing
+            paddingLeft: '2mm', // Mandatory side spacing
+            paddingRight: '2mm', // Mandatory side spacing
             width: '100%',
             wordWrap: 'break-word',
             letterSpacing: '0.02em'
