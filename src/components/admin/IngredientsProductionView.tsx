@@ -32,7 +32,8 @@ interface IngredientsProductionSummary {
 }
 
 interface IngredientsProductionViewProps {
-  productionData: any; // Will receive the same data as meals view
+  productionData: any;
+  sortedIngredientLineItems: IngredientLineItem[];
   loading: boolean;
   sortBy: 'alphabetical' | 'quantity';
   setSortBy: (sortBy: 'alphabetical' | 'quantity') => void;
@@ -40,65 +41,22 @@ interface IngredientsProductionViewProps {
 
 export const IngredientsProductionView: React.FC<IngredientsProductionViewProps> = ({
   productionData,
+  sortedIngredientLineItems,
   loading,
   sortBy,
   setSortBy
 }) => {
-  // Process ingredients from the production data
-  const ingredientsData = useMemo((): IngredientsProductionSummary | null => {
-    if (!productionData?.mealLineItems) return null;
-
-    // We'll need to fetch ingredient data for each meal
-    // For now, return a placeholder structure
-    const ingredientLineItems: IngredientLineItem[] = [
-      {
-        ingredientName: "Chicken Breast",
-        totalQuantity: 2500,
-        unit: "g",
-        mealBreakdown: [
-          { mealName: "Grilled Chicken Salad", quantity: 1500, unit: "g", orderCount: 10 },
-          { mealName: "Chicken Curry", quantity: 1000, unit: "g", orderCount: 5 }
-        ]
-      },
-      {
-        ingredientName: "Brown Rice",
-        totalQuantity: 800,
-        unit: "g", 
-        mealBreakdown: [
-          { mealName: "Chicken Curry", quantity: 500, unit: "g", orderCount: 5 },
-          { mealName: "Veggie Bowl", quantity: 300, unit: "g", orderCount: 3 }
-        ]
-      },
-      {
-        ingredientName: "Mixed Vegetables",
-        totalQuantity: 1200,
-        unit: "g",
-        mealBreakdown: [
-          { mealName: "Veggie Bowl", quantity: 600, unit: "g", orderCount: 3 },
-          { mealName: "Grilled Chicken Salad", quantity: 400, unit: "g", orderCount: 10 },
-          { mealName: "Chicken Curry", quantity: 200, unit: "g", orderCount: 5 }
-        ]
-      }
-    ];
+  // Use the processed ingredient data from parent
+  const ingredientsData = useMemo(() => {
+    if (!productionData || !sortedIngredientLineItems.length) return null;
 
     return {
       productionDate: productionData.productionDate,
-      totalIngredients: ingredientLineItems.reduce((sum, item) => sum + item.totalQuantity, 0),
-      uniqueIngredientTypes: ingredientLineItems.length,
-      ingredientLineItems
+      totalIngredients: productionData.totalIngredients || 0,
+      uniqueIngredientTypes: productionData.uniqueIngredientTypes || 0,
+      ingredientLineItems: sortedIngredientLineItems
     };
-  }, [productionData]);
-
-  // Memoized sorting logic
-  const sortedIngredientLineItems = useMemo(() => {
-    if (!ingredientsData?.ingredientLineItems) return [];
-    
-    const items = [...ingredientsData.ingredientLineItems];
-    if (sortBy === 'quantity') {
-      return items.sort((a, b) => b.totalQuantity - a.totalQuantity);
-    }
-    return items.sort((a, b) => a.ingredientName.localeCompare(b.ingredientName));
-  }, [ingredientsData?.ingredientLineItems, sortBy]);
+  }, [productionData, sortedIngredientLineItems]);
 
   if (!ingredientsData) {
     return (

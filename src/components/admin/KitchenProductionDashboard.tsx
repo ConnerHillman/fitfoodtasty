@@ -32,11 +32,26 @@ interface MealLineItem {
   }>;
 }
 
+interface IngredientLineItem {
+  ingredientName: string;
+  totalQuantity: number;
+  unit: string;
+  mealBreakdown: Array<{
+    mealName: string;
+    quantity: number;
+    unit: string;
+    orderCount: number;
+  }>;
+}
+
 interface ProductionSummary {
   productionDate: Date;
   totalMeals: number;
   uniqueMealTypes: number;
   mealLineItems: MealLineItem[];
+  ingredientLineItems: IngredientLineItem[];
+  totalIngredients: number;
+  uniqueIngredientTypes: number;
 }
 
 export const KitchenProductionDashboard: React.FC = () => {
@@ -77,7 +92,86 @@ export const KitchenProductionDashboard: React.FC = () => {
     return Object.values(mealLineItems);
   }, []);
 
-  // Memoized sorting logic
+  // Process ingredients from meal line items
+  const processIngredientLineItems = useCallback(async (mealLineItems: MealLineItem[]) => {
+    const ingredientMap: { [key: string]: IngredientLineItem } = {};
+    
+    // Get all unique meal names
+    const mealNames = Array.from(new Set(mealLineItems.map(item => item.mealName)));
+    
+    if (mealNames.length === 0) return [];
+
+    try {
+      // Fetch meal ingredients for all meals
+      const { data: mealsWithIngredients, error } = await supabase
+        .from('meals')
+        .select(`
+          name,
+          meal_ingredients (
+            quantity,
+            unit,
+            ingredients (
+              name,
+              default_unit
+            )
+          )
+        `)
+        .in('name', mealNames);
+
+      if (error) throw error;
+
+      // Process each meal's ingredients
+      mealLineItems.forEach(mealItem => {
+        const mealData = mealsWithIngredients?.find(m => m.name === mealItem.mealName);
+        
+        if (mealData?.meal_ingredients) {
+          mealData.meal_ingredients.forEach((mealIngredient: any) => {
+            if (!mealIngredient.ingredients) return;
+            
+            const ingredientName = mealIngredient.ingredients.name;
+            const quantityPerMeal = mealIngredient.quantity || 0;
+            const unit = mealIngredient.unit || mealIngredient.ingredients.default_unit || 'g';
+            const totalQuantityForThisIngredient = quantityPerMeal * mealItem.totalQuantity;
+
+            if (!ingredientMap[ingredientName]) {
+              ingredientMap[ingredientName] = {
+                ingredientName,
+                totalQuantity: 0,
+                unit,
+                mealBreakdown: []
+              };
+            }
+
+            // Add to total quantity
+            ingredientMap[ingredientName].totalQuantity += totalQuantityForThisIngredient;
+
+            // Add to meal breakdown
+            const existingBreakdown = ingredientMap[ingredientName].mealBreakdown
+              .find(breakdown => breakdown.mealName === mealItem.mealName);
+
+            if (existingBreakdown) {
+              existingBreakdown.quantity += totalQuantityForThisIngredient;
+              existingBreakdown.orderCount = mealItem.orders.length;
+            } else {
+              ingredientMap[ingredientName].mealBreakdown.push({
+                mealName: mealItem.mealName,
+                quantity: totalQuantityForThisIngredient,
+                unit,
+                orderCount: mealItem.orders.length
+              });
+            }
+          });
+        }
+      });
+
+      return Object.values(ingredientMap);
+    } catch (error) {
+      console.error('Error processing ingredients:', error);
+      return [];
+    }
+  }, []);
+
+  // Memoized sorting logic for meals
   const sortedMealLineItems = useMemo(() => {
     if (!productionData?.mealLineItems) return [];
     
@@ -87,6 +181,17 @@ export const KitchenProductionDashboard: React.FC = () => {
     }
     return items.sort((a, b) => a.mealName.localeCompare(b.mealName));
   }, [productionData?.mealLineItems, sortBy]);
+
+  // Memoized sorting logic for ingredients
+  const sortedIngredientLineItems = useMemo(() => {
+    if (!productionData?.ingredientLineItems) return [];
+    
+    const items = [...productionData.ingredientLineItems];
+    if (sortBy === 'quantity') {
+      return items.sort((a, b) => b.totalQuantity - a.totalQuantity);
+    }
+    return items.sort((a, b) => a.ingredientName.localeCompare(b.ingredientName));
+  }, [productionData?.ingredientLineItems, sortBy]);
 
   const loadProductionData = async () => {
     if (!selectedDate) return;
@@ -201,13 +306,20 @@ export const KitchenProductionDashboard: React.FC = () => {
       const allOrders = [...filteredOrders, ...normalizedPackageOrders];
       const mealLineItems = processMealLineItems(allOrders);
       
+      // Process ingredients from the meal line items
+      const ingredientLineItems = await processIngredientLineItems(mealLineItems);
+      
       const totalMeals = mealLineItems.reduce((sum, meal) => sum + meal.totalQuantity, 0);
+      const totalIngredients = ingredientLineItems.reduce((sum, ingredient) => sum + ingredient.totalQuantity, 0);
 
       setProductionData({
         productionDate: selectedDate,
         totalMeals,
         uniqueMealTypes: mealLineItems.length,
-        mealLineItems
+        mealLineItems,
+        ingredientLineItems,
+        totalIngredients,
+        uniqueIngredientTypes: ingredientLineItems.length
       });
 
     } catch (error) {
@@ -471,6 +583,7 @@ export const KitchenProductionDashboard: React.FC = () => {
               <TabsContent value="ingredients" className="mt-6">
                 <IngredientsProductionView 
                   productionData={productionData}
+                  sortedIngredientLineItems={sortedIngredientLineItems}
                   loading={loading}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
