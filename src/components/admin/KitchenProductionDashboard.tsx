@@ -158,14 +158,31 @@ export const KitchenProductionDashboard: React.FC = () => {
         }
       });
 
-      // Convert package orders to same format as regular orders
+      // Fetch actual meal names for package orders
+      const packageMealIds = filteredPackageOrders.flatMap(pkg => 
+        pkg.package_meal_selections?.map(selection => selection.meal_id) || []
+      );
+      
+      let packageMeals: any[] = [];
+      if (packageMealIds.length > 0) {
+        const { data: mealsData } = await supabase
+          .from('meals')
+          .select('id, name')
+          .in('id', packageMealIds);
+        packageMeals = mealsData || [];
+      }
+
+      // Convert package orders to same format as regular orders with proper meal names
       const normalizedPackageOrders = filteredPackageOrders.map(pkg => ({
         ...pkg,
-        order_items: pkg.package_meal_selections?.map(selection => ({
-          meal_id: selection.meal_id,
-          meal_name: `${pkg.packages?.name || 'Package'} Meal`, // Better naming
-          quantity: selection.quantity
-        })) || []
+        order_items: pkg.package_meal_selections?.map(selection => {
+          const meal = packageMeals.find(m => m.id === selection.meal_id);
+          return {
+            meal_id: selection.meal_id,
+            meal_name: meal?.name || 'Unknown Meal',
+            quantity: selection.quantity
+          };
+        }) || []
       }));
 
       const allOrders = [...filteredOrders, ...normalizedPackageOrders];
@@ -208,7 +225,6 @@ export const KitchenProductionDashboard: React.FC = () => {
   const handlePrint = () => {
     window.print();
   };
-
 
   return (
     <>
