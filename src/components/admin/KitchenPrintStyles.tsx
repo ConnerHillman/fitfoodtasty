@@ -106,6 +106,17 @@ export const KitchenPrintStyles: React.FC = () => {
         .kitchen-production-container h1 .icon {
           display: none !important;
         }
+
+        /* Print-only title styles */
+        .print-title { display: block !important; }
+        .print-title-text {
+          font-size: 24pt !important;
+          font-weight: 800 !important;
+          line-height: 1.2 !important;
+          margin: 0 0 6mm 0 !important;
+          color: #000 !important;
+          text-align: center !important;
+        }
       }
     `}</style>
   );
