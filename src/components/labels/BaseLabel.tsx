@@ -254,12 +254,12 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         width: LABEL_DIMENSIONS.width,
         height: LABEL_DIMENSIONS.height,
         boxSizing: 'border-box',
-        padding: '3mm', // Reduced from 4mm for more content space
+        padding: '3mm 3mm 8mm 3mm', // Extra bottom padding for URL space
         display: 'flex',
         flexDirection: 'column',
         fontSize: '6px',
         lineHeight: '1.2',
-        justifyContent: 'space-between'
+        position: 'relative'
       }}
     >
       {/* Header Zone - Dynamic spacing based on content density */}
@@ -358,7 +358,12 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         </div>
 
         {/* Product Details Section - Dynamic content optimization */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          paddingBottom: '2mm' // Ensure content stops before URL
+        }}>
           
           {/* Ingredients - Dynamic sizing based on content length */}
           <div style={{ marginBottom: `${dynamicSpacing.ingredientsMargin}mm` }}>
@@ -448,17 +453,21 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
 
       </div>
 
-      {/* Footer Section - Consistent sizing */}
+      {/* Footer URL - Fixed at bottom, centered */}
       <div 
         className="text-center font-medium text-primary" 
         style={{ 
+          position: 'absolute',
+          bottom: '1.5mm',
+          left: '0',
+          right: '0',
           fontSize: `${dynamicSizes.footer}mm`,
           fontWeight: '550',
           lineHeight: '1.0',
-          marginTop: `${dynamicSpacing.footerMargin}mm`,
-          paddingTop: `${dynamicSpacing.footerMargin}mm`,
+          letterSpacing: '0.03em',
           borderTop: '0.15mm solid rgba(var(--primary), 0.25)',
-          letterSpacing: '0.03em'
+          paddingTop: '1mm',
+          margin: '0 3mm'
         }}
       >
         www.fitfoodtasty.co.uk
