@@ -154,7 +154,7 @@ export const LabelGenerator: React.FC = () => {
     }
 
     try {
-      // Try Supabase first
+      // Prepare meal data for Supabase with normalized field name
       const mealData = {
         name: labelData.mealName,
         calories: labelData.calories,
@@ -166,14 +166,52 @@ export const LabelGenerator: React.FC = () => {
         storage_heating_instructions: labelData.storageHeatingInstructions
       };
 
-      const { error: supabaseError } = await supabase
+      // Insert into Supabase by default
+      const { data, error: supabaseError } = await supabase
         .from('saved_meal_labels')
-        .insert([mealData]);
+        .insert([mealData])
+        .select()
+        .single();
 
-      if (supabaseError) {
-        console.warn('Supabase save failed, using localStorage:', supabaseError);
-        
-        // Fallback to localStorage
+      if (!supabaseError && data) {
+        toast.success('Meal saved to database successfully');
+        loadSavedMeals();
+        return;
+      }
+
+      // Supabase failed, fallback to localStorage
+      console.warn('Supabase save failed, falling back to localStorage:', supabaseError);
+      toast.info('Database save failed, saving to local storage instead');
+      
+      const mealToSave: SavedMeal = {
+        id: Date.now().toString(),
+        name: labelData.mealName,
+        calories: labelData.calories,
+        protein: labelData.protein,
+        fat: labelData.fat,
+        carbs: labelData.carbs,
+        ingredients: labelData.ingredients,
+        allergens: labelData.allergens,
+        storageHeatingInstructions: labelData.storageHeatingInstructions
+      };
+
+      // Get existing localStorage meals
+      const existing = localStorage.getItem('fitfoodtasty_saved_meals');
+      const meals = existing ? JSON.parse(existing) : [];
+      
+      // Add new meal and save back to localStorage
+      meals.push(mealToSave);
+      localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(meals));
+      
+      toast.success('Meal saved to local storage successfully');
+      loadSavedMeals();
+      
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      toast.error('Failed to save meal - please try again');
+      
+      // Final fallback attempt to localStorage
+      try {
         const mealToSave: SavedMeal = {
           id: Date.now().toString(),
           name: labelData.mealName,
@@ -190,13 +228,13 @@ export const LabelGenerator: React.FC = () => {
         const meals = existing ? JSON.parse(existing) : [];
         meals.push(mealToSave);
         localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(meals));
+        
+        toast.success('Meal saved to local storage as backup');
+        loadSavedMeals();
+      } catch (localError) {
+        console.error('Local storage fallback also failed:', localError);
+        toast.error('Failed to save meal to both database and local storage');
       }
-      
-      toast.success('Meal saved successfully');
-      loadSavedMeals();
-    } catch (error) {
-      console.error('Error saving meal:', error);
-      toast.error('Failed to save meal');
     }
   };
 
