@@ -34,8 +34,6 @@ interface MealProduction {
   totalCarbs: number;
   ingredients: string;
   allergens: string;
-  storageInstructions?: string;
-  heatingInstructions?: string;
   orderCount: number;
 }
 
@@ -70,8 +68,8 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       const startDate = startOfDay(selectedDate);
       const endDate = endOfDay(selectedDate);
 
-      // Fetch orders, package orders, meals, and saved label overrides for the selected date
-      const [ordersRes, packageOrdersRes, mealsRes, savedLabelsRes] = await Promise.all([
+      // Fetch orders and package orders for the selected date
+      const [ordersRes, packageOrdersRes, mealsRes] = await Promise.all([
         supabase.from("orders").select(`
           id,
           status,
@@ -116,37 +114,16 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
               name
             )
           )
-        `).eq("is_active", true),
-
-        supabase.from("saved_meal_labels").select(`
-          name,
-          ingredients,
-          allergens,
-          storage_instructions,
-          heating_instructions,
-          calories,
-          protein,
-          fat,
-          carbs
-        `)
+        `).eq("is_active", true)
       ]);
 
       if (ordersRes.error) throw ordersRes.error;
       if (packageOrdersRes.error) throw packageOrdersRes.error;
       if (mealsRes.error) throw mealsRes.error;
-      if (savedLabelsRes.error) throw savedLabelsRes.error;
 
       const orders = ordersRes.data || [];
       const packageOrders = packageOrdersRes.data || [];
       const meals = mealsRes.data || [];
-      const savedLabels = savedLabelsRes.data || [];
-
-      // Map saved labels by lowercased name for quick lookup
-      const savedMap = new Map<string, any>(
-        savedLabels
-          .filter((s: any) => !!s?.name)
-          .map((s: any) => [String(s.name).toLowerCase(), s])
-      );
 
       // Process meal production data
       const mealProductionMap = new Map<string, MealProduction>();
@@ -165,10 +142,6 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
               existing.quantity += item.quantity;
               existing.orderCount += 1;
             } else {
-              const saved = savedMap.get(String(meal.name || '').toLowerCase());
-              const defaultIngredients = meal.meal_ingredients?.map(mi => mi.ingredients.name).join(', ') || '';
-              const defaultAllergens = meal.meal_allergens?.map(ma => ma.allergens.name).join(', ') || '';
-
               mealProductionMap.set(key, {
                 mealId: meal.id,
                 mealName: meal.name,
@@ -177,10 +150,8 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
                 totalProtein: Math.round(meal.total_protein || 0),
                 totalFat: Math.round(meal.total_fat || 0),
                 totalCarbs: Math.round(meal.total_carbs || 0),
-                ingredients: (saved?.ingredients && saved.ingredients.trim()) ? saved.ingredients : defaultIngredients,
-                allergens: (saved?.allergens && saved.allergens.trim()) ? saved.allergens : defaultAllergens,
-                storageInstructions: saved?.storage_instructions || undefined,
-                heatingInstructions: saved?.heating_instructions || undefined,
+                ingredients: meal.meal_ingredients?.map(mi => mi.ingredients.name).join(', ') || '',
+                allergens: meal.meal_allergens?.map(ma => ma.allergens.name).join(', ') || '',
                 orderCount: 1
               });
             }
@@ -201,10 +172,6 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
               existing.quantity += selection.quantity;
               existing.orderCount += 1;
             } else {
-              const saved = savedMap.get(String(meal.name || '').toLowerCase());
-              const defaultIngredients = meal.meal_ingredients?.map(mi => mi.ingredients.name).join(', ') || '';
-              const defaultAllergens = meal.meal_allergens?.map(ma => ma.allergens.name).join(', ') || '';
-
               mealProductionMap.set(key, {
                 mealId: meal.id,
                 mealName: meal.name,
@@ -213,10 +180,8 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
                 totalProtein: Math.round(meal.total_protein || 0),
                 totalFat: Math.round(meal.total_fat || 0),
                 totalCarbs: Math.round(meal.total_carbs || 0),
-                ingredients: (saved?.ingredients && saved.ingredients.trim()) ? saved.ingredients : defaultIngredients,
-                allergens: (saved?.allergens && saved.allergens.trim()) ? saved.allergens : defaultAllergens,
-                storageInstructions: saved?.storage_instructions || undefined,
-                heatingInstructions: saved?.heating_instructions || undefined,
+                ingredients: meal.meal_ingredients?.map(mi => mi.ingredients.name).join(', ') || '',
+                allergens: meal.meal_allergens?.map(ma => ma.allergens.name).join(', ') || '',
                 orderCount: 1
               });
             }
