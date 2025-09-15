@@ -380,32 +380,6 @@ export const KitchenProductionDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Production Summary Cards */}
-            <div className="kitchen-summary grid grid-cols-1 md:grid-cols-2 gap-4 print:flex print:justify-between print:border-2 print:border-black print:p-3 print:bg-gray-100">
-              <Card className="border-l-4 border-l-primary">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Meals</p>
-                      <p className="text-3xl font-bold text-primary">{productionData.totalMeals}</p>
-                    </div>
-                    <Package className="h-8 w-8 text-primary" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-blue-500">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Meal Types</p>
-                      <p className="text-3xl font-bold text-blue-600">{productionData.uniqueMealTypes}</p>
-                    </div>
-                    <ChefHat className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
             {/* Main Production List */}
             <Card>

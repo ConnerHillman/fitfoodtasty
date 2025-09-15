@@ -40,28 +40,6 @@ export const KitchenPrintStyles: React.FC = () => {
           margin: 1mm 0 0 0;
         }
         
-        .kitchen-summary {
-          display: flex;
-          justify-content: space-between;
-          border: 2px solid #000;
-          padding: 3mm;
-          margin-bottom: 5mm;
-          background: #f5f5f5;
-        }
-        
-        .kitchen-summary-item {
-          text-align: center;
-        }
-        
-        .kitchen-summary-label {
-          font-size: 10pt;
-          font-weight: bold;
-        }
-        
-        .kitchen-summary-value {
-          font-size: 16pt;
-          font-weight: bold;
-        }
         
         .kitchen-meal-list {
           border-collapse: collapse;
