@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -44,8 +44,13 @@ export const KitchenProductionDashboard: React.FC = () => {
     retryIngredientProcessing
   } = useProductionData();
 
-  // Debounce the data loading to prevent excessive API calls
-  const debouncedLoadData = useDebounce(loadProductionData, 300);
+  // Debounce the data loading to prevent excessive API calls - use ref to stabilize
+  const loadDataRef = useRef(loadProductionData);
+  loadDataRef.current = loadProductionData;
+  
+  const debouncedLoadData = useDebounce(useCallback((date: Date) => {
+    loadDataRef.current(date);
+  }, []), 300);
 
   // Memoized sorting logic for meals
   const sortedMealLineItems = useMemo(() => {

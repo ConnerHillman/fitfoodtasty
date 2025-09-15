@@ -42,10 +42,10 @@ export const useProductionData = () => {
     };
   }, []);
 
-  // Safe state update - only if component is still mounted
-  const safeSetState = useCallback(<T>(setter: (prev: T) => T, currentValue: T): void => {
+  // Safe state update helper - only if component is still mounted
+  const safeSetState = useCallback((updateFn: () => void): void => {
     if (isMountedRef.current) {
-      setter(currentValue);
+      updateFn();
     }
   }, []);
 
@@ -524,7 +524,7 @@ export const useProductionData = () => {
         setLoading(false);
       }
     }
-  }, [processMealLineItems, processIngredientLineItems, toast, safeSetState]);
+  }, [processMealLineItems, processIngredientLineItems, toast]);
 
   const retryIngredientProcessing = useCallback(async () => {
     if (!productionData?.mealLineItems.length) {
