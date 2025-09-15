@@ -234,11 +234,11 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       console.log('Container found, checking content...');
       
-      // Make the container temporarily visible for proper rendering
+      // Make the container temporarily positioned but completely hidden from view
       container.style.position = 'fixed';
-      container.style.left = '0';
-      container.style.top = '0';
-      container.style.visibility = 'visible';
+      container.style.left = '-9999px'; // Move far off-screen
+      container.style.top = '-9999px';  // Move far off-screen
+      container.style.visibility = 'hidden'; // Hide from view
       container.style.zIndex = '-9999';
       
       // Wait for next render cycle
@@ -287,10 +287,14 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
           scale: 2, 
           useCORS: true, 
           backgroundColor: '#ffffff',
-          logging: true,
+          logging: false, // Reduce console noise
           allowTaint: true,
           height: el.offsetHeight,
-          width: el.offsetWidth
+          width: el.offsetWidth,
+          ignoreElements: (element) => {
+            // Don't ignore any elements since we're off-screen
+            return false;
+          }
         });
         
         console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
