@@ -321,29 +321,8 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
       {/* Main Content - Dynamic density-aware layout */}
       <div className="flex-1" style={{ display: 'flex', flexDirection: 'column' }}>
         
-        {/* Safety Information Section - Dynamic spacing */}
+        {/* Storage Instructions Section - Dynamic spacing */}
         <div style={{ marginBottom: `${dynamicSpacing.sectionMargin}mm` }}>
-          
-          {/* USE BY Date - Dynamic sizing */}
-          <div 
-            className="font-bold text-foreground text-center" 
-            style={{ 
-              fontSize: `${dynamicSizes.useBy}mm`,
-              fontWeight: '750',
-              lineHeight: '1.0',
-              marginBottom: `${dynamicSpacing.useByMargin}mm`,
-              letterSpacing: '0.02em'
-            }}
-          >
-            USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
-              weekday: 'short',
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            }) : 'Fri, 19/09/2025'}
-          </div>
-
-          {/* Storage Instructions - Dynamic sizing */}
           <div 
             className="text-foreground text-center" 
             style={{ 
@@ -433,7 +412,8 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
           {data.allergens && (
             <div className="text-center" style={{ 
               fontSize: `${dynamicSizes.allergens}mm`, 
-              lineHeight: '1.2' 
+              lineHeight: '1.2',
+              marginBottom: `${dynamicSpacing.useByMargin}mm`
             }}>
               <span 
                 className="font-semibold text-foreground" 
@@ -449,6 +429,25 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               </span>
             </div>
           )}
+
+          {/* USE BY Date - Smaller, positioned before URL */}
+          <div 
+            className="font-bold text-foreground text-center" 
+            style={{ 
+              fontSize: `${dynamicSizes.useBy * 0.7}mm`, // Make it smaller
+              fontWeight: '650',
+              lineHeight: '1.0',
+              marginBottom: '2mm',
+              letterSpacing: '0.01em'
+            }}
+          >
+            USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
+              weekday: 'short',
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            }) : 'Fri, 19/09/2025'}
+          </div>
         </div>
 
       </div>
