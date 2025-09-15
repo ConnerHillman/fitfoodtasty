@@ -8,15 +8,13 @@ export interface LabelData {
   ingredients: string;
   allergens: string;
   useByDate: string;
-  storageInstructions?: string;
-  heatingInstructions?: string;
+  storageHeatingInstructions?: string;
   quantity?: number;
 }
 
 // Extended interface for components that need all fields
 export interface FullLabelData extends LabelData {
-  storageInstructions: string;
-  heatingInstructions: string;
+  storageHeatingInstructions: string;
   quantity: number;
 }
 
@@ -36,6 +34,5 @@ export const LABEL_DIMENSIONS = {
 
 // Default instructions
 export const DEFAULT_INSTRUCTIONS = {
-  storage: 'Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.',
-  heating: 'Pierce film and heat for 3-4 minutes or until piping hot.'
+  storageHeating: 'Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.'
 } as const;

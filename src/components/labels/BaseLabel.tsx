@@ -7,14 +7,14 @@ interface BaseLabelProps {
 }
 
 export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
-  const storageInstructions = data.storageInstructions || DEFAULT_INSTRUCTIONS.storage;
+  const storageHeatingInstructions = data.storageHeatingInstructions || DEFAULT_INSTRUCTIONS.storageHeating;
 
   // Phase 1: Content Analysis Engine
   const analyzeContentDensity = () => {
     const mealNameLength = data.mealName.length;
     const ingredientsLength = data.ingredients ? data.ingredients.length : 0;
     const allergensLength = data.allergens ? data.allergens.length : 0;
-    const storageLength = storageInstructions.length;
+    const storageLength = storageHeatingInstructions.length;
     
     // Calculate total character count
     const totalCharacters = mealNameLength + ingredientsLength + allergensLength + storageLength;
@@ -353,7 +353,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
               marginBottom: `${dynamicSpacing.storageMargin}mm`
             }}
           >
-            {storageInstructions}
+            {storageHeatingInstructions}
           </div>
         </div>
 

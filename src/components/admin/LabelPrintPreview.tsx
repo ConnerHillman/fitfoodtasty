@@ -163,8 +163,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
                     ingredients: meal.ingredients,
                     allergens: meal.allergens,
                     useByDate: useByDate,
-                    storageInstructions: DEFAULT_INSTRUCTIONS.storage,
-                    heatingInstructions: DEFAULT_INSTRUCTIONS.heating
+                    storageHeatingInstructions: DEFAULT_INSTRUCTIONS.storageHeating
                   }}
                 />
               ) : (

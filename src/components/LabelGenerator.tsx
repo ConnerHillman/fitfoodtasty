@@ -28,7 +28,6 @@ interface SavedMeal {
   ingredients: string;
   allergens: string;
   storage_instructions: string;
-  heating_instructions: string;
 }
 
 export const LabelGenerator: React.FC = () => {
@@ -41,8 +40,7 @@ export const LabelGenerator: React.FC = () => {
     ingredients: '',
     allergens: '',
     useByDate: '',
-    storageInstructions: DEFAULT_INSTRUCTIONS.storage,
-    heatingInstructions: DEFAULT_INSTRUCTIONS.heating,
+    storageHeatingInstructions: DEFAULT_INSTRUCTIONS.storageHeating,
     quantity: 10
   });
 
@@ -104,8 +102,7 @@ export const LabelGenerator: React.FC = () => {
         carbs: labelData.carbs,
         ingredients: labelData.ingredients,
         allergens: labelData.allergens,
-        storage_instructions: labelData.storageInstructions,
-        heating_instructions: labelData.heatingInstructions
+        storage_instructions: labelData.storageHeatingInstructions
       };
 
       // Save to localStorage for now
@@ -132,8 +129,7 @@ export const LabelGenerator: React.FC = () => {
       carbs: meal.carbs,
       ingredients: meal.ingredients,
       allergens: meal.allergens,
-      storageInstructions: meal.storage_instructions,
-      heatingInstructions: meal.heating_instructions
+      storageHeatingInstructions: meal.storage_instructions
     }));
     setShowSavedMeals(false);
     toast.success('Meal loaded');
@@ -202,8 +198,7 @@ export const LabelGenerator: React.FC = () => {
       carbs: Math.round(meal.total_carbs),
       ingredients: meal.ingredients.join(', '),
       allergens: meal.allergens.join(', '),
-      storageInstructions: meal.storage_instructions || DEFAULT_INSTRUCTIONS.storage,
-      heatingInstructions: meal.heating_instructions || DEFAULT_INSTRUCTIONS.heating
+      storageHeatingInstructions: meal.storage_heating_instructions || DEFAULT_INSTRUCTIONS.storageHeating
     }));
     toast.success(`Meal "${meal.name}" loaded into label generator`);
   };
@@ -330,6 +325,31 @@ export const LabelGenerator: React.FC = () => {
                 placeholder="e.g. Egg, Mustard, Sulphur dioxide, Gluten, Milk"
                 rows={2}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="storageHeatingInstructions">
+                Storage and Heating Instructions
+                <span className="text-xs text-muted-foreground ml-2">
+                  ({labelData.storageHeatingInstructions.length}/200)
+                </span>
+              </Label>
+              <Textarea
+                id="storageHeatingInstructions"
+                value={labelData.storageHeatingInstructions}
+                onChange={(e) => {
+                  if (e.target.value.length <= 200) {
+                    handleInputChange('storageHeatingInstructions', e.target.value);
+                  }
+                }}
+                placeholder="e.g., Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot."
+                rows={3}
+              />
+              {labelData.storageHeatingInstructions.length >= 180 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Character limit approaching - this ensures proper label formatting
+                </p>
+              )}
             </div>
 
             <div>
