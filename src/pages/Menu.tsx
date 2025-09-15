@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import MealsGrid from "@/components/MealsGrid";
+import MealsGridDynamic from "@/components/MealsGridDynamic";
 import PackagesBar, { MealPackage } from "@/components/packages/PackagesBar";
 import PackageSelectionDialog from "@/components/packages/PackageSelectionDialog";
 import { useViewTracking } from "@/hooks/useViewTracking";
@@ -93,7 +93,7 @@ const Menu = () => {
       <PackagesBar onSelect={handleSelectPackage} />
 
       {/* Standard menu below */}
-      <MealsGrid />
+      <MealsGridDynamic />
 
       {/* Package selection modal */}
       <PackageSelectionDialog open={dialogOpen} onOpenChange={setDialogOpen} pkg={selectedPackage} />
