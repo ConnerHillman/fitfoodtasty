@@ -11,6 +11,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { addDays, subDays, startOfDay, endOfDay } from "date-fns";
 import CustomerLink from "@/components/admin/CustomerLink";
 import OrderLink from "@/components/admin/OrderLink";
+import { LabelReport } from "@/components/admin/LabelReport";
 
 const BusinessDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -25,6 +26,7 @@ const BusinessDashboard = () => {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [showLabelReport, setShowLabelReport] = useState(false);
   
   useEffect(() => {
     fetchDashboardData();
@@ -127,7 +129,12 @@ const BusinessDashboard = () => {
   };
 
   const printDeliveryLabels = () => {
-    if (orders.length === 0) {
+    setShowLabelReport(true);
+  };
+
+  };
+
+  const originalPrintDeliveryLabels = () => {
       toast({
         title: "No Orders",
         description: "There are no confirmed orders to print labels for.",
@@ -745,6 +752,12 @@ const BusinessDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Label Report Dialog */}
+      <LabelReport
+        isOpen={showLabelReport}
+        onClose={() => setShowLabelReport(false)}
+      />
     </div>
   );
 };
