@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Label Generator QA Test Suite</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .info { color: blue; }
+        button { margin: 5px; padding: 10px; }
+        #results { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Label Generator Manual QA Test Suite</h1>
+    <div id="results"></div>
+
+    <div class="test-section">
+        <h3>Test 1: UI Interaction - Save/Load Buttons</h3>
+        <button onclick="testUIInteraction()">Run UI Test</button>
+        <p>This will test if the save/load functionality is working in the interface.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Network Blocking - localStorage Fallback</h3>
+        <button onclick="testNetworkFallback()">Setup Network Fallback Test</button>
+        <p>This simulates Supabase being unavailable and tests localStorage fallback.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Mixed Data - Both Storage Types</h3>
+        <button onclick="testMixedData()">Test Mixed Storage</button>
+        <p>Tests loading meals from both Supabase and localStorage simultaneously.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Migration Test - Legacy Field Names</h3>
+        <button onclick="testLegacyMigration()">Test Legacy Migration</button>
+        <p>Tests importing old localStorage data with legacy field names.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 5: Character Limit Validation</h3>
+        <button onclick="testCharacterLimit()">Test Character Limits</button>
+        <p>Tests the 200-character limit enforcement.</p>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const className = type === 'pass' ? 'pass' : type === 'fail' ? 'fail' : 'info';
+            results.innerHTML += `<div class="${className}">[${new Date().toLocaleTimeString()}] ${message}</div>`;
+            console.log(`QA Test: ${message}`);
+        }
+
+        function testUIInteraction() {
+            log('Starting UI Interaction Test...', 'info');
+            
+            // Test data for UI
+            const testMeal = {
+                mealName: 'QA UI Test Meal',
+                calories: 450,
+                protein: 25,
+                fat: 15,
+                carbs: 30,
+                ingredients: 'Chicken, Rice, Vegetables, Sauce',
+                allergens: 'None',
+                storageHeatingInstructions: 'Store in fridge below 5°C. Heat for 3-4 minutes until piping hot.',
+                quantity: 10
+            };
+
+            // Check if we can access the parent window (where the actual app is running)
+            try {
+                if (window.parent && window.parent !== window) {
+                    log('UI Test: Can access parent window - ready for manual testing', 'pass');
+                    log('UI Test: Please manually test save/load buttons in the Label Generator', 'info');
+                } else {
+                    log('UI Test: Run this in the context of the main application', 'info');
+                }
+            } catch (e) {
+                log(`UI Test Error: ${e.message}`, 'fail');
+            }
+        }
+
+        function testNetworkFallback() {
+            log('Starting Network Fallback Test...', 'info');
+            
+            // Create localStorage test data to verify fallback works
+            const localStorageTestData = [
+                {
+                    id: Date.now().toString(),
+                    name: 'localStorage Fallback Test Meal',
+                    calories: 400,
+                    protein: 20,
+                    fat: 12,
+                    carbs: 35,
+                    ingredients: 'Test ingredients',
+                    allergens: 'Test allergens',
+                    storageHeatingInstructions: 'Test storage instructions'
+                }
+            ];
+
+            localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(localStorageTestData));
+            log('Network Fallback: Test data saved to localStorage', 'pass');
+            log('Network Fallback: Please disable network and test load functionality', 'info');
+        }
+
+        function testMixedData() {
+            log('Starting Mixed Data Test...', 'info');
+            
+            // Create multiple localStorage entries with different field formats
+            const mixedTestData = [
+                {
+                    id: (Date.now() - 1000).toString(),
+                    name: 'Mixed Test Meal 1 (modern)',
+                    calories: 350,
+                    protein: 18,
+                    fat: 10,
+                    carbs: 25,
+                    ingredients: 'Modern format ingredients',
+                    allergens: 'Modern allergens',
+                    storageHeatingInstructions: 'Modern field format'
+                },
+                {
+                    id: (Date.now() - 2000).toString(),
+                    name: 'Mixed Test Meal 2 (legacy)',
+                    calories: 420,
+                    protein: 22,
+                    fat: 14,
+                    carbs: 28,
+                    ingredients: 'Legacy format ingredients',
+                    allergens: 'Legacy allergens',
+                    storage_instructions: 'Legacy storage field',
+                    heating_instructions: 'Legacy heating field'
+                }
+            ];
+
+            localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(mixedTestData));
+            log('Mixed Data: Test data with both modern and legacy formats saved', 'pass');
+            log('Mixed Data: Please test loading - should show both meals with normalized instructions', 'info');
+        }
+
+        function testLegacyMigration() {
+            log('Starting Legacy Migration Test...', 'info');
+            
+            // Create legacy format data
+            const legacyTestData = [
+                {
+                    id: (Date.now() - 3000).toString(),
+                    name: 'Legacy Migration Test 1',
+                    calories: 380,
+                    protein: 19,
+                    fat: 11,
+                    carbs: 27,
+                    ingredients: 'Legacy ingredients',
+                    allergens: 'Legacy allergens',
+                    storage_instructions: 'Store in refrigerator below 5°C',
+                    heating_instructions: 'Heat for 3-4 minutes'
+                },
+                {
+                    id: (Date.now() - 4000).toString(),
+                    name: 'Legacy Migration Test 2',
+                    calories: 460,
+                    protein: 24,
+                    fat: 16,
+                    carbs: 32,
+                    ingredients: 'More legacy ingredients',
+                    allergens: 'More legacy allergens',
+                    storage_heating_instructions: 'Combined legacy instruction field'
+                }
+            ];
+
+            localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(legacyTestData));
+            log('Legacy Migration: Old format data saved to localStorage', 'pass');
+            log('Legacy Migration: Load meals and verify instructions are properly normalized', 'info');
+        }
+
+        function testCharacterLimit() {
+            log('Starting Character Limit Test...', 'info');
+            
+            // Test exactly 200 characters
+            const exactly200 = 'X'.repeat(200);
+            const over200 = 'X'.repeat(250);
+            
+            log(`Character Limit: 200 character string length = ${exactly200.length}`, 'info');
+            log(`Character Limit: 250 character string length = ${over200.length}`, 'info');
+            
+            // Create test data with long instructions
+            const longInstructionTestData = [
+                {
+                    id: Date.now().toString(),
+                    name: 'Character Limit Test Meal',
+                    calories: 400,
+                    protein: 20,
+                    fat: 12,
+                    carbs: 30,
+                    ingredients: 'Test ingredients',
+                    allergens: 'Test allergens',
+                    storageHeatingInstructions: over200
+                }
+            ];
+
+            localStorage.setItem('fitfoodtasty_saved_meals', JSON.stringify(longInstructionTestData));
+            log('Character Limit: Test data with 250+ character instructions saved', 'pass');
+            log('Character Limit: Try saving this meal to Supabase - should be truncated or rejected', 'info');
+        }
+
+        // Initialize the test environment
+        document.addEventListener('DOMContentLoaded', function() {
+            log('QA Test Suite Loaded - Ready for manual testing', 'pass');
+            log('Note: Some tests require manual interaction with the Label Generator interface', 'info');
+        });
+    </script>
+</body>
+</html>
