@@ -243,38 +243,32 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       container.style.pointerEvents = 'none'; // No interaction
       container.style.opacity = '0'; // Completely transparent to users
       
-      // Wait for fonts and layout to be ready
-      await document.fonts.ready;
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      
-      // Additional 300ms for complete layout settling
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Wait for next render cycle
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Ensure white background on container for proper rendering
-      container.style.backgroundColor = '#ffffff';
-
-      // Batch check for images that need loading
+      // Wait for images (logo) to load
       const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
-      const unloadedImages = images.filter(img => !img.complete);
+      console.log('Found images:', images.length);
       
-      if (unloadedImages.length > 0) {
-        await Promise.all(
-          unloadedImages.map(
-            (img) =>
-              new Promise<void>((resolve) => {
-                const timeout = setTimeout(() => resolve(), 500); // 500ms timeout per image
-                img.onload = () => {
-                  clearTimeout(timeout);
-                  resolve();
-                };
-                img.onerror = () => {
-                  clearTimeout(timeout);
-                  resolve();
-                };
-              })
-          )
-        );
-      }
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) {
+                console.log('Image already loaded:', img.src.substring(0, 50) + '...');
+                return resolve();
+              }
+              img.onload = () => {
+                console.log('Image loaded successfully');
+                resolve();
+              };
+              img.onerror = () => {
+                console.log('Image failed to load');
+                resolve();
+              };
+            })
+        )
+      );
 
       const pages = Array.from(container.querySelectorAll('.print-page')) as HTMLElement[];
       console.log('Found pages:', pages.length);
@@ -287,36 +281,26 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       const pdf = new jsPDF('p', 'mm', 'a4');
 
-      // Process pages sequentially for stability (no parallel batching)
       for (let i = 0; i < pages.length; i++) {
         const el = pages[i];
         console.log(`Capturing page ${i + 1}/${pages.length}`);
         
-        // Ensure each page has white background
-        el.style.backgroundColor = '#ffffff';
-        
-        // Debug: Log page dimensions and label count
-        console.log(`Page ${i + 1} dimensions: ${el.offsetWidth}x${el.offsetHeight}`);
-        const labelsInPage = el.querySelectorAll('[style*="96mm"]').length;
-        console.log(`Page ${i + 1} contains ${labelsInPage} labels`);
-        
         const canvas = await html2canvas(el, { 
-          scale: 2, // Back to high quality
+          scale: 2, 
           useCORS: true, 
           backgroundColor: '#ffffff',
-          logging: false, // Keep logging disabled for production
+          logging: false, // Reduce console noise
           allowTaint: true,
           height: el.offsetHeight,
           width: el.offsetWidth,
-          // Remove problematic options that caused iframe errors
-          foreignObjectRendering: false,
-          removeContainer: false,
-          imageTimeout: 1000
+          ignoreElements: (element) => {
+            // Don't ignore any elements since we're off-screen
+            return false;
+          }
         });
         
         console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
         
-        // Back to PNG for transparency support
         const imgData = canvas.toDataURL('image/png');
         if (i > 0) pdf.addPage();
         
