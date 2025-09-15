@@ -374,7 +374,7 @@ export const KitchenProductionDashboard: React.FC = () => {
           <div className="space-y-6">
             {/* Print Header - Only visible when printing */}
             <div className="kitchen-header hidden print:block">
-              <h1 className="kitchen-title">Kitchen Production Report</h1>
+              <h1 className="kitchen-title">Kitchen Production List</h1>
               <div className="kitchen-date">
                 {formatDate(productionData.productionDate, 'EEEE, MMMM d, yyyy')}
               </div>
