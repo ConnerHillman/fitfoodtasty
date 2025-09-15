@@ -201,7 +201,9 @@ export const LabelGenerator: React.FC = () => {
       fat: Math.round(meal.total_fat),
       carbs: Math.round(meal.total_carbs),
       ingredients: meal.ingredients.join(', '),
-      allergens: meal.allergens.join(', ')
+      allergens: meal.allergens.join(', '),
+      storageInstructions: meal.storage_instructions || DEFAULT_INSTRUCTIONS.storage,
+      heatingInstructions: meal.heating_instructions || DEFAULT_INSTRUCTIONS.heating
     }));
     toast.success(`Meal "${meal.name}" loaded into label generator`);
   };

@@ -52,7 +52,9 @@ const MealFormWithIngredients = ({
     category: "lunch",
     price: "",
     image_url: "",
-    shelf_life_days: 5
+    shelf_life_days: 5,
+    storage_instructions: "Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.",
+    heating_instructions: "Pierce film and heat for 3-4 minutes or until piping hot."
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
@@ -150,6 +152,8 @@ const MealFormWithIngredients = ({
         price: parseFloat(formData.price) || 0,
         image_url: imageUrl,
         shelf_life_days: formData.shelf_life_days,
+        storage_instructions: formData.storage_instructions,
+        heating_instructions: formData.heating_instructions,
         total_calories: nutrition.calories,
         total_protein: nutrition.protein,
         total_carbs: nutrition.carbs,
@@ -297,6 +301,59 @@ const MealFormWithIngredients = ({
                     ...formData,
                     description: e.target.value
                   })} placeholder="Describe the flavors, cooking method, and what makes this meal special..." rows={4} className="border-2 focus:border-primary/50 resize-none" />
+                  </div>
+
+                  {/* Storage & Heating Instructions */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="storage_instructions" className="text-base font-semibold">
+                        Storage Instructions
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({formData.storage_instructions.length}/150)
+                        </span>
+                      </Label>
+                      <Textarea
+                        id="storage_instructions"
+                        value={formData.storage_instructions}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 150) {
+                            setFormData({ ...formData, storage_instructions: e.target.value });
+                          }
+                        }}
+                        placeholder="e.g., Store in a refrigerator below 5°c..."
+                        className="min-h-[80px] border-2 focus:border-primary/50 resize-none"
+                      />
+                      {formData.storage_instructions.length >= 140 && (
+                        <p className="text-xs text-amber-600">
+                          Character limit approaching - this ensures proper label formatting
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label htmlFor="heating_instructions" className="text-base font-semibold">
+                        Heating Instructions
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({formData.heating_instructions.length}/100)
+                        </span>
+                      </Label>
+                      <Textarea
+                        id="heating_instructions"
+                        value={formData.heating_instructions}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 100) {
+                            setFormData({ ...formData, heating_instructions: e.target.value });
+                          }
+                        }}
+                        placeholder="e.g., Pierce film and heat for 3-4 minutes..."
+                        className="min-h-[80px] border-2 focus:border-primary/50 resize-none"
+                      />
+                      {formData.heating_instructions.length >= 90 && (
+                        <p className="text-xs text-amber-600">
+                          Character limit approaching - this ensures proper label formatting
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-3">

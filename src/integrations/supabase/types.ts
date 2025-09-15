@@ -393,6 +393,39 @@ export type Database = {
         }
         Relationships: []
       }
+      filters: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          threshold: Json | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          threshold?: Json | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          threshold?: Json | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fulfillment_settings: {
         Row: {
           created_at: string
@@ -630,11 +663,47 @@ export type Database = {
           },
         ]
       }
+      meal_ingredients_allergens: {
+        Row: {
+          allergen_type: string | null
+          created_at: string
+          id: string
+          ingredient: string
+          is_allergen: boolean
+          meal_id: string
+        }
+        Insert: {
+          allergen_type?: string | null
+          created_at?: string
+          id?: string
+          ingredient: string
+          is_allergen?: boolean
+          meal_id: string
+        }
+        Update: {
+          allergen_type?: string | null
+          created_at?: string
+          id?: string
+          ingredient?: string
+          is_allergen?: boolean
+          meal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_ingredients_allergens_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meals: {
         Row: {
           category: string | null
           created_at: string
           description: string | null
+          heating_instructions: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -642,6 +711,7 @@ export type Database = {
           price: number | null
           shelf_life_days: number
           sort_order: number | null
+          storage_instructions: string | null
           total_calories: number | null
           total_carbs: number | null
           total_fat: number | null
@@ -658,6 +728,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          heating_instructions?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -665,6 +736,7 @@ export type Database = {
           price?: number | null
           shelf_life_days?: number
           sort_order?: number | null
+          storage_instructions?: string | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
@@ -681,6 +753,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          heating_instructions?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -688,6 +761,7 @@ export type Database = {
           price?: number | null
           shelf_life_days?: number
           sort_order?: number | null
+          storage_instructions?: string | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
@@ -1230,6 +1304,33 @@ export type Database = {
           id?: string
           total_credits?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_order_favorites: {
+        Row: {
+          created_at: string | null
+          favorited_at: string | null
+          id: string
+          order_id: string
+          order_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          favorited_at?: string | null
+          id?: string
+          order_id: string
+          order_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          favorited_at?: string | null
+          id?: string
+          order_id?: string
+          order_type?: string
           user_id?: string
         }
         Relationships: []

@@ -37,6 +37,8 @@ interface Meal {
   image_url?: string;
   created_at: string;
   shelf_life_days: number;
+  storage_instructions?: string;
+  heating_instructions?: string;
 }
 
 interface Ingredient {
@@ -300,6 +302,8 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
           price: parseFloat(editData.price),
           category: editData.category,
           shelf_life_days: parseInt(editData.shelf_life_days),
+          storage_instructions: editData.storage_instructions,
+          heating_instructions: editData.heating_instructions,
         })
         .eq("id", meal.id);
 
@@ -444,7 +448,11 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
   };
 
   const cancelEdit = () => {
-    setEditData(meal);
+    setEditData({
+      ...meal,
+      storage_instructions: meal.storage_instructions || 'Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.',
+      heating_instructions: meal.heating_instructions || 'Pierce film and heat for 3-4 minutes or until piping hot.'
+    });
     setEditMode('none');
   };
 
@@ -563,6 +571,75 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
                   ) : (
                     <p className="font-medium">{meal.shelf_life_days} days</p>
                   )}
+                </div>
+
+                {/* Storage & Heating Instructions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Storage Instructions
+                      {editMode === 'basic' && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({(editData.storage_instructions || '').length}/150)
+                        </span>
+                      )}
+                    </Label>
+                    {editMode === 'basic' ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editData.storage_instructions || ''}
+                          onChange={(e) => {
+                            if (e.target.value.length <= 150) {
+                              setEditData({...editData, storage_instructions: e.target.value});
+                            }
+                          }}
+                          placeholder="e.g., Store in a refrigerator below 5°c..."
+                          className="min-h-[80px] resize-none"
+                        />
+                        {(editData.storage_instructions || '').length >= 140 && (
+                          <p className="text-xs text-amber-600">
+                            Character limit approaching
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm bg-muted/50 p-3 rounded border">
+                        {meal.storage_instructions || 'Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Heating Instructions
+                      {editMode === 'basic' && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({(editData.heating_instructions || '').length}/100)
+                        </span>
+                      )}
+                    </Label>
+                    {editMode === 'basic' ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editData.heating_instructions || ''}
+                          onChange={(e) => {
+                            if (e.target.value.length <= 100) {
+                              setEditData({...editData, heating_instructions: e.target.value});
+                            }
+                          }}
+                          placeholder="e.g., Pierce film and heat for 3-4 minutes..."
+                          className="min-h-[80px] resize-none"
+                        />
+                        {(editData.heating_instructions || '').length >= 90 && (
+                          <p className="text-xs text-amber-600">
+                            Character limit approaching
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm bg-muted/50 p-3 rounded border">
+                        {meal.heating_instructions || 'Pierce film and heat for 3-4 minutes or until piping hot.'}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div>
