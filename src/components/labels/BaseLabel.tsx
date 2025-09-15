@@ -208,7 +208,6 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
       headerMargin: 0.8,
       logoMargin: 0.5,
       mealNameMargin: 0.8,
-      separatorMargin: 0.8,
       nutritionMargin: 1.0,
       sectionMargin: 1.0,
       useByMargin: 0.5,
@@ -235,7 +234,6 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
       headerMargin: Math.max(baseSpacing.headerMargin * finalMultiplier, 0.3),
       logoMargin: Math.max(baseSpacing.logoMargin * finalMultiplier, 0.2),
       mealNameMargin: Math.max(baseSpacing.mealNameMargin * finalMultiplier, 0.3),
-      separatorMargin: Math.max(baseSpacing.separatorMargin * finalMultiplier, 0.3),
       nutritionMargin: Math.max(baseSpacing.nutritionMargin * finalMultiplier, 0.4),
       sectionMargin: Math.max(baseSpacing.sectionMargin * finalMultiplier, 0.4),
       useByMargin: Math.max(baseSpacing.useByMargin * finalMultiplier, 0.2),
@@ -291,17 +289,6 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         >
           {data.mealName}
         </h1>
-        
-        {/* Visual separator - Dynamic spacing */}
-        <div 
-          className="bg-primary/50" 
-          style={{ 
-            width: '25%', 
-            height: '0.4mm', 
-            marginBottom: `${dynamicSpacing.separatorMargin}mm`
-          }} 
-          aria-hidden="true"
-        ></div>
       </div>
 
       {/* Nutrition Bar - Dynamic sizing and spacing with mandatory bottom margin */}
