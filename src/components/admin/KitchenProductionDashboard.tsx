@@ -14,13 +14,15 @@ import {
   CheckCircle,
   AlertCircle,
   Hash,
-  ArrowDownAZ
+  ArrowDownAZ,
+  Download
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { KitchenPrintStyles } from './KitchenPrintStyles';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
 
 interface MealLineItem {
   mealName: string;
@@ -239,6 +241,82 @@ export const KitchenProductionDashboard: React.FC = () => {
     window.print();
   };
 
+  // Excel export functionality
+  const handleExcelExport = useCallback(() => {
+    if (!productionData) {
+      toast({
+        title: "No Data to Export",
+        description: "Please load production data first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      
+      // Prepare data for export - kitchen-friendly format
+      const exportData = [
+        // Header row with date
+        [`Kitchen Production List - ${formatDate(productionData.productionDate, 'EEEE, MMMM d, yyyy')}`],
+        [], // Empty row for spacing
+        ['Qty', 'Meal Description'], // Column headers
+        ...sortedMealLineItems.map(meal => [
+          meal.totalQuantity,
+          meal.mealName
+        ]),
+        [], // Empty row before total
+        ['TOTAL MEALS:', productionData.totalMeals]
+      ];
+
+      // Add special instructions if any
+      if (productionData.specialInstructions.length > 0) {
+        exportData.push(
+          [], // Empty row
+          ['SPECIAL INSTRUCTIONS:'],
+          ...productionData.specialInstructions.map(instruction => ['', instruction])
+        );
+      }
+
+      // Create worksheet
+      const ws = XLSX.utils.aoa_to_sheet(exportData);
+
+      // Set column widths for better formatting
+      ws['!cols'] = [
+        { wch: 8 },  // Qty column
+        { wch: 50 }  // Meal Description column
+      ];
+
+      // Style the header row (merge cells for title)
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } } // Merge title row
+      ];
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Kitchen Production');
+
+      // Generate filename with date
+      const filename = `Kitchen_Production_${formatDate(productionData.productionDate, 'yyyy-MM-dd')}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+
+      toast({
+        title: "Export Successful",
+        description: `Kitchen production list exported as ${filename}`,
+      });
+
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export production data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [productionData, sortedMealLineItems, toast]);
+
   return (
     <>
       <KitchenPrintStyles />
@@ -285,6 +363,15 @@ export const KitchenProductionDashboard: React.FC = () => {
             <Button onClick={loadProductionData} disabled={loading} size="lg">
               <Clock className="h-4 w-4 mr-2" />
               {loading ? 'Loading...' : 'Refresh'}
+            </Button>
+            <Button 
+              onClick={handleExcelExport} 
+              disabled={loading || !productionData} 
+              variant="outline" 
+              size="lg"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export Excel
             </Button>
             <Button onClick={handlePrint} variant="outline" size="lg">
               <Printer className="h-4 w-4 mr-2" />
