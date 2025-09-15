@@ -252,12 +252,22 @@ export const KitchenProductionDashboard: React.FC = () => {
       return;
     }
 
+    // Prevent multiple exports during processing
+    if (loading) {
+      toast({
+        title: "Please Wait",
+        description: "Data is still loading. Please wait before exporting.",
+        variant: "default",
+      });
+      return;
+    }
+
     try {
       // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
       
       // Prepare data for export - kitchen-friendly format
-      const exportData = [
+      const exportData: (string | number)[][] = [
         // Header row with date
         [`Kitchen Production List - ${formatDate(productionData.productionDate, 'EEEE, MMMM d, yyyy')}`],
         [], // Empty row for spacing
@@ -284,20 +294,21 @@ export const KitchenProductionDashboard: React.FC = () => {
 
       // Set column widths for better formatting
       ws['!cols'] = [
-        { wch: 8 },  // Qty column
-        { wch: 50 }  // Meal Description column
+        { wch: 8 },  // Qty column - sufficient for quantities up to 9999
+        { wch: 50 }  // Meal Description column - accommodates long meal names
       ];
 
       // Style the header row (merge cells for title)
       ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } } // Merge title row
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } } // Merge title row across both columns
       ];
 
-      // Add worksheet to workbook
+      // Add worksheet to workbook with descriptive name
       XLSX.utils.book_append_sheet(wb, ws, 'Kitchen Production');
 
-      // Generate filename with date
-      const filename = `Kitchen_Production_${formatDate(productionData.productionDate, 'yyyy-MM-dd')}.xlsx`;
+      // Generate safe filename with date
+      const dateStr = formatDate(productionData.productionDate, 'yyyy-MM-dd');
+      const filename = `Kitchen_Production_${dateStr}.xlsx`;
 
       // Save file
       XLSX.writeFile(wb, filename);
@@ -311,11 +322,11 @@ export const KitchenProductionDashboard: React.FC = () => {
       console.error('Export error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to export production data. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to export production data. Please try again.",
         variant: "destructive",
       });
     }
-  }, [productionData, sortedMealLineItems, toast]);
+  }, [productionData, sortedMealLineItems, toast, loading]);
 
   return (
     <>
