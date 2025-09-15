@@ -35,41 +35,45 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
           />
         </div>
         
-        {/* Meal Name - Dominant visual element with proper spacing */}
+        {/* Meal Name - Level 1: Dominant visual hierarchy */}
         <h1 
-          className="text-center font-bold text-foreground leading-tight" 
+          className="text-center font-bold text-foreground" 
           style={{ 
-            fontSize: '4.5mm', 
-            fontWeight: '700',
-            marginBottom: '1.5mm',
+            fontSize: '5.5mm', // Increased for true dominance
+            fontWeight: '800', // Extra bold for maximum impact
+            lineHeight: '1.1',
+            marginBottom: '2mm',
             width: '100%',
-            wordWrap: 'break-word'
+            wordWrap: 'break-word',
+            letterSpacing: '0.02em' // Slight spacing for premium feel
           }}
         >
           {data.mealName}
         </h1>
         
-        {/* Clean separator */}
+        {/* Visual separator - Clean and purposeful */}
         <div 
-          className="bg-primary/40" 
+          className="bg-primary/50" 
           style={{ 
-            width: '30%', 
-            height: '0.3mm', 
-            marginBottom: '1.5mm' 
+            width: '25%', 
+            height: '0.4mm', 
+            marginBottom: '2mm' 
           }} 
           aria-hidden="true"
         ></div>
       </div>
 
-      {/* Nutrition Zone - Clean horizontal emphasis */}
+      {/* Nutrition Zone - Level 2: Prominent secondary information */}
       <div 
-        className="bg-primary/8 text-center font-semibold text-primary leading-tight" 
+        className="bg-primary/10 text-center font-semibold text-primary" 
         style={{ 
-          fontSize: '2.8mm', 
-          fontWeight: '600',
-          padding: '1.5mm 2mm',
-          marginBottom: '2mm',
-          borderRadius: '1mm'
+          fontSize: '3.2mm', // Increased for better readability 
+          fontWeight: '650', // Perfect balance between regular and bold
+          lineHeight: '1.2',
+          padding: '2mm 2.5mm',
+          marginBottom: '2.5mm',
+          borderRadius: '1.5mm',
+          letterSpacing: '0.01em'
         }}
       >
         {data.calories} Calories • {data.protein}g Protein • {data.fat}g Fat • {data.carbs}g Carbs
@@ -80,13 +84,15 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         
         {/* Safety Information Zone */}
         <div>
-          {/* USE BY Date - Critical safety information */}
+          {/* USE BY Date - Level 3: Critical safety information */}
           <div 
             className="font-bold text-foreground text-center" 
             style={{ 
-              fontSize: '2.5mm', 
-              fontWeight: '700',
-              marginBottom: '1mm'
+              fontSize: '3mm', // Increased for critical safety info
+              fontWeight: '750', // Strong emphasis for safety
+              lineHeight: '1.1',
+              marginBottom: '1.5mm',
+              letterSpacing: '0.02em'
             }}
           >
             USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
@@ -97,13 +103,14 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             }) : 'Fri, 19/09/2025'}
           </div>
 
-          {/* Storage Instructions */}
+          {/* Storage Instructions - Level 4: Important but secondary */}
           <div 
-            className="text-foreground text-center leading-relaxed" 
+            className="text-foreground text-center" 
             style={{ 
-              fontSize: '2mm', 
-              fontWeight: '400',
-              marginBottom: '1.5mm'
+              fontSize: '2.3mm', // Optimal readability size
+              fontWeight: '500', // Medium weight for good readability
+              lineHeight: '1.3', // Better line spacing for multi-line text
+              marginBottom: '2mm'
             }}
           >
             {storageInstructions}
@@ -112,12 +119,18 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
 
         {/* Product Information Zone */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1mm' }}>
-          {/* Ingredients */}
-          <div style={{ fontSize: '2mm', lineHeight: '1.3' }}>
-            <span className="font-semibold text-foreground" style={{ fontWeight: '600' }}>
+          {/* Ingredients - Level 4: Body text with clear hierarchy */}
+          <div style={{ fontSize: '2.2mm', lineHeight: '1.4', marginBottom: '1.5mm' }}>
+            <span 
+              className="font-semibold text-foreground" 
+              style={{ fontWeight: '650', fontSize: '2.3mm' }} // Slightly larger for labels
+            >
               Ingredients:
             </span>{' '}
-            <span className="text-foreground" style={{ fontWeight: '400' }}>
+            <span 
+              className="text-foreground" 
+              style={{ fontWeight: '450', lineHeight: '1.4' }} // Optimized for readability
+            >
               {data.ingredients ? data.ingredients.split(',').map((ingredient, index) => (
                 <span key={index}>
                   {ingredient.trim()}
@@ -127,13 +140,19 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
             </span>
           </div>
 
-          {/* Allergens */}
+          {/* Allergens - Level 3: Critical safety with visual emphasis */}
           {data.allergens && (
-            <div style={{ fontSize: '2mm', lineHeight: '1.3' }}>
-              <span className="font-semibold text-foreground" style={{ fontWeight: '600' }}>
+            <div style={{ fontSize: '2.2mm', lineHeight: '1.4' }}>
+              <span 
+                className="font-semibold text-foreground" 
+                style={{ fontWeight: '650', fontSize: '2.3mm' }}
+              >
                 Allergens:
               </span>{' '}
-              <span className="font-bold text-foreground" style={{ fontWeight: '700' }}>
+              <span 
+                className="font-bold text-foreground" 
+                style={{ fontWeight: '750' }} // Strong emphasis for safety
+              >
                 {data.allergens}
               </span>
             </div>
@@ -142,15 +161,17 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
 
       </div>
 
-      {/* Footer Zone - Clean brand presence */}
+      {/* Footer Zone - Level 5: Subtle brand presence */}
       <div 
         className="text-center font-medium text-primary" 
         style={{ 
-          fontSize: '1.8mm', 
-          fontWeight: '500',
-          marginTop: '1.5mm',
-          paddingTop: '1mm',
-          borderTop: '0.1mm solid rgba(var(--border), 0.3)'
+          fontSize: '2mm', // Increased slightly for better readability
+          fontWeight: '550', // Refined weight for professional appearance
+          lineHeight: '1.2',
+          marginTop: '2mm',
+          paddingTop: '1.5mm',
+          borderTop: '0.1mm solid rgba(var(--border), 0.4)',
+          letterSpacing: '0.03em' // Professional letter spacing
         }}
       >
         www.fitfoodtasty.co.uk
