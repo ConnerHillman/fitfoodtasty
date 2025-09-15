@@ -11,8 +11,6 @@ import {
   Clock, 
   Package, 
   Printer,
-  CheckCircle,
-  AlertCircle,
   Hash,
   ArrowDownAZ,
   Download
@@ -39,7 +37,6 @@ interface ProductionSummary {
   totalMeals: number;
   uniqueMealTypes: number;
   mealLineItems: MealLineItem[];
-  specialInstructions: string[];
 }
 
 export const KitchenProductionDashboard: React.FC = () => {
@@ -204,21 +201,12 @@ export const KitchenProductionDashboard: React.FC = () => {
       const mealLineItems = processMealLineItems(allOrders);
       
       const totalMeals = mealLineItems.reduce((sum, meal) => sum + meal.totalQuantity, 0);
-      
-      // Extract special instructions from meal names
-      const specialInstructions: string[] = [];
-      mealLineItems.forEach(meal => {
-        if (meal.mealName.includes('BIG') || meal.mealName.includes('NO ') || meal.mealName.includes('GLASS') || meal.mealName.includes('LowCal')) {
-          specialInstructions.push(meal.mealName);
-        }
-      });
 
       setProductionData({
         productionDate: selectedDate,
         totalMeals,
         uniqueMealTypes: mealLineItems.length,
-        mealLineItems,
-        specialInstructions
+        mealLineItems
       });
 
     } catch (error) {
@@ -279,15 +267,6 @@ export const KitchenProductionDashboard: React.FC = () => {
         [], // Empty row before total
         ['TOTAL MEALS:', productionData.totalMeals]
       ];
-
-      // Add special instructions if any
-      if (productionData.specialInstructions.length > 0) {
-        exportData.push(
-          [], // Empty row
-          ['SPECIAL INSTRUCTIONS:'],
-          ...productionData.specialInstructions.map(instruction => ['', instruction])
-        );
-      }
 
       // Create worksheet
       const ws = XLSX.utils.aoa_to_sheet(exportData);
@@ -402,7 +381,7 @@ export const KitchenProductionDashboard: React.FC = () => {
             </div>
 
             {/* Production Summary Cards */}
-            <div className="kitchen-summary grid grid-cols-1 md:grid-cols-3 gap-4 print:flex print:justify-between print:border-2 print:border-black print:p-3 print:bg-gray-100">
+            <div className="kitchen-summary grid grid-cols-1 md:grid-cols-2 gap-4 print:flex print:justify-between print:border-2 print:border-black print:p-3 print:bg-gray-100">
               <Card className="border-l-4 border-l-primary">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
@@ -423,18 +402,6 @@ export const KitchenProductionDashboard: React.FC = () => {
                       <p className="text-3xl font-bold text-blue-600">{productionData.uniqueMealTypes}</p>
                     </div>
                     <ChefHat className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-green-500">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Special Instructions</p>
-                      <p className="text-3xl font-bold text-green-600">{productionData.specialInstructions.length}</p>
-                    </div>
-                    <AlertCircle className="h-8 w-8 text-green-500" />
                   </div>
                 </CardContent>
               </Card>
@@ -520,27 +487,6 @@ export const KitchenProductionDashboard: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Special Instructions Section */}
-            {productionData.specialInstructions.length > 0 && (
-              <Card className="kitchen-special-instructions print:border-2 print:border-orange-500 print:bg-orange-50">
-                <CardHeader>
-                  <CardTitle className="kitchen-special-title text-xl font-bold flex items-center gap-2 text-orange-600 print:text-orange-700">
-                    <AlertCircle className="h-5 w-5" />
-                    Special Instructions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {productionData.specialInstructions.map((instruction, index) => (
-                      <div key={index} className="kitchen-instruction-item flex items-center gap-2 p-2 bg-orange-50 rounded print:bg-white print:border-l-2 print:border-orange-500">
-                        <CheckCircle className="h-4 w-4 text-orange-600" />
-                        <span className="text-sm font-medium">{instruction}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         ) : (
           <Card>
