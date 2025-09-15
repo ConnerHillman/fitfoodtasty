@@ -711,6 +711,7 @@ export type Database = {
           price: number | null
           shelf_life_days: number
           sort_order: number | null
+          storage_heating_instructions: string | null
           storage_instructions: string | null
           total_calories: number | null
           total_carbs: number | null
@@ -736,6 +737,7 @@ export type Database = {
           price?: number | null
           shelf_life_days?: number
           sort_order?: number | null
+          storage_heating_instructions?: string | null
           storage_instructions?: string | null
           total_calories?: number | null
           total_carbs?: number | null
@@ -761,6 +763,7 @@ export type Database = {
           price?: number | null
           shelf_life_days?: number
           sort_order?: number | null
+          storage_heating_instructions?: string | null
           storage_instructions?: string | null
           total_calories?: number | null
           total_carbs?: number | null
