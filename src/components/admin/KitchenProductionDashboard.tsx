@@ -21,14 +21,12 @@ import { KitchenPrintStyles } from './KitchenPrintStyles';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-interface MealVariation {
-  baseName: string;
-  variations: string[];
+interface MealLineItem {
+  mealName: string;
   totalQuantity: number;
   orders: Array<{
     orderId: string;
     quantity: number;
-    fullMealName: string;
     customerName?: string;
   }>;
 }
@@ -37,7 +35,7 @@ interface ProductionSummary {
   productionDate: Date;
   totalMeals: number;
   uniqueMealTypes: number;
-  mealVariations: MealVariation[];
+  mealLineItems: MealLineItem[];
   specialInstructions: string[];
 }
 
@@ -48,78 +46,33 @@ export const KitchenProductionDashboard: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const { toast } = useToast();
 
-  // Smart meal name parsing to extract base name and variations
-  const parseMealName = (fullName: string) => {
-    // Remove common prefixes and suffixes to find base name
-    let baseName = fullName;
-    const variations: string[] = [];
-
-    // Extract LowCal prefix
-    if (baseName.includes('LowCal ') || baseName.includes('(LowCal)')) {
-      variations.push('LowCal');
-      baseName = baseName.replace('LowCal ', '').replace('(LowCal)', '');
-    }
-
-    // Extract variations in parentheses
-    const parenthesesRegex = /\s*\([^)]+\)/g;
-    const parenthesesMatches = baseName.match(parenthesesRegex);
-    if (parenthesesMatches) {
-      parenthesesMatches.forEach(match => {
-        const cleanMatch = match.replace(/[()]/g, '').trim();
-        if (cleanMatch && !variations.includes(cleanMatch)) {
-          variations.push(cleanMatch);
-        }
-        baseName = baseName.replace(match, '');
-      });
-    }
-
-    // Extract BIG suffix
-    if (baseName.includes(' BIG') || baseName.includes('BIG')) {
-      if (!variations.includes('BIG')) variations.push('BIG');
-      baseName = baseName.replace(' BIG', '').replace('BIG', '');
-    }
-
-    // Clean up base name
-    baseName = baseName.trim().replace(/\s+/g, ' ');
-
-    return { baseName, variations };
-  };
-
-  // Group meals by base name and aggregate variations
-  const groupMealsByBaseName = (orders: any[]) => {
-    const mealGroups: { [key: string]: MealVariation } = {};
+  // Process meals as individual line items without grouping by base name
+  const processMealLineItems = (orders: any[]) => {
+    const mealLineItems: { [key: string]: MealLineItem } = {};
 
     orders.forEach(order => {
       order.order_items?.forEach((item: any) => {
-        const { baseName, variations } = parseMealName(item.meal_name);
+        const mealName = item.meal_name.trim();
         
-        if (!mealGroups[baseName]) {
-          mealGroups[baseName] = {
-            baseName,
-            variations: [],
+        if (!mealLineItems[mealName]) {
+          mealLineItems[mealName] = {
+            mealName,
             totalQuantity: 0,
             orders: []
           };
         }
 
-        mealGroups[baseName].totalQuantity += item.quantity;
-        mealGroups[baseName].orders.push({
+        mealLineItems[mealName].totalQuantity += item.quantity;
+        mealLineItems[mealName].orders.push({
           orderId: order.id,
           quantity: item.quantity,
-          fullMealName: item.meal_name,
           customerName: order.customer_name
-        });
-
-        // Add unique variations
-        variations.forEach(variation => {
-          if (!mealGroups[baseName].variations.includes(variation)) {
-            mealGroups[baseName].variations.push(variation);
-          }
         });
       });
     });
 
-    return Object.values(mealGroups).sort((a, b) => b.totalQuantity - a.totalQuantity);
+    // Sort alphabetically by default
+    return Object.values(mealLineItems).sort((a, b) => a.mealName.localeCompare(b.mealName));
   };
 
   const loadProductionData = async () => {
@@ -216,25 +169,23 @@ export const KitchenProductionDashboard: React.FC = () => {
       }));
 
       const allOrders = [...filteredOrders, ...normalizedPackageOrders];
-      const mealVariations = groupMealsByBaseName(allOrders);
+      const mealLineItems = processMealLineItems(allOrders);
       
-      const totalMeals = mealVariations.reduce((sum, meal) => sum + meal.totalQuantity, 0);
+      const totalMeals = mealLineItems.reduce((sum, meal) => sum + meal.totalQuantity, 0);
       
-      // Extract special instructions from variations
+      // Extract special instructions from meal names
       const specialInstructions: string[] = [];
-      mealVariations.forEach(meal => {
-        meal.variations.forEach(variation => {
-          if (variation.includes('BIG') || variation.includes('NO ') || variation.includes('GLASS')) {
-            specialInstructions.push(`${meal.baseName}: ${variation}`);
-          }
-        });
+      mealLineItems.forEach(meal => {
+        if (meal.mealName.includes('BIG') || meal.mealName.includes('NO ') || meal.mealName.includes('GLASS') || meal.mealName.includes('LowCal')) {
+          specialInstructions.push(meal.mealName);
+        }
       });
 
       setProductionData({
         productionDate: selectedDate,
         totalMeals,
-        uniqueMealTypes: mealVariations.length,
-        mealVariations,
+        uniqueMealTypes: mealLineItems.length,
+        mealLineItems,
         specialInstructions
       });
 
@@ -258,16 +209,6 @@ export const KitchenProductionDashboard: React.FC = () => {
     window.print();
   };
 
-  const formatVariations = (variations: string[]) => {
-    if (variations.length === 0) return '';
-    return ` (${variations.join(', ')})`;
-  };
-
-  const getVariationCount = (meal: MealVariation, variation: string) => {
-    return meal.orders.filter(order => 
-      order.fullMealName.toLowerCase().includes(variation.toLowerCase())
-    ).reduce((sum, order) => sum + order.quantity, 0);
-  };
 
   return (
     <>
@@ -382,33 +323,16 @@ export const KitchenProductionDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="kitchen-meal-list space-y-1">
-                  {productionData.mealVariations.map((meal, index) => (
+                  {productionData.mealLineItems.map((meal, index) => (
                     <div key={index} className="kitchen-meal-row flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 print:table-row">
                       <div className="flex items-center gap-3">
                         <Badge variant="secondary" className="kitchen-meal-quantity text-lg font-bold px-3 py-1 print:bg-white print:border print:border-black">
                           {meal.totalQuantity}
                         </Badge>
                         <span className="kitchen-meal-name text-lg font-medium">
-                          {meal.baseName}
-                          {formatVariations(meal.variations)}
+                          {meal.mealName}
                         </span>
                       </div>
-                      
-                      {meal.variations.length > 0 && (
-                        <div className="kitchen-meal-variations flex flex-wrap gap-2 print:text-xs print:text-gray-600">
-                          {meal.variations.map((variation, vIndex) => {
-                            const count = getVariationCount(meal, variation);
-                            if (count > 0) {
-                              return (
-                                <Badge key={vIndex} variant="outline" className="text-sm">
-                                  {variation} x{count}
-                                </Badge>
-                              );
-                            }
-                            return null;
-                          })}
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
