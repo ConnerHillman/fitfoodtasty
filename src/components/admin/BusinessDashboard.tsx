@@ -132,9 +132,9 @@ const BusinessDashboard = () => {
     setShowLabelReport(true);
   };
 
-  };
 
   const originalPrintDeliveryLabels = () => {
+    if (orders.length === 0) {
       toast({
         title: "No Orders",
         description: "There are no confirmed orders to print labels for.",
