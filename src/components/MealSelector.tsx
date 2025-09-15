@@ -18,8 +18,7 @@ interface MealData {
   total_protein: number;
   total_fat: number;
   total_carbs: number;
-  storage_instructions?: string;
-  heating_instructions?: string;
+  storage_heating_instructions?: string;
   ingredients: string[];
   allergens: string[];
 }
@@ -73,8 +72,7 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
           total_protein,
           total_fat,
           total_carbs,
-          storage_instructions,
-          heating_instructions,
+          storage_heating_instructions,
           meal_ingredients (
             quantity,
             unit,
@@ -103,8 +101,7 @@ export const MealSelector: React.FC<MealSelectorProps> = ({ isOpen, onClose, onS
         total_protein: meal.total_protein || 0,
         total_fat: meal.total_fat || 0,
         total_carbs: meal.total_carbs || 0,
-        storage_instructions: meal.storage_instructions,
-        heating_instructions: meal.heating_instructions,
+        storage_heating_instructions: meal.storage_heating_instructions,
         ingredients: meal.meal_ingredients?.map((mi: any) => 
           `${mi.ingredients.name} (${mi.quantity}${mi.unit})`
         ) || [],
