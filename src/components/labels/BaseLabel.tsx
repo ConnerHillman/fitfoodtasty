@@ -304,7 +304,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         ></div>
       </div>
 
-      {/* Nutrition Bar - Dynamic sizing and spacing */}
+      {/* Nutrition Bar - Dynamic sizing and spacing with mandatory bottom margin */}
       <div 
         className="text-center font-semibold text-primary" 
         style={{ 
@@ -312,7 +312,7 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
           fontWeight: '650',
           lineHeight: '1.0',
           padding: `${dynamicSpacing.nutritionMargin}mm 0`,
-          marginBottom: `${dynamicSpacing.nutritionMargin}mm`,
+          marginBottom: `${Math.max(dynamicSpacing.nutritionMargin * 1.5, 1.5)}mm`, // Mandatory bottom spacing
           background: 'linear-gradient(90deg, transparent, rgba(var(--primary), 0.08) 20%, rgba(var(--primary), 0.08) 80%, transparent)',
           letterSpacing: '0.01em'
         }}
