@@ -9,134 +9,84 @@ interface BaseLabelProps {
 export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
   const storageHeatingInstructions = data.storageHeatingInstructions || DEFAULT_INSTRUCTIONS.storageHeating;
 
-  // Phase 1: Content Analysis Engine
+  // Simplified content analysis focusing on meal name length for consistent sizing
   const analyzeContentDensity = () => {
     const mealNameLength = data.mealName.length;
     const ingredientsLength = data.ingredients ? data.ingredients.length : 0;
     const allergensLength = data.allergens ? data.allergens.length : 0;
-    const storageLength = storageHeatingInstructions.length;
     
-    // Calculate total character count
-    const totalCharacters = mealNameLength + ingredientsLength + allergensLength + storageLength;
-    
-    // Phase 2: Enhanced density scoring with advanced algorithms
+    // Primary factor: meal name length (most important for title sizing)
     let densityScore = 0;
     
-    // Meal name impact (considers word count and length)
-    const mealNameWords = data.mealName.split(' ').length;
-    const mealNameComplexity = mealNameLength + (mealNameWords * 3); // Multi-word names are more complex
-    densityScore += Math.min(mealNameComplexity * 1.2, 25);
+    // Meal name scoring - simpler and more predictable
+    if (mealNameLength <= 15) densityScore += 10;      // Short names get low density (larger text)
+    else if (mealNameLength <= 25) densityScore += 20; // Medium names get medium density
+    else if (mealNameLength <= 35) densityScore += 35; // Long names get higher density
+    else densityScore += 50;                           // Very long names get high density
     
-    // Ingredients impact (major factor with ingredient count analysis)
-    const ingredientCount = data.ingredients ? data.ingredients.split(',').length : 0;
-    const ingredientComplexity = ingredientsLength + (ingredientCount * 8); // More ingredients = higher complexity
-    densityScore += Math.min(ingredientComplexity * 0.12, 40);
+    // Secondary factors (minor impact)
+    if (ingredientsLength > 200) densityScore += 15;   // Very long ingredients
+    if (allergensLength > 50) densityScore += 10;      // Many allergens
     
-    // Allergens impact (safety critical)
-    const allergenCount = data.allergens ? data.allergens.split(',').length : 0;
-    densityScore += Math.min(allergensLength * 0.8 + (allergenCount * 4), 15);
-    
-    // Storage instructions impact
-    densityScore += Math.min(storageLength * 0.1, 10);
-    
-    // Phase 2: Advanced complexity factors
-    if (ingredientsLength > 300) densityScore += 15; // Extremely long ingredients
-    if (ingredientCount > 12) densityScore += 10; // Many individual ingredients
-    if (mealNameLength > 25) densityScore += 8; // Very long meal names
-    if (allergenCount > 6) densityScore += 8; // Many allergens
-    if (totalCharacters > 500) densityScore += 12; // Overall content overload
-    
-    return Math.min(Math.round(densityScore), 100);
+    return Math.min(densityScore, 100);
   };
 
-  // Phase 2: Advanced scaling with quality thresholds and emergency modes
-  const getAdvancedScalingFactors = (density: number) => {
-    // Phase 2: Emergency compression mode for extreme content
-    if (density >= 95) {
+  // Simplified scaling system with consistent meal name sizing
+  const getScalingFactors = (density: number) => {
+    // Focus on meal name consistency first
+    if (density >= 60) {
       return {
-        mealNameScale: 0.7,     // Emergency compression
-        nutritionScale: 0.8,    // Aggressive reduction
-        useByScale: 0.85,       // Maintain safety readability
-        storageScale: 0.7,      // Heavy compression
-        ingredientsScale: 0.6,  // Maximum compression
-        allergensScale: 0.75,   // Safety priority
-        spacingScale: 0.3,      // Ultra-tight spacing
-        logoScale: 0.85,        // Compact logo
-        qualityMode: 'emergency'
+        mealNameScale: 0.8,     // Compact for very long names
+        nutritionScale: 0.85,   
+        useByScale: 0.9,        
+        storageScale: 0.8,      
+        ingredientsScale: 0.75, 
+        allergensScale: 0.8,    
+        spacingScale: 0.6,      
+        logoScale: 0.9,        
+        qualityMode: 'compact'
       };
     }
     
-    // Very high density with quality preservation
-    if (density >= 80) {
-      return {
-        mealNameScale: 0.75,    // Significant reduction
-        nutritionScale: 0.82,   // Controlled reduction
-        useByScale: 0.88,       // Safety priority
-        storageScale: 0.75,     // Space efficient
-        ingredientsScale: 0.65, // Aggressive but readable
-        allergensScale: 0.8,    // Safety compliance
-        spacingScale: 0.4,      // Very tight
-        logoScale: 0.88,        // Slightly smaller
-        qualityMode: 'compressed'
-      };
-    }
-    
-    // High density - balanced optimization
-    if (density >= 65) {
-      return {
-        mealNameScale: 0.85,    // Moderate reduction
-        nutritionScale: 0.92,   // Slight reduction
-        useByScale: 0.95,       // Minimal impact
-        storageScale: 0.85,     // Efficient spacing
-        ingredientsScale: 0.8,  // Readable compression
-        allergensScale: 0.9,    // Safety maintained
-        spacingScale: 0.6,      // Tighter spacing
-        logoScale: 0.95,        // Minimal reduction
-        qualityMode: 'optimized'
-      };
-    }
-    
-    // Medium density - baseline perfection
     if (density >= 35) {
       return {
-        mealNameScale: 1.0,
-        nutritionScale: 1.0,
-        useByScale: 1.0,
-        storageScale: 1.0,
-        ingredientsScale: 1.0,
-        allergensScale: 1.0,
-        spacingScale: 1.0,
-        logoScale: 1.0,
+        mealNameScale: 0.95,    // Slightly smaller for long names
+        nutritionScale: 0.95,   
+        useByScale: 0.95,       
+        storageScale: 0.9,      
+        ingredientsScale: 0.85, 
+        allergensScale: 0.9,    
+        spacingScale: 0.8,      
+        logoScale: 0.95,        
+        qualityMode: 'balanced'
+      };
+    }
+    
+    if (density >= 20) {
+      return {
+        mealNameScale: 1.0,     // Standard size for medium names
+        nutritionScale: 1.0,    
+        useByScale: 1.0,        
+        storageScale: 1.0,      
+        ingredientsScale: 1.0,  
+        allergensScale: 1.0,    
+        spacingScale: 1.0,      
+        logoScale: 1.0,         
         qualityMode: 'optimal'
       };
     }
     
-    // Low density - enhanced visual impact
-    if (density >= 15) {
-      return {
-        mealNameScale: 1.25,    // Enhanced prominence
-        nutritionScale: 1.15,   // Better visibility
-        useByScale: 1.1,        // Clear safety info
-        storageScale: 1.05,     // Improved readability
-        ingredientsScale: 1.0,  // Maintain baseline
-        allergensScale: 1.05,   // Clear safety
-        spacingScale: 1.3,      // Premium spacing
-        logoScale: 1.08,        // Enhanced branding
-        qualityMode: 'enhanced'
-      };
-    }
-    
-    // Very low density - premium presentation
+    // Short names get enhanced sizing
     return {
-      mealNameScale: 1.4,      // Maximum impact
-      nutritionScale: 1.25,    // Prominent display
-      useByScale: 1.2,         // Clear communication
-      storageScale: 1.15,      // Enhanced readability
-      ingredientsScale: 1.1,   // Improved presentation
-      allergensScale: 1.15,    // Clear safety info
-      spacingScale: 1.5,       // Luxury spacing
-      logoScale: 1.15,         // Strong branding
-      qualityMode: 'premium'
+      mealNameScale: 1.2,      // Larger for short names
+      nutritionScale: 1.1,     
+      useByScale: 1.05,        
+      storageScale: 1.05,      
+      ingredientsScale: 1.0,   
+      allergensScale: 1.05,    
+      spacingScale: 1.2,       
+      logoScale: 1.05,         
+      qualityMode: 'enhanced'
     };
   };
 
@@ -169,12 +119,12 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
     return { sizes, factors };
   };
 
-  // Apply enhanced content analysis
+  // Apply simplified content analysis
   const contentDensity = analyzeContentDensity();
-  const rawScalingFactors = getAdvancedScalingFactors(contentDensity);
+  const scalingFactors = getScalingFactors(contentDensity);
   
-  // Phase 2: Base sizes with enhanced precision
-  const enhancedBaseSizes = {
+  // Simplified base sizes
+  const baseSizes = {
     mealName: 5.2,
     nutrition: 3.0,
     useBy: 2.8,
@@ -185,25 +135,20 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
     footer: 1.9
   };
   
-  // Calculate dynamic sizes with quality enforcement
-  let dynamicSizes = {
-    mealName: enhancedBaseSizes.mealName * rawScalingFactors.mealNameScale,
-    nutrition: enhancedBaseSizes.nutrition * rawScalingFactors.nutritionScale,
-    useBy: enhancedBaseSizes.useBy * rawScalingFactors.useByScale,
-    storage: enhancedBaseSizes.storage * rawScalingFactors.storageScale,
-    ingredients: enhancedBaseSizes.ingredients * rawScalingFactors.ingredientsScale,
-    allergens: enhancedBaseSizes.allergens * rawScalingFactors.allergensScale,
-    logo: enhancedBaseSizes.logo * rawScalingFactors.logoScale,
-    footer: enhancedBaseSizes.footer
+  // Calculate sizes directly (no complex quality enforcement)
+  const dynamicSizes = {
+    mealName: baseSizes.mealName * scalingFactors.mealNameScale,
+    nutrition: baseSizes.nutrition * scalingFactors.nutritionScale,
+    useBy: baseSizes.useBy * scalingFactors.useByScale,
+    storage: baseSizes.storage * scalingFactors.storageScale,
+    ingredients: baseSizes.ingredients * scalingFactors.ingredientsScale,
+    allergens: baseSizes.allergens * scalingFactors.allergensScale,
+    logo: baseSizes.logo * scalingFactors.logoScale,
+    footer: baseSizes.footer
   };
-
-  // Apply quality thresholds
-  const qualityEnforced = enforceQualityThresholds(dynamicSizes, rawScalingFactors);
-  dynamicSizes = qualityEnforced.sizes;
-  const scalingFactors = qualityEnforced.factors;
   
-  // Phase 2: Advanced spacing with adaptive algorithms
-  const calculateAdvancedSpacing = (factors: any) => {
+  // Simplified spacing calculation
+  const calculateSpacing = (factors: any) => {
     const baseSpacing = {
       headerMargin: 0.8,
       logoMargin: 0.5,
@@ -216,34 +161,22 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
       footerMargin: 1.0
     };
     
-    // Apply advanced spacing algorithms based on quality mode
     const spacingMultiplier = factors.spacingScale;
-    const qualityAdjustment = {
-      emergency: 0.8,   // Even tighter in emergency mode
-      compressed: 0.9,  // Slightly tighter
-      optimized: 1.0,   // Standard
-      optimal: 1.0,     // Perfect baseline
-      enhanced: 1.1,    // Slightly more generous
-      premium: 1.2      // Luxury spacing
-    };
-    
-    const adjustment = qualityAdjustment[factors.qualityMode] || 1.0;
-    const finalMultiplier = spacingMultiplier * adjustment;
     
     return {
-      headerMargin: Math.max(baseSpacing.headerMargin * finalMultiplier, 0.3),
-      logoMargin: Math.max(baseSpacing.logoMargin * finalMultiplier, 0.2),
-      mealNameMargin: Math.max(baseSpacing.mealNameMargin * finalMultiplier, 0.3),
-      nutritionMargin: Math.max(baseSpacing.nutritionMargin * finalMultiplier, 0.4),
-      sectionMargin: Math.max(baseSpacing.sectionMargin * finalMultiplier, 0.4),
-      useByMargin: Math.max(baseSpacing.useByMargin * finalMultiplier, 0.2),
-      storageMargin: Math.max(baseSpacing.storageMargin * finalMultiplier, 0.3),
-      ingredientsMargin: Math.max(baseSpacing.ingredientsMargin * finalMultiplier, 0.3),
-      footerMargin: Math.max(baseSpacing.footerMargin * finalMultiplier, 0.4)
+      headerMargin: Math.max(baseSpacing.headerMargin * spacingMultiplier, 0.3),
+      logoMargin: Math.max(baseSpacing.logoMargin * spacingMultiplier, 0.2),
+      mealNameMargin: Math.max(baseSpacing.mealNameMargin * spacingMultiplier, 0.3),
+      nutritionMargin: Math.max(baseSpacing.nutritionMargin * spacingMultiplier, 0.4),
+      sectionMargin: Math.max(baseSpacing.sectionMargin * spacingMultiplier, 0.4),
+      useByMargin: Math.max(baseSpacing.useByMargin * spacingMultiplier, 0.2),
+      storageMargin: Math.max(baseSpacing.storageMargin * spacingMultiplier, 0.3),
+      ingredientsMargin: Math.max(baseSpacing.ingredientsMargin * spacingMultiplier, 0.3),
+      footerMargin: Math.max(baseSpacing.footerMargin * spacingMultiplier, 0.4)
     };
   };
   
-  const dynamicSpacing = calculateAdvancedSpacing(rawScalingFactors);
+  const dynamicSpacing = calculateSpacing(scalingFactors);
 
   return (
     <div 
@@ -377,15 +310,15 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
                     .replace(/Smoked Paprika/g, 'Paprika');
                 }
                 
-                // Emergency mode: Aggressive abbreviations
-                if (rawScalingFactors.qualityMode === 'emergency') {
+                // Compact mode: Aggressive abbreviations for very long names
+                if (scalingFactors.qualityMode === 'compact') {
                   processedIngredients = processedIngredients
                     .replace(/Olive Oil/g, 'Oil')
                     .replace(/Parsley/g, 'Parsley')
                     .replace(/Lime Juice/g, 'Lime')
                     .replace(/Chilli Flakes/g, 'Chilli')
                     .replace(/\s+/g, ' ') // Remove extra spaces
-                    .replace(/\(\d+g\)/g, ''); // Remove weights in emergency
+                    .replace(/\(\d+g\)/g, ''); // Remove weights in compact mode
                 }
                 
                 return processedIngredients.split(',').map((ingredient, index) => (
