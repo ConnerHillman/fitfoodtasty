@@ -10,6 +10,7 @@ export const useProductionData = () => {
   const [loading, setLoading] = useState(false);
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [ingredientsError, setIngredientsError] = useState<string | null>(null);
+  const [dataValidationWarnings, setDataValidationWarnings] = useState<string[]>([]);
   const { toast } = useToast();
   
   // Request tracking to prevent race conditions
@@ -22,6 +23,68 @@ export const useProductionData = () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+    };
+  }, []);
+
+  // Validate meal data completeness and integrity
+  const validateMealData = useCallback((mealsWithIngredients: any[], expectedMealNames: string[]) => {
+    const warnings: string[] = [];
+    const validMeals: any[] = [];
+    const missingMeals: string[] = [];
+    const incompleteMeals: string[] = [];
+
+    expectedMealNames.forEach(mealName => {
+      const mealData = mealsWithIngredients?.find(m => m.name === mealName);
+      
+      if (!mealData) {
+        missingMeals.push(mealName);
+        warnings.push(`Missing meal data for "${mealName}" - orders will be skipped`);
+        return;
+      }
+
+      // Check if meal has ingredient data
+      if (!mealData.meal_ingredients || mealData.meal_ingredients.length === 0) {
+        incompleteMeals.push(mealName);
+        warnings.push(`No ingredients defined for meal "${mealName}" - will not contribute to ingredient calculations`);
+        validMeals.push(mealData); // Still include for tracking, just no ingredients
+        return;
+      }
+
+      // Check for incomplete ingredient data
+      const incompleteIngredients = mealData.meal_ingredients.filter((ing: any) => 
+        !ing.ingredients || !ing.ingredients.name || ing.quantity == null
+      );
+
+      if (incompleteIngredients.length > 0) {
+        warnings.push(`Incomplete ingredient data in "${mealName}" - ${incompleteIngredients.length} ingredients missing details`);
+      }
+
+      // Filter out incomplete ingredients but keep the meal
+      const validIngredients = mealData.meal_ingredients.filter((ing: any) => 
+        ing.ingredients && ing.ingredients.name && ing.quantity != null
+      );
+
+      validMeals.push({
+        ...mealData,
+        meal_ingredients: validIngredients
+      });
+    });
+
+    // Log summary
+    if (missingMeals.length > 0) {
+      console.warn(`[Data Validation] ${missingMeals.length} meals missing from database:`, missingMeals);
+    }
+    if (incompleteMeals.length > 0) {
+      console.warn(`[Data Validation] ${incompleteMeals.length} meals have no ingredients:`, incompleteMeals);
+    }
+
+    return {
+      validMeals,
+      warnings,
+      missingMeals,
+      incompleteMeals,
+      totalExpected: expectedMealNames.length,
+      totalValid: validMeals.length
     };
   }, []);
 
@@ -90,11 +153,21 @@ export const useProductionData = () => {
 
       if (error) throw error;
 
+      // Validate meal data completeness before processing
+      const validationResults = validateMealData(mealsWithIngredients, mealNames);
+      if (validationResults.warnings.length > 0) {
+        setDataValidationWarnings(validationResults.warnings);
+        console.warn('[Data Validation] Meal data issues found:', validationResults.warnings);
+      }
+
+      // Use only validated meals for processing
+      const validMeals = validationResults.validMeals;
+
       // Process each meal's ingredients with unit conversion
       const ingredientAggregations: { [key: string]: Array<{ quantity: number; unit: string; mealData: any }> } = {};
       
       mealLineItems.forEach(mealItem => {
-        const mealData = mealsWithIngredients?.find(m => m.name === mealItem.mealName);
+        const mealData = validMeals?.find(m => m.name === mealItem.mealName);
         
         if (mealData?.meal_ingredients) {
           mealData.meal_ingredients.forEach((mealIngredient: any) => {
@@ -263,34 +336,73 @@ export const useProductionData = () => {
         }
       });
 
-      // Fetch actual meal names for package orders
+      // Fetch actual meal names for package orders with validation
       const packageMealIds = filteredPackageOrders.flatMap(pkg => 
         pkg.package_meal_selections?.map(selection => selection.meal_id) || []
       );
       
       let packageMeals: any[] = [];
+      const packageValidationWarnings: string[] = [];
+      
       if (packageMealIds.length > 0) {
-        const { data: mealsData } = await supabase
+        const uniqueMealIds = [...new Set(packageMealIds)];
+        console.log(`[Package Validation] Validating ${uniqueMealIds.length} unique meal IDs from packages`);
+        
+        const { data: mealsData, error: mealFetchError } = await supabase
           .from('meals')
-          .select('id, name')
-          .in('id', packageMealIds);
-        packageMeals = mealsData || [];
+          .select('id, name, is_active')
+          .in('id', uniqueMealIds);
+          
+        if (mealFetchError) {
+          console.error('[Package Validation] Error fetching meal data:', mealFetchError);
+          packageValidationWarnings.push('Failed to validate package meal references');
+        } else {
+          packageMeals = mealsData || [];
+          
+          // Check for missing or inactive meals
+          const foundMealIds = new Set(packageMeals.map(m => m.id));
+          const missingMealIds = uniqueMealIds.filter(id => !foundMealIds.has(id));
+          const inactiveMeals = packageMeals.filter(m => !m.is_active);
+          
+          if (missingMealIds.length > 0) {
+            packageValidationWarnings.push(`${missingMealIds.length} package meals not found in database`);
+            console.warn('[Package Validation] Missing meal IDs:', missingMealIds);
+          }
+          
+          if (inactiveMeals.length > 0) {
+            packageValidationWarnings.push(`${inactiveMeals.length} package meals are inactive: ${inactiveMeals.map(m => m.name).join(', ')}`);
+            console.warn('[Package Validation] Inactive meals:', inactiveMeals.map(m => m.name));
+          }
+          
+          console.log(`[Package Validation] Successfully validated ${packageMeals.length}/${uniqueMealIds.length} meal references`);
+        }
       }
 
-      // Convert package orders to same format as regular orders with proper meal names
+      // Convert package orders to same format as regular orders with validation
       const normalizedPackageOrders = filteredPackageOrders.map(pkg => ({
         ...pkg,
         order_items: pkg.package_meal_selections?.map(selection => {
           const meal = packageMeals.find(m => m.id === selection.meal_id);
+          if (!meal) {
+            console.warn(`[Package Validation] Package order ${pkg.id} references unknown meal ID: ${selection.meal_id}`);
+          }
           return {
             meal_id: selection.meal_id,
-            meal_name: meal?.name || 'Unknown Meal',
+            meal_name: meal?.name || `Unknown Meal (${selection.meal_id})`,
             quantity: selection.quantity
           };
-        }) || []
-      }));
+        }).filter(item => item.meal_name !== `Unknown Meal (${item.meal_id})`) || [] // Filter out unknown meals
+      })).filter(pkg => pkg.order_items.length > 0); // Filter out packages with no valid meals
+
+      // Combine validation warnings
+      const allValidationWarnings = [...packageValidationWarnings];
+      if (allValidationWarnings.length > 0) {
+        setDataValidationWarnings(prev => [...prev, ...allValidationWarnings]);
+      }
 
       const allOrders = [...filteredOrders, ...normalizedPackageOrders];
+      console.log(`[Data Processing] Processing ${filteredOrders.length} regular orders and ${normalizedPackageOrders.length} package orders`);
+      
       const mealLineItems = processMealLineItems(allOrders);
       
       const totalMeals = mealLineItems.reduce((sum, meal) => sum + meal.totalQuantity, 0);
@@ -308,8 +420,18 @@ export const useProductionData = () => {
 
       setProductionData(initialData);
 
+      // Show validation warnings to user if any
+      if (dataValidationWarnings.length > 0) {
+        toast({
+          title: "Data Validation Warnings",
+          description: `${dataValidationWarnings.length} issues found. Check console for details.`,
+          variant: "destructive",
+        });
+      }
+
       // Process ingredients separately to avoid blocking the UI
       setIngredientsLoading(true);
+      setDataValidationWarnings([]); // Reset warnings for new ingredient processing
       try {
         // Check if this request is still current before processing
         if (currentRequestRef.current !== requestId) {
@@ -361,7 +483,12 @@ export const useProductionData = () => {
   }, [processMealLineItems, processIngredientLineItems, toast]);
 
   const retryIngredientProcessing = useCallback(async () => {
-    if (!productionData?.mealLineItems.length) return;
+    if (!productionData?.mealLineItems.length) {
+      console.warn('[Retry] No meal line items available for retry');
+      return;
+    }
+    
+    console.log(`[Retry] Retrying ingredient processing for ${productionData.mealLineItems.length} meal types`);
     
     // Create new request ID for retry
     const requestId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -414,6 +541,7 @@ export const useProductionData = () => {
     loading,
     ingredientsLoading,
     ingredientsError,
+    dataValidationWarnings,
     loadProductionData,
     retryIngredientProcessing
   };

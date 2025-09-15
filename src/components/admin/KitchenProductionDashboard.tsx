@@ -12,7 +12,8 @@ import {
   Printer,
   Hash,
   ArrowDownAZ,
-  Download
+  Download,
+  AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -33,11 +34,12 @@ export const KitchenProductionDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'meals' | 'ingredients'>('meals');
   const { toast } = useToast();
   
-  const { 
-    productionData, 
-    loading, 
-    ingredientsLoading, 
+  const {
+    productionData,
+    loading,
+    ingredientsLoading,
     ingredientsError,
+    dataValidationWarnings,
     loadProductionData,
     retryIngredientProcessing
   } = useProductionData();
@@ -317,6 +319,31 @@ export const KitchenProductionDashboard: React.FC = () => {
                 <TabsTrigger value="meals">Meals</TabsTrigger>
                 <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
               </TabsList>
+
+              {/* Data Validation Warnings */}
+              {dataValidationWarnings && dataValidationWarnings.length > 0 && (
+                <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg print:hidden">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-destructive mb-2">Data Validation Issues</h4>
+                      <ul className="text-sm text-destructive/80 space-y-1">
+                        {dataValidationWarnings.slice(0, 5).map((warning, index) => (
+                          <li key={index} className="flex items-start gap-1">
+                            <span className="w-1 h-1 bg-destructive/60 rounded-full mt-2 flex-shrink-0" />
+                            {warning}
+                          </li>
+                        ))}
+                        {dataValidationWarnings.length > 5 && (
+                          <li className="text-xs italic">
+                            ... and {dataValidationWarnings.length - 5} more issues (check console for full list)
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <TabsContent value="meals" className="mt-6">
                 <Card className="print:shadow-none print:border-none">
