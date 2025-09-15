@@ -159,15 +159,16 @@ export const SingleLabel: React.FC<SingleLabelProps> = (props) => {
       <div className="mx-2 mb-1 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded px-2 py-1 flex-1">
         <div className="font-bold text-gray-800 mb-1" style={{ fontSize: '6px' }}>INGREDIENTS:</div>
         <div 
-          className="text-gray-700 whitespace-pre-line" 
+          className="text-gray-800 whitespace-pre-line" 
           style={{ 
-            fontSize: '7px', // Increased from 5px to 7px for better readability
-            lineHeight: '1.5', // Increased line spacing
-            paddingLeft: '2px' // Small padding for bullet points
+            fontSize: '10px', // Increased to 10px for much better readability
+            lineHeight: '1.6', // Increased line spacing for better visibility
+            paddingLeft: '4px', // More padding for bullet points
+            fontWeight: '500' // Medium weight for better readability
           }}
           dangerouslySetInnerHTML={{
             __html: formatIngredients(data.ingredients, data.allergens || '')
-              .replace(/\*\*(.*?)\*\*/g, '<span style="background: #fef2f2; color: #dc2626; font-weight: bold; padding: 1px 2px; border-radius: 2px;">$1</span>')
+              .replace(/\*\*(.*?)\*\*/g, '<span style="background: #fef2f2; color: #dc2626; font-weight: bold; padding: 1px 3px; border-radius: 3px;">$1</span>')
           }}
         />
       </div>
