@@ -1,3 +1,341 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Category Design Tokens */
+:root {
+  /* Luxury category gradient backgrounds */
+  --category-breakfast: linear-gradient(135deg, #ff6b35 0%, #ff8f3d 100%);
+  --category-lunch: linear-gradient(135deg, #4a90e2 0%, #5ba3f5 100%);
+  --category-dinner: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  --category-default: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+  
+  /* Category text colors for contrast */
+  --category-text-light: rgba(255, 255, 255, 0.95);
+  --category-text-dark: rgba(0, 0, 0, 0.8);
+  
+  /* Category shadow and glow effects */
+  --category-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --category-glow: 0 0 20px rgba(255, 255, 255, 0.2);
+  --category-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+:root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* Meal prep theme colors */
+    --success: 142 71% 45%;
+    --warning: 25 95% 53%;
+    --info: 221 83% 53%;
+    
+    /* Order status colors */
+    --status-confirmed: 25 95% 53%;
+    --status-confirmed-foreground: 210 40% 98%;
+    --status-completed: 142 71% 45%;
+    --status-completed-foreground: 210 40% 98%;
+    --status-cancelled: 0 84% 60%;
+    --status-cancelled-foreground: 210 40% 98%;
+    --status-pending: 221 83% 53%;
+    --status-pending-foreground: 210 40% 98%;
+    --status-preparing: 39 85% 55%;
+    --status-preparing-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Order status colors - Dark mode */
+    --status-confirmed: 25 95% 53%;
+    --status-confirmed-foreground: 210 40% 98%;
+    --status-completed: 142 71% 45%;
+    --status-completed-foreground: 210 40% 98%;
+    --status-cancelled: 0 84% 60%;
+    --status-cancelled-foreground: 210 40% 98%;
+    --status-pending: 221 83% 53%;
+    --status-pending-foreground: 210 40% 98%;
+    --status-preparing: 39 85% 55%;
+    --status-preparing-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* Typography Scale - Mobile First */
+  h1 {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight tracking-tight;
+  }
+  
+  h2 {
+    @apply text-xl sm:text-2xl lg:text-3xl font-semibold leading-tight tracking-tight;
+  }
+  
+  h3 {
+    @apply text-lg sm:text-xl lg:text-2xl font-semibold leading-snug;
+  }
+  
+  h4 {
+    @apply text-base sm:text-lg font-medium leading-snug;
+  }
+  
+  h5 {
+    @apply text-sm sm:text-base font-medium leading-normal;
+  }
+  
+  h6 {
+    @apply text-sm font-medium leading-normal;
+  }
+  
+  p {
+    @apply text-sm sm:text-base leading-relaxed;
+  }
+  
+  small {
+    @apply text-xs sm:text-sm leading-normal;
+  }
+}
+
+@layer utilities {
+  /* Typography Utilities - Mobile First */
+  .text-display-lg {
+    @apply text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-none tracking-tight;
+  }
+  
+  .text-display-md {
+    @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight tracking-tight;
+  }
+  
+  .text-display-sm {
+    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight tracking-tight;
+  }
+  
+  .text-heading-lg {
+    @apply text-lg sm:text-xl lg:text-2xl font-semibold leading-tight;
+  }
+  
+  .text-heading-md {
+    @apply text-base sm:text-lg lg:text-xl font-semibold leading-tight;
+  }
+  
+  .text-heading-sm {
+    @apply text-sm sm:text-base lg:text-lg font-medium leading-snug;
+  }
+  
+  .text-body-lg {
+    @apply text-base sm:text-lg leading-relaxed;
+  }
+  
+  .text-body-md {
+    @apply text-sm sm:text-base leading-relaxed;
+  }
+  
+  .text-body-sm {
+    @apply text-xs sm:text-sm leading-normal;
+  }
+  
+  .text-caption {
+    @apply text-xs leading-tight;
+  }
+
+  /* Spacing Utilities - Mobile First */
+  .space-mobile {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+  
+  .space-mobile-sm {
+    @apply space-y-2 sm:space-y-3 lg:space-y-4;
+  }
+  
+  .space-mobile-lg {
+    @apply space-y-6 sm:space-y-8 lg:space-y-12;
+  }
+  
+  .gap-mobile {
+    @apply gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  .gap-mobile-sm {
+    @apply gap-2 sm:gap-3 lg:gap-4;
+  }
+  
+  .gap-mobile-lg {
+    @apply gap-4 sm:gap-6 lg:gap-8;
+  }
+  
+  .padding-mobile {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+  
+  .padding-mobile-sm {
+    @apply p-2 sm:p-3 lg:p-4;
+  }
+  
+  .padding-mobile-lg {
+    @apply p-6 sm:p-8 lg:p-12;
+  }
+  
+  .margin-mobile {
+    @apply m-4 sm:m-6 lg:m-8;
+  }
+  
+  .margin-mobile-sm {
+    @apply m-2 sm:m-3 lg:m-4;
+  }
+  
+  .margin-mobile-lg {
+    @apply m-6 sm:m-8 lg:m-12;
+  }
+
+  /* Modern glassmorphism effects */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg;
+  }
+  
+  .glass-card-dark {
+    @apply bg-gray-900/80 backdrop-blur-sm border border-gray-700/20 shadow-lg;
+  }
+  
+  /* Enhanced hover effects */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-xl;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-300 ease-out hover:shadow-lg hover:shadow-primary/25;
+  }
+  
+  /* Status indicators */
+  .status-active {
+    @apply bg-gradient-to-r from-green-400 to-green-600 text-white;
+  }
+  
+  .status-inactive {
+    @apply bg-gradient-to-r from-gray-400 to-gray-600 text-white;
+  }
+  
+  /* Modern gradients */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-primary to-primary/80;
+  }
+  
+  .gradient-success {
+    @apply bg-gradient-to-r from-green-500 to-emerald-600;
+  }
+  
+  .gradient-info {
+    @apply bg-gradient-to-r from-blue-500 to-indigo-600;
+  }
+  
+  /* Button Text Scaling */
+  .btn-text-mobile {
+    @apply text-base sm:text-sm font-medium;
+  }
+  
+  .btn-text-mobile-lg {
+    @apply text-lg sm:text-base font-semibold;
+  }
+}
+
+/* Print-specific styles for label printing */
+@media print {
+  /* Clean page setup */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  /* Show print elements */
+  .print\\:block {
+    display: block !important;
+  }
+}

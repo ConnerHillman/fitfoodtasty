@@ -393,39 +393,6 @@ export type Database = {
         }
         Relationships: []
       }
-      filters: {
-        Row: {
-          category: string | null
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          threshold: Json | null
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          threshold?: Json | null
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          category?: string | null
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          threshold?: Json | null
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       fulfillment_settings: {
         Row: {
           created_at: string
@@ -656,41 +623,6 @@ export type Database = {
           },
           {
             foreignKeyName: "meal_ingredients_meal_id_fkey"
-            columns: ["meal_id"]
-            isOneToOne: false
-            referencedRelation: "meals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      meal_ingredients_allergens: {
-        Row: {
-          allergen_type: string | null
-          created_at: string
-          id: string
-          ingredient: string
-          is_allergen: boolean
-          meal_id: string
-        }
-        Insert: {
-          allergen_type?: string | null
-          created_at?: string
-          id?: string
-          ingredient: string
-          is_allergen?: boolean
-          meal_id: string
-        }
-        Update: {
-          allergen_type?: string | null
-          created_at?: string
-          id?: string
-          ingredient?: string
-          is_allergen?: boolean
-          meal_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meal_ingredients_allergens_meal_id_fkey"
             columns: ["meal_id"]
             isOneToOne: false
             referencedRelation: "meals"

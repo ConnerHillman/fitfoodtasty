@@ -1,6 +1,6 @@
 import React from 'react';
 import { format as formatDate } from 'date-fns';
-import { SingleLabel } from '@/components/shared/SingleLabel';
+import logoImage from '@/assets/fit-food-tasty-logo.png';
 
 interface MealProduction {
   mealId: string;
@@ -19,6 +19,96 @@ interface LabelPrintPreviewProps {
   mealProduction: MealProduction[];
   useByDate?: string;
 }
+
+// Reuse the exact same SingleLabel component from LabelPreview
+const SingleLabel: React.FC<{ 
+  mealName: string;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  ingredients: string;
+  allergens: string;
+  useByDate: string;
+}> = ({ mealName, calories, protein, fat, carbs, ingredients, allergens, useByDate }) => (
+  <div className="w-full h-full bg-card text-card-foreground font-inter" style={{
+    width: '96mm',
+    height: '50.8mm',
+    boxSizing: 'border-box',
+    padding: '6px',
+    display: 'flex',
+    flexDirection: 'column',
+    fontSize: '6px',
+    lineHeight: '1.2',
+    justifyContent: 'space-between'
+  }}>
+    {/* Header Section */}
+    <div className="flex flex-col items-center">
+      {/* Logo */}
+      <div className="mb-2">
+        <img 
+          src={logoImage} 
+          alt="Fit Food Tasty logo"
+          className="h-8 w-auto object-contain"
+        />
+      </div>
+      {/* Meal Name */}
+      <h1 className="text-center font-bold text-foreground leading-tight mb-2" style={{ fontSize: '14px' }}>
+        {mealName}
+      </h1>
+      {/* Separator */}
+      <div className="w-8 h-px bg-primary/30 mb-2" aria-hidden="true"></div>
+    </div>
+
+    {/* Nutrition Section */}
+    <div className="bg-gradient-to-r from-primary/8 to-primary/12 rounded border border-primary/20 px-2 py-1.5 mb-2">
+      <div className="text-center font-bold text-primary leading-tight" style={{ fontSize: '8px' }}>
+        {calories} Calories • {protein}g Protein • {fat}g Fat • {carbs}g Carbs
+      </div>
+    </div>
+
+    {/* Main Content */}
+    <div className="flex-1 space-y-1.5 min-h-0">
+      {/* Use By Date - Most Important */}
+      <div className="bg-muted/50 rounded px-2 py-1">
+        <div className="font-bold text-foreground leading-tight" style={{ fontSize: '7px' }}>
+          USE BY: {useByDate ? new Date(useByDate).toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }) : 'Fri, 19/09/2025'}
+        </div>
+      </div>
+
+      {/* Storage Instructions */}
+      <div className="text-muted-foreground leading-tight" style={{ fontSize: '6px' }}>
+        Store in a refrigerator below 5°c. Heat in a microwave for 3–4 minutes or until piping hot.
+      </div>
+
+      {/* Ingredients */}
+      <div className="leading-tight" style={{ fontSize: '6px' }}>
+        <span className="font-semibold text-foreground">Ingredients:</span>{' '}
+        <span className="text-muted-foreground">{ingredients || 'Not specified'}</span>
+      </div>
+
+      {/* Allergens */}
+      {allergens && (
+        <div className="leading-tight" style={{ fontSize: '6px' }}>
+          <span className="font-semibold text-foreground">Allergens:</span>{' '}
+          <span className="font-bold text-foreground">{allergens}</span>
+        </div>
+      )}
+    </div>
+
+    {/* Footer */}
+    <div className="border-t border-border/30 pt-1 mt-auto">
+      <div className="text-center font-medium text-primary leading-tight" style={{ fontSize: '6px' }}>
+        www.fitfoodtasty.co.uk
+      </div>
+    </div>
+  </div>
+);
 
 export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({ 
   mealProduction, 
@@ -97,12 +187,12 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
               grid-template-columns: repeat(2, 96mm) !important;
               grid-template-rows: repeat(5, 50.8mm) !important;
               column-gap: 5mm !important;
-              row-gap: 5mm !important;
+              row-gap: 4.8mm !important; /* print-only fudge to prevent bottom cut-off */
               width: 210mm !important;
               height: 297mm !important;
               box-sizing: border-box !important;
               align-content: start !important;
-              justify-content: center !important;
+              justify-content: start !important;
             }
           }
           
@@ -121,7 +211,7 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             padding: 11.5mm 6.5mm;
             box-sizing: border-box;
             align-content: start;
-            justify-content: center;
+            justify-content: start;
           }
 
           /* Force exact label dimensions and positioning */
@@ -132,6 +222,9 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
             display: flex !important;
             flex-direction: column !important;
             overflow: hidden !important;
+          }
+          .print-page > div > div > div:last-child {
+            margin-top: auto;
           }
         `
       }} />
@@ -164,21 +257,21 @@ export const LabelPrintPreview: React.FC<LabelPrintPreviewProps> = ({
                   useByDate={useByDate}
                 />
               ) : (
-                  <div style={{ 
-                    width: '96mm', 
-                    height: '50.8mm',
-                    border: '1px dashed #ccc', 
-                    opacity: 0.25,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#999',
-                    fontSize: '10px',
-                    position: 'relative'
-                  }}>
-                    <div style={{position:'absolute', left:'6px', right:'6px', bottom:'6px', borderTop:'1px dashed #ccc', paddingTop: '4px', textAlign:'center'}}>Empty</div>
-                  </div>
-                )}
+                <div style={{ 
+                  width: '96mm', 
+                  height: '50.8mm',
+                  border: '1px dashed #ccc', 
+                  opacity: 0.25,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#999',
+                  fontSize: '10px',
+                  position: 'relative'
+                }}>
+                  <div style={{position:'absolute', left:'6px', right:'6px', bottom:'6px', borderTop:'1px dashed #ccc', paddingTop: '4px', textAlign:'center'}}>Empty</div>
+                </div>
+              )}
             </div>
           ))}
         </div>
