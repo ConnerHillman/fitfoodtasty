@@ -57,8 +57,8 @@ export const BaseLabel: React.FC<BaseLabelProps> = ({ data }) => {
         {/* Critical Information Container */}
         <div className="bg-card/80 rounded-lg border border-border/40 p-2.5 space-y-2">
           {/* Use By Date - Critical safety information */}
-          <div className="bg-destructive/10 rounded-md px-2.5 py-2 border border-destructive/20">
-            <div className="font-bold text-destructive leading-tight text-center" style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.025em' }}>
+          <div className="text-center">
+            <div className="font-bold text-foreground leading-tight" style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.025em' }}>
               USE BY: {data.useByDate ? new Date(data.useByDate).toLocaleDateString('en-GB', {
                 weekday: 'short',
                 day: '2-digit',
