@@ -1,5 +1,6 @@
 import React from 'react';
 import { LabelPrintPreview } from './LabelPrintPreview';
+import { LabelDebugTest } from './LabelDebugTest';
 
 // Test component with sample data
 export const LabelTestPreview: React.FC = () => {
@@ -34,7 +35,7 @@ export const LabelTestPreview: React.FC = () => {
   const testUseByDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   return (
-    <div className="p-4">
+    <div className="p-4 space-y-6">
       <h2 className="text-lg font-bold mb-4">Premium Label Design Test</h2>
       <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-yellow-50 rounded border-2 border-green-200">
         <h3 className="font-semibold mb-2 text-yellow-700 font-playfair">Enhanced Premium Label Test</h3>
@@ -46,6 +47,11 @@ export const LabelTestPreview: React.FC = () => {
           <li>• <strong>Real Data:</strong> Korean Beef Bowl with multiple allergens (Eggs, Milk, Mustard, Soy, Wheat)</li>
         </ul>
       </div>
+      
+      {/* Debug Test Section */}
+      <LabelDebugTest />
+      
+      {/* Print Preview */}
       <LabelPrintPreview 
         mealProduction={testMealProduction} 
         useByDate={testUseByDate}

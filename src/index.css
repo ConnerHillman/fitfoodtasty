@@ -35,14 +35,9 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 142 76% 36%;
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    
-    /* Meal prep theme colors */
-    --success: 142 71% 45%;
-    --warning: 25 95% 53%;
-    --info: 221 83% 53%;
-    
+
     /* Order status colors */
     --status-confirmed: 25 95% 53%;
     --status-confirmed-foreground: 210 40% 98%;
@@ -71,7 +66,7 @@ All colors MUST be HSL.
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -148,194 +143,178 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-
-  /* Typography Scale - Mobile First */
-  h1 {
-    @apply text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight tracking-tight;
-  }
-  
-  h2 {
-    @apply text-xl sm:text-2xl lg:text-3xl font-semibold leading-tight tracking-tight;
-  }
-  
-  h3 {
-    @apply text-lg sm:text-xl lg:text-2xl font-semibold leading-snug;
-  }
-  
-  h4 {
-    @apply text-base sm:text-lg font-medium leading-snug;
-  }
-  
-  h5 {
-    @apply text-sm sm:text-base font-medium leading-normal;
-  }
-  
-  h6 {
-    @apply text-sm font-medium leading-normal;
-  }
-  
-  p {
-    @apply text-sm sm:text-base leading-relaxed;
-  }
-  
-  small {
-    @apply text-xs sm:text-sm leading-normal;
   }
 }
 
-@layer utilities {
-  /* Typography Utilities - Mobile First */
-  .text-display-lg {
-    @apply text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-none tracking-tight;
+/* Enhanced Button Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
   }
-  
-  .text-display-md {
-    @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight tracking-tight;
-  }
-  
-  .text-display-sm {
-    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight tracking-tight;
-  }
-  
-  .text-heading-lg {
-    @apply text-lg sm:text-xl lg:text-2xl font-semibold leading-tight;
-  }
-  
-  .text-heading-md {
-    @apply text-base sm:text-lg lg:text-xl font-semibold leading-tight;
-  }
-  
-  .text-heading-sm {
-    @apply text-sm sm:text-base lg:text-lg font-medium leading-snug;
-  }
-  
-  .text-body-lg {
-    @apply text-base sm:text-lg leading-relaxed;
-  }
-  
-  .text-body-md {
-    @apply text-sm sm:text-base leading-relaxed;
-  }
-  
-  .text-body-sm {
-    @apply text-xs sm:text-sm leading-normal;
-  }
-  
-  .text-caption {
-    @apply text-xs leading-tight;
-  }
-
-  /* Spacing Utilities - Mobile First */
-  .space-mobile {
-    @apply space-y-4 sm:space-y-6 lg:space-y-8;
-  }
-  
-  .space-mobile-sm {
-    @apply space-y-2 sm:space-y-3 lg:space-y-4;
-  }
-  
-  .space-mobile-lg {
-    @apply space-y-6 sm:space-y-8 lg:space-y-12;
-  }
-  
-  .gap-mobile {
-    @apply gap-3 sm:gap-4 lg:gap-6;
-  }
-  
-  .gap-mobile-sm {
-    @apply gap-2 sm:gap-3 lg:gap-4;
-  }
-  
-  .gap-mobile-lg {
-    @apply gap-4 sm:gap-6 lg:gap-8;
-  }
-  
-  .padding-mobile {
-    @apply p-4 sm:p-6 lg:p-8;
-  }
-  
-  .padding-mobile-sm {
-    @apply p-2 sm:p-3 lg:p-4;
-  }
-  
-  .padding-mobile-lg {
-    @apply p-6 sm:p-8 lg:p-12;
-  }
-  
-  .margin-mobile {
-    @apply m-4 sm:m-6 lg:m-8;
-  }
-  
-  .margin-mobile-sm {
-    @apply m-2 sm:m-3 lg:m-4;
-  }
-  
-  .margin-mobile-lg {
-    @apply m-6 sm:m-8 lg:m-12;
-  }
-
-  /* Modern glassmorphism effects */
-  .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg;
-  }
-  
-  .glass-card-dark {
-    @apply bg-gray-900/80 backdrop-blur-sm border border-gray-700/20 shadow-lg;
-  }
-  
-  /* Enhanced hover effects */
-  .hover-lift {
-    @apply transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-xl;
-  }
-  
-  .hover-glow {
-    @apply transition-all duration-300 ease-out hover:shadow-lg hover:shadow-primary/25;
-  }
-  
-  /* Status indicators */
-  .status-active {
-    @apply bg-gradient-to-r from-green-400 to-green-600 text-white;
-  }
-  
-  .status-inactive {
-    @apply bg-gradient-to-r from-gray-400 to-gray-600 text-white;
-  }
-  
-  /* Modern gradients */
-  .gradient-primary {
-    @apply bg-gradient-to-r from-primary to-primary/80;
-  }
-  
-  .gradient-success {
-    @apply bg-gradient-to-r from-green-500 to-emerald-600;
-  }
-  
-  .gradient-info {
-    @apply bg-gradient-to-r from-blue-500 to-indigo-600;
-  }
-  
-  /* Button Text Scaling */
-  .btn-text-mobile {
-    @apply text-base sm:text-sm font-medium;
-  }
-  
-  .btn-text-mobile-lg {
-    @apply text-lg sm:text-base font-semibold;
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
   }
 }
 
-/* Print-specific styles for label printing */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Luxury Category Styles */
+.category-breakfast {
+  background: var(--category-breakfast);
+  color: var(--category-text-light);
+  box-shadow: var(--category-shadow);
+}
+
+.category-lunch {
+  background: var(--category-lunch);
+  color: var(--category-text-light);
+  box-shadow: var(--category-shadow);
+}
+
+.category-dinner {
+  background: var(--category-dinner);
+  color: var(--category-text-light);
+  box-shadow: var(--category-shadow);
+}
+
+.category-default {
+  background: var(--category-default);
+  color: var(--category-text-light);
+  box-shadow: var(--category-shadow);
+}
+
+/* Category hover effects */
+.category-breakfast:hover,
+.category-lunch:hover,
+.category-dinner:hover,
+.category-default:hover {
+  box-shadow: var(--category-hover-shadow);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Luxury Gradient Backgrounds for Premium Feel */
+.gradient-luxury {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)) 0%, 
+    hsl(var(--accent)) 50%, 
+    hsl(var(--muted)) 100%);
+}
+
+.gradient-premium {
+  background: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 100%);
+}
+
+/* Hero Section Enhancements */
+.hero-text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Meal Card Enhancements */
+.meal-card-luxury {
+  background: linear-gradient(145deg, 
+    hsl(var(--card)) 0%, 
+    hsl(var(--muted)) 100%);
+  border: 1px solid hsl(var(--border));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.meal-card-luxury:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Premium Form Styling */
+.form-luxury {
+  background: linear-gradient(135deg, 
+    hsl(var(--background)) 0%, 
+    hsl(var(--muted)) 100%);
+  border: 1px solid hsl(var(--border));
+  backdrop-filter: blur(10px);
+}
+
+/* Enhanced Scrollbar for Premium Feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)) 0%, 
+    hsl(var(--accent)) 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, 
+    hsl(var(--accent)) 0%, 
+    hsl(var(--primary)) 100%);
+}
+
+/* Toast Enhancements */
+.toast-luxury {
+  background: linear-gradient(135deg, 
+    hsl(var(--background)) 0%, 
+    hsl(var(--muted)) 100%);
+  border: 1px solid hsl(var(--border));
+  backdrop-filter: blur(15px);
+}
+
+/* Print Optimizations */
 @media print {
-  /* Clean page setup */
-  @page {
-    size: A4;
-    margin: 0;
+  .no-print {
+    display: none !important;
   }
   
-  /* Show print elements */
-  .print\\:block {
-    display: block !important;
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
+}
+
+/* Premium Status Badge Colors */
+.status-confirmed {
+  background: hsl(var(--status-confirmed));
+  color: hsl(var(--status-confirmed-foreground));
+}
+
+.status-completed {
+  background: hsl(var(--status-completed));
+  color: hsl(var(--status-completed-foreground));
+}
+
+.status-cancelled {
+  background: hsl(var(--status-cancelled));
+  color: hsl(var(--status-cancelled-foreground));
+}
+
+.status-pending {
+  background: hsl(var(--status-pending));
+  color: hsl(var(--status-pending-foreground));
+}
+
+.status-preparing {
+  background: hsl(var(--status-preparing));
+  color: hsl(var(--status-preparing-foreground));
 }
