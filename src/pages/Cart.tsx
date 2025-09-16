@@ -144,7 +144,10 @@ const Cart = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('validate-coupon', {
-        body: { coupon_code: discounts.couponCode.trim() }
+        body: { 
+          code: discounts.couponCode.trim(),
+          cart_total: subtotal
+        }
       });
 
       if (error) throw error;
@@ -434,6 +437,7 @@ const Cart = () => {
             appliedGiftCard={discounts.appliedGiftCard}
             onAppliedGiftCardChange={discounts.setAppliedGiftCard}
             checkExpiryWarning={discounts.checkExpiryWarning}
+            cartTotal={subtotal}
           />
         </div>
 

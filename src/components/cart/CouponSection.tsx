@@ -23,6 +23,7 @@ interface CouponSectionProps {
   appliedGiftCard: any;
   onAppliedGiftCardChange: (giftCard: any) => void;
   checkExpiryWarning: (coupon: any) => void;
+  cartTotal?: number;
 }
 
 const CouponSection: React.FC<CouponSectionProps> = ({
@@ -39,6 +40,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
   appliedGiftCard,
   onAppliedGiftCardChange,
   checkExpiryWarning,
+  cartTotal = 0,
 }) => {
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -51,7 +53,10 @@ const CouponSection: React.FC<CouponSectionProps> = ({
 
     try {
       const { data, error } = await supabase.functions.invoke('validate-coupon', {
-        body: { coupon_code: couponCode.trim() }
+        body: { 
+          code: couponCode.trim(),
+          cart_total: cartTotal
+        }
       });
 
       if (error) throw error;
