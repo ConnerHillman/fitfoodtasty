@@ -15,7 +15,6 @@ import type { StatCardData, ColumnDef, ActionItem } from '@/components/common';
 
 import CustomerLink from "@/components/admin/CustomerLink";
 import OrderLink from "@/components/admin/OrderLink";
-import CustomerDetailModal from "@/components/admin/CustomerDetailModal";
 import { AdjustOrderModal } from "@/components/admin/orders/AdjustOrderModal";
 import { VoidOrderDialog } from "@/components/admin/orders/VoidOrderDialog";
 import { RefundOrderDialog } from "@/components/admin/orders/RefundOrderDialog";
@@ -457,8 +456,6 @@ const AllOrders: React.FC = () => {
         order={selectedOrder}
       />
 
-      {/* Customer Detail Modal */}
-      <CustomerDetailModal />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Mail, Phone, MapPin, Calendar } from "lucide-react";
-import { formatLongDate } from "@/lib/utils";
+import { formatLongDate, safeParseDate } from "@/lib/utils";
 
 interface CustomerProfile {
   id: string;
@@ -61,9 +61,8 @@ export const CustomerContactInfo = ({ customer, email }: CustomerContactInfoProp
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
                 <div className="font-medium">
-                  {formatLongDate(customer.created_at)}
+                  {safeParseDate(customer.created_at) ? formatLongDate(customer.created_at) : "—"}
                 </div>
-                <div className="text-sm text-muted-foreground">Customer Since</div>
               </div>
             </div>
           </div>

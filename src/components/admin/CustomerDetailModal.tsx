@@ -286,7 +286,9 @@ const CustomerDetailModal = () => {
             <div>
               <DialogTitle className="text-2xl">{customer.full_name}</DialogTitle>
               <DialogDescription>
-                Customer since {format(new Date(customer.created_at), "MMMM dd, yyyy")}
+                {customer.created_at && !isNaN(new Date(customer.created_at).getTime())
+                  ? `Customer since ${format(new Date(customer.created_at), "MMMM dd, yyyy")}`
+                  : "Customer since —"}
               </DialogDescription>
             </div>
             <div className="flex items-center gap-2">
