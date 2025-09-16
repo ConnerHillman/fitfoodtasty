@@ -1534,29 +1534,30 @@ const Cart = () => {
                 </div>
               )}
 
-              {/* Gift Card Input Section */}
-              {requestedDeliveryDate && (
-                <div className="mt-4 mb-4">
-                  <GiftCardInput
-                    onGiftCardApplied={(giftCardData) => {
-                      setAppliedGiftCard(giftCardData);
-                      toast({
-                        title: "Gift Card Applied!",
-                        description: `Applied £${giftCardData.amount_used} from gift card ${giftCardData.code}`,
-                      });
-                    }}
-                    onGiftCardRemoved={() => {
-                      setAppliedGiftCard(null);
-                      toast({
-                        title: "Gift Card Removed",
-                        description: "Gift card has been removed from your order.",
-                      });
-                    }}
-                    appliedGiftCard={appliedGiftCard}
-                    totalAmount={getDiscountedTotal()}
-                  />
-                </div>
-              )}
+              {/* Discounts & Gift Cards Section - Always visible */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold text-lg">Discounts & Gift Cards</h3>
+                
+                {/* Gift Card Input - Always visible */}
+                <GiftCardInput
+                  onGiftCardApplied={(giftCardData) => {
+                    setAppliedGiftCard(giftCardData);
+                    toast({
+                      title: "Gift Card Applied!",
+                      description: `Applied £${giftCardData.amount_used} from gift card ${giftCardData.code}`,
+                    });
+                  }}
+                  onGiftCardRemoved={() => {
+                    setAppliedGiftCard(null);
+                    toast({
+                      title: "Gift Card Removed",
+                      description: "Gift card has been removed from your order.",
+                    });
+                  }}
+                  appliedGiftCard={appliedGiftCard}
+                  totalAmount={getDiscountedTotal()}
+                />
+              </div>
 
               {/* Free Order Button for 100% off coupons */}
               {requestedDeliveryDate && user && isCoupon100PercentOff() && (
