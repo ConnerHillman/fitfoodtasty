@@ -1207,68 +1207,66 @@ const Cart = () => {
               </div>
 
               {/* Coupon Input Section */}
-              {requestedDeliveryDate && (
-                <div className="mt-4 mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-3">Have a coupon code?</h4>
-                  <div className="flex flex-col lg:flex-row gap-3">
-                    <Input
-                      type="text"
-                      placeholder="Enter coupon code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 h-12"
-                      disabled={couponApplied}
-                    />
-                    <Button
-                      variant="outline"
-                      className="h-12 lg:w-auto w-full px-6"
-                      onClick={applyCoupon}
-                      disabled={couponApplied || !couponCode.trim()}
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                  {couponMessage && (
-                    <div className={`mt-3 text-sm ${
-                      couponApplied 
-                        ? "text-green-600 font-medium" 
-                        : "text-red-600"
-                     }`}>
-                       {couponMessage}
-                       {getExpiryWarning() && (
-                         <div className="mt-2 text-amber-600 font-medium text-xs bg-amber-50 border border-amber-200 rounded px-2 py-1">
-                           {getExpiryWarning()}
-                         </div>
-                       )}
-                       {couponApplied && (
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           className="ml-2 h-8"
-                          onClick={() => {
-                            // Remove free item from cart if it was added
-                            if (appliedCoupon?.free_item_id && freeItemAdded) {
-                              const freeItemId = `free-${appliedCoupon.free_item_id}`;
-                              removeFromCart(freeItemId);
-                            }
-                            
-                            setCouponApplied(false);
-                            setAppliedCoupon(null);
-                            setCouponMessage("");
-                            setFreeItemAdded(false);
-                            toast({
-                              title: "Coupon Removed",
-                              description: "Coupon has been removed from your order.",
-                            });
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  )}
+              <div className="mt-4 mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Have a coupon code?</h4>
+                <div className="flex flex-col lg:flex-row gap-3">
+                  <Input
+                    type="text"
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="flex-1 h-12"
+                    disabled={couponApplied}
+                  />
+                  <Button
+                    variant="outline"
+                    className="h-12 lg:w-auto w-full px-6"
+                    onClick={applyCoupon}
+                    disabled={couponApplied || !couponCode.trim()}
+                  >
+                    Apply
+                  </Button>
                 </div>
-              )}
+                {couponMessage && (
+                  <div className={`mt-3 text-sm ${
+                    couponApplied 
+                      ? "text-green-600 font-medium" 
+                      : "text-red-600"
+                   }`}>
+                     {couponMessage}
+                     {getExpiryWarning() && (
+                       <div className="mt-2 text-amber-600 font-medium text-xs bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                         {getExpiryWarning()}
+                       </div>
+                     )}
+                     {couponApplied && (
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="ml-2 h-8"
+                        onClick={() => {
+                          // Remove free item from cart if it was added
+                          if (appliedCoupon?.free_item_id && freeItemAdded) {
+                            const freeItemId = `free-${appliedCoupon.free_item_id}`;
+                            removeFromCart(freeItemId);
+                          }
+                          
+                          setCouponApplied(false);
+                          setAppliedCoupon(null);
+                          setCouponMessage("");
+                          setFreeItemAdded(false);
+                          toast({
+                            title: "Coupon Removed",
+                            description: "Coupon has been removed from your order.",
+                          });
+                        }}
+                      >
+                        Remove
+                      </Button>
+                     )}
+                  </div>
+                )}
+              </div>
 
               {/* Gift Card Input Section */}
               <div className="mt-4 mb-4">
@@ -1489,68 +1487,66 @@ const Cart = () => {
               </div>
 
               {/* Coupon Input Section */}
-              {requestedDeliveryDate && (
-                <div className="mt-4 mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-3">Have a coupon code?</h4>
-                  <div className="flex flex-col lg:flex-row gap-3">
-                    <Input
-                      type="text"
-                      placeholder="Enter coupon code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 h-12"
-                      disabled={couponApplied}
-                    />
-                    <Button
-                      variant="outline"
-                      className="h-12 lg:w-auto w-full px-6"
-                      onClick={applyCoupon}
-                      disabled={couponApplied || !couponCode.trim()}
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                  {couponMessage && (
-                    <div className={`mt-3 text-sm ${
-                      couponApplied 
-                        ? "text-green-600 font-medium" 
-                        : "text-red-600"
-                     }`}>
-                       {couponMessage}
-                       {getExpiryWarning() && (
-                         <div className="mt-2 text-amber-600 font-medium text-xs bg-amber-50 border border-amber-200 rounded px-2 py-1">
-                           {getExpiryWarning()}
-                         </div>
-                       )}
-                       {couponApplied && (
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           className="ml-2 h-8"
-                          onClick={() => {
-                            // Remove free item from cart if it was added
-                            if (appliedCoupon?.free_item_id && freeItemAdded) {
-                              const freeItemId = `free-${appliedCoupon.free_item_id}`;
-                              removeFromCart(freeItemId);
-                            }
-                            
-                            setCouponApplied(false);
-                            setAppliedCoupon(null);
-                            setCouponMessage("");
-                            setFreeItemAdded(false);
-                            toast({
-                              title: "Coupon Removed",
-                              description: "Coupon has been removed from your order.",
-                            });
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  )}
+              <div className="mt-4 mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Have a coupon code?</h4>
+                <div className="flex flex-col lg:flex-row gap-3">
+                  <Input
+                    type="text"
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="flex-1 h-12"
+                    disabled={couponApplied}
+                  />
+                  <Button
+                    variant="outline"
+                    className="h-12 lg:w-auto w-full px-6"
+                    onClick={applyCoupon}
+                    disabled={couponApplied || !couponCode.trim()}
+                  >
+                    Apply
+                  </Button>
                 </div>
-              )}
+                {couponMessage && (
+                  <div className={`mt-3 text-sm ${
+                    couponApplied 
+                      ? "text-green-600 font-medium" 
+                      : "text-red-600"
+                   }`}>
+                     {couponMessage}
+                     {getExpiryWarning() && (
+                       <div className="mt-2 text-amber-600 font-medium text-xs bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                         {getExpiryWarning()}
+                       </div>
+                     )}
+                     {couponApplied && (
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="ml-2 h-8"
+                        onClick={() => {
+                          // Remove free item from cart if it was added
+                          if (appliedCoupon?.free_item_id && freeItemAdded) {
+                            const freeItemId = `free-${appliedCoupon.free_item_id}`;
+                            removeFromCart(freeItemId);
+                          }
+                          
+                          setCouponApplied(false);
+                          setAppliedCoupon(null);
+                          setCouponMessage("");
+                          setFreeItemAdded(false);
+                          toast({
+                            title: "Coupon Removed",
+                            description: "Coupon has been removed from your order.",
+                          });
+                        }}
+                      >
+                        Remove
+                      </Button>
+                     )}
+                  </div>
+                )}
+               </div>
 
               {/* Gift Card Input Section */}
               <div className="mt-4 mb-4">
