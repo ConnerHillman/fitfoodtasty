@@ -1199,7 +1199,7 @@ const Cart = () => {
                       {requestedDeliveryDate ? (
                         format(new Date(requestedDeliveryDate), "PPP")
                       ) : (
-                        <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
+                        <span className="font-bold">Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
                       )}
                      </Button>
                   </PopoverTrigger>
@@ -1479,7 +1479,7 @@ const Cart = () => {
                     {requestedDeliveryDate ? (
                       format(new Date(requestedDeliveryDate), "PPP")
                     ) : (
-                      <span>Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
+                      <span className="font-bold">Pick a {deliveryMethod === "delivery" ? "delivery" : "collection"} date</span>
                     )}
                   </Button>
                   </PopoverTrigger>
