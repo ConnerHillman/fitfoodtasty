@@ -8,53 +8,60 @@ export const filterIngredientsByViewMode = (
   ingredients: IngredientLineItem[],
   viewMode: IngredientViewMode
 ): IngredientLineItem[] => {
-  switch (viewMode) {
-    case 'production':
-      // Hide small quantities (< 5g/ml) that don't need precise weighing
-      return ingredients.filter(ingredient => {
-        const conversion = convertToBaseUnit(ingredient.totalQuantity, ingredient.unit);
-        const category = getUnitCategory(ingredient.unit);
-        
-        // For weight/volume, convert to base unit (grams/ml) for comparison
-        if (category === 'weight' || category === 'volume') {
-          // Convert to grams or ml for threshold comparison
-          const baseQuantity = ingredient.totalQuantity * (
-            category === 'weight' ? 
-              (ingredient.unit.toLowerCase() === 'kg' ? 1000 : ingredient.unit.toLowerCase() === 'lb' ? 453.592 : ingredient.unit.toLowerCase() === 'oz' ? 28.3495 : 1) :
-              (ingredient.unit.toLowerCase() === 'l' ? 1000 : ingredient.unit.toLowerCase() === 'fl oz' ? 29.5735 : ingredient.unit.toLowerCase() === 'cup' ? 236.588 : 1)
-          );
-          return baseQuantity >= 5;
-        }
-        
-        // For count units, use original threshold
-        return ingredient.totalQuantity >= 5;
-      });
-    
-    case 'major':
-      // Show only bulk ingredients (≥ 25g/ml) that need careful weighing
-      return ingredients.filter(ingredient => {
-        const category = getUnitCategory(ingredient.unit);
-        
-        // For weight/volume, convert to base unit (grams/ml) for comparison
-        if (category === 'weight' || category === 'volume') {
-          // Convert to grams or ml for threshold comparison
-          const baseQuantity = ingredient.totalQuantity * (
-            category === 'weight' ? 
-              (ingredient.unit.toLowerCase() === 'kg' ? 1000 : ingredient.unit.toLowerCase() === 'lb' ? 453.592 : ingredient.unit.toLowerCase() === 'oz' ? 28.3495 : 1) :
-              (ingredient.unit.toLowerCase() === 'l' ? 1000 : ingredient.unit.toLowerCase() === 'fl oz' ? 29.5735 : ingredient.unit.toLowerCase() === 'cup' ? 236.588 : 1)
-          );
-          return baseQuantity >= 25;
-        }
-        
-        // For count units, use original threshold
-        return ingredient.totalQuantity >= 25;
-      });
-    
-    case 'complete':
-    default:
-      // Show all ingredients for verification/allergen checking
-      return ingredients;
-  }
+  // Convert any ingredient to a normalized comparison value in grams/ml (or raw count)
+  const toComparable = (item: IngredientLineItem): number => {
+    const category = getUnitCategory(item.unit);
+
+    if (category === 'weight') {
+      // Item.totalQuantity is a display value in either g or kg. Normalize to grams for comparison
+      const unit = item.unit.toLowerCase().trim();
+      return unit === 'kg' ? item.totalQuantity * 1000
+        : unit === 'lb' ? item.totalQuantity * 453.592
+        : unit === 'oz' ? item.totalQuantity * 28.3495
+        : item.totalQuantity; // assume grams
+    }
+
+    if (category === 'volume') {
+      const unit = item.unit.toLowerCase().trim();
+      return unit === 'l' ? item.totalQuantity * 1000
+        : unit === 'fl oz' ? item.totalQuantity * 29.5735
+        : unit === 'cup' ? item.totalQuantity * 236.588
+        : unit === 'pint' ? item.totalQuantity * 473.176
+        : unit === 'quart' ? item.totalQuantity * 946.353
+        : unit === 'gallon' ? item.totalQuantity * 3785.41
+        : item.totalQuantity; // assume ml
+    }
+
+    // count/other: use as-is
+    return item.totalQuantity;
+  };
+
+  const threshold = viewMode === 'major' ? 25 : viewMode === 'production' ? 5 : 0;
+
+  if (threshold === 0) return ingredients;
+
+  const filtered = ingredients.filter((ingredient) => {
+    const comparable = toComparable(ingredient);
+    const keep = comparable >= threshold;
+
+    // Debugging: log suspicious drops where unit is weight/volume but large human value is filtered out
+    if (!keep) {
+      const cat = getUnitCategory(ingredient.unit);
+      if ((cat === 'weight' || cat === 'volume') && ingredient.totalQuantity >= 10) {
+        console.warn('[IngredientFilter] Dropped by threshold', {
+          name: ingredient.ingredientName,
+          displayed: `${ingredient.totalQuantity}${ingredient.unit}`,
+          comparable,
+          threshold,
+          category: cat,
+        });
+      }
+    }
+
+    return keep;
+  });
+
+  return filtered;
 };
 
 /**
