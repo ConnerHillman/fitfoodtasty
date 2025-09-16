@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PaymentElement,
   useStripe,
@@ -20,13 +20,17 @@ interface PaymentFormProps {
   totalAmount: number;
   deliveryMethod: string;
   requestedDeliveryDate: string;
+  orderNotes?: string;
+  onOrderNotesChange?: (notes: string) => void;
 }
 
 export default function PaymentForm({ 
   clientSecret, 
   totalAmount, 
   deliveryMethod, 
-  requestedDeliveryDate 
+  requestedDeliveryDate,
+  orderNotes: externalOrderNotes,
+  onOrderNotesChange: externalOnOrderNotesChange
 }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -34,8 +38,23 @@ export default function PaymentForm({
   const { clearCart } = useCart();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [orderNotes, setOrderNotes] = useState("");
+  const [orderNotes, setOrderNotes] = useState(externalOrderNotes || "");
   const [saveCard, setSaveCard] = useState(true);
+
+  // Update local state when external prop changes
+  useEffect(() => {
+    if (externalOrderNotes !== undefined) {
+      setOrderNotes(externalOrderNotes);
+    }
+  }, [externalOrderNotes]);
+
+  // Handle order notes change
+  const handleOrderNotesChange = (notes: string) => {
+    setOrderNotes(notes);
+    if (externalOnOrderNotesChange) {
+      externalOnOrderNotesChange(notes);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -67,7 +86,10 @@ export default function PaymentForm({
         const paymentIntentId = clientSecret.split('_secret_')[0];
         
         const { data, error } = await supabase.functions.invoke('create-order-from-payment', {
-          body: { payment_intent_id: paymentIntentId }
+          body: { 
+            payment_intent_id: paymentIntentId,
+            order_notes: orderNotes.trim() || null
+          }
         });
 
         if (error) throw error;
@@ -176,7 +198,7 @@ export default function PaymentForm({
           <Textarea
             placeholder="Type Order Notes here."
             value={orderNotes}
-            onChange={(e) => setOrderNotes(e.target.value)}
+            onChange={(e) => handleOrderNotesChange(e.target.value)}
             className="min-h-[100px] resize-none"
           />
         </CardContent>

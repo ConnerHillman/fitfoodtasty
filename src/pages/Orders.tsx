@@ -264,9 +264,6 @@ const Orders = () => {
           variant: "success" as any,
         });
         navigate("/cart");
-        setTimeout(() => {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }, 100);
       }
     } else {
       toast({
@@ -356,9 +353,6 @@ const Orders = () => {
           variant: "success" as any,
         });
         navigate("/cart");
-        setTimeout(() => {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }, 100);
       }
     } else {
       toast({
