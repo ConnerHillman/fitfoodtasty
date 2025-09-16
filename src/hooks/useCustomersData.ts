@@ -24,32 +24,56 @@ export const useCustomersData = () => {
 
       if (profilesError) throw profilesError;
 
-      // Get order statistics for each customer
+      // Get all profile user IDs for batch order fetching
+      const profileUserIds = profiles?.map(p => p.user_id) || [];
+      
+      // Batch fetch orders and package orders for all profiles
+      const [ordersResult, packageOrdersResult] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("*")
+          .in("user_id", profileUserIds),
+        supabase
+          .from("package_orders")
+          .select("*")
+          .in("user_id", profileUserIds)
+      ]);
+
+      if (ordersResult.error || packageOrdersResult.error) {
+        throw ordersResult.error || packageOrdersResult.error;
+      }
+
+      // Group orders by user_id for efficient lookup
+      const ordersByUser = (ordersResult.data || []).reduce((acc, order) => {
+        const userId = order.user_id;
+        if (!acc[userId]) acc[userId] = [];
+        acc[userId].push(order);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      const packageOrdersByUser = (packageOrdersResult.data || []).reduce((acc, order) => {
+        const userId = order.user_id;
+        if (!acc[userId]) acc[userId] = [];
+        acc[userId].push(order);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      // Build customer data with email from first order if available
       const customerData: Customer[] = [];
 
       for (const profile of profiles || []) {
-        // Get regular orders
-        const { data: orders, error: ordersError } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", profile.user_id.toString());
-
-        // Get package orders
-        const { data: packageOrders, error: packageOrdersError } = await supabase
-          .from("package_orders")
-          .select("*")
-          .eq("user_id", profile.user_id.toString());
-
-        if (ordersError || packageOrdersError) {
-          console.error("Error fetching orders:", ordersError || packageOrdersError);
-          continue;
-        }
-
-        const allOrders = [...(orders || []), ...(packageOrders || [])];
+        const orders = ordersByUser[profile.user_id] || [];
+        const packageOrders = packageOrdersByUser[profile.user_id] || [];
+        const allOrders = [...orders, ...packageOrders];
+        
         const totalSpent = allOrders.reduce((sum, order) => sum + parseFloat(String(order.total_amount || 0)), 0);
         const lastOrderDate = allOrders.length > 0 
           ? allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
           : undefined;
+
+        // Get email from first order if available
+        const firstOrderWithEmail = allOrders.find(order => order.customer_email);
+        const customerEmail = firstOrderWithEmail?.customer_email;
 
         customerData.push({
           id: profile.id,
@@ -60,7 +84,7 @@ export const useCustomersData = () => {
           city: profile.city || '',
           postal_code: profile.postal_code || '',
           county: profile.county || '',
-          email: undefined, // Can't access auth.users directly
+          email: customerEmail,
           created_at: profile.created_at,
           total_orders: allOrders.length,
           total_spent: totalSpent,

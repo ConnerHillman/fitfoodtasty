@@ -6,9 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useCustomersData } from "@/hooks/useCustomersData";
 import { useFilteredCustomers } from "@/hooks/useFilteredCustomers";
 import { GenericDataTable } from "@/components/common/GenericDataTable";
-import { GenericFiltersBar } from "@/components/common/GenericFiltersBar";
 import { StatsCardsGrid } from "@/components/common/StatsCards";
 import { GenericModal } from "@/components/common/GenericModal";
+import { CustomerFiltersBar } from "./customers/CustomerFiltersBar";
+import { CustomerCardView } from "./customers/CustomerCardView";
 import AddCustomerDialog from "./AddCustomerDialog";
 
 import type { CustomerFilters } from "@/types/customer";
@@ -85,13 +86,13 @@ const CustomersManager = () => {
 
   const tableColumns = [
     {
-      key: "display_name",
+      key: "full_name",
       header: "Name",
       sortable: true,
       cell: (value: any, customer: any) => (
         <div>
-          <div className="font-medium">{customer.display_name}</div>
-          <div className="text-sm text-muted-foreground">{customer.user_email}</div>
+          <div className="font-medium">{customer.full_name}</div>
+          <div className="text-sm text-muted-foreground">{customer.email || 'No email'}</div>
         </div>
       ),
     },
@@ -122,11 +123,6 @@ const CustomersManager = () => {
     },
   ];
 
-  const filterOptions = [
-    { value: "all", label: "All Customers" },
-    { value: "active", label: "Active" },
-    { value: "new", label: "New This Month" },
-  ];
 
   if (loading) {
     return (
@@ -160,46 +156,48 @@ const CustomersManager = () => {
       {/* Stats Cards */}
       <StatsCardsGrid stats={statsData} />
 
-      {/* Filters and Table */}
-      <GenericFiltersBar
+      {/* Filters */}
+      <CustomerFiltersBar
         filters={filters}
         onFiltersChange={handleFiltersChange}
         totalCount={customers.length}
         filteredCount={filteredCustomers.length}
-        entityName="customer"
-        entityNamePlural="customers"
-        customFilters={filterOptions}
-        customFilterValue={filters.filterBy}
-        onCustomFilterChange={(value) => handleFiltersChange({ filterBy: value })}
-        exportLabel="Export Customers"
         onExport={handleExport}
       />
 
-      <GenericDataTable
-        data={filteredCustomers}
-        columns={tableColumns}
-        actions={customerActions}
-        loading={loading}
-        emptyMessage="No customers found matching your filters."
-      />
+      {/* Data Display */}
+      {filters.viewMode === "card" ? (
+        <CustomerCardView
+          customers={filteredCustomers}
+          getCustomerValue={getCustomerValue}
+        />
+      ) : (
+        <GenericDataTable
+          data={filteredCustomers}
+          columns={tableColumns}
+          actions={customerActions}
+          loading={loading}
+          emptyMessage="No customers found matching your filters."
+        />
+      )}
 
       {/* Customer Detail Modal */}
       {selectedCustomer && (
         <GenericModal
           open={!!selectedCustomer}
           onOpenChange={(open) => !open && setSelectedCustomer(null)}
-          title={`Customer Details: ${selectedCustomer.display_name}`}
+          title={`Customer Details: ${selectedCustomer.full_name}`}
           size="lg"
         >
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Name</label>
-                <p className="text-sm text-muted-foreground">{selectedCustomer.display_name}</p>
+                <p className="text-sm text-muted-foreground">{selectedCustomer.full_name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium">Email</label>
-                <p className="text-sm text-muted-foreground">{selectedCustomer.user_email}</p>
+                <p className="text-sm text-muted-foreground">{selectedCustomer.email || 'No email'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium">Total Orders</label>
