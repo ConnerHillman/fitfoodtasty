@@ -130,13 +130,19 @@ export const useCustomersData = () => {
   };
 
   const getCustomerStats = (customers: Customer[]) => {
+    const customersWithOrders = customers.filter(c => c.total_orders > 0);
+    const totalRevenue = customers.reduce((sum, c) => sum + c.total_spent, 0);
+    
+    // Fix: Calculate average order value correctly
+    const averageOrderValue = customersWithOrders.length > 0 
+      ? totalRevenue / customersWithOrders.length 
+      : 0;
+
     const stats = {
       total: customers.length,
-      withOrders: customers.filter(c => c.total_orders > 0).length,
-      totalRevenue: customers.reduce((sum, c) => sum + c.total_spent, 0),
-      averageOrderValue: customers.length > 0 
-        ? customers.reduce((sum, c) => sum + c.total_spent, 0) / customers.filter(c => c.total_orders > 0).length 
-        : 0,
+      withOrders: customersWithOrders.length,
+      totalRevenue,
+      averageOrderValue,
       activeCustomers: customers.filter(c => c.last_order_date && 
         new Date(c.last_order_date) > subDays(new Date(), 30)).length
     };

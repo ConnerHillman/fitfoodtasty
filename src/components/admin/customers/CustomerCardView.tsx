@@ -21,11 +21,11 @@ export function CustomerCardView({ customers, getCustomerValue }: CustomerCardVi
           key={customer.id}
           role="button"
           tabIndex={0}
-          onClick={() => openCustomerDetail(customer.user_id || customer.id)}
+          onClick={() => openCustomerDetail(customer)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              openCustomerDetail(customer.user_id || customer.id);
+              openCustomerDetail(customer);
             }
           }}
           className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card via-card/95 to-card/90 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
@@ -45,6 +45,7 @@ export function CustomerCardView({ customers, getCustomerValue }: CustomerCardVi
             <CustomerLink
               customerId={customer.user_id}
               customerName={customer.full_name}
+              customerData={customer}
               variant="ghost"
               className="text-xl font-bold text-foreground hover:text-primary transition-colors duration-200 p-0 h-auto justify-start w-full"
             />

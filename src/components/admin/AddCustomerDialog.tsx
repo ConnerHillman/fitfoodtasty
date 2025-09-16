@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { validateCustomerData } from "@/lib/customerValidation";
 import { UserPlus, User, Phone, MapPin, Mail } from "lucide-react";
 
 interface AddCustomerDialogProps {
@@ -57,30 +58,23 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
   };
 
   const validateForm = (): boolean => {
-    if (!formData.full_name.trim()) {
+    const validationResult = validateCustomerData({
+      full_name: formData.full_name,
+      email: formData.email,
+      phone: formData.phone,
+      delivery_address: formData.delivery_address,
+      city: formData.city,
+      postal_code: formData.postal_code,
+      county: formData.county,
+      delivery_instructions: formData.delivery_instructions,
+    });
+
+    if (!validationResult.isValid) {
+      // Show the first validation error
+      const firstError = validationResult.errors[0];
       toast({
         title: "Validation Error",
-        description: "Full name is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!formData.email.trim()) {
-      toast({
-        title: "Validation Error", 
-        description: "Email is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a valid email address",
+        description: firstError.message,
         variant: "destructive",
       });
       return false;
@@ -96,21 +90,31 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
 
     setLoading(true);
     try {
+      // Validate and sanitize data
+      const validationResult = validateCustomerData({
+        full_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        delivery_address: formData.delivery_address,
+        city: formData.city,
+        postal_code: formData.postal_code,
+        county: formData.county,
+        delivery_instructions: formData.delivery_instructions,
+      });
+
+      if (!validationResult.isValid || !validationResult.sanitizedData) {
+        return; // validateForm should have already shown the error
+      }
+
+      const sanitizedData = validationResult.sanitizedData;
+
       // First, create an auth user with email and a temporary password
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: sanitizedData.email,
         password: Math.random().toString(36).slice(-12), // Generate random password
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: formData.full_name,
-            phone: formData.phone,
-            delivery_address: formData.delivery_address,
-            delivery_instructions: formData.delivery_instructions,
-            city: formData.city,
-            postal_code: formData.postal_code,
-            county: formData.county,
-          }
+          data: sanitizedData
         }
       });
 
@@ -136,13 +140,13 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
         .from('profiles')
         .upsert({
           user_id: authData.user.id,
-          full_name: formData.full_name,
-          phone: formData.phone || null,
-          delivery_address: formData.delivery_address || null,
-          delivery_instructions: formData.delivery_instructions || null,
-          city: formData.city || null,
-          postal_code: formData.postal_code || null,
-          county: formData.county || null,
+          full_name: sanitizedData.full_name,
+          phone: sanitizedData.phone || null,
+          delivery_address: sanitizedData.delivery_address || null,
+          delivery_instructions: sanitizedData.delivery_instructions || null,
+          city: sanitizedData.city || null,
+          postal_code: sanitizedData.postal_code || null,
+          county: sanitizedData.county || null,
         });
 
       if (profileError) {
@@ -152,7 +156,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
 
       toast({
         title: "Success",
-        description: `Customer ${formData.full_name} has been added successfully`,
+        description: `Customer ${sanitizedData.full_name} has been added successfully`,
       });
 
       resetForm();

@@ -31,6 +31,6 @@ export const createModalProvider = <T,>(name: string) => {
 
 // Customer detail modal using the generic modal system
 const { Provider: CustomerDetailProvider, useModal: useCustomerDetail } = 
-  createModalProvider<string>('CustomerDetail');
+  createModalProvider<any>('CustomerDetail'); // Using any for flexibility with customer data
 
 export { CustomerDetailProvider, useCustomerDetail };

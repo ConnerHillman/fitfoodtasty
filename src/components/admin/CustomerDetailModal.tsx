@@ -11,6 +11,7 @@ import { useCustomerDetail } from "@/contexts/ModalContext";
 import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency, formatCustomerSegment } from "@/lib/utils";
+import { sanitizeCustomerForDisplay } from "@/lib/customerValidation";
 
 // Import decomposed components
 import { CustomerStatsCards } from "./customer-detail/CustomerStatsCards";
@@ -22,50 +23,15 @@ import { CustomerAnalytics } from "./customer-detail/CustomerAnalytics";
 import OrderLink from "./OrderLink";
 import OrderStatusBadge from "./OrderStatusBadge";
 
-interface CustomerProfile {
-  id: string;
-  user_id: string;
-  full_name: string;
-  phone: string;
-  delivery_address: string;
-  delivery_instructions: string;
-  city: string;
-  postal_code: string;
-  county: string;
-  created_at: string;
-}
-
-interface CustomerOrder {
-  id: string;
-  created_at: string;
-  total_amount: number;
-  status: string;
-  type: 'order' | 'package_order';
-  items_count?: number;
-}
-
-interface CustomerStats {
-  totalOrders: number;
-  totalSpent: number;
-  averageOrderValue: number;
-  orderFrequency: number;
-  daysSinceLastOrder?: number;
-  customerLifetimeValue?: number;
-}
-
-interface MonthlyRevenue {
-  month: string;
-  orders: number;
-  revenue: number;
-}
-
-interface ActivityItem {
-  id: string;
-  created_at: string;
-  type: 'view' | 'cart_abandoned' | 'order';
-  page?: string;
-  total_amount?: number;
-}
+// Use proper types from customer types
+import type { 
+  CustomerProfile, 
+  CustomerOrder, 
+  CustomerDetailStats, 
+  MonthlyRevenue, 
+  ActivityItem,
+  CustomerModalData 
+} from "@/types/customer";
 
 const CustomerDetailModal = () => {
   const { toast } = useToast();
@@ -74,13 +40,25 @@ const CustomerDetailModal = () => {
   const [loading, setLoading] = useState(false);
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
-  const [stats, setStats] = useState<CustomerStats | null>(null);
+  const [stats, setStats] = useState<CustomerDetailStats | null>(null);
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [email, setEmail] = useState<string>("");
 
-  // Type the customerData properly
-  const typedCustomerData = customerData as any;
+  // Type guard and sanitization for customer data
+  const getTypedCustomerData = (): CustomerModalData | null => {
+    if (!customerData || typeof customerData !== 'object') return null;
+    
+    // Sanitize the customer data to prevent XSS
+    const sanitized = sanitizeCustomerForDisplay(customerData);
+    
+    // Ensure required fields exist
+    if (!sanitized.user_id || !sanitized.full_name) return null;
+    
+    return sanitized as CustomerModalData;
+  };
+
+  const typedCustomerData = getTypedCustomerData();
 
   useEffect(() => {
     if (typedCustomerData && isOpen) {
@@ -172,7 +150,8 @@ const CustomerDetailModal = () => {
           total_amount: order.total_amount,
           status: order.status,
           type: 'order' as const,
-          items_count: order.order_items?.length || 0
+          items_count: order.order_items?.length || 0,
+          currency: 'gbp' // Default currency
         })),
         ...(packageOrders || []).map(order => ({
           id: order.id,
@@ -180,7 +159,8 @@ const CustomerDetailModal = () => {
           total_amount: order.total_amount,
           status: order.status,
           type: 'package_order' as const,
-          items_count: 1
+          items_count: 1,
+          currency: 'gbp' // Default currency
         }))
       ];
 

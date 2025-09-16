@@ -12,6 +12,7 @@ import { CustomerCardView } from "./customers/CustomerCardView";
 import AddCustomerDialog from "./AddCustomerDialog";
 import CustomerLink from "./CustomerLink";
 import CustomerDetailModal from "./CustomerDetailModal";
+import { CustomerErrorBoundary } from "@/components/common/CustomerErrorBoundary";
 
 import type { CustomerFilters } from "@/types/customer";
 
@@ -143,56 +144,66 @@ const CustomersManager = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Users className="h-8 w-8 text-primary" />
-          <div>
-            <h2 className="text-2xl font-bold">Customer Management</h2>
-            <p className="text-muted-foreground">View and manage your customer base</p>
+    <CustomerErrorBoundary onRetry={() => fetchCustomers(filters.dateRange)}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Users className="h-8 w-8 text-primary" />
+            <div>
+              <h2 className="text-2xl font-bold">Customer Management</h2>
+              <p className="text-muted-foreground">View and manage your customer base</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <CustomerErrorBoundary>
+              <AddCustomerDialog onCustomerAdded={handleRefresh} />
+            </CustomerErrorBoundary>
+            <Button onClick={handleRefresh} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <AddCustomerDialog onCustomerAdded={handleRefresh} />
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-      </div>
 
-      {/* Stats Cards */}
-      <StatsCardsGrid stats={statsData} />
+        {/* Stats Cards */}
+        <CustomerErrorBoundary>
+          <StatsCardsGrid stats={statsData} />
+        </CustomerErrorBoundary>
 
-      {/* Filters */}
-      <CustomerFiltersBar
+        {/* Filters */}
+        <CustomerErrorBoundary>
+          <CustomerFiltersBar
         filters={filters}
         onFiltersChange={handleFiltersChange}
         totalCount={customers.length}
         filteredCount={filteredCustomers.length}
-        onExport={handleExport}
-      />
+            onExport={handleExport}
+          />
+        </CustomerErrorBoundary>
 
-      {/* Data Display */}
-      {filters.viewMode === "card" ? (
-        <CustomerCardView
-          customers={filteredCustomers}
-          getCustomerValue={getCustomerValue}
-        />
-      ) : (
-        <GenericDataTable
-          data={filteredCustomers}
-          columns={tableColumns}
-          actions={customerActions}
-          loading={loading}
-          emptyMessage="No customers found matching your filters."
-        />
-      )}
+        {/* Data Display */}
+        <CustomerErrorBoundary>
+          {filters.viewMode === "card" ? (
+            <CustomerCardView
+              customers={filteredCustomers}
+              getCustomerValue={getCustomerValue}
+            />
+          ) : (
+            <GenericDataTable
+              data={filteredCustomers}
+              columns={tableColumns}
+              actions={customerActions}
+              loading={loading}
+              emptyMessage="No customers found matching your filters."
+            />
+          )}
+        </CustomerErrorBoundary>
 
-      {/* Customer Detail Modal */}
-      <CustomerDetailModal />
-    </div>
+        {/* Customer Detail Modal */}
+        <CustomerDetailModal />
+      </div>
+    </CustomerErrorBoundary>
   );
 };
 
