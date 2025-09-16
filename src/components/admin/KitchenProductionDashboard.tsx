@@ -41,6 +41,8 @@ export const KitchenProductionDashboard: React.FC = () => {
     ingredientsLoading,
     ingredientsError,
     dataValidationWarnings,
+    selectedIngredients,
+    setSelectedIngredients,
     loadProductionData,
     retryIngredientProcessing
   } = useProductionData();
@@ -444,6 +446,8 @@ export const KitchenProductionDashboard: React.FC = () => {
                   loading={loading || ingredientsLoading}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
+                  selectedIngredients={selectedIngredients}
+                  setSelectedIngredients={setSelectedIngredients}
                   ingredientsError={ingredientsError}
                   onRetryIngredients={retryIngredientProcessing}
                 />

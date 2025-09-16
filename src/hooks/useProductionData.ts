@@ -11,6 +11,7 @@ export const useProductionData = () => {
   const [loading, setLoading] = useState(false);
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [ingredientsError, setIngredientsError] = useState<string | null>(null);
+  const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(new Set());
   const [dataValidationWarnings, setDataValidationWarnings] = useState<string[]>([]);
   
   const { toast } = useToast();
@@ -593,6 +594,8 @@ export const useProductionData = () => {
     ingredientsLoading,
     ingredientsError,
     dataValidationWarnings,
+    selectedIngredients,
+    setSelectedIngredients,
     loadProductionData,
     retryIngredientProcessing
   };

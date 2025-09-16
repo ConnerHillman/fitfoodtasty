@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -6,10 +6,12 @@ import {
   Hash,
   ArrowDownAZ,
   Package,
-  Clock
+  Clock,
+  Filter
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
 import type { ProductionSummary, IngredientLineItem, SortBy } from '@/types/kitchen';
+import { IngredientFilterModal } from './IngredientFilterModal';
 
 interface IngredientsProductionViewProps {
   productionData: ProductionSummary | null;
@@ -17,6 +19,8 @@ interface IngredientsProductionViewProps {
   loading: boolean;
   sortBy: SortBy;
   setSortBy: (sortBy: SortBy) => void;
+  selectedIngredients: Set<string>;
+  setSelectedIngredients: (selected: Set<string>) => void;
   ingredientsError?: string | null;
   onRetryIngredients?: () => void;
 }
@@ -27,9 +31,30 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
   loading,
   sortBy,
   setSortBy,
+  selectedIngredients,
+  setSelectedIngredients,
   ingredientsError,
   onRetryIngredients
-}) => {
+ }) => {
+  const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // Initialize selectedIngredients with all ingredients when data first loads
+  useEffect(() => {
+    if (sortedIngredientLineItems.length > 0 && selectedIngredients.size === 0) {
+      const allIngredientNames = new Set(sortedIngredientLineItems.map(item => item.ingredientName));
+      setSelectedIngredients(allIngredientNames);
+    }
+  }, [sortedIngredientLineItems, selectedIngredients.size, setSelectedIngredients]);
+
+  // Filter ingredients based on selected ingredients
+  const filteredIngredientLineItems = useMemo(() => {
+    if (selectedIngredients.size === 0) {
+      return sortedIngredientLineItems; // Show all if none selected (initialization case)
+    }
+    return sortedIngredientLineItems.filter(ingredient => 
+      selectedIngredients.has(ingredient.ingredientName)
+    );
+  }, [sortedIngredientLineItems, selectedIngredients]);
 
   // Use the processed ingredient data from parent
   const ingredientsData = useMemo(() => {
@@ -39,9 +64,13 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
       productionDate: productionData.productionDate,
       totalIngredients: productionData.totalIngredients || 0,
       uniqueIngredientTypes: productionData.uniqueIngredientTypes || 0,
-      ingredientLineItems: sortedIngredientLineItems
+      ingredientLineItems: filteredIngredientLineItems,
+      allIngredientLineItems: sortedIngredientLineItems
     };
-  }, [productionData, sortedIngredientLineItems]);
+  }, [productionData, sortedIngredientLineItems, filteredIngredientLineItems]);
+
+  // Calculate filter status
+  const hiddenIngredientsCount = sortedIngredientLineItems.length - filteredIngredientLineItems.length;
 
   if (!ingredientsData && !ingredientsError) {
     return (
@@ -90,6 +119,25 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
           </CardTitle>
           
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+            {/* Filter Controls */}
+            <div className="flex gap-2 print:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilterModal(true)}
+                disabled={loading}
+                className="text-xs"
+              >
+                <Filter className="h-3 w-3 mr-1" />
+                Filter Ingredients
+                {hiddenIngredientsCount > 0 && (
+                  <span className="ml-1 text-muted-foreground">
+                    ({hiddenIngredientsCount} hidden)
+                  </span>
+                )}
+              </Button>
+            </div>
+            
             {/* Sorting Controls */}
             <div className="flex gap-2 print:hidden">
               <Button
@@ -154,7 +202,15 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
                             </span>
                           </div>
                         ))}
-                      </div>
+          </div>
+
+          {/* Filter Status */}
+          {hiddenIngredientsCount > 0 && (
+            <div className="text-sm text-muted-foreground print:hidden">
+              Showing {filteredIngredientLineItems.length} of {sortedIngredientLineItems.length} ingredients 
+              ({hiddenIngredientsCount} hidden by filter)
+            </div>
+          )}
                     </td>
                   </tr>
                 ))
@@ -179,6 +235,15 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
             {ingredientsData.ingredientLineItems.length}
           </span>
         </div>
+
+        {/* Filter Modal */}
+        <IngredientFilterModal
+          isOpen={showFilterModal}
+          onClose={() => setShowFilterModal(false)}
+          ingredients={sortedIngredientLineItems}
+          selectedIngredients={selectedIngredients}
+          onApply={setSelectedIngredients}
+        />
       </CardContent>
     </Card>
   );
