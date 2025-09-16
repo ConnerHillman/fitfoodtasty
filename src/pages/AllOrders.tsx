@@ -6,6 +6,8 @@ import { Package, Eye, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock, Edi
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { subDays } from 'date-fns';
+import type { DateRange } from '@/types/common';
 
 // Import new generic components
 import { GenericFiltersBar, StatsCardsGrid, GenericDataTable } from '@/components/common';
@@ -39,6 +41,7 @@ interface OrderFilters {
   sortBy: string;
   sortOrder: "asc" | "desc";
   viewMode: "list" | "card";
+  dateRange: DateRange;
 }
 
 const AllOrders: React.FC = () => {
@@ -52,7 +55,11 @@ const AllOrders: React.FC = () => {
     searchTerm: '',
     sortBy: 'created_at',
     sortOrder: 'desc',
-    viewMode: 'list'
+    viewMode: 'list',
+    dateRange: {
+      from: subDays(new Date(), 30), // Default to last 30 days
+      to: new Date(),
+    }
   });
 
   // Modal states
@@ -129,14 +136,21 @@ const AllOrders: React.FC = () => {
     }
   };
 
-  // Filter orders based on search
+  // Filter orders based on search and date range
   const filteredOrders = useMemo(() => {
-    return orders.filter(order =>
-      order.id.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      (order.customer_name || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      (order.customer_email || '').toLowerCase().includes(filters.searchTerm.toLowerCase())
-    );
-  }, [orders, filters.searchTerm]);
+    return orders.filter(order => {
+      // Search filter
+      const matchesSearch = order.id.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        (order.customer_name || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        (order.customer_email || '').toLowerCase().includes(filters.searchTerm.toLowerCase());
+      
+      // Date range filter
+      const orderDate = new Date(order.created_at);
+      const matchesDateRange = orderDate >= filters.dateRange.from && orderDate <= filters.dateRange.to;
+      
+      return matchesSearch && matchesDateRange;
+    });
+  }, [orders, filters.searchTerm, filters.dateRange]);
 
   // Stats data
   const statsData: StatCardData[] = useMemo(() => {
@@ -316,6 +330,17 @@ const AllOrders: React.FC = () => {
     { value: 'customer_name', label: 'Customer Name' }
   ];
 
+  // Clear date range function (like in customer management)
+  const clearDateRange = () => {
+    setFilters(prev => ({
+      ...prev,
+      dateRange: {
+        from: new Date(2020, 0, 1), // Show all orders from 2020
+        to: new Date(),
+      }
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -363,6 +388,15 @@ const AllOrders: React.FC = () => {
         viewModes={['list']}
         entityName="order"
         entityNamePlural="orders"
+        dateRange={filters.dateRange}
+        onDateRangeChange={(range) => {
+          if (range) {
+            setFilters(prev => ({ ...prev, dateRange: range }));
+          } else {
+            clearDateRange();
+          }
+        }}
+        clearDateRange={clearDateRange}
       />
 
       {/* Orders Table */}

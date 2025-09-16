@@ -1,8 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Search, Download, Grid3X3, List, Filter } from "lucide-react";
+import { SimpleDateRangePicker } from "@/components/ui/simple-date-range-picker";
+import { Search, Download, Grid3X3, List, Filter, X } from "lucide-react";
 import type { BaseFilters, ViewModeFilters, DateRange } from "@/types/common";
 
 interface FilterOption {
@@ -36,6 +36,7 @@ interface GenericFiltersBarProps<T extends BaseFilters & ViewModeFilters> {
   // Date range support
   dateRange?: DateRange;
   onDateRangeChange?: (range: DateRange | null) => void;
+  clearDateRange?: () => void;
   
   // View mode options
   viewModes?: Array<'list' | 'card' | 'grid'>;
@@ -62,6 +63,7 @@ export function GenericFiltersBar<T extends BaseFilters & ViewModeFilters>({
   sortOptions,
   dateRange,
   onDateRangeChange,
+  clearDateRange,
   viewModes = ['list', 'card'],
   onExport,
   exportLabel = "Export",
@@ -93,16 +95,31 @@ export function GenericFiltersBar<T extends BaseFilters & ViewModeFilters>({
         <div className="flex gap-2 flex-wrap">
           {/* Date Range Picker */}
           {onDateRangeChange && (
-            <DateRangePicker
-              date={dateRange}
-              onDateChange={(range) => {
-                if (range?.from && range?.to) {
-                  onDateRangeChange({ from: range.from, to: range.to });
-                } else {
-                  onDateRangeChange(null);
-                }
-              }}
-            />
+            <div className="flex items-center gap-2">
+              <SimpleDateRangePicker
+                date={dateRange}
+                onDateChange={(range) => {
+                  if (range?.from && range?.to) {
+                    onDateRangeChange({ from: range.from, to: range.to });
+                  } else {
+                    onDateRangeChange(null);
+                  }
+                }}
+                placeholder="Select date range"
+                className="w-full sm:w-auto"
+              />
+              {clearDateRange && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearDateRange}
+                  className="px-2 hidden sm:flex"
+                  title="Clear date selection"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )}
 
           {/* Custom Filter */}
