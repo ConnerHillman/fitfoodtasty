@@ -10,6 +10,8 @@ import { Printer, Package, AlertTriangle, Calendar, Download, FileText, Loader2,
 import { supabase } from '@/integrations/supabase/client';
 import { LabelPrintPreview } from '@/components/admin/LabelPrintPreview';
 import { format as formatDate, addDays } from 'date-fns';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Type definitions for order data
 interface OrderItem {
@@ -243,11 +245,10 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
     setError(null);
 
     try {
-      // Simulate progress steps
-      setGenerationProgress(20);
+      setGenerationProgress(10);
       setGenerationStatus('preparing');
       
-      // Convert to MealProduction format for the edge function
+      // Convert to MealProduction format for preview component
       const mealProduction: MealProduction[] = selectedLabels.map(label => ({
         mealId: label.mealId,
         mealName: label.mealName,
@@ -261,47 +262,105 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
         orderCount: 1
       }));
 
-      setGenerationProgress(40);
+      setGenerationProgress(20);
       setGenerationStatus('generating');
 
-      // Use the edge function to generate PDF
-      const { data, error } = await supabase.functions.invoke('generate-labels-pdf', {
-        body: {
-          mealProduction,
-          useByDate
-        }
+      // Create a temporary container for the label preview
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.width = '210mm';
+      tempContainer.style.height = '297mm';
+      tempContainer.style.background = 'white';
+      document.body.appendChild(tempContainer);
+
+      // Import and render the preview component dynamically
+      const { LabelPrintPreview } = await import('@/components/admin/LabelPrintPreview');
+      const React = await import('react');
+      const ReactDOM = await import('react-dom/client');
+
+      // Create preview element
+      const previewElement = React.createElement(LabelPrintPreview, {
+        mealProduction,
+        useByDate
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to generate labels');
+      const root = ReactDOM.createRoot(tempContainer);
+      root.render(previewElement);
+
+      // Wait for rendering to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      setGenerationProgress(40);
+
+      // Find all pages in the preview
+      const pages = tempContainer.querySelectorAll('.print-page');
+      
+      if (pages.length === 0) {
+        throw new Error('No label pages found to generate PDF');
       }
 
-      setGenerationProgress(80);
+      // Create PDF with A4 dimensions (210x297mm)
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      setGenerationProgress(60);
+      setGenerationStatus('generating');
+
+      // Process each page
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
+        
+        try {
+          // Capture the page as canvas
+          const canvas = await html2canvas(page, {
+            scale: 2, // Higher resolution
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            width: 794, // A4 width in pixels at 96 DPI
+            height: 1123 // A4 height in pixels at 96 DPI
+          });
+
+          const imgData = canvas.toDataURL('image/png');
+          
+          // Add new page for subsequent pages
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          // Add image to PDF (full A4 size)
+          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+          
+          setGenerationProgress(60 + (i + 1) / pages.length * 20);
+        } catch (pageError) {
+          console.error(`Error processing page ${i + 1}:`, pageError);
+          throw new Error(`Failed to process page ${i + 1}`);
+        }
+      }
+
+      setGenerationProgress(85);
       setGenerationStatus('downloading');
 
-      // Create and trigger download with proper filename from response
-      if (data) {
-        const blob = new Blob([data], { type: 'text/html' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        // Generate filename based on order and label count
-        const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
-        const timestamp = new Date().toISOString().split('T')[0];
-        link.download = `meal-labels-order-${order.id.slice(-8)}-${timestamp}-${totalLabels}labels.html`;
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }
+      // Generate filename and save PDF
+      const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `meal-labels-order-${order.id.slice(-8)}-${timestamp}-${totalLabels}labels.pdf`;
+      
+      pdf.save(filename);
+
+      // Cleanup
+      root.unmount();
+      document.body.removeChild(tempContainer);
 
       setGenerationProgress(100);
       setGenerationStatus('complete');
 
-      const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
-      toast.success(`Successfully generated ${totalLabels} labels for ${selectedLabels.length} meals`);
+      toast.success(`Successfully generated PDF with ${totalLabels} labels for ${selectedLabels.length} meals`);
       
       // Close dialog after a brief delay to show completion
       setTimeout(() => {
@@ -309,9 +368,9 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
       }, 1000);
 
     } catch (error: any) {
-      console.error('Error generating labels:', error);
-      setError(error.message || 'Failed to generate labels. Please try again.');
-      toast.error(error.message || 'Failed to generate labels. Please try again.');
+      console.error('Error generating PDF:', error);
+      setError(error.message || 'Failed to generate PDF. Please try again.');
+      toast.error(error.message || 'Failed to generate PDF. Please try again.');
       setGenerationStatus('idle');
     } finally {
       setIsGenerating(false);
@@ -374,15 +433,15 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
                   {isGenerating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {generationStatus === 'preparing' && 'Preparing...'}
-                      {generationStatus === 'generating' && 'Generating...'}
-                      {generationStatus === 'downloading' && 'Downloading...'}
+                      {generationStatus === 'preparing' && 'Preparing PDF...'}
+                      {generationStatus === 'generating' && 'Generating PDF...'}
+                      {generationStatus === 'downloading' && 'Saving PDF...'}
                       {generationStatus === 'complete' && 'Complete!'}
                     </>
                   ) : (
                     <>
                       <Download className="h-4 w-4 mr-2" />
-                      Generate Labels
+                      Generate PDF
                     </>
                   )}
                 </Button>
@@ -423,13 +482,13 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              {generationStatus === 'preparing' && 'Preparing label data...'}
-              {generationStatus === 'generating' && 'Generating labels...'}
-              {generationStatus === 'downloading' && 'Preparing download...'}
+              {generationStatus === 'preparing' && 'Preparing PDF data...'}
+              {generationStatus === 'generating' && 'Generating PDF pages...'}
+              {generationStatus === 'downloading' && 'Saving PDF file...'}
               {generationStatus === 'complete' && (
                 <>
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  Labels generated successfully!
+                  PDF generated successfully!
                 </>
               )}
             </div>
@@ -575,12 +634,12 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 {generationStatus === 'preparing' && 'Preparing...'}
                 {generationStatus === 'generating' && 'Generating...'}
-                {generationStatus === 'downloading' && 'Downloading...'}
+                {generationStatus === 'downloading' && 'Saving...'}
               </>
             ) : (
               <>
                 <Printer className="h-4 w-4 mr-2" />
-                Generate Labels
+                Generate PDF
               </>
             )}
           </Button>
