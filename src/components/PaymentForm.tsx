@@ -35,7 +35,7 @@ export default function PaymentForm({
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [orderNotes, setOrderNotes] = useState("");
-  const [saveCard, setSaveCard] = useState(false);
+  const [saveCard, setSaveCard] = useState(true);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
