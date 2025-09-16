@@ -67,7 +67,6 @@ const BusinessSettings = () => {
   const deliveryForm = useForm<DeliverySettingsData>({
     resolver: zodResolver(deliverySettingsSchema),
     defaultValues: {
-      delivery_fee: '5.99',
       max_delivery_distance: '15',
       minimum_order_value: '25.00',
     },

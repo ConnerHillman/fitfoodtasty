@@ -32,7 +32,7 @@ const Cart = () => {
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
   const [selectedCollectionPoint, setSelectedCollectionPoint] = useState<string>("");
   const [collectionPoints, setCollectionPoints] = useState<any[]>([]);
-  const [deliveryFee, setDeliveryFee] = useState(5.99);
+  const [deliveryFee, setDeliveryFee] = useState(0);
   const [clientSecret, setClientSecret] = useState<string>("");
   
   // Coupon state
