@@ -77,9 +77,9 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
       <Card>
         <CardContent className="py-12">
           <div className="text-center">
-            <Package className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No ingredient data</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <Package className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-2 text-sm font-medium text-foreground">No ingredient data</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
               Select a date with scheduled meals to view ingredient requirements.
             </p>
           </div>
@@ -95,8 +95,8 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
         <CardContent className="py-12">
           <div className="text-center">
             <Package className="mx-auto h-12 w-12 text-destructive" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Failed to load ingredients</h3>
-            <p className="mt-1 text-sm text-gray-500 mb-4">
+            <h3 className="mt-2 text-sm font-medium text-foreground">Failed to load ingredients</h3>
+            <p className="mt-1 text-sm text-muted-foreground mb-4">
               {ingredientsError}
             </p>
             <Button onClick={onRetryIngredients} disabled={loading}>
@@ -209,7 +209,10 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
               ) : (
                 <tr>
                   <td colSpan={3} className="py-8 text-center text-muted-foreground">
-                    No ingredients required for this date
+                    {selectedIngredients.size === 0 
+                      ? "No ingredients selected - use the filter to select ingredients"
+                      : "No ingredients match the current filter selection"
+                    }
                   </td>
                 </tr>
               )}
@@ -232,7 +235,7 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
             TOTAL INGREDIENT TYPES:
           </span>
           <span className="text-2xl font-bold text-primary print:text-white">
-            {ingredientsData.ingredientLineItems.length}
+            {filteredIngredientLineItems.length === 0 ? "0" : ingredientsData.ingredientLineItems.length}
           </span>
         </div>
 

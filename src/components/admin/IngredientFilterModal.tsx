@@ -122,17 +122,28 @@ export const IngredientFilterModal: React.FC<IngredientFilterModalProps> = ({
           <ScrollArea className="flex-1 border rounded-md">
             <div className="p-4 space-y-3">
               {filteredIngredients.length > 0 ? (
-                filteredIngredients.map((ingredient) => {
+                filteredIngredients.map((ingredient, ingredientIndex) => {
                   const isSelected = localSelected.has(ingredient.ingredientName);
                   return (
                     <div
                       key={ingredient.ingredientName}
-                      className="flex items-center space-x-3 hover:bg-muted/50 p-2 rounded cursor-pointer"
+                      className="flex items-center space-x-3 hover:bg-muted/50 p-2 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       onClick={() => handleToggleIngredient(ingredient.ingredientName)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleToggleIngredient(ingredient.ingredientName);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-pressed={isSelected}
+                      aria-label={`${isSelected ? 'Deselect' : 'Select'} ${ingredient.ingredientName}, ${ingredient.totalQuantity}${ingredient.unit}`}
                     >
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => handleToggleIngredient(ingredient.ingredientName)}
+                        tabIndex={-1}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">
