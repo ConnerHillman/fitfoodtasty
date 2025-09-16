@@ -437,7 +437,6 @@ const BusinessDashboard = () => {
                     setDateRange({ from: range.from, to: range.to });
                   }
                 }}
-                showPresets={true}
               />
               <Button
                 onClick={fetchDashboardData}

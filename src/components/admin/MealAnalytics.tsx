@@ -394,7 +394,6 @@ const MealAnalytics = () => {
             <SimpleDateRangePicker
               date={dateRange}
               onDateChange={setDateRange}
-              showPresets={true}
               placeholder="Select date range for analytics"
               className="w-auto"
             />

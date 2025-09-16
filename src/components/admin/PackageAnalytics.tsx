@@ -269,7 +269,6 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
                 setDateRange({ from: range.from, to: range.to });
               }
             }}
-            showPresets={true}
           />
         </div>
 
