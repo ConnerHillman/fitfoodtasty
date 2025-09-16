@@ -14,8 +14,8 @@ export const VALIDATION_RULES = {
     maxLength: 254
   },
   phone: {
-    pattern: /^[\+]?[1-9][\d]{0,15}$/,
-    maxLength: 20
+    pattern: /^[\+]?[\d\s\-\(\)]{7,20}$/,
+    maxLength: 25
   },
   postalCode: {
     pattern: /^[A-Z]{1,2}[0-9R][0-9A-Z]?\s?[0-9][ABD-HJLNP-UW-Z]{2}$/i, // UK postcode
@@ -108,19 +108,31 @@ export function validateFullName(name: string): ValidationError | null {
 }
 
 /**
- * Validates a phone number
+ * Normalizes a phone number for storage (removes formatting)
+ */
+export function normalizePhoneNumber(phone: string): string {
+  if (!phone) return '';
+  return sanitizeString(phone).replace(/[\s\-\(\)]/g, '');
+}
+
+/**
+ * Validates a phone number (supports international formats)
  */
 export function validatePhone(phone: string): ValidationError | null {
   if (!phone) return null; // Phone is optional
   
-  const sanitized = sanitizeString(phone).replace(/[\s\-\(\)]/g, ''); // Remove formatting
+  const sanitized = sanitizeString(phone);
   
   if (sanitized.length > VALIDATION_RULES.phone.maxLength) {
     return { field: 'phone', message: 'Phone number is too long', code: 'TOO_LONG' };
   }
   
   if (!VALIDATION_RULES.phone.pattern.test(sanitized)) {
-    return { field: 'phone', message: 'Please enter a valid phone number', code: 'INVALID_FORMAT' };
+    return { 
+      field: 'phone', 
+      message: 'Please enter a valid phone number (e.g., +44 7123 456789 or 07123 456789)', 
+      code: 'INVALID_FORMAT' 
+    };
   }
   
   return null;
@@ -200,7 +212,7 @@ export function validateCustomerData(data: {
   const sanitizedData = {
     full_name: sanitizeString(data.full_name),
     email: sanitizeString(data.email).toLowerCase(),
-    phone: data.phone ? sanitizeString(data.phone).replace(/[\s\-\(\)]/g, '') : '',
+    phone: data.phone ? normalizePhoneNumber(data.phone) : '',
     delivery_address: data.delivery_address ? sanitizeString(data.delivery_address) : '',
     city: data.city ? sanitizeString(data.city) : '',
     postal_code: data.postal_code ? sanitizeString(data.postal_code).toUpperCase().replace(/\s/g, '') : '',

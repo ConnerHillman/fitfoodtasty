@@ -236,7 +236,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="Enter phone number"
+                  placeholder="e.g., +44 7123 456789 or 07123 456789"
                 />
               </div>
             </CardContent>
