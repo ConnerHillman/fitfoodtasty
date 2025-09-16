@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ReactNode } from "react";
-import { LucideIcon, MoreHorizontal } from "lucide-react";
+import { LucideIcon, MoreHorizontal, ChevronDown } from "lucide-react";
 
 export interface ColumnDef<T> {
   key: string;
@@ -173,9 +173,10 @@ export function GenericDataTable<T>({
               variant="ghost" 
               size="sm"
               onClick={(e) => e.stopPropagation()}
-              className="h-8 w-8 p-0"
+              className="h-8 px-3"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              Actions
+              <ChevronDown className="h-4 w-4 ml-1" />
               <span className="sr-only">More actions</span>
             </Button>
           </DropdownMenuTrigger>
