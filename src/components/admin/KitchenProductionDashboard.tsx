@@ -25,7 +25,7 @@ import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import type { ProductionSummary, SortBy } from '@/types/kitchen';
-import { filterIngredientsByViewMode, getViewModeInfo } from '@/lib/ingredientFilters';
+
 
 
 export const KitchenProductionDashboard: React.FC = () => {
@@ -41,8 +41,6 @@ export const KitchenProductionDashboard: React.FC = () => {
     ingredientsLoading,
     ingredientsError,
     dataValidationWarnings,
-    ingredientViewMode,
-    setIngredientViewMode,
     loadProductionData,
     retryIngredientProcessing
   } = useProductionData();
@@ -143,18 +141,8 @@ export const KitchenProductionDashboard: React.FC = () => {
           ['Qty', 'Unit', 'Ingredient', 'Used In Meals'], // Column headers
         ];
 
-        // Export filtered ingredients as main sheet, add filtered sheet info
-        const filteredIngredients = filterIngredientsByViewMode(sortedIngredientLineItems, ingredientViewMode);
-        const exportIngredients = ingredientViewMode === 'complete' ? sortedIngredientLineItems : filteredIngredients;
-        
-        // Add sheet description for filtered exports
-        if (ingredientViewMode !== 'complete') {
-          const { label, threshold } = getViewModeInfo(ingredientViewMode);
-          ingredientsExportData.push([`Filtered View: ${label} (≥${threshold}g/ml)`], []);
-        }
-        
         // Add ingredient data
-        exportIngredients.forEach(ingredient => {
+        sortedIngredientLineItems.forEach(ingredient => {
           const usedInMeals = ingredient.mealBreakdown
             .map(breakdown => `${breakdown.mealName} (${breakdown.quantity}${breakdown.unit})`)
             .join(', ');
@@ -168,53 +156,15 @@ export const KitchenProductionDashboard: React.FC = () => {
         });
 
         // Add totals
-        const filteredIngredientsForTotal = filterIngredientsByViewMode(sortedIngredientLineItems, ingredientViewMode);
         ingredientsExportData.push(
           [], // Empty row before total
           [
-            ingredientViewMode === 'complete' ? 'TOTAL INGREDIENT TYPES:' : 'FILTERED INGREDIENT TYPES:',
+            'TOTAL INGREDIENT TYPES:',
             '', 
-            (ingredientViewMode === 'complete' ? productionData.uniqueIngredientTypes : filteredIngredientsForTotal.length).toString(),
+            productionData.uniqueIngredientTypes.toString(),
             ''
           ]
         );
-        
-        // Add complete list as second sheet if filtered
-        if (ingredientViewMode !== 'complete') {
-          const completeIngredientsData = [
-            [`Complete Ingredient List - ${dateStr}`],
-            [], // Empty row
-            ['Qty', 'Unit', 'Ingredient', 'Used In Meals']
-          ];
-          
-          sortedIngredientLineItems.forEach(ingredient => {
-            const usedInMeals = ingredient.mealBreakdown
-              .map(breakdown => `${breakdown.mealName} (${breakdown.quantity}${breakdown.unit})`)
-              .join(', ');
-            
-            completeIngredientsData.push([
-              ingredient.totalQuantity.toString(),
-              ingredient.unit,
-              ingredient.ingredientName,
-              usedInMeals
-            ]);
-          });
-          
-          completeIngredientsData.push(
-            [],
-            ['TOTAL INGREDIENT TYPES:', '', productionData.uniqueIngredientTypes.toString(), '']
-          );
-          
-          const completeWs = XLSX.utils.aoa_to_sheet(completeIngredientsData);
-          completeWs['!cols'] = [
-            { wch: 8 }, { wch: 8 }, { wch: 30 }, { wch: 60 }
-          ];
-          completeWs['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }
-          ];
-          
-          XLSX.utils.book_append_sheet(wb, completeWs, 'Complete Ingredients');
-        }
 
         const ingredientsWs = XLSX.utils.aoa_to_sheet(ingredientsExportData);
         
@@ -494,8 +444,6 @@ export const KitchenProductionDashboard: React.FC = () => {
                   loading={loading || ingredientsLoading}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
-                  ingredientViewMode={ingredientViewMode}
-                  setIngredientViewMode={setIngredientViewMode}
                   ingredientsError={ingredientsError}
                   onRetryIngredients={retryIngredientProcessing}
                 />

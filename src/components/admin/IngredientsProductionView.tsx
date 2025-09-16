@@ -9,8 +9,7 @@ import {
   Clock
 } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
-import type { ProductionSummary, IngredientLineItem, SortBy, IngredientViewMode } from '@/types/kitchen';
-import { filterIngredientsByViewMode, getViewModeInfo, getFilterStatusText } from '@/lib/ingredientFilters';
+import type { ProductionSummary, IngredientLineItem, SortBy } from '@/types/kitchen';
 
 interface IngredientsProductionViewProps {
   productionData: ProductionSummary | null;
@@ -18,8 +17,6 @@ interface IngredientsProductionViewProps {
   loading: boolean;
   sortBy: SortBy;
   setSortBy: (sortBy: SortBy) => void;
-  ingredientViewMode: IngredientViewMode;
-  setIngredientViewMode: (mode: IngredientViewMode) => void;
   ingredientsError?: string | null;
   onRetryIngredients?: () => void;
 }
@@ -30,15 +27,9 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
   loading,
   sortBy,
   setSortBy,
-  ingredientViewMode,
-  setIngredientViewMode,
   ingredientsError,
   onRetryIngredients
 }) => {
-  // Filter ingredients based on view mode
-  const filteredIngredientLineItems = useMemo(() => {
-    return filterIngredientsByViewMode(sortedIngredientLineItems, ingredientViewMode);
-  }, [sortedIngredientLineItems, ingredientViewMode]);
 
   // Use the processed ingredient data from parent
   const ingredientsData = useMemo(() => {
@@ -48,10 +39,9 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
       productionDate: productionData.productionDate,
       totalIngredients: productionData.totalIngredients || 0,
       uniqueIngredientTypes: productionData.uniqueIngredientTypes || 0,
-      ingredientLineItems: filteredIngredientLineItems,
-      allIngredientLineItems: sortedIngredientLineItems
+      ingredientLineItems: sortedIngredientLineItems
     };
-  }, [productionData, sortedIngredientLineItems, filteredIngredientLineItems]);
+  }, [productionData, sortedIngredientLineItems]);
 
   if (!ingredientsData && !ingredientsError) {
     return (
@@ -100,25 +90,6 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
           </CardTitle>
           
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-            {/* Filter Controls */}
-            <div className="flex gap-1 print:hidden">
-              {(['production', 'major', 'complete'] as const).map((mode) => {
-                const { label } = getViewModeInfo(mode);
-                return (
-                  <Button
-                    key={mode}
-                    variant={ingredientViewMode === mode ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setIngredientViewMode(mode)}
-                    disabled={loading}
-                    className="text-xs"
-                  >
-                    {label}
-                  </Button>
-                );
-              })}
-            </div>
-            
             {/* Sorting Controls */}
             <div className="flex gap-2 print:hidden">
               <Button
@@ -142,15 +113,6 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
                 Qty
               </Button>
             </div>
-          </div>
-          
-          {/* Filter Status */}
-          <div className="text-sm text-muted-foreground print:hidden">
-            {getFilterStatusText(
-              ingredientsData.ingredientLineItems.length,
-              ingredientsData.allIngredientLineItems.length,
-              ingredientViewMode
-            )}
           </div>
         </div>
       </CardHeader>
@@ -211,7 +173,7 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
         
         <div className="kitchen-total flex items-center justify-between bg-muted/30 p-3 rounded border print:text-center print:text-white print:bg-black print:border-black">
           <span className="text-lg font-bold">
-            {ingredientViewMode === 'complete' ? 'TOTAL INGREDIENT TYPES:' : 'FILTERED INGREDIENT TYPES:'}
+            TOTAL INGREDIENT TYPES:
           </span>
           <span className="text-2xl font-bold text-primary print:text-white">
             {ingredientsData.ingredientLineItems.length}
