@@ -7,17 +7,17 @@ import { useCustomersData } from "@/hooks/useCustomersData";
 import { useFilteredCustomers } from "@/hooks/useFilteredCustomers";
 import { GenericDataTable } from "@/components/common/GenericDataTable";
 import { StatsCardsGrid } from "@/components/common/StatsCards";
-import { GenericModal } from "@/components/common/GenericModal";
 import { CustomerFiltersBar } from "./customers/CustomerFiltersBar";
 import { CustomerCardView } from "./customers/CustomerCardView";
 import AddCustomerDialog from "./AddCustomerDialog";
+import CustomerLink from "./CustomerLink";
+import CustomerDetailModal from "./CustomerDetailModal";
 
 import type { CustomerFilters } from "@/types/customer";
 
 const CustomersManager = () => {
   const { toast } = useToast();
   const { customers, loading, fetchCustomers, getCustomerStats, getCustomerValue } = useCustomersData();
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   
   const [filters, setFilters] = useState<CustomerFilters>({
     searchTerm: "",
@@ -91,7 +91,11 @@ const CustomersManager = () => {
       sortable: true,
       cell: (value: any, customer: any) => (
         <div>
-          <div className="font-medium">{customer.full_name}</div>
+          <CustomerLink 
+            customerId={customer.user_id} 
+            customerName={customer.full_name}
+            className="font-medium"
+          />
           <div className="text-sm text-muted-foreground">{customer.email || 'No email'}</div>
         </div>
       ),
@@ -125,12 +129,7 @@ const CustomersManager = () => {
     },
   ];
 
-  const customerActions = [
-    {
-      label: "View Details",
-      onClick: (customer: any) => setSelectedCustomer(customer),
-    },
-  ];
+  const customerActions = [];
 
 
   if (loading) {
@@ -191,39 +190,7 @@ const CustomersManager = () => {
       )}
 
       {/* Customer Detail Modal */}
-      {selectedCustomer && (
-        <GenericModal
-          open={!!selectedCustomer}
-          onOpenChange={(open) => !open && setSelectedCustomer(null)}
-          title={`Customer Details: ${selectedCustomer.full_name}`}
-          size="lg"
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <p className="text-sm text-muted-foreground">{selectedCustomer.full_name}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <p className="text-sm text-muted-foreground">{selectedCustomer.email || 'No email'}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Total Orders</label>
-                <p className="text-sm text-muted-foreground">{selectedCustomer.total_orders || 0}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Total Spent</label>
-                <p className="text-sm text-muted-foreground">£{(selectedCustomer.total_spent || 0).toFixed(2)}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Joined</label>
-                <p className="text-sm text-muted-foreground">{new Date(selectedCustomer.created_at).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
-        </GenericModal>
-      )}
+      <CustomerDetailModal />
     </div>
   );
 };
