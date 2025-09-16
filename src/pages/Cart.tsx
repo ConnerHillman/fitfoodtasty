@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,9 @@ const Cart = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  
+  // Refs
+  const paymentSectionRef = useRef<HTMLDivElement>(null);
   
   // State variables
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
@@ -563,6 +566,19 @@ const Cart = () => {
         description: "Failed to create order. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  // Auto-scroll to payment section after date selection
+  const scrollToPaymentSection = () => {
+    if (paymentSectionRef.current) {
+      paymentSectionRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      
+      // Add a subtle highlight animation
+      paymentSectionRef.current.style.animation = 'fade-in 0.5s ease-out';
     }
   };
 
@@ -1300,7 +1316,7 @@ const Cart = () => {
 
               {/* Payment Form - Only for authenticated users with payment required */}
               {requestedDeliveryDate && user && clientSecret && !isCoupon100PercentOff() && (
-                <div className="mt-4">
+                <div ref={paymentSectionRef} className="mt-4 animate-fade-in">
                   <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
                     <PaymentForm
                       clientSecret={clientSecret}
@@ -1640,6 +1656,11 @@ const Cart = () => {
               const dateString = `${year}-${month}-${day}`;
               setRequestedDeliveryDate(dateString);
               setCalendarOpen(false); // Close the popover after selection
+              
+              // Auto-scroll to payment section after a brief delay
+              setTimeout(() => {
+                scrollToPaymentSection();
+              }, 300);
             }
           }}
           disabled={isDateDisabled}
