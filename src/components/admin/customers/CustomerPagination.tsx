@@ -23,8 +23,8 @@ export function CustomerPagination<T>({
   if (total === 0) return null;
 
   return (
-    <div className="flex items-center justify-between px-2">
-      <div className="flex items-center space-x-6 lg:space-x-8">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
           <Select
@@ -43,50 +43,60 @@ export function CustomerPagination<T>({
             </SelectContent>
           </Select>
         </div>
+        
+        <div className="text-sm text-muted-foreground text-center sm:text-left">
+          <span className="hidden sm:inline">
+            {startIndex}-{endIndex} of {total} customers
+          </span>
+          <span className="sm:hidden">
+            {startIndex}-{endIndex} of {total}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-2">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
           Page {page} of {totalPages}
         </div>
-        <div className="text-sm text-muted-foreground">
-          {startIndex}-{endIndex} of {total} customers
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            className="hidden h-8 w-8 p-0 lg:flex"
+            onClick={() => onPageChange(1)}
+            disabled={!hasPreviousPage}
+            aria-label="Go to first page"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => onPageChange(page - 1)}
+            disabled={!hasPreviousPage}
+            aria-label="Go to previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => onPageChange(page + 1)}
+            disabled={!hasNextPage}
+            aria-label="Go to next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="hidden h-8 w-8 p-0 lg:flex"
+            onClick={() => onPageChange(totalPages)}
+            disabled={!hasNextPage}
+            aria-label="Go to last page"
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
         </div>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          className="hidden h-8 w-8 p-0 lg:flex"
-          onClick={() => onPageChange(1)}
-          disabled={!hasPreviousPage}
-        >
-          <span className="sr-only">Go to first page</span>
-          <ChevronsLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
-          onClick={() => onPageChange(page - 1)}
-          disabled={!hasPreviousPage}
-        >
-          <span className="sr-only">Go to previous page</span>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
-          onClick={() => onPageChange(page + 1)}
-          disabled={!hasNextPage}
-        >
-          <span className="sr-only">Go to next page</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          className="hidden h-8 w-8 p-0 lg:flex"
-          onClick={() => onPageChange(totalPages)}
-          disabled={!hasNextPage}
-        >
-          <span className="sr-only">Go to last page</span>
-          <ChevronsRight className="h-4 w-4" />
-        </Button>
       </div>
     </div>
   );

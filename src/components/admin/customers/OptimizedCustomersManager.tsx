@@ -156,6 +156,9 @@ const OptimizedCustomersManager = () => {
             onFiltersChange={handleFiltersChange}
             totalCount={customers.length}
             filteredCount={filteredCustomers.length}
+            customers={customers}
+            filteredCustomers={filteredCustomers}
+            stats={customerStats}
             onExport={handleExport}
           />
         </CustomerErrorBoundary>
@@ -168,7 +171,7 @@ const OptimizedCustomersManager = () => {
             <CustomerDataDisplay
               customers={paginatedResult.data}
               filters={filters}
-              loading={loading}
+              loading={loading && customers.length === 0}
               getCustomerValue={getCustomerValue}
             />
           )}

@@ -8,14 +8,33 @@ import type { Customer } from "@/types/customer";
 interface CustomerCardViewProps {
   customers: Customer[];
   getCustomerValue: (customer: Customer) => "high" | "medium" | "low";
+  loading?: boolean;
 }
 
-export function CustomerCardView({ customers, getCustomerValue }: CustomerCardViewProps) {
+export function CustomerCardView({ customers, getCustomerValue, loading }: CustomerCardViewProps) {
   const { open: openCustomerDetail } = useCustomerDetail();
   const formatCurrency = (amount: number) => `£${amount.toFixed(2)}`;
 
+  if (loading) {
+    return (
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (customers.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="text-muted-foreground">No customers found matching your filters.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {customers.map((customer) => (
         <div
           key={customer.id}
