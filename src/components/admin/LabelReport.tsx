@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { 
   CalendarIcon, 
   Printer, 
@@ -13,7 +14,8 @@ import {
   Package, 
   Calculator,
   FileText,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +51,8 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
   const [loading, setLoading] = useState(false);
   const [showLabelPreview, setShowLabelPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState('');
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -222,8 +226,15 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
     if (mealProduction.length === 0) return;
 
     setIsGeneratingPDF(true);
+    setGenerationProgress(0);
+    setGenerationStatus('Preparing label data...');
+    
     try {
       console.log('Starting PDF generation for meals:', mealProduction.length);
+      
+      // Step 1: Preparing label data (0-20%)
+      setGenerationProgress(20);
+      setGenerationStatus('Rendering labels preview...');
       
       // Ensure the offscreen renderer is in the DOM and visible for rendering
       const container = pdfRef.current;
@@ -245,6 +256,10 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       
       // Wait for next render cycle
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Step 2: Rendering complete (20-40%)
+      setGenerationProgress(40);
+      setGenerationStatus('Loading images and fonts...');
 
       // Wait for images (logo) to load
       const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
@@ -270,6 +285,10 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         )
       );
 
+      // Step 3: Images loaded (40-60%)
+      setGenerationProgress(60);
+      setGenerationStatus('Converting pages to PDF...');
+
       const pages = Array.from(container.querySelectorAll('.print-page')) as HTMLElement[];
       console.log('Found pages:', pages.length);
       
@@ -284,6 +303,11 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       for (let i = 0; i < pages.length; i++) {
         const el = pages[i];
         console.log(`Capturing page ${i + 1}/${pages.length}`);
+        
+        // Update progress per page (60-90%)
+        const pageProgress = 60 + ((i / pages.length) * 30);
+        setGenerationProgress(pageProgress);
+        setGenerationStatus(`Converting page ${i + 1} of ${pages.length}...`);
         
         const canvas = await html2canvas(el, { 
           scale: 2, 
@@ -310,6 +334,10 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       }
 
+      // Step 4: Finalizing download (90-100%)
+      setGenerationProgress(90);
+      setGenerationStatus('Finalizing download...');
+
       // Reset container to hidden state
       container.style.position = 'absolute';
       container.style.left = '-10000px';
@@ -319,6 +347,9 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       const fileName = `Meal_Labels_${formatDate(selectedDate, 'yyyy-MM-dd')}.pdf`;
       pdf.save(fileName);
+
+      setGenerationProgress(100);
+      setGenerationStatus('Download complete!');
 
       const totalLabels = mealProduction.reduce((sum, meal) => sum + meal.quantity, 0);
       const totalPages = Math.ceil(totalLabels / 10);
@@ -336,6 +367,8 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       });
     } finally {
       setIsGeneratingPDF(false);
+      setGenerationProgress(0);
+      setGenerationStatus('');
     }
   };
 
@@ -409,13 +442,29 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
                       onClick={generatePDFForAllMeals}
                       disabled={isGeneratingPDF}
                     >
-                      <Download className="h-4 w-4 mr-1" />
-                      {isGeneratingPDF ? 'Generating...' : 'Generate Labels'}
+                      {isGeneratingPDF ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4 mr-1" />
+                      )}
+                      {isGeneratingPDF ? `${Math.round(generationProgress)}%` : 'Generate Labels'}
                     </Button>
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Progress indicator during PDF generation */}
+                {isGeneratingPDF && (
+                  <div className="mb-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm font-medium">Generating PDF Labels...</span>
+                    </div>
+                    <Progress value={generationProgress} className="mb-2" />
+                    <p className="text-xs text-muted-foreground">{generationStatus}</p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="text-center p-3 bg-muted/50 rounded">
                     <div className="text-2xl font-bold text-primary">{mealProduction.length}</div>
