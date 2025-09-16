@@ -71,9 +71,31 @@ export const useCustomersData = () => {
           ? allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
           : undefined;
 
-        // Get email from first order if available
-        const firstOrderWithEmail = allOrders.find(order => order.customer_email);
-        const customerEmail = firstOrderWithEmail?.customer_email;
+        // Get email using priority-based selection
+        let customerEmail: string | undefined;
+        
+        // 1. First priority: Find orders where customer_name matches profile full_name
+        const matchingNameOrder = allOrders.find(order => 
+          order.customer_email && order.customer_name === profile.full_name
+        );
+        
+        if (matchingNameOrder) {
+          customerEmail = matchingNameOrder.customer_email;
+        } else {
+          // 2. Second priority: Most frequently used email in this user's orders
+          const emailCounts: Record<string, number> = {};
+          allOrders.forEach(order => {
+            if (order.customer_email) {
+              emailCounts[order.customer_email] = (emailCounts[order.customer_email] || 0) + 1;
+            }
+          });
+          
+          if (Object.keys(emailCounts).length > 0) {
+            // Get the email with the highest count
+            customerEmail = Object.entries(emailCounts)
+              .sort(([,a], [,b]) => b - a)[0][0];
+          }
+        }
 
         customerData.push({
           id: profile.id,
