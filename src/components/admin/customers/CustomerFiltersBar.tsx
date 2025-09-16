@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { SimpleDateRangePicker } from "@/components/ui/simple-date-range-picker";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CustomerExportButton } from "./CustomerExportButton";
@@ -181,7 +181,7 @@ export function CustomerFiltersBar({
                   </Select>
                 </div>
 
-                <DateRangePicker
+                <SimpleDateRangePicker
                   date={{ from: filters.dateRange.from, to: filters.dateRange.to }}
                   onDateChange={(range) => 
                     onFiltersChange({ 
@@ -191,6 +191,7 @@ export function CustomerFiltersBar({
                       } 
                     })
                   }
+                  className="w-full"
                 />
               </div>
             </CollapsibleContent>
@@ -231,7 +232,7 @@ export function CustomerFiltersBar({
             </div>
 
             <div className="hidden sm:block">
-              <DateRangePicker
+              <SimpleDateRangePicker
                 date={{ from: filters.dateRange.from, to: filters.dateRange.to }}
                 onDateChange={(range) => 
                   onFiltersChange({ 
