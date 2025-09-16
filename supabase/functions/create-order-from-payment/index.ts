@@ -111,6 +111,7 @@ serve(async (req) => {
           production_date: metadata.production_date,
           delivery_address: user.user_metadata?.delivery_address,
           stripe_session_id: payment_intent_id,
+          order_notes: metadata.order_notes || null,
         })
         .select()
         .single();
@@ -181,6 +182,7 @@ serve(async (req) => {
           coupon_free_item_id: metadata.coupon_free_item_id || null,
           expires_at: metadata.expires_at || null,
           stripe_session_id: payment_intent_id,
+          order_notes: metadata.order_notes || null,
         })
         .select()
         .single();

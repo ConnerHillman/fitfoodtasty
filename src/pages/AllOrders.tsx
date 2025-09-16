@@ -28,6 +28,7 @@ interface Order {
   total_amount: number;
   status: string;
   created_at: string;
+  order_notes?: string;
   order_items?: any[];
   package_meal_selections?: any[];
   type: 'individual' | 'package';
@@ -142,7 +143,8 @@ const AllOrders: React.FC = () => {
       // Search filter
       const matchesSearch = order.id.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         (order.customer_name || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        (order.customer_email || '').toLowerCase().includes(filters.searchTerm.toLowerCase());
+        (order.customer_email || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        (order.order_notes || '').toLowerCase().includes(filters.searchTerm.toLowerCase());
       
       // Date range filter
       const orderDate = new Date(order.created_at);
@@ -235,6 +237,21 @@ const AllOrders: React.FC = () => {
         }>
           {order.status}
         </Badge>
+      )
+    },
+    {
+      key: 'order_notes',
+      header: 'Notes',
+      accessor: (order) => (
+        <div className="max-w-[150px]">
+          {order.order_notes ? (
+            <div className="text-xs text-muted-foreground truncate" title={order.order_notes}>
+              📝 {order.order_notes.slice(0, 50)}{order.order_notes.length > 50 ? '...' : ''}
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground/50">No notes</span>
+          )}
+        </div>
       )
     },
     {
@@ -383,7 +400,7 @@ const AllOrders: React.FC = () => {
         onFiltersChange={(newFilters) => setFilters(prev => ({ ...prev, ...newFilters }))}
         totalCount={orders.length}
         filteredCount={filteredOrders.length}
-        searchPlaceholder="Search orders by ID, customer name, or email..."
+        searchPlaceholder="Search orders by ID, customer name, email, or notes..."
         sortOptions={sortOptions}
         viewModes={['list']}
         entityName="order"

@@ -67,6 +67,7 @@ interface OrderDetails {
   production_date?: string;
   created_at: string;
   updated_at: string;
+  order_notes?: string;
   order_items?: OrderItem[];
   package_id?: string;
   package_meal_selections?: PackageMealSelection[];
@@ -538,6 +539,23 @@ const OrderDetails: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Order Notes */}
+            {order.order_notes && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit3 className="h-5 w-5" />
+                    Order Notes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <p className="text-sm whitespace-pre-wrap">{order.order_notes}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Order Timeline */}
             <Card>

@@ -37,6 +37,7 @@ serve(async (req) => {
       coupon_code,
       coupon_data,
       discount_percentage,
+      order_notes,
     } = await req.json().catch(() => ({ items: [] }));
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -113,6 +114,7 @@ serve(async (req) => {
           quantity: item.quantity,
           amount: typeof item.amount === "number" ? item.amount : Math.round((item.price ?? 0) * 100)
         }))),
+        order_notes: order_notes || '',
       },
     });
 

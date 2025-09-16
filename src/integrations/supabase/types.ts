@@ -1023,6 +1023,7 @@ export type Database = {
           discount_amount: number | null
           id: string
           last_modified_by: string | null
+          order_notes: string | null
           production_date: string | null
           referral_code_used: string | null
           refund_amount: number | null
@@ -1052,6 +1053,7 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           last_modified_by?: string | null
+          order_notes?: string | null
           production_date?: string | null
           referral_code_used?: string | null
           refund_amount?: number | null
@@ -1081,6 +1083,7 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           last_modified_by?: string | null
+          order_notes?: string | null
           production_date?: string | null
           referral_code_used?: string | null
           refund_amount?: number | null
@@ -1167,6 +1170,7 @@ export type Database = {
           delivery_address: string | null
           id: string
           last_modified_by: string | null
+          order_notes: string | null
           package_id: string | null
           production_date: string | null
           refund_amount: number | null
@@ -1190,6 +1194,7 @@ export type Database = {
           delivery_address?: string | null
           id?: string
           last_modified_by?: string | null
+          order_notes?: string | null
           package_id?: string | null
           production_date?: string | null
           refund_amount?: number | null
@@ -1213,6 +1218,7 @@ export type Database = {
           delivery_address?: string | null
           id?: string
           last_modified_by?: string | null
+          order_notes?: string | null
           package_id?: string | null
           production_date?: string | null
           refund_amount?: number | null
