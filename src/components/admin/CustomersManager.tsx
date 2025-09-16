@@ -109,6 +109,15 @@ const CustomersManager = () => {
       cell: (value: any, customer: any) => `£${(customer.total_spent || 0).toFixed(2)}`,
     },
     {
+      key: "last_order_date",
+      header: "Last Order",
+      sortable: true,
+      cell: (value: any, customer: any) => 
+        customer.last_order_date 
+          ? new Date(customer.last_order_date).toLocaleDateString()
+          : 'Never',
+    },
+    {
       key: "created_at",
       header: "Joined",
       sortable: true,
