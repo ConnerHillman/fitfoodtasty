@@ -32,7 +32,7 @@ const Cart = () => {
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
   const [selectedCollectionPoint, setSelectedCollectionPoint] = useState<string>("");
   const [collectionPoints, setCollectionPoints] = useState<any[]>([]);
-  const [deliveryFee, setDeliveryFee] = useState(4.5);
+  const [deliveryFee, setDeliveryFee] = useState(5.99);
   const [clientSecret, setClientSecret] = useState<string>("");
   
   // Coupon state
@@ -218,7 +218,7 @@ const Cart = () => {
           if (!Number.isNaN(num)) setDeliveryFee(num);
         }
       } catch (e) {
-        // leave default 2.99 on error
+        // leave default 5.99 on error
       }
     };
 
