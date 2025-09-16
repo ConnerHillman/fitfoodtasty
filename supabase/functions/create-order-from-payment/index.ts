@@ -64,6 +64,28 @@ serve(async (req) => {
     const originalAmount = paymentIntent.amount; // in cents
     const discountAmount = discountPercentage > 0 ? Math.round((originalAmount * discountPercentage) / 100) : 0;
     const finalAmount = originalAmount; // Stripe already processed the discounted amount
+    
+    // Handle gift card redemption if present
+    const giftCardCode = metadata.gift_card_code;
+    const giftCardAmountUsed = parseFloat(metadata.gift_card_amount_used || '0');
+    const giftCardId = metadata.gift_card_id;
+    
+    if (giftCardCode && giftCardId && giftCardAmountUsed > 0) {
+      // Redeem the gift card
+      const { error: redeemError } = await supabaseClient.functions.invoke('redeem-gift-card', {
+        body: {
+          code: giftCardCode,
+          amount_to_use: giftCardAmountUsed,
+          user_id: user.id,
+          order_id: null // Will be updated later
+        }
+      });
+      
+      if (redeemError) {
+        console.error('Failed to redeem gift card:', redeemError);
+        throw new Error('Failed to redeem gift card');
+      }
+    }
 
     // Check if this is a package order
     const hasPackageItems = items.some((item: any) => item.type === 'package');
@@ -118,6 +140,23 @@ serve(async (req) => {
       if (selectionsError) throw selectionsError;
 
       console.log('Package order created successfully:', packageOrderData.id);
+      
+      // Update gift card transaction with order ID if gift card was used
+      if (giftCardId && giftCardAmountUsed > 0) {
+        const { error: updateError } = await supabaseClient
+          .from('gift_card_transactions')
+          .update({ order_id: packageOrderData.id })
+          .eq('gift_card_id', giftCardId)
+          .eq('amount_used', giftCardAmountUsed)
+          .eq('user_id', user.id)
+          .is('order_id', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+          
+        if (updateError) {
+          console.error('Failed to update gift card transaction with order ID:', updateError);
+        }
+      }
 
     } else {
       // Handle regular order creation
@@ -191,6 +230,23 @@ serve(async (req) => {
       if (itemsError) throw itemsError;
 
       console.log('Order created successfully:', orderData.id);
+      
+      // Update gift card transaction with order ID if gift card was used
+      if (giftCardId && giftCardAmountUsed > 0) {
+        const { error: updateError } = await supabaseClient
+          .from('gift_card_transactions')
+          .update({ order_id: orderData.id })
+          .eq('gift_card_id', giftCardId)
+          .eq('amount_used', giftCardAmountUsed)
+          .eq('user_id', user.id)
+          .is('order_id', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+          
+        if (updateError) {
+          console.error('Failed to update gift card transaction with order ID:', updateError);
+        }
+      }
     }
 
     return new Response(JSON.stringify({ 

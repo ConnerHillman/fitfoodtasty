@@ -23,3 +23,18 @@ verify_jwt = true
 
 [functions.create-reorder]
 verify_jwt = true
+
+[functions.create-gift-card-payment]
+verify_jwt = false
+
+[functions.process-gift-card-payment]
+verify_jwt = false
+
+[functions.validate-gift-card]
+verify_jwt = false
+
+[functions.redeem-gift-card]
+verify_jwt = false
+
+[functions.process-stripe-webhook]
+verify_jwt = false

@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Elements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import PaymentForm from "@/components/PaymentForm";
+import GiftCardInput from "@/components/GiftCardInput";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, clearCart, addToCart } = useCart();
@@ -40,6 +41,13 @@ const Cart = () => {
   const [couponApplied, setCouponApplied] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null); // Store full coupon data
   const [freeItemAdded, setFreeItemAdded] = useState(false);
+  
+  // Gift card state
+  const [appliedGiftCard, setAppliedGiftCard] = useState<{
+    code: string;
+    amount_used: number;
+    gift_card_id: string;
+  } | null>(null);
   
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [deliveryZone, setDeliveryZone] = useState<any>(null);
@@ -264,6 +272,9 @@ const Cart = () => {
             customer_name: (user as any)?.user_metadata?.full_name,
             coupon_code: couponApplied ? appliedCoupon?.code : null,
             coupon_data: couponApplied ? appliedCoupon : null,
+            gift_card_code: appliedGiftCard?.code || null,
+            gift_card_amount_used: appliedGiftCard?.amount_used || 0,
+            gift_card_id: appliedGiftCard?.gift_card_id || null,
           }
         });
 
@@ -311,15 +322,21 @@ const Cart = () => {
       fees = 0;
     }
     
-    const total = subtotal + fees;
+    let total = subtotal + fees;
     
+    // Apply coupon discount first
     if (couponApplied && appliedCoupon) {
       if (appliedCoupon.discount_percentage > 0) {
         const discountAmount = (total * appliedCoupon.discount_percentage) / 100;
-        return Math.max(0, total - discountAmount);
+        total = Math.max(0, total - discountAmount);
       } else if (appliedCoupon.discount_amount > 0) {
-        return Math.max(0, total - appliedCoupon.discount_amount);
+        total = Math.max(0, total - appliedCoupon.discount_amount);
       }
+    }
+    
+    // Apply gift card discount
+    if (appliedGiftCard) {
+      total = Math.max(0, total - appliedGiftCard.amount_used);
     }
     
     return total;
@@ -1514,6 +1531,30 @@ const Cart = () => {
                       )}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Gift Card Input Section */}
+              {requestedDeliveryDate && (
+                <div className="mt-4 mb-4">
+                  <GiftCardInput
+                    onGiftCardApplied={(giftCardData) => {
+                      setAppliedGiftCard(giftCardData);
+                      toast({
+                        title: "Gift Card Applied!",
+                        description: `Applied £${giftCardData.amount_used} from gift card ${giftCardData.code}`,
+                      });
+                    }}
+                    onGiftCardRemoved={() => {
+                      setAppliedGiftCard(null);
+                      toast({
+                        title: "Gift Card Removed",
+                        description: "Gift card has been removed from your order.",
+                      });
+                    }}
+                    appliedGiftCard={appliedGiftCard}
+                    totalAmount={getDiscountedTotal()}
+                  />
                 </div>
               )}
 
