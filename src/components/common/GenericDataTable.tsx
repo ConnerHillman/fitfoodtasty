@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ReactNode } from "react";
 import { LucideIcon, MoreHorizontal } from "lucide-react";
 
@@ -122,31 +123,84 @@ export function GenericDataTable<T>({
       );
     }
 
-    // Multiple actions - show dropdown menu here if needed
+    if (visibleActions.length === 2) {
+      return (
+        <div className="flex gap-1">
+          {visibleActions.map((action, index) => {
+            const Icon = action.icon;
+            return (
+              <Button
+                key={index}
+                variant={action.variant || "ghost"}
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  action.onClick(item);
+                }}
+                className={action.className}
+              >
+                {Icon && <Icon className="h-4 w-4 mr-1" />}
+                {action.label}
+              </Button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Multiple actions (3+) - show first action + dropdown
+    const primaryAction = visibleActions[0];
+    const dropdownActions = visibleActions.slice(1);
+    const PrimaryIcon = primaryAction.icon;
+
     return (
       <div className="flex gap-1">
-        {visibleActions.slice(0, 2).map((action, index) => {
-          const Icon = action.icon;
-          return (
-            <Button
-              key={index}
-              variant={action.variant || "ghost"}
+        <Button
+          variant={primaryAction.variant || "ghost"}
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            primaryAction.onClick(item);
+          }}
+          className={primaryAction.className}
+        >
+          {PrimaryIcon && <PrimaryIcon className="h-4 w-4 mr-1" />}
+          {primaryAction.label}
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                action.onClick(item);
-              }}
-              className={action.className}
+              onClick={(e) => e.stopPropagation()}
+              className="h-8 w-8 p-0"
             >
-              {Icon && <Icon className="h-4 w-4" />}
+              <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">More actions</span>
             </Button>
-          );
-        })}
-        {visibleActions.length > 2 && (
-          <Button variant="ghost" size="sm">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align="end"
+            className="w-48 bg-popover border border-border shadow-md z-50"
+          >
+            {dropdownActions.map((action, index) => {
+              const Icon = action.icon;
+              return (
+                <DropdownMenuItem
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick(item);
+                  }}
+                  className="cursor-pointer"
+                >
+                  {Icon && <Icon className="h-4 w-4 mr-2" />}
+                  {action.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     );
   };
