@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Truck, MapPin } from "lucide-react";
+import { Truck } from "lucide-react";
 
 interface DeliveryOptionsProps {
   deliveryMethod: "delivery" | "pickup";
@@ -89,18 +89,11 @@ const DeliveryOptions: React.FC<DeliveryOptionsProps> = ({
               />
             </div>
             
-            {postcodeChecked && (
+            {postcodeChecked && !deliveryZone && (
               <div className="mt-2">
-                {deliveryZone ? (
-                  <Badge variant="default" className="bg-green-50 text-green-700 border-green-200">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    Delivery available in {deliveryZone.zone_name}
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive">
-                    Delivery not available for this postcode
-                  </Badge>
-                )}
+                <Badge variant="destructive">
+                  Delivery not available for this postcode
+                </Badge>
               </div>
             )}
           </div>

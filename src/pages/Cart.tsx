@@ -52,18 +52,8 @@ const Cart = () => {
   useEffect(() => {
     const createPI = async () => {
       try {
-        if (!dateValidation.requestedDeliveryDate) return;
-
-        // Validate availability for the chosen day
-        const validDay = dateValidation.isAvailableDay(new Date(dateValidation.requestedDeliveryDate + 'T12:00:00'));
-        if (!validDay) return;
-
-        // Validate delivery/pickup specifics
-        if (deliveryLogic.deliveryMethod === 'pickup') {
-          if (!deliveryLogic.selectedCollectionPoint) return;
-        } else {
-          if (!deliveryLogic.deliveryZone) return;
-        }
+        // Allow early PaymentIntent creation so payment UI is visible
+        if (items.length === 0) return;
 
         // Skip payment intent creation for 100% off coupons
         if (discounts.isCoupon100PercentOff(subtotal, fees)) {

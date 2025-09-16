@@ -5,6 +5,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { Link } from "react-router-dom";
 import { ShoppingBag, User } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import PaymentForm from "@/components/PaymentForm";
 
 interface PaymentSectionProps {
@@ -87,10 +88,19 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   if (!clientSecret) {
     return (
       <Card className="bg-background border border-border">
-        <CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">
-            Please select a delivery date to continue
-          </p>
+        <CardContent className="p-6 space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-medium">Secure payment</h3>
+            <p className="text-muted-foreground">Preparing your payment details...</p>
+          </div>
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-2/3" />
+            <Skeleton className="h-10 w-1/2" />
+          </div>
+          <Button className="w-full h-12" size="lg" disabled>
+            Pay now
+          </Button>
         </CardContent>
       </Card>
     );
