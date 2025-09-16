@@ -78,11 +78,22 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
 
   // Calculate use by date from production date or fallback to 5 days from now
   useEffect(() => {
-    if (order?.production_date) {
-      const productionDate = new Date(order.production_date);
-      const calculatedUseByDate = addDays(productionDate, 5);
-      setUseByDate(formatDate(calculatedUseByDate, 'yyyy-MM-dd'));
-    } else {
+    try {
+      if (order?.production_date) {
+        const productionDate = new Date(order.production_date);
+        // Check if the date is valid
+        if (!isNaN(productionDate.getTime())) {
+          const calculatedUseByDate = addDays(productionDate, 5);
+          setUseByDate(formatDate(calculatedUseByDate, 'yyyy-MM-dd'));
+          return;
+        }
+      }
+      // Fallback to 5 days from now
+      const fallbackDate = addDays(new Date(), 5);
+      setUseByDate(formatDate(fallbackDate, 'yyyy-MM-dd'));
+    } catch (error) {
+      console.error('Error calculating use by date:', error);
+      // Ultimate fallback
       const fallbackDate = addDays(new Date(), 5);
       setUseByDate(formatDate(fallbackDate, 'yyyy-MM-dd'));
     }
@@ -298,7 +309,7 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Use by date: <strong>{formatDate(new Date(useByDate), 'EEEE, MMMM d, yyyy')}</strong>
+                Use by date: <strong>{useByDate ? formatDate(new Date(useByDate), 'EEEE, MMMM d, yyyy') : 'Not set'}</strong>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setShowPreview(false)}>
@@ -356,7 +367,7 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
                 <span className="text-muted-foreground">Use by date:</span>{' '}
                 <Badge variant="secondary" className="ml-1">
                   <Calendar className="h-3 w-3 mr-1" />
-                  {formatDate(new Date(useByDate), 'MMM d, yyyy')}
+                  {useByDate ? formatDate(new Date(useByDate), 'MMM d, yyyy') : 'Not set'}
                 </Badge>
               </div>
             </div>
