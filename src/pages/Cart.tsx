@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,11 +26,6 @@ const Cart = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  
-  // Refs
-  const paymentSectionRef = useRef<HTMLDivElement>(null);
-  const mobilePaymentAnchorRef = useRef<HTMLDivElement>(null);
-  const desktopPaymentAnchorRef = useRef<HTMLDivElement>(null);
   
   // State variables
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
@@ -571,64 +566,6 @@ const Cart = () => {
     }
   };
 
-  // Auto-scroll to payment section after date selection
-  const scrollToPaymentSection = () => {
-    console.log('scrollToPaymentSection called', { 
-      isMobile, 
-      user: !!user, 
-      clientSecret: !!clientSecret,
-      hasPaymentSection: !!paymentSectionRef.current 
-    });
-    
-    // Wait for payment section to be ready if user is logged in
-    if (user && !clientSecret && !appliedCoupon) {
-      console.log('Waiting for clientSecret to be ready...');
-      setTimeout(() => scrollToPaymentSection(), 200);
-      return;
-    }
-    
-    // Determine which anchor to scroll to based on device type
-    let targetRef = null;
-    let context = '';
-    
-    if (isMobile && mobilePaymentAnchorRef.current) {
-      targetRef = mobilePaymentAnchorRef.current;
-      context = 'mobile payment section';
-    } else if (!isMobile && desktopPaymentAnchorRef.current) {
-      targetRef = desktopPaymentAnchorRef.current;
-      context = 'desktop payment section';
-    }
-    
-    if (targetRef) {
-      console.log(`Scrolling to ${context}`);
-      
-      // Calculate offset for sticky header (approximately 80px)
-      const headerOffset = 100;
-      const elementPosition = targetRef.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-      
-      // Add subtle highlight animation
-      if (paymentSectionRef.current) {
-        paymentSectionRef.current.style.animation = 'fade-in 0.5s ease-out';
-        paymentSectionRef.current.style.boxShadow = '0 0 20px rgba(var(--primary), 0.1)';
-        setTimeout(() => {
-          if (paymentSectionRef.current) {
-            paymentSectionRef.current.style.boxShadow = '';
-          }
-        }, 2000);
-      }
-      
-      console.log(`Successfully scrolled to ${context}`);
-    } else {
-      console.log('No valid scroll target found - payment section may not be rendered yet');
-    }
-  };
-
   // Get available dates for selected collection point
   const getAvailableCollectionDates = () => {
     if (deliveryMethod !== "pickup" || !selectedCollectionPoint) return [];
@@ -893,7 +830,6 @@ const Cart = () => {
         </p>
       </div>
 
-
       {/* Mobile: Show collapsible order summary first */}
       <div className="block lg:hidden mb-6">
         <Card>
@@ -1060,7 +996,6 @@ const Cart = () => {
             );
           })}
         </div>
-
 
         {/* Order Summary - Desktop only */}
         <div className="order-1 lg:order-2 hidden lg:block space-y-4">
@@ -1363,12 +1298,9 @@ const Cart = () => {
                 </div>
               )}
 
-              {/* Mobile Payment Anchor */}
-              <div ref={mobilePaymentAnchorRef} className="lg:hidden invisible h-0" aria-hidden="true" />
-              
               {/* Payment Form - Only for authenticated users with payment required */}
               {requestedDeliveryDate && user && clientSecret && !isCoupon100PercentOff() && (
-                <div ref={paymentSectionRef} className="mt-4 animate-fade-in">
+                <div className="mt-4">
                   <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
                     <PaymentForm
                       clientSecret={clientSecret}
@@ -1650,9 +1582,6 @@ const Cart = () => {
                 </div>
               )}
 
-              {/* Desktop Payment Anchor */}
-              <div ref={desktopPaymentAnchorRef} className="hidden lg:block invisible h-0" aria-hidden="true" />
-              
               {/* Payment Form - Only for authenticated users with payment required */}
               {requestedDeliveryDate && user && clientSecret && !isCoupon100PercentOff() && (
                 <div className="mt-4">
@@ -1711,11 +1640,6 @@ const Cart = () => {
               const dateString = `${year}-${month}-${day}`;
               setRequestedDeliveryDate(dateString);
               setCalendarOpen(false); // Close the popover after selection
-              
-              // Auto-scroll to payment section after a delay to allow DOM updates
-              setTimeout(() => {
-                scrollToPaymentSection();
-              }, 500);
             }
           }}
           disabled={isDateDisabled}
