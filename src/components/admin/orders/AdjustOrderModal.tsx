@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Edit3, Package, CreditCard, AlertTriangle, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OrderItem {
   id: string;
@@ -67,13 +68,21 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
     setIsSubmitting(true);
     
     try {
-      // TODO: Implement actual order adjustment logic
-      // This would involve updating the order in the database
-      // and potentially processing payment adjustments
+      const { data, error } = await supabase.functions.invoke('adjust-order', {
+        body: {
+          orderId: order.id,
+          orderType: order.type || 'individual',
+          adjustmentType,
+          amount: adjustmentAmount,
+          reason: adjustmentReason
+        }
+      });
+
+      if (error) throw error;
       
       toast({
         title: "Order Adjusted",
-        description: `Order ${order.id.slice(-8)} has been successfully adjusted.`,
+        description: data.message || `Order ${order.id.slice(-8)} has been successfully adjusted.`,
       });
       
       onOrderUpdated();
@@ -84,11 +93,11 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
       setAdjustmentAmount(0);
       setAdjustmentType('discount');
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adjusting order:', error);
       toast({
         title: "Adjustment Failed",
-        description: "Failed to adjust the order. Please try again.",
+        description: error.message || "Failed to adjust the order. Please try again.",
         variant: "destructive",
       });
     } finally {

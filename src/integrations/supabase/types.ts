@@ -773,6 +773,48 @@ export type Database = {
         }
         Relationships: []
       }
+      order_audit_log: {
+        Row: {
+          action_type: string
+          amount_changed: number | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+          order_id: string
+          order_type: string
+          performed_by: string
+          reason: string | null
+        }
+        Insert: {
+          action_type: string
+          amount_changed?: number | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          order_id: string
+          order_type?: string
+          performed_by: string
+          reason?: string | null
+        }
+        Update: {
+          action_type?: string
+          amount_changed?: number | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          order_id?: string
+          order_type?: string
+          performed_by?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -837,14 +879,19 @@ export type Database = {
           delivery_address: string | null
           discount_amount: number | null
           id: string
+          last_modified_by: string | null
           production_date: string | null
           referral_code_used: string | null
+          refund_amount: number | null
+          refund_reason: string | null
           requested_delivery_date: string | null
           status: string
           stripe_session_id: string | null
           total_amount: number
           updated_at: string
           user_id: string
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           actual_delivery_date?: string | null
@@ -861,14 +908,19 @@ export type Database = {
           delivery_address?: string | null
           discount_amount?: number | null
           id?: string
+          last_modified_by?: string | null
           production_date?: string | null
           referral_code_used?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount: number
           updated_at?: string
           user_id: string
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           actual_delivery_date?: string | null
@@ -885,14 +937,19 @@ export type Database = {
           delivery_address?: string | null
           discount_amount?: number | null
           id?: string
+          last_modified_by?: string | null
           production_date?: string | null
           referral_code_used?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
           updated_at?: string
           user_id?: string
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: []
       }
@@ -966,14 +1023,19 @@ export type Database = {
           customer_name: string | null
           delivery_address: string | null
           id: string
+          last_modified_by: string | null
           package_id: string | null
           production_date: string | null
+          refund_amount: number | null
+          refund_reason: string | null
           requested_delivery_date: string | null
           status: string
           stripe_session_id: string | null
           total_amount: number
           updated_at: string
           user_id: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           actual_delivery_date?: string | null
@@ -984,14 +1046,19 @@ export type Database = {
           customer_name?: string | null
           delivery_address?: string | null
           id?: string
+          last_modified_by?: string | null
           package_id?: string | null
           production_date?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount: number
           updated_at?: string
           user_id?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           actual_delivery_date?: string | null
@@ -1002,14 +1069,19 @@ export type Database = {
           customer_name?: string | null
           delivery_address?: string | null
           id?: string
+          last_modified_by?: string | null
           package_id?: string | null
           production_date?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
           updated_at?: string
           user_id?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -1384,6 +1456,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_order_change: {
+        Args: {
+          p_action_type: string
+          p_amount_changed?: number
+          p_metadata?: Json
+          p_new_values?: Json
+          p_old_values?: Json
+          p_order_id: string
+          p_order_type: string
+          p_performed_by: string
+          p_reason?: string
+        }
+        Returns: string
       }
       recalculate_all_meal_nutrition: {
         Args: Record<PropertyKey, never>

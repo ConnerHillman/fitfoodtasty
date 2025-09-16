@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RotateCcw, AlertTriangle, CreditCard, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Order {
   id: string;
@@ -65,16 +66,21 @@ export const RefundOrderDialog: React.FC<RefundOrderDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // TODO: Implement actual refund processing
-      // This would involve:
-      // 1. Processing refund through Stripe API
-      // 2. Updating order status and refund amount
-      // 3. Creating refund record in database
-      // 4. Sending customer notification if selected
+      const { data, error } = await supabase.functions.invoke('process-refund', {
+        body: {
+          orderId: order.id,
+          orderType: order.type || 'individual',
+          amount: refundAmount,
+          reason: refundReason,
+          notifyCustomer
+        }
+      });
+
+      if (error) throw error;
       
       toast({
         title: "Refund Processed",
-        description: `Refund of ${formatCurrency(refundAmount)} has been processed for order ${order.id.slice(-8)}.`,
+        description: data.message || `Refund of ${formatCurrency(refundAmount)} has been processed for order ${order.id.slice(-8)}.`,
       });
       
       onOrderRefunded();
@@ -86,11 +92,11 @@ export const RefundOrderDialog: React.FC<RefundOrderDialogProps> = ({
       setIsPartialRefund(false);
       setNotifyCustomer(true);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing refund:', error);
       toast({
         title: "Refund Failed",
-        description: "Failed to process the refund. Please try again.",
+        description: error.message || "Failed to process the refund. Please try again.",
         variant: "destructive",
       });
     } finally {

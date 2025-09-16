@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { X, AlertTriangle, Package, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Order {
   id: string;
@@ -52,16 +53,21 @@ export const VoidOrderDialog: React.FC<VoidOrderDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // TODO: Implement actual order voiding logic
-      // This would involve:
-      // 1. Updating order status to 'voided'
-      // 2. Processing refund if selected
-      // 3. Sending customer notification if selected
-      // 4. Creating an audit log entry
+      const { data, error } = await supabase.functions.invoke('void-order', {
+        body: {
+          orderId: order.id,
+          orderType: order.type || 'individual',
+          reason: voidReason,
+          processRefund,
+          notifyCustomer
+        }
+      });
+
+      if (error) throw error;
       
       toast({
         title: "Order Voided",
-        description: `Order ${order.id.slice(-8)} has been voided successfully.`,
+        description: data.message || `Order ${order.id.slice(-8)} has been voided successfully.`,
       });
       
       onOrderVoided();
@@ -72,11 +78,11 @@ export const VoidOrderDialog: React.FC<VoidOrderDialogProps> = ({
       setProcessRefund(false);
       setNotifyCustomer(true);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error voiding order:', error);
       toast({
         title: "Void Failed",
-        description: "Failed to void the order. Please try again.",
+        description: error.message || "Failed to void the order. Please try again.",
         variant: "destructive",
       });
     } finally {
