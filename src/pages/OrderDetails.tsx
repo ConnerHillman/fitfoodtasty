@@ -204,6 +204,14 @@ const OrderDetails: React.FC = () => {
     }).format(amount);
   };
 
+  const getTotalMealsCount = () => {
+    if (isPackageOrder) {
+      return order.package_meal_selections?.reduce((total, selection) => total + selection.quantity, 0) || 0;
+    } else {
+      return order.order_items?.reduce((total, item) => total + item.quantity, 0) || 0;
+    }
+  };
+
   // Action handlers
   const handleAdjustOrder = () => {
     setAdjustModalOpen(true);
@@ -446,8 +454,8 @@ const OrderDetails: React.FC = () => {
                 </CardTitle>
                 <CardDescription>
                   {isPackageOrder 
-                    ? `${order.packages?.name} - ${order.packages?.meal_count} meals`
-                    : `${order.order_items?.length || 0} items`
+                    ? `${order.packages?.name} - ${getTotalMealsCount()} meals`
+                    : `${getTotalMealsCount()} meals`
                   }
                 </CardDescription>
               </CardHeader>
