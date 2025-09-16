@@ -327,15 +327,12 @@ const Cart = () => {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/menu">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Continue Shopping
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-bold">Your Cart</h1>
-        </div>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/menu">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Continue Shopping
+          </Link>
+        </Button>
         <Button 
           variant="outline" 
           size="sm"
