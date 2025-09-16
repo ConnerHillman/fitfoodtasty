@@ -5,6 +5,7 @@ import { useCustomerDetail } from '@/contexts/ModalContext';
 interface CustomerLinkProps {
   customerId: string;
   customerName: string;
+  customerData?: any; // Full customer object
   className?: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
@@ -13,6 +14,7 @@ interface CustomerLinkProps {
 const CustomerLink: React.FC<CustomerLinkProps> = ({ 
   customerId, 
   customerName, 
+  customerData,
   className = "",
   variant = "link",
   size = "sm"
@@ -22,7 +24,7 @@ const CustomerLink: React.FC<CustomerLinkProps> = ({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    openCustomerDetail(customerId);
+    openCustomerDetail(customerData || { user_id: customerId, full_name: customerName });
   };
 
   return (

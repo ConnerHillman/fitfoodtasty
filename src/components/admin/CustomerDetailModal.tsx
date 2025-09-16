@@ -69,7 +69,7 @@ interface ActivityItem {
 
 const CustomerDetailModal = () => {
   const { toast } = useToast();
-  const { isOpen, data: customerId, close: closeCustomerDetail } = useCustomerDetail();
+  const { isOpen, data: customerData, close: closeCustomerDetail } = useCustomerDetail();
 
   const [loading, setLoading] = useState(false);
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
@@ -79,11 +79,14 @@ const CustomerDetailModal = () => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [email, setEmail] = useState<string>("");
 
+  // Type the customerData properly
+  const typedCustomerData = customerData as any;
+
   useEffect(() => {
-    if (customerId && isOpen) {
+    if (typedCustomerData && isOpen) {
       fetchAllCustomerData();
     }
-  }, [customerId, isOpen]);
+  }, [typedCustomerData, isOpen]);
 
   // Fetch stats and other data when orders change
   useEffect(() => {
@@ -95,15 +98,27 @@ const CustomerDetailModal = () => {
   }, [orders]);
 
   const fetchAllCustomerData = async () => {
-    if (!customerId) return;
+    if (!typedCustomerData) return;
 
     setLoading(true);
     try {
-      await Promise.all([
-        fetchCustomerProfile(),
-        fetchOrders(),
-        fetchEmail()
-      ]);
+      // Set customer data directly from the provided data
+      setCustomer({
+        id: typedCustomerData.user_id,
+        user_id: typedCustomerData.user_id,
+        full_name: typedCustomerData.full_name,
+        phone: typedCustomerData.phone || '',
+        delivery_address: typedCustomerData.delivery_address || '',
+        delivery_instructions: typedCustomerData.delivery_instructions || '',
+        city: typedCustomerData.city || '',
+        postal_code: typedCustomerData.postal_code || '',
+        county: typedCustomerData.county || '',
+        created_at: typedCustomerData.created_at
+      });
+      
+      setEmail(typedCustomerData.email || '');
+      
+      await fetchOrders();
     } catch (error) {
       console.error("Error fetching customer data:", error);
       toast({
@@ -116,36 +131,8 @@ const CustomerDetailModal = () => {
     }
   };
 
-  const fetchCustomerProfile = async () => {
-    if (!customerId) return;
-
-    try {
-      // Get user from auth
-      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(customerId);
-      if (authError) throw authError;
-
-      // Create a minimal customer profile from available data
-      if (authData?.user) {
-        setCustomer({
-          id: authData.user.id,
-          user_id: authData.user.id,
-          full_name: authData.user.user_metadata?.full_name || authData.user.email || 'Unknown',
-          phone: authData.user.user_metadata?.phone || '',
-          delivery_address: authData.user.user_metadata?.delivery_address || '',
-          delivery_instructions: '',
-          city: authData.user.user_metadata?.city || '',
-          postal_code: authData.user.user_metadata?.postal_code || '',
-          county: '',
-          created_at: authData.user.created_at
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching customer profile:", error);
-    }
-  };
-
   const fetchOrders = async () => {
-    if (!customerId) return;
+    if (!typedCustomerData?.user_id) return;
 
     try {
       // Fetch regular orders
@@ -158,7 +145,7 @@ const CustomerDetailModal = () => {
           status,
           order_items(id)
         `)
-        .eq('user_id', customerId)
+        .eq('user_id', typedCustomerData.user_id)
         .order('created_at', { ascending: false });
 
       if (regularError) throw regularError;
@@ -172,7 +159,7 @@ const CustomerDetailModal = () => {
           total_amount,
           status
         `)
-        .eq('user_id', customerId)
+        .eq('user_id', typedCustomerData.user_id)
         .order('created_at', { ascending: false });
 
       if (packageError) throw packageError;
@@ -263,14 +250,14 @@ const CustomerDetailModal = () => {
   };
 
   const fetchActivities = async () => {
-    if (!customerId) return;
+    if (!typedCustomerData?.user_id) return;
 
     try {
       // Fetch abandoned carts
       const { data: carts, error: cartsError } = await supabase
         .from('abandoned_carts')
         .select('id, created_at, total_amount')
-        .eq('user_id', customerId)
+        .eq('user_id', typedCustomerData.user_id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -303,17 +290,6 @@ const CustomerDetailModal = () => {
     }
   };
 
-  const fetchEmail = async () => {
-    if (!customerId) return;
-
-    try {
-      const { data, error } = await supabase.auth.admin.getUserById(customerId);
-      if (error) throw error;
-      setEmail(data?.user?.email || "");
-    } catch (error) {
-      console.error("Error fetching email:", error);
-    }
-  };
 
   const getCustomerSegment = () => {
     if (!stats) return "New";

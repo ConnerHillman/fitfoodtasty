@@ -94,6 +94,7 @@ const CustomersManager = () => {
           <CustomerLink 
             customerId={customer.user_id} 
             customerName={customer.full_name}
+            customerData={customer}
             className="font-medium"
           />
           <div className="text-sm text-muted-foreground">{customer.email || 'No email'}</div>
