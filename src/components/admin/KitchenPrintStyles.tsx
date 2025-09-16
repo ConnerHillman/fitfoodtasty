@@ -49,7 +49,7 @@ export const KitchenPrintStyles: React.FC = () => {
           padding: 5mm;
         }
         
-        .kitchen-meal-list {
+        .kitchen-meal-list, .kitchen-ingredient-list {
           border-collapse: collapse;
           width: 100%;
           margin-bottom: 3mm;

@@ -44,7 +44,7 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
       const allIngredientNames = new Set(sortedIngredientLineItems.map(item => item.ingredientName));
       setSelectedIngredients(allIngredientNames);
     }
-  }, [sortedIngredientLineItems, selectedIngredients.size, setSelectedIngredients]);
+  }, [sortedIngredientLineItems.length, selectedIngredients.size, setSelectedIngredients]);
 
   // Filter ingredients based on selected ingredients
   const filteredIngredientLineItems = useMemo(() => {
@@ -202,15 +202,7 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
                             </span>
                           </div>
                         ))}
-          </div>
-
-          {/* Filter Status */}
-          {hiddenIngredientsCount > 0 && (
-            <div className="text-sm text-muted-foreground print:hidden">
-              Showing {filteredIngredientLineItems.length} of {sortedIngredientLineItems.length} ingredients 
-              ({hiddenIngredientsCount} hidden by filter)
-            </div>
-          )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -224,6 +216,14 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
             </tbody>
           </table>
         </div>
+
+        {/* Filter Status */}
+        {hiddenIngredientsCount > 0 && (
+          <div className="text-sm text-muted-foreground print:hidden mt-4">
+            Showing {filteredIngredientLineItems.length} of {sortedIngredientLineItems.length} ingredients 
+            ({hiddenIngredientsCount} hidden by filter)
+          </div>
+        )}
         
         <Separator className="my-4" />
         

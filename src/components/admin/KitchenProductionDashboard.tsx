@@ -273,6 +273,7 @@ export const KitchenProductionDashboard: React.FC = () => {
                     "justify-start text-left font-normal text-lg px-4 py-6",
                     !selectedDate && "text-muted-foreground"
                   )}
+                  aria-label="Select production date"
                 >
                   <CalendarIcon className="mr-2 h-5 w-5" />
                   {selectedDate ? formatDate(selectedDate, 'EEEE, MMMM d, yyyy') : "Pick a date"}
@@ -310,7 +311,12 @@ export const KitchenProductionDashboard: React.FC = () => {
               <Download className="h-4 w-4 mr-2" />
               Export Excel
             </Button>
-            <Button onClick={handlePrint} variant="outline" size="lg">
+            <Button 
+              onClick={handlePrint} 
+              disabled={!productionData || (activeTab === 'ingredients' && !productionData?.ingredientLineItems?.length)}
+              variant="outline" 
+              size="lg"
+            >
               <Printer className="h-4 w-4 mr-2" />
               Print
             </Button>
