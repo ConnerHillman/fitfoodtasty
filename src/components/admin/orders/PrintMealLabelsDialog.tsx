@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Printer, Package, AlertTriangle, Calendar, Download, FileText } from 'lucide-react';
+import { Printer, Package, AlertTriangle, Calendar, Download, FileText, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { LabelPrintPreview } from '@/components/admin/LabelPrintPreview';
 import { format as formatDate, addDays } from 'date-fns';
@@ -72,8 +74,11 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
 }) => {
   const [mealLabels, setMealLabels] = useState<MealLabelData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState<'idle' | 'preparing' | 'generating' | 'downloading' | 'complete'>('idle');
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [useByDate, setUseByDate] = useState('');
 
   // Calculate use by date from production date or fallback to 5 days from now
@@ -233,7 +238,15 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
     }
 
     setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStatus('preparing');
+    setError(null);
+
     try {
+      // Simulate progress steps
+      setGenerationProgress(20);
+      setGenerationStatus('preparing');
+      
       // Convert to MealProduction format for the edge function
       const mealProduction: MealProduction[] = selectedLabels.map(label => ({
         mealId: label.mealId,
@@ -248,6 +261,9 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
         orderCount: 1
       }));
 
+      setGenerationProgress(40);
+      setGenerationStatus('generating');
+
       // Use the edge function to generate PDF
       const { data, error } = await supabase.functions.invoke('generate-labels-pdf', {
         body: {
@@ -256,7 +272,12 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message || 'Failed to generate labels');
+      }
+
+      setGenerationProgress(80);
+      setGenerationStatus('downloading');
 
       // Create and trigger download with proper filename from response
       if (data) {
@@ -276,14 +297,27 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
         window.URL.revokeObjectURL(url);
       }
 
+      setGenerationProgress(100);
+      setGenerationStatus('complete');
+
       const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
-      toast.success(`Generated ${totalLabels} labels for ${selectedLabels.length} meals`);
-      onClose();
-    } catch (error) {
+      toast.success(`Successfully generated ${totalLabels} labels for ${selectedLabels.length} meals`);
+      
+      // Close dialog after a brief delay to show completion
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+
+    } catch (error: any) {
       console.error('Error generating labels:', error);
-      toast.error('Failed to generate labels. Please try again.');
+      setError(error.message || 'Failed to generate labels. Please try again.');
+      toast.error(error.message || 'Failed to generate labels. Please try again.');
+      setGenerationStatus('idle');
     } finally {
       setIsGenerating(false);
+      if (generationStatus !== 'complete') {
+        setGenerationProgress(0);
+      }
     }
   };
 
@@ -322,6 +356,9 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
               <Package className="h-5 w-5" />
               Label Preview - {order.customer_name || 'Order'} #{order.id.slice(-8)}
             </DialogTitle>
+            <DialogDescription>
+              Preview of meal labels before generating the final document for printing.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -330,12 +367,24 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
                 Use by date: <strong>{useByDate ? formatDate(new Date(useByDate), 'EEEE, MMMM d, yyyy') : 'Not set'}</strong>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowPreview(false)}>
+                <Button variant="outline" onClick={() => setShowPreview(false)} disabled={isGenerating}>
                   Back to Selection
                 </Button>
                 <Button onClick={generatePDFForLabels} disabled={isGenerating}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {isGenerating ? 'Generating...' : 'Generate PDF'}
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {generationStatus === 'preparing' && 'Preparing...'}
+                      {generationStatus === 'generating' && 'Generating...'}
+                      {generationStatus === 'downloading' && 'Downloading...'}
+                      {generationStatus === 'complete' && 'Complete!'}
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Generate Labels
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -358,7 +407,35 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
             <Printer className="h-5 w-5" />
             Print Meal Labels - Order #{order.id.slice(-8)}
           </DialogTitle>
+          <DialogDescription>
+            Select meals to generate printable labels for production and packaging.
+          </DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {isGenerating && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {generationStatus === 'preparing' && 'Preparing label data...'}
+              {generationStatus === 'generating' && 'Generating labels...'}
+              {generationStatus === 'downloading' && 'Preparing download...'}
+              {generationStatus === 'complete' && (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  Labels generated successfully!
+                </>
+              )}
+            </div>
+            <Progress value={generationProgress} className="w-full" />
+          </div>
+        )}
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Order Information */}
@@ -476,14 +553,14 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
 
         {/* Footer */}
         <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isGenerating}>
             Cancel
           </Button>
           {selectedCount > 0 && (
             <Button
               variant="outline"
               onClick={() => setShowPreview(true)}
-              disabled={loading}
+              disabled={loading || isGenerating}
             >
               <FileText className="h-4 w-4 mr-2" />
               Preview Labels
@@ -493,8 +570,19 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
             onClick={generatePDFForLabels}
             disabled={selectedCount === 0 || isGenerating || loading}
           >
-            <Printer className="h-4 w-4 mr-2" />
-            {isGenerating ? 'Generating...' : 'Generate Labels'}
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {generationStatus === 'preparing' && 'Preparing...'}
+                {generationStatus === 'generating' && 'Generating...'}
+                {generationStatus === 'downloading' && 'Downloading...'}
+              </>
+            ) : (
+              <>
+                <Printer className="h-4 w-4 mr-2" />
+                Generate Labels
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>
