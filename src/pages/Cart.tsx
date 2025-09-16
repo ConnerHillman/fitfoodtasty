@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,12 +14,12 @@ import DeliveryOptions from "@/components/cart/DeliveryOptions";
 import DatePicker from "@/components/cart/DatePicker";
 import CouponSection from "@/components/cart/CouponSection";
 import PaymentSection from "@/components/cart/PaymentSection";
+import CartItemCard from "@/components/cart/CartItemCard";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, addToCart } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
   
   // Custom hooks for cart logic
   const deliveryLogic = useDeliveryLogic();
@@ -48,6 +47,10 @@ const Cart = () => {
     return discounts.getDiscountAmount(subtotal, fees);
   }, [subtotal, fees, discounts.getDiscountAmount]);
 
+  const isCoupon100Off = useMemo(() => {
+    return discounts.isCoupon100PercentOff(subtotal, fees);
+  }, [subtotal, fees, discounts.isCoupon100PercentOff]);
+
   // Auto-create Stripe PaymentIntent when requirements are met
   useEffect(() => {
     const createPI = async () => {
@@ -56,7 +59,7 @@ const Cart = () => {
         if (items.length === 0) return;
 
         // Skip payment intent creation for 100% off coupons
-        if (discounts.isCoupon100PercentOff(subtotal, fees)) {
+        if (isCoupon100Off) {
           setClientSecret("");
           return;
         }
@@ -108,11 +111,12 @@ const Cart = () => {
     fees, 
     discounts.couponApplied, 
     discounts.appliedCoupon,
-    orderNotes
+    orderNotes,
+    isCoupon100Off
   ]);
 
-  // Apply coupon function
-  const applyCoupon = async () => {
+  // Memoized apply coupon function
+  const applyCoupon = useCallback(async () => {
     if (!discounts.couponCode.trim()) return;
 
     try {
@@ -187,10 +191,10 @@ const Cart = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [discounts, toast, addToCart]);
 
-  // Create free order for 100% off coupons
-  const createFreeOrder = async () => {
+  // Memoized create free order for 100% off coupons
+  const createFreeOrder = useCallback(async () => {
     try {
       let deliveryFeeToUse = fees;
       
@@ -303,7 +307,7 @@ const Cart = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [items, fees, discounts, deliveryLogic, dateValidation, user, orderNotes, getTotalPrice, toast]);
 
   // Empty cart display
   if (items.length === 0) {
@@ -356,45 +360,12 @@ const Cart = () => {
           {/* Cart Items */}
           <div className="space-y-4">
             {items.map((item) => (
-              <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-background">
-                {item.image_url && (
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-20 h-20 object-cover rounded-md flex-shrink-0"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-lg truncate">{item.name}</h3>
-                  <p className="text-sm text-muted-foreground truncate">{item.description}</p>
-                  <p className="text-lg font-semibold text-primary">£{item.price.toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-8 text-center">{item.quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFromCart(item.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <CartItemCard
+                key={item.id}
+                item={item}
+                onUpdateQuantity={updateQuantity}
+                onRemove={removeFromCart}
+              />
             ))}
           </div>
 
@@ -451,13 +422,13 @@ const Cart = () => {
             subtotal={subtotal}
             fees={fees}
             discountAmount={discountAmount}
-            discountDisplay={discounts.getDiscountDisplay()}
+            discountDisplay={discounts.getDiscountDisplay}
             giftCardAmount={discounts.appliedGiftCard?.amount_used || 0}
             finalTotal={finalTotal}
-            expanded={orderSummaryExpanded}
-            onToggleExpanded={() => setOrderSummaryExpanded(!orderSummaryExpanded)}
-            isMobile={isMobile}
-            expiryWarning={discounts.getExpiryWarning()}
+            expanded={true}
+            onToggleExpanded={undefined}
+            isMobile={false}
+            expiryWarning={discounts.getExpiryWarning}
           />
 
           {/* Payment Section */}
@@ -467,7 +438,7 @@ const Cart = () => {
             finalTotal={finalTotal}
             deliveryMethod={deliveryLogic.deliveryMethod}
             requestedDeliveryDate={dateValidation.requestedDeliveryDate}
-            isCoupon100PercentOff={discounts.isCoupon100PercentOff(subtotal, fees)}
+            isCoupon100PercentOff={isCoupon100Off}
             onCreateFreeOrder={createFreeOrder}
             orderNotes={orderNotes}
             onOrderNotesChange={setOrderNotes}

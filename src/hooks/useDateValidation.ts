@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 export const useDateValidation = (deliveryZone: any) => {
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  // Calculate minimum delivery date (tomorrow)
-  const getMinDeliveryDate = () => {
+  // Memoized minimum delivery date function
+  const getMinDeliveryDate = useCallback(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
-  };
+  }, []);
 
-  // Calculate production date (corrected logic)
-  const calculateProductionDate = (deliveryDate: string) => {
+  // Memoized calculate production date (corrected logic)
+  const calculateProductionDate = useCallback((deliveryDate: string) => {
     if (!deliveryDate) return "";
     
     const delivery = new Date(deliveryDate + 'T12:00:00');
@@ -23,10 +23,10 @@ export const useDateValidation = (deliveryZone: any) => {
     production.setDate(production.getDate() - leadDays);
     
     return production.toISOString().split('T')[0];
-  };
+  }, [deliveryZone?.production_lead_days]);
 
-  // Get available collection dates (next 14 days)
-  const getAvailableCollectionDates = () => {
+  // Memoized available collection dates (next 14 days)
+  const getAvailableCollectionDates = useMemo(() => {
     const dates = [];
     const today = new Date();
     
@@ -37,10 +37,10 @@ export const useDateValidation = (deliveryZone: any) => {
     }
     
     return dates;
-  };
+  }, []);
 
-  // Check if a date is available for delivery/collection
-  const isDateAvailable = (date: Date) => {
+  // Memoized check if a date is available for delivery/collection
+  const isDateAvailable = useCallback((date: Date) => {
     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     
     if (deliveryZone?.delivery_days) {
@@ -49,20 +49,21 @@ export const useDateValidation = (deliveryZone: any) => {
     
     // Default: Monday to Friday
     return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(dayName);
-  };
+  }, [deliveryZone?.delivery_days]);
 
-  // Check if date is disabled (past dates)
-  const isDateDisabled = (date: Date) => {
+  // Memoized check if date is disabled (past dates)
+  const isDateDisabled = useCallback((date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
-    return date < today;
-  };
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    return checkDate < today;
+  }, []);
 
-  // Check if day is available
-  const isAvailableDay = (date: Date) => {
+  // Memoized check if day is available
+  const isAvailableDay = useCallback((date: Date) => {
     return !isDateDisabled(date) && isDateAvailable(date);
-  };
+  }, [isDateDisabled, isDateAvailable]);
 
   return {
     requestedDeliveryDate,

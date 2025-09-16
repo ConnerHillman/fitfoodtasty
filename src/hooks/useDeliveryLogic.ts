@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -38,8 +38,8 @@ export const useDeliveryLogic = () => {
     fetchCollectionPoints();
   }, []);
 
-  // Function to fetch delivery zone by postcode
-  const fetchDeliveryZoneByPostcode = async (postcode: string) => {
+  // Memoized function to fetch delivery zone by postcode
+  const fetchDeliveryZoneByPostcode = useCallback(async (postcode: string) => {
     if (!postcode) return;
     
     try {
@@ -88,7 +88,7 @@ export const useDeliveryLogic = () => {
       console.error('Failed to fetch delivery zone:', error);
       setPostcodeChecked(true);
     }
-  };
+  }, []);
 
   // Fetch user profile and delivery zone
   useEffect(() => {
@@ -163,19 +163,19 @@ export const useDeliveryLogic = () => {
     fetchDeliveryFee();
   }, []);
 
-  // Handle manual postcode input
-  const handlePostcodeChange = async (postcode: string) => {
+  // Memoized handle manual postcode input
+  const handlePostcodeChange = useCallback(async (postcode: string) => {
     setManualPostcode(postcode);
     setPostcodeChecked(false);
     if (postcode.length >= 4) {
       await fetchDeliveryZoneByPostcode(postcode);
     }
-  };
+  }, [fetchDeliveryZoneByPostcode]);
 
-  const getCollectionFee = () => {
+  const getCollectionFee = useCallback(() => {
     const collectionPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
     return collectionPoint?.collection_fee || 0;
-  };
+  }, [collectionPoints, selectedCollectionPoint]);
 
   return {
     deliveryMethod,

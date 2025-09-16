@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export const useDiscounts = () => {
@@ -18,18 +18,18 @@ export const useDiscounts = () => {
     gift_card_id: string;
   } | null>(null);
 
-  // Helper function to check if coupon makes order 100% off
-  const isCoupon100PercentOff = (subtotal: number, fees: number) => {
+  // Memoized helper function to check if coupon makes order 100% off
+  const isCoupon100PercentOff = useCallback((subtotal: number, fees: number) => {
     if (!couponApplied || !appliedCoupon) return false;
     
     if (appliedCoupon.discount_percentage >= 100) return true;
     
     const total = subtotal + fees;
     return appliedCoupon.discount_amount >= total;
-  };
+  }, [couponApplied, appliedCoupon]);
 
-  // Calculate discounted total
-  const getDiscountedTotal = (subtotal: number, fees: number) => {
+  // Memoized calculate discounted total
+  const getDiscountedTotal = useCallback((subtotal: number, fees: number) => {
     let adjustedFees = fees;
     
     // Apply free delivery
@@ -55,10 +55,10 @@ export const useDiscounts = () => {
     }
     
     return total;
-  };
+  }, [couponApplied, appliedCoupon, appliedGiftCard]);
 
-  // Get discount display text
-  const getDiscountDisplay = () => {
+  // Memoized discount display text
+  const getDiscountDisplay = useMemo(() => {
     if (!couponApplied || !appliedCoupon) return "";
     
     if (appliedCoupon.discount_percentage > 0) {
@@ -71,10 +71,10 @@ export const useDiscounts = () => {
       return "Free Item";
     }
     return "Discount";
-  };
+  }, [couponApplied, appliedCoupon]);
 
-  // Calculate discount amount for display
-  const getDiscountAmount = (subtotal: number, fees: number) => {
+  // Memoized calculate discount amount for display
+  const getDiscountAmount = useCallback((subtotal: number, fees: number) => {
     if (!couponApplied || !appliedCoupon) return 0;
     
     if (appliedCoupon.discount_percentage > 0) {
@@ -85,10 +85,10 @@ export const useDiscounts = () => {
       return fees;
     }
     return 0;
-  };
+  }, [couponApplied, appliedCoupon]);
 
-  // Check if coupon expires within 3 days and show warning
-  const checkExpiryWarning = (coupon: any) => {
+  // Memoized check if coupon expires within 3 days and show warning
+  const checkExpiryWarning = useCallback((coupon: any) => {
     if (!coupon?.expires_at) return;
     
     const now = new Date();
@@ -103,10 +103,10 @@ export const useDiscounts = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
-  // Get expiry warning text for display
-  const getExpiryWarning = () => {
+  // Memoized expiry warning text for display
+  const getExpiryWarning = useMemo(() => {
     if (!couponApplied || !appliedCoupon?.expires_at) return null;
     
     const now = new Date();
@@ -117,7 +117,7 @@ export const useDiscounts = () => {
       return daysUntilExpiry === 1 ? "⚠️ Expires tomorrow!" : `⚠️ Expires in ${daysUntilExpiry} days!`;
     }
     return null;
-  };
+  }, [couponApplied, appliedCoupon]);
 
   return {
     // Coupon state
@@ -139,9 +139,9 @@ export const useDiscounts = () => {
     // Helper functions
     isCoupon100PercentOff,
     getDiscountedTotal,
-    getDiscountDisplay,
+    getDiscountDisplay: getDiscountDisplay,
     getDiscountAmount,
     checkExpiryWarning,
-    getExpiryWarning,
+    getExpiryWarning: getExpiryWarning,
   };
 };
