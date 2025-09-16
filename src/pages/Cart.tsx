@@ -29,6 +29,8 @@ const Cart = () => {
   
   // Refs
   const paymentSectionRef = useRef<HTMLDivElement>(null);
+  const mobilePaymentAnchorRef = useRef<HTMLDivElement>(null);
+  const desktopPaymentAnchorRef = useRef<HTMLDivElement>(null);
   
   // State variables
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
@@ -571,14 +573,32 @@ const Cart = () => {
 
   // Auto-scroll to payment section after date selection
   const scrollToPaymentSection = () => {
-    if (paymentSectionRef.current) {
-      paymentSectionRef.current.scrollIntoView({
+    console.log('scrollToPaymentSection called', { isMobile, user: !!user, clientSecret: !!clientSecret });
+    
+    // Determine which anchor to scroll to
+    let targetRef = null;
+    
+    if (isMobile && mobilePaymentAnchorRef.current) {
+      targetRef = mobilePaymentAnchorRef.current;
+      console.log('Using mobile payment anchor');
+    } else if (!isMobile && desktopPaymentAnchorRef.current) {
+      targetRef = desktopPaymentAnchorRef.current;
+      console.log('Using desktop payment anchor');
+    }
+    
+    if (targetRef) {
+      targetRef.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
       });
       
-      // Add a subtle highlight animation
-      paymentSectionRef.current.style.animation = 'fade-in 0.5s ease-out';
+      // Add a subtle highlight animation to the payment section if it exists
+      if (paymentSectionRef.current) {
+        paymentSectionRef.current.style.animation = 'fade-in 0.5s ease-out';
+      }
+      console.log('Scrolled to payment section');
+    } else {
+      console.log('No valid scroll target found');
     }
   };
 
@@ -846,6 +866,9 @@ const Cart = () => {
         </p>
       </div>
 
+      {/* Mobile Payment Anchor - Always present but invisible */}
+      <div ref={mobilePaymentAnchorRef} className="invisible h-0" aria-hidden="true" />
+
       {/* Mobile: Show collapsible order summary first */}
       <div className="block lg:hidden mb-6">
         <Card>
@@ -1012,6 +1035,9 @@ const Cart = () => {
             );
           })}
         </div>
+
+        {/* Desktop Payment Anchor - Always present but invisible */}
+        <div ref={desktopPaymentAnchorRef} className="invisible h-0" aria-hidden="true" />
 
         {/* Order Summary - Desktop only */}
         <div className="order-1 lg:order-2 hidden lg:block space-y-4">
@@ -1657,10 +1683,10 @@ const Cart = () => {
               setRequestedDeliveryDate(dateString);
               setCalendarOpen(false); // Close the popover after selection
               
-              // Auto-scroll to payment section after a brief delay
+              // Auto-scroll to payment section after a delay to allow DOM updates
               setTimeout(() => {
                 scrollToPaymentSection();
-              }, 300);
+              }, 500);
             }
           }}
           disabled={isDateDisabled}
