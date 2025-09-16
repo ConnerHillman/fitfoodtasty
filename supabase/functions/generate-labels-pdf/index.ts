@@ -311,16 +311,21 @@ serve(async (req) => {
   try {
     const { mealProduction, useByDate } = await req.json();
 
-    console.log(`Generating PDF for ${mealProduction.length} meals`);
+    console.log(`Generating labels for ${mealProduction.length} meals`);
 
     // Generate HTML content with proper PDF styling
     const htmlContent = generateLabelsHTML(mealProduction, useByDate);
 
+    // Create filename with timestamp and meal count for better organization
+    const timestamp = new Date().toISOString().split('T')[0];
+    const totalLabels = mealProduction.reduce((sum: number, meal: any) => sum + meal.quantity, 0);
+    const filename = `meal-labels-${timestamp}-${totalLabels}labels.html`;
+
     return new Response(htmlContent, {
       headers: {
         ...corsHeaders,
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="meal_labels_${new Date().toISOString().split('T')[0]}.pdf"`,
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });
   } catch (error) {

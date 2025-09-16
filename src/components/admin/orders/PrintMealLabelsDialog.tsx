@@ -258,13 +258,18 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
 
       if (error) throw error;
 
-      // Create and trigger download
+      // Create and trigger download with proper filename from response
       if (data) {
         const blob = new Blob([data], { type: 'text/html' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `meal-labels-${order.id}-${new Date().toISOString().split('T')[0]}.html`;
+        
+        // Generate filename based on order and label count
+        const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
+        const timestamp = new Date().toISOString().split('T')[0];
+        link.download = `meal-labels-order-${order.id.slice(-8)}-${timestamp}-${totalLabels}labels.html`;
+        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
