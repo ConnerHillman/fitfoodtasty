@@ -13,6 +13,10 @@ import type { StatCardData, ColumnDef, ActionItem } from '@/components/common';
 
 import CustomerLink from "@/components/admin/CustomerLink";
 import OrderLink from "@/components/admin/OrderLink";
+import { AdjustOrderModal } from "@/components/admin/orders/AdjustOrderModal";
+import { VoidOrderDialog } from "@/components/admin/orders/VoidOrderDialog";
+import { RefundOrderDialog } from "@/components/admin/orders/RefundOrderDialog";
+import { PrintMealLabelsDialog } from "@/components/admin/orders/PrintMealLabelsDialog";
 
 interface Order {
   id: string;
@@ -50,6 +54,13 @@ const AllOrders: React.FC = () => {
     sortOrder: 'desc',
     viewMode: 'list'
   });
+
+  // Modal states
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+  const [voidDialogOpen, setVoidDialogOpen] = useState(false);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [printLabelsDialogOpen, setPrintLabelsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchAllOrders();
@@ -181,15 +192,6 @@ const AllOrders: React.FC = () => {
       )
     },
     {
-      key: 'type',
-      header: 'Type',
-      accessor: (order) => (
-        <Badge variant={order.type === 'package' ? 'default' : 'secondary'}>
-          {order.type === 'package' ? 'Package' : 'Individual'}
-        </Badge>
-      )
-    },
-    {
       key: 'customer_name',
       header: 'Customer',
       accessor: (order) => (
@@ -240,35 +242,23 @@ const AllOrders: React.FC = () => {
   };
 
   const handleAdjustOrder = (order: Order) => {
-    // TODO: Implement adjust order functionality
-    toast({
-      title: "Adjust Order",
-      description: `Adjust functionality for order ${order.id.slice(-8)} will be implemented soon.`,
-    });
+    setSelectedOrder(order);
+    setAdjustModalOpen(true);
   };
 
   const handleVoidOrder = (order: Order) => {
-    // TODO: Implement void order functionality
-    toast({
-      title: "Void Order",
-      description: `Void functionality for order ${order.id.slice(-8)} will be implemented soon.`,
-    });
+    setSelectedOrder(order);
+    setVoidDialogOpen(true);
   };
 
   const handleRefundOrder = (order: Order) => {
-    // TODO: Implement refund order functionality
-    toast({
-      title: "Refund Order",
-      description: `Refund functionality for order ${order.id.slice(-8)} will be implemented soon.`,
-    });
+    setSelectedOrder(order);
+    setRefundDialogOpen(true);
   };
 
   const handlePrintLabels = (order: Order) => {
-    // TODO: Implement print meal labels functionality
-    toast({
-      title: "Print Meal Labels",
-      description: `Print labels functionality for order ${order.id.slice(-8)} will be implemented soon.`,
-    });
+    setSelectedOrder(order);
+    setPrintLabelsDialogOpen(true);
   };
 
   const handleReOrder = (order: Order) => {
@@ -385,6 +375,34 @@ const AllOrders: React.FC = () => {
         onRowClick={(order) => navigate(`/orders/${order.id}`)}
         emptyMessage="No orders found"
         emptyDescription="Orders will appear here once customers start placing them"
+      />
+
+      {/* Action Modals */}
+      <AdjustOrderModal
+        isOpen={adjustModalOpen}
+        onClose={() => setAdjustModalOpen(false)}
+        order={selectedOrder}
+        onOrderUpdated={fetchAllOrders}
+      />
+
+      <VoidOrderDialog
+        isOpen={voidDialogOpen}
+        onClose={() => setVoidDialogOpen(false)}
+        order={selectedOrder}
+        onOrderVoided={fetchAllOrders}
+      />
+
+      <RefundOrderDialog
+        isOpen={refundDialogOpen}
+        onClose={() => setRefundDialogOpen(false)}
+        order={selectedOrder}
+        onOrderRefunded={fetchAllOrders}
+      />
+
+      <PrintMealLabelsDialog
+        isOpen={printLabelsDialogOpen}
+        onClose={() => setPrintLabelsDialogOpen(false)}
+        order={selectedOrder}
       />
     </div>
   );
