@@ -804,49 +804,284 @@ const Marketing = () => {
     );
   };
 
-  const GiftCardsSection = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="h-5 w-5" />
-          Purchased Gift Cards
-        </CardTitle>
-        <CardDescription>
-          View and manage gift card purchases
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Total Sold</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">$0</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Active Cards</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Redeemed</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-              </CardContent>
-            </Card>
+  const GiftCardsSection = () => {
+    const [giftCards, setGiftCards] = useState<any[]>([]);
+    const [stats, setStats] = useState({
+      totalSold: 0,
+      totalValue: 0,
+      activeCards: 0,
+      redeemedCards: 0,
+      outstandingBalance: 0
+    });
+    const [loading, setLoading] = useState(true);
+    const [searchFilter, setSearchFilter] = useState("");
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'redeemed' | 'expired'>('all');
+
+    useEffect(() => {
+      fetchGiftCards();
+      fetchGiftCardStats();
+    }, []);
+
+    const fetchGiftCards = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gift_cards')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+        setGiftCards(data || []);
+      } catch (error) {
+        console.error('Error fetching gift cards:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchGiftCardStats = async () => {
+      try {
+        // Get total stats
+        const { data: allCards, error } = await supabase
+          .from('gift_cards')
+          .select('amount, balance, status, expires_at');
+
+        if (error) throw error;
+
+        const now = new Date();
+        let totalSold = 0;
+        let totalValue = 0;
+        let activeCards = 0;
+        let redeemedCards = 0;
+        let outstandingBalance = 0;
+
+        allCards?.forEach(card => {
+          totalSold += 1;
+          totalValue += card.amount;
+          outstandingBalance += card.balance;
+
+          const isExpired = new Date(card.expires_at) < now;
+          
+          if (card.status === 'redeemed' || card.balance === 0) {
+            redeemedCards += 1;
+          } else if (!isExpired && card.status === 'active') {
+            activeCards += 1;
+          }
+        });
+
+        setStats({
+          totalSold,
+          totalValue,
+          activeCards,
+          redeemedCards,
+          outstandingBalance
+        });
+      } catch (error) {
+        console.error('Error fetching gift card stats:', error);
+      }
+    };
+
+    const filteredGiftCards = giftCards.filter(card => {
+      const matchesSearch = card.code.toLowerCase().includes(searchFilter.toLowerCase()) ||
+                           card.purchaser_name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+                           card.recipient_name?.toLowerCase().includes(searchFilter.toLowerCase());
+      
+      const now = new Date();
+      const isExpired = new Date(card.expires_at) < now;
+      
+      let matchesStatus = true;
+      if (statusFilter === 'active') {
+        matchesStatus = card.status === 'active' && !isExpired && card.balance > 0;
+      } else if (statusFilter === 'redeemed') {
+        matchesStatus = card.status === 'redeemed' || card.balance === 0;
+      } else if (statusFilter === 'expired') {
+        matchesStatus = isExpired;
+      }
+      
+      return matchesSearch && matchesStatus;
+    });
+
+    const getStatusBadge = (card: any) => {
+      const now = new Date();
+      const isExpired = new Date(card.expires_at) < now;
+      
+      if (isExpired) {
+        return <Badge variant="destructive">Expired</Badge>;
+      } else if (card.balance === 0) {
+        return <Badge variant="secondary">Fully Redeemed</Badge>;
+      } else if (card.balance < card.amount) {
+        return <Badge variant="outline">Partially Used</Badge>;
+      } else {
+        return <Badge variant="default">Active</Badge>;
+      }
+    };
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Gift Cards Management
+          </CardTitle>
+          <CardDescription>
+            View and manage gift card purchases and redemptions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Total Sold</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalSold}</div>
+                  <div className="text-sm text-muted-foreground">£{stats.totalValue.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Active Cards</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{stats.activeCards}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Redeemed</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{stats.redeemedCards}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Outstanding</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">£{stats.outstandingBalance.toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Liability</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Redemption Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats.totalSold > 0 ? Math.round((stats.redeemedCards / stats.totalSold) * 100) : 0}%
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search by code, purchaser, or recipient..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="redeemed">Redeemed</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={fetchGiftCards} variant="outline">
+                Refresh
+              </Button>
+            </div>
+
+            {/* Gift Cards Table */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="max-h-96 overflow-y-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Code</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Amount</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Balance</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Purchaser</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Recipient</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Created</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Expires</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                          Loading gift cards...
+                        </td>
+                      </tr>
+                    ) : filteredGiftCards.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                          No gift cards found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredGiftCards.map((card) => (
+                        <tr key={card.id} className="border-t hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div className="font-mono text-sm">{card.code}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="font-semibold">£{card.amount}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className={`font-semibold ${card.balance > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                              £{card.balance}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            {getStatusBadge(card)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-sm">
+                              <div className="font-medium">{card.purchaser_name}</div>
+                              <div className="text-gray-500">{card.purchaser_email}</div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-sm">
+                              <div className="font-medium">{card.recipient_name || '—'}</div>
+                              <div className="text-gray-500">{card.recipient_email || '—'}</div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {new Date(card.created_at).toLocaleDateString('en-GB')}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {new Date(card.expires_at).toLocaleDateString('en-GB')}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="text-sm text-gray-500 text-center">
+              Showing {filteredGiftCards.length} of {giftCards.length} gift cards
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   const UpsalesSection = () => (
     <Card>

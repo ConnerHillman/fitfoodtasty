@@ -25,6 +25,8 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import AccountSettings from "./pages/AccountSettings";
 import ReferralReports from "./pages/ReferralReports";
 import LabelGenerator from "./pages/LabelGenerator";
+import GiftCards from "./pages/GiftCards";
+import GiftCardBalance from "./pages/GiftCardBalance";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +55,8 @@ const App = () => (
             <Route path="/business/settings" element={<RequireAuth><Layout><BusinessSettings /></Layout></RequireAuth>} />
             <Route path="/referral-reports" element={<RequireAuth><Layout><ReferralReports /></Layout></RequireAuth>} />
             <Route path="/labels" element={<RequireAuth><LabelGenerator /></RequireAuth>} />
+            <Route path="/gift-cards" element={<Layout><GiftCards /></Layout>} />
+            <Route path="/gift-card-balance" element={<Layout><GiftCardBalance /></Layout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
