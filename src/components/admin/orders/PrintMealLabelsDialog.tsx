@@ -1,181 +1,329 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Printer, Package, FileText, Download, AlertTriangle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Printer, Package, AlertTriangle, Calendar, Download, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { LabelPrintPreview } from '@/components/admin/LabelPrintPreview';
+import { format as formatDate, addDays } from 'date-fns';
 
+// Type definitions for order data
 interface OrderItem {
-  id: string;
+  meal_id: string;
   meal_name: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
 }
 
 interface PackageMealSelection {
-  id: string;
   meal_id: string;
   quantity: number;
-  meals?: {
-    name: string;
-    price: number;
-  };
 }
 
 interface Order {
   id: string;
-  user_id: string;
-  customer_name: string;
-  customer_email: string;
-  total_amount: number;
-  status: string;
-  created_at: string;
+  order_type?: 'individual' | 'package';
+  customer_name?: string;
+  production_date?: string;
   order_items?: OrderItem[];
   package_meal_selections?: PackageMealSelection[];
-  type: 'individual' | 'package';
-  packages?: {
+  package?: {
     name: string;
   };
 }
 
 interface MealLabelData {
+  mealId: string;
   mealName: string;
   quantity: number;
   selected: boolean;
+  totalCalories: number;
+  totalProtein: number;
+  totalFat: number;
+  totalCarbs: number;
+  ingredients: string;
+  allergens: string;
+}
+
+interface MealProduction {
+  mealId: string;
+  mealName: string;
+  quantity: number;
+  totalCalories: number;
+  totalProtein: number;
+  totalFat: number;
+  totalCarbs: number;
+  ingredients: string;
+  allergens: string;
+  orderCount: number;
 }
 
 interface PrintMealLabelsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  order: Order | null;
+  order: Order;
 }
 
 export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
   isOpen,
   onClose,
-  order
+  order,
 }) => {
-  const { toast } = useToast();
   const [mealLabels, setMealLabels] = useState<MealLabelData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [includeCustomerInfo, setIncludeCustomerInfo] = useState(true);
-  const [includeOrderInfo, setIncludeOrderInfo] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [useByDate, setUseByDate] = useState('');
 
-  // Initialize meal labels data when order changes
+  // Calculate use by date from production date or fallback to 5 days from now
   useEffect(() => {
-    if (!order) {
-      setMealLabels([]);
-      return;
+    if (order?.production_date) {
+      const productionDate = new Date(order.production_date);
+      const calculatedUseByDate = addDays(productionDate, 5);
+      setUseByDate(formatDate(calculatedUseByDate, 'yyyy-MM-dd'));
+    } else {
+      const fallbackDate = addDays(new Date(), 5);
+      setUseByDate(formatDate(fallbackDate, 'yyyy-MM-dd'));
     }
+  }, [order?.production_date]);
 
-    const labels: MealLabelData[] = [];
+  // Initialize meal labels based on order data with full meal information
+  useEffect(() => {
+    if (!order || !isOpen) return;
 
-    if (order.type === 'individual' && order.order_items) {
-      order.order_items.forEach(item => {
-        labels.push({
-          mealName: item.meal_name,
-          quantity: item.quantity,
-          selected: true
-        });
-      });
-    } else if (order.type === 'package' && order.package_meal_selections) {
-      order.package_meal_selections.forEach(selection => {
-        labels.push({
-          mealName: selection.meals?.name || 'Unknown Meal',
-          quantity: selection.quantity,
-          selected: true
-        });
-      });
-    }
+    const fetchMealData = async () => {
+      setLoading(true);
+      try {
+        const labels: MealLabelData[] = [];
+        const mealIds: string[] = [];
 
-    setMealLabels(labels);
-  }, [order]);
+        // Collect meal IDs from order
+        if (order.order_items) {
+          order.order_items.forEach((item) => {
+            mealIds.push(item.meal_id);
+          });
+        } else if (order.package_meal_selections) {
+          order.package_meal_selections.forEach((selection) => {
+            mealIds.push(selection.meal_id);
+          });
+        }
 
-  const handleToggleMeal = (index: number) => {
-    setMealLabels(prev => 
-      prev.map((label, i) => 
-        i === index ? { ...label, selected: !label.selected } : label
+        if (mealIds.length === 0) {
+          setMealLabels([]);
+          return;
+        }
+
+        // Fetch complete meal data from database
+        const { data: mealsData, error } = await supabase
+          .from('meals')
+          .select(`
+            id,
+            name,
+            total_calories,
+            total_protein,
+            total_fat,
+            total_carbs,
+            meal_ingredients (
+              ingredient_id,
+              quantity,
+              unit,
+              ingredients (
+                name
+              )
+            ),
+            meal_allergens (
+              allergen_id,
+              allergens (
+                name
+              )
+            )
+          `)
+          .in('id', mealIds)
+          .eq('is_active', true);
+
+        if (error) throw error;
+
+        const mealsMap = new Map(mealsData?.map(meal => [meal.id, meal]) || []);
+
+        // Build meal labels with complete data
+        if (order.order_items) {
+          order.order_items.forEach((item) => {
+            const mealData = mealsMap.get(item.meal_id);
+            if (mealData) {
+              labels.push({
+                mealId: item.meal_id,
+                mealName: item.meal_name,
+                quantity: item.quantity,
+                selected: true,
+                totalCalories: Math.round(mealData.total_calories || 0),
+                totalProtein: Math.round(mealData.total_protein || 0),
+                totalFat: Math.round(mealData.total_fat || 0),
+                totalCarbs: Math.round(mealData.total_carbs || 0),
+                ingredients: mealData.meal_ingredients?.map(mi => mi.ingredients.name).join(', ') || '',
+                allergens: mealData.meal_allergens?.map(ma => ma.allergens.name).join(', ') || '',
+              });
+            }
+          });
+        } else if (order.package_meal_selections) {
+          order.package_meal_selections.forEach((selection) => {
+            const mealData = mealsMap.get(selection.meal_id);
+            if (mealData) {
+              labels.push({
+                mealId: selection.meal_id,
+                mealName: mealData.name,
+                quantity: selection.quantity,
+                selected: true,
+                totalCalories: Math.round(mealData.total_calories || 0),
+                totalProtein: Math.round(mealData.total_protein || 0),
+                totalFat: Math.round(mealData.total_fat || 0),
+                totalCarbs: Math.round(mealData.total_carbs || 0),
+                ingredients: mealData.meal_ingredients?.map(mi => mi.ingredients.name).join(', ') || '',
+                allergens: mealData.meal_allergens?.map(ma => ma.allergens.name).join(', ') || '',
+              });
+            }
+          });
+        }
+
+        setMealLabels(labels);
+      } catch (error) {
+        console.error('Error fetching meal data:', error);
+        toast.error('Failed to load meal information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMealData();
+  }, [order, isOpen]);
+
+  const handleToggleMeal = (mealId: string) => {
+    setMealLabels((prev) =>
+      prev.map((meal) =>
+        meal.mealId === mealId ? { ...meal, selected: !meal.selected } : meal
       )
     );
   };
 
   const handleSelectAll = () => {
-    setMealLabels(prev => prev.map(label => ({ ...label, selected: true })));
+    setMealLabels((prev) => prev.map((meal) => ({ ...meal, selected: true })));
   };
 
   const handleDeselectAll = () => {
-    setMealLabels(prev => prev.map(label => ({ ...label, selected: false })));
+    setMealLabels((prev) => prev.map((meal) => ({ ...meal, selected: false })));
   };
 
-  const handleGenerateLabels = async () => {
-    if (!order) return;
-
-    const selectedLabels = mealLabels.filter(label => label.selected);
+  const generatePDFForLabels = async () => {
+    const selectedLabels = mealLabels.filter((label) => label.selected);
     
     if (selectedLabels.length === 0) {
-      toast({
-        title: "No Labels Selected",
-        description: "Please select at least one meal to generate labels.",
-        variant: "destructive",
-      });
+      toast.error('Please select at least one meal to generate labels');
       return;
     }
 
     setIsGenerating(true);
-
     try {
-      // TODO: Implement actual label generation
-      // This would involve:
-      // 1. Fetching meal details (ingredients, allergens, nutrition info)
-      // 2. Generating PDF labels with proper formatting
-      // 3. Including customer and order information if selected
-      // 4. Triggering download or opening print dialog
+      // Convert to MealProduction format for the edge function
+      const mealProduction: MealProduction[] = selectedLabels.map(label => ({
+        mealId: label.mealId,
+        mealName: label.mealName,
+        quantity: label.quantity,
+        totalCalories: label.totalCalories,
+        totalProtein: label.totalProtein,
+        totalFat: label.totalFat,
+        totalCarbs: label.totalCarbs,
+        ingredients: label.ingredients,
+        allergens: label.allergens,
+        orderCount: 1
+      }));
 
-      // Simulate generation time
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      toast({
-        title: "Labels Generated",
-        description: `Generated ${selectedLabels.length} meal labels for order ${order.id.slice(-8)}.`,
+      // Use the edge function to generate PDF
+      const { error } = await supabase.functions.invoke('generate-labels-pdf', {
+        body: {
+          mealProduction,
+          useByDate
+        }
       });
 
+      if (error) throw error;
+
+      const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
+      toast.success(`Generated ${totalLabels} labels for ${selectedLabels.length} meals`);
       onClose();
-      
     } catch (error) {
       console.error('Error generating labels:', error);
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate meal labels. Please try again.",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate labels. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleClose = () => {
-    if (!isGenerating) {
-      onClose();
-    }
+    if (isGenerating) return; // Prevent closing while generating
+    setShowPreview(false);
+    onClose();
   };
+
+  const selectedLabels = mealLabels.filter((label) => label.selected);
+  const selectedCount = selectedLabels.length;
+  const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
+
+  // Convert selected labels to MealProduction format for preview
+  const mealProductionForPreview: MealProduction[] = selectedLabels.map(label => ({
+    mealId: label.mealId,
+    mealName: label.mealName,
+    quantity: label.quantity,
+    totalCalories: label.totalCalories,
+    totalProtein: label.totalProtein,
+    totalFat: label.totalFat,
+    totalCarbs: label.totalCarbs,
+    ingredients: label.ingredients,
+    allergens: label.allergens,
+    orderCount: 1
+  }));
 
   if (!order) return null;
 
-  const selectedCount = mealLabels.filter(label => label.selected).length;
-  const totalLabels = mealLabels.reduce((sum, label) => 
-    label.selected ? sum + label.quantity : sum, 0
-  );
+  if (showPreview) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Label Preview - {order.customer_name || 'Order'} #{order.id.slice(-8)}
+            </DialogTitle>
+          </DialogHeader>
 
-  const hasNoMeals = mealLabels.length === 0;
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Use by date: <strong>{formatDate(new Date(useByDate), 'EEEE, MMMM d, yyyy')}</strong>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowPreview(false)}>
+                  Back to Selection
+                </Button>
+                <Button onClick={generatePDFForLabels} disabled={isGenerating}>
+                  <Download className="h-4 w-4 mr-2" />
+                  {isGenerating ? 'Generating...' : 'Generate PDF'}
+                </Button>
+              </div>
+            </div>
+
+            <LabelPrintPreview 
+              mealProduction={mealProductionForPreview} 
+              useByDate={useByDate}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5" />
@@ -183,118 +331,113 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Order Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Order Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Customer:</span>
-                <span className="font-medium">{order.customer_name}</span>
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Order Information */}
+          <div className="bg-muted p-4 rounded-lg">
+            <h3 className="font-semibold mb-2">Order Information</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Customer:</span>{' '}
+                {order.customer_name || 'Unknown'}
               </div>
-              <div className="flex justify-between text-sm">
-                <span>Type:</span>
-                <Badge variant={order.type === 'package' ? 'default' : 'secondary'}>
-                  {order.type === 'package' ? 'Package' : 'Individual'}
+              <div>
+                <span className="text-muted-foreground">Order Type:</span>{' '}
+                <Badge variant="outline" className="ml-1">
+                  {order.order_type || 'individual'}
                 </Badge>
               </div>
-              {order.type === 'package' && order.packages && (
-                <div className="flex justify-between text-sm">
-                  <span>Package:</span>
-                  <span className="font-medium">{order.packages.name}</span>
+              {order.package?.name && (
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">Package:</span>{' '}
+                  {order.package.name}
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* No Meals Warning */}
-          {hasNoMeals && (
-            <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h4 className="font-medium text-destructive">No Meals Found</h4>
-                <p className="text-sm text-destructive/80 mt-1">
-                  This order doesn't contain any meals to generate labels for.
-                </p>
+              <div className="col-span-2">
+                <span className="text-muted-foreground">Use by date:</span>{' '}
+                <Badge variant="secondary" className="ml-1">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {formatDate(new Date(useByDate), 'MMM d, yyyy')}
+                </Badge>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Meal Selection */}
-          {!hasNoMeals && (
+          {/* Loading or Meal Selection */}
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-sm text-muted-foreground">Loading meal information...</p>
+            </div>
+          ) : mealLabels.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-muted-foreground">
+                No meals found
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                This order doesn't contain any meals to generate labels for.
+              </p>
+            </div>
+          ) : (
             <>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Select Meals for Labels</Label>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                      Select All
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleDeselectAll}>
-                      Clear All
-                    </Button>
-                  </div>
-                </div>
-
-                <Card className="max-h-48 overflow-y-auto">
-                  <CardContent className="p-4 space-y-3">
-                    {mealLabels.map((label, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <Checkbox
-                          checked={label.selected}
-                          onCheckedChange={() => handleToggleMeal(index)}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">
-                            {label.mealName}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Quantity: {label.quantity} {label.quantity === 1 ? 'label' : 'labels'}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                {/* Selection Summary */}
-                <div className="text-sm text-muted-foreground">
-                  {selectedCount} meals selected • {totalLabels} total labels to generate
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Select Meals for Labels</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeselectAll}
+                  >
+                    Clear All
+                  </Button>
                 </div>
               </div>
 
-              <Separator />
-
-              {/* Label Options */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Label Options</Label>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include-customer"
-                      checked={includeCustomerInfo}
-                      onCheckedChange={(checked) => setIncludeCustomerInfo(checked === true)}
-                    />
-                    <Label htmlFor="include-customer" className="text-sm">
-                      Include customer information on labels
-                    </Label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {mealLabels.map((meal) => (
+                  <div
+                    key={meal.mealId}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={meal.selected}
+                        onCheckedChange={() => handleToggleMeal(meal.mealId)}
+                      />
+                      <div>
+                        <div className="font-medium">{meal.mealName}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {meal.totalCalories} cal • {meal.totalProtein}g protein
+                        </div>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">{meal.quantity} labels</Badge>
                   </div>
+                ))}
+              </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include-order"
-                      checked={includeOrderInfo}
-                      onCheckedChange={(checked) => setIncludeOrderInfo(checked === true)}
-                    />
-                    <Label htmlFor="include-order" className="text-sm">
-                      Include order ID and date on labels
-                    </Label>
+              {/* Summary */}
+              <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+                <h4 className="font-semibold mb-2">Label Summary</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Selected Meals:</span>{' '}
+                    {selectedCount}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Total Labels:</span>{' '}
+                    {totalLabels}
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Pages:</span>{' '}
+                    {Math.ceil(totalLabels / 10)}
                   </div>
                 </div>
               </div>
@@ -302,26 +445,29 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isGenerating}>
+        {/* Footer */}
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          {!hasNoMeals && (
-            <Button 
-              onClick={handleGenerateLabels} 
-              disabled={isGenerating || selectedCount === 0}
+          {selectedCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setShowPreview(true)}
+              disabled={loading}
             >
-              {isGenerating ? (
-                "Generating..."
-              ) : (
-                <>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Generate {totalLabels} Labels
-                </>
-              )}
+              <FileText className="h-4 w-4 mr-2" />
+              Preview Labels
             </Button>
           )}
-        </DialogFooter>
+          <Button
+            onClick={generatePDFForLabels}
+            disabled={selectedCount === 0 || isGenerating || loading}
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            {isGenerating ? 'Generating...' : 'Generate Labels'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

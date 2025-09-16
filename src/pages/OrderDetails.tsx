@@ -630,7 +630,7 @@ const OrderDetails: React.FC = () => {
               onClose={() => setPrintLabelsDialogOpen(false)}
               order={{
                 ...order,
-                type: isPackageOrder ? 'package' : 'individual'
+                order_type: isPackageOrder ? 'package' : 'individual'
               }}
             />
           </>
