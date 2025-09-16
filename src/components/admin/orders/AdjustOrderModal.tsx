@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Edit3, Package, CreditCard, AlertTriangle, Save, Plus, Minus, ShoppingCart, CalendarIcon } from 'lucide-react';
+import { Edit3, Package, CreditCard, AlertTriangle, Save, Plus, Minus, ShoppingCart, CalendarIcon, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -400,6 +400,35 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                 <Badge variant={order.status === 'pending' ? 'secondary' : 'default'}>
                   {order.status}
                 </Badge>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Delivery Date:</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">
+                    {order.requested_delivery_date 
+                      ? format(new Date(order.requested_delivery_date), 'PPP')
+                      : 'Not set'
+                    }
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => setActiveTab('delivery')}
+                    title="Edit delivery date"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Production Date:</span>
+                <span className="font-medium">
+                  {order.production_date 
+                    ? format(new Date(order.production_date), 'PPP')
+                    : 'Not set'
+                  }
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Original Total:</span>
