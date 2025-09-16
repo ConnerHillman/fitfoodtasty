@@ -17,11 +17,20 @@ import {
   Phone,
   Mail,
   Hash,
-  Truck
+  Truck,
+  Edit3,
+  X,
+  RotateCcw,
+  Printer,
+  RotateCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { AdjustOrderModal } from '@/components/admin/orders/AdjustOrderModal';
+import { VoidOrderDialog } from '@/components/admin/orders/VoidOrderDialog';
+import { RefundOrderDialog } from '@/components/admin/orders/RefundOrderDialog';
+import { PrintMealLabelsDialog } from '@/components/admin/orders/PrintMealLabelsDialog';
 
 interface OrderItem {
   id: string;
@@ -72,6 +81,12 @@ const OrderDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isPackageOrder, setIsPackageOrder] = useState(false);
   const { toast } = useToast();
+
+  // Modal states
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+  const [voidDialogOpen, setVoidDialogOpen] = useState(false);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [printLabelsDialogOpen, setPrintLabelsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (orderId) {
@@ -187,6 +202,34 @@ const OrderDetails: React.FC = () => {
     }).format(amount);
   };
 
+  // Action handlers
+  const handleAdjustOrder = () => {
+    setAdjustModalOpen(true);
+  };
+
+  const handleVoidOrder = () => {
+    setVoidDialogOpen(true);
+  };
+
+  const handleRefundOrder = () => {
+    setRefundDialogOpen(true);
+  };
+
+  const handlePrintLabels = () => {
+    setPrintLabelsDialogOpen(true);
+  };
+
+  const handleReOrder = () => {
+    toast({
+      title: "Re-Order",
+      description: "Re-order functionality will be implemented soon.",
+    });
+  };
+
+  const handleOrderUpdated = () => {
+    fetchOrderDetails(); // Refresh order data
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -245,6 +288,63 @@ const OrderDetails: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Order Summary */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex flex-wrap gap-2">
+                {/* Primary Actions */}
+                <Button 
+                  onClick={handleAdjustOrder}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Adjust Order
+                </Button>
+                <Button 
+                  onClick={handleVoidOrder}
+                  variant="destructive"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Void Order
+                </Button>
+                <Button 
+                  onClick={handleRefundOrder}
+                  variant="secondary"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Process Refund
+                </Button>
+              </div>
+              
+              <div className="hidden sm:block w-px bg-border mx-2 self-stretch"></div>
+              
+              <div className="flex flex-wrap gap-2">
+                {/* Secondary Actions */}
+                <Button 
+                  onClick={handlePrintLabels}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print Labels
+                </Button>
+                <Button 
+                  onClick={handleReOrder}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <RotateCw className="h-4 w-4" />
+                  Re-Order
+                </Button>
+              </div>
+            </div>
+
             {/* Items Ordered */}
             <Card>
               <CardHeader>
@@ -459,6 +559,50 @@ const OrderDetails: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Modals */}
+        {order && (
+          <>
+            <AdjustOrderModal 
+              isOpen={adjustModalOpen}
+              onClose={() => setAdjustModalOpen(false)}
+              order={{
+                ...order,
+                type: isPackageOrder ? 'package' : 'individual'
+              }}
+              onOrderUpdated={handleOrderUpdated}
+            />
+            
+            <VoidOrderDialog 
+              isOpen={voidDialogOpen}
+              onClose={() => setVoidDialogOpen(false)}
+              order={{
+                ...order,
+                type: isPackageOrder ? 'package' : 'individual'
+              }}
+              onOrderVoided={handleOrderUpdated}
+            />
+            
+            <RefundOrderDialog 
+              isOpen={refundDialogOpen}
+              onClose={() => setRefundDialogOpen(false)}
+              order={{
+                ...order,
+                type: isPackageOrder ? 'package' : 'individual'
+              }}
+              onOrderRefunded={handleOrderUpdated}
+            />
+            
+            <PrintMealLabelsDialog 
+              isOpen={printLabelsDialogOpen}
+              onClose={() => setPrintLabelsDialogOpen(false)}
+              order={{
+                ...order,
+                type: isPackageOrder ? 'package' : 'individual'
+              }}
+            />
+          </>
+        )}
       </div>
     </Layout>
   );
