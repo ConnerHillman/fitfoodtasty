@@ -1,17 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCustomerCache } from "./useCustomerCache";
+import { sanitizeCustomerForDisplay } from "@/lib/customerValidation";
 import { startOfDay, endOfDay, subDays } from "date-fns";
 import type { Customer, CustomerFilters } from "@/types/customer";
+import type { DateRange } from "@/types/common";
 
 export const useCustomersData = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const cache = useCustomerCache();
 
-  const fetchCustomers = async (dateRange: { from: Date; to: Date }) => {
-    setLoading(true);
+  // Cleanup expired cache entries periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      cache.cleanupExpiredEntries();
+    }, 60000); // Every minute
+
+    return () => clearInterval(interval);
+  }, [cache]);
+
+  const fetchCustomers = useCallback(async (dateRange: DateRange, forceRefresh: boolean = false) => {
     try {
+      setError(null);
+      
+      // Check cache first unless forcing refresh
+      if (!forceRefresh) {
+        const cachedData = cache.getCachedData(dateRange);
+        if (cachedData) {
+          setCustomers(cachedData);
+          return cachedData;
+        }
+      }
+      
+      setLoading(true);
       const from = startOfDay(dateRange.from);
       const to = endOfDay(dateRange.to);
 
@@ -116,18 +141,36 @@ export const useCustomersData = () => {
         });
       }
 
-      setCustomers(customerData);
+      // Sanitize data for display safety
+      const sanitizedCustomers = customerData.map(sanitizeCustomerForDisplay);
+      setCustomers(sanitizedCustomers);
+      
+      // Cache the results
+      cache.setCachedData(sanitizedCustomers, dateRange, { 
+        searchTerm: "", 
+        sortBy: "created_at", 
+        sortOrder: "desc", 
+        filterBy: "all", 
+        viewMode: "list", 
+        dateRange 
+      });
+      
+      return sanitizedCustomers;
+
     } catch (error: any) {
+      const errorMessage = error?.message || "Failed to fetch customers";
       console.error("Error fetching customers:", error);
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to fetch customers",
+        description: errorMessage,
         variant: "destructive",
       });
+      return [];
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, cache]);
 
   const getCustomerStats = (customers: Customer[]) => {
     const customersWithOrders = customers.filter(c => c.total_orders > 0);
@@ -159,12 +202,18 @@ export const useCustomersData = () => {
     return "low";
   };
 
+  const invalidateCustomerCache = useCallback(() => {
+    cache.invalidateCache();
+  }, [cache]);
+
   return {
     customers,
     loading,
+    error,
     fetchCustomers,
     getCustomerStats,
     getCustomerValue,
-    refetch: (dateRange: { from: Date; to: Date }) => fetchCustomers(dateRange)
+    invalidateCustomerCache,
+    refetch: (dateRange: DateRange) => fetchCustomers(dateRange)
   };
 };
