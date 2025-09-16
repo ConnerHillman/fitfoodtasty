@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,17 +7,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Edit3, Package, CreditCard, AlertTriangle, Save } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit3, Package, CreditCard, AlertTriangle, Save, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 interface OrderItem {
   id: string;
+  meal_id?: string;
   meal_name: string;
   quantity: number;
   unit_price: number;
   total_price: number;
+}
+
+interface PackageMealSelection {
+  id: string;
+  meal_id: string;
+  quantity: number;
+  meals?: {
+    name: string;
+    price: number;
+  };
 }
 
 interface Order {
@@ -29,11 +42,26 @@ interface Order {
   status: string;
   created_at: string;
   order_items?: OrderItem[];
-  package_meal_selections?: any[];
+  package_meal_selections?: PackageMealSelection[];
   type: 'individual' | 'package';
   packages?: {
     name: string;
   };
+}
+
+interface Meal {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+}
+
+interface MealModification {
+  action: 'add' | 'remove' | 'update_quantity' | 'replace';
+  mealId: string;
+  quantity?: number;
+  replacementMealId?: string;
+  itemId?: string;
 }
 
 interface AdjustOrderModalProps {
@@ -54,6 +82,181 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
   const [adjustmentAmount, setAdjustmentAmount] = useState(0);
   const [adjustmentType, setAdjustmentType] = useState<'discount' | 'refund' | 'fee'>('discount');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('financial');
+  
+  // Meal modification states
+  const [availableMeals, setAvailableMeals] = useState<Meal[]>([]);
+  const [mealModifications, setMealModifications] = useState<MealModification[]>([]);
+  const [selectedMealToAdd, setSelectedMealToAdd] = useState('');
+  const [quantityToAdd, setQuantityToAdd] = useState(1);
+  const [currentItems, setCurrentItems] = useState<(OrderItem | PackageMealSelection)[]>([]);
+
+  useEffect(() => {
+    if (isOpen && order) {
+      fetchAvailableMeals();
+      setCurrentItems(order.type === 'package' ? order.package_meal_selections || [] : order.order_items || []);
+    }
+  }, [isOpen, order]);
+
+  const fetchAvailableMeals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('meals')
+        .select('id, name, price, category')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      setAvailableMeals(data || []);
+    } catch (error) {
+      console.error('Error fetching meals:', error);
+    }
+  };
+
+  const addMealModification = () => {
+    if (!selectedMealToAdd) return;
+    
+    const meal = availableMeals.find(m => m.id === selectedMealToAdd);
+    if (!meal) return;
+
+    setMealModifications(prev => [...prev, {
+      action: 'add',
+      mealId: selectedMealToAdd,
+      quantity: quantityToAdd
+    }]);
+
+    // Add to current items for preview
+    if (order?.type === 'package') {
+      setCurrentItems(prev => [...prev, {
+        id: 'temp-' + Date.now(),
+        meal_id: selectedMealToAdd,
+        quantity: quantityToAdd,
+        meals: { name: meal.name, price: meal.price }
+      } as PackageMealSelection]);
+    } else {
+      setCurrentItems(prev => [...prev, {
+        id: 'temp-' + Date.now(),
+        meal_id: selectedMealToAdd,
+        meal_name: meal.name,
+        quantity: quantityToAdd,
+        unit_price: meal.price,
+        total_price: meal.price * quantityToAdd
+      } as OrderItem]);
+    }
+
+    setSelectedMealToAdd('');
+    setQuantityToAdd(1);
+  };
+
+  const removeMealItem = (itemId: string) => {
+    const isTemp = itemId.startsWith('temp-');
+    
+    if (isTemp) {
+      // Remove from preview
+      setCurrentItems(prev => prev.filter(item => item.id !== itemId));
+      // Remove from modifications
+      setMealModifications(prev => prev.filter(mod => 
+        !(mod.action === 'add' && mod.mealId === currentItems.find(item => item.id === itemId)?.meal_id)
+      ));
+    } else {
+      // Mark for removal
+      setMealModifications(prev => [...prev, {
+        action: 'remove',
+        mealId: '',
+        itemId
+      }]);
+      // Remove from preview
+      setCurrentItems(prev => prev.filter(item => item.id !== itemId));
+    }
+  };
+
+  const updateItemQuantity = (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    const isTemp = itemId.startsWith('temp-');
+    
+    if (isTemp) {
+      // Update preview for temp items
+      setCurrentItems(prev => prev.map(item => {
+        if (item.id === itemId) {
+          const updated = { ...item, quantity: newQuantity };
+          if ('unit_price' in updated) {
+            updated.total_price = updated.unit_price * newQuantity;
+          }
+          return updated;
+        }
+        return item;
+      }));
+      
+      // Update modification
+      setMealModifications(prev => prev.map(mod => {
+        if (mod.action === 'add' && mod.mealId === currentItems.find(item => item.id === itemId)?.meal_id) {
+          return { ...mod, quantity: newQuantity };
+        }
+        return mod;
+      }));
+    } else {
+      // Mark for quantity update
+      setMealModifications(prev => {
+        const existing = prev.find(mod => mod.action === 'update_quantity' && mod.itemId === itemId);
+        if (existing) {
+          return prev.map(mod => 
+            mod.action === 'update_quantity' && mod.itemId === itemId 
+              ? { ...mod, quantity: newQuantity }
+              : mod
+          );
+        }
+        return [...prev, {
+          action: 'update_quantity',
+          mealId: '',
+          itemId,
+          quantity: newQuantity
+        }];
+      });
+      
+      // Update preview
+      setCurrentItems(prev => prev.map(item => {
+        if (item.id === itemId) {
+          const updated = { ...item, quantity: newQuantity };
+          if ('unit_price' in updated) {
+            updated.total_price = updated.unit_price * newQuantity;
+          }
+          return updated;
+        }
+        return item;
+      }));
+    }
+  };
+
+  const calculateNewTotal = () => {
+    if (!order) return 0;
+    
+    let newTotal = 0;
+    
+    if (order.type === 'package') {
+      // For packages, total usually doesn't change with meal modifications
+      newTotal = order.total_amount;
+    } else {
+      // Calculate based on current items
+      newTotal = currentItems.reduce((sum, item) => {
+        if ('total_price' in item) {
+          return sum + item.total_price;
+        }
+        return sum;
+      }, 0);
+    }
+
+    // Apply financial adjustments
+    if (adjustmentAmount > 0) {
+      if (adjustmentType === 'discount' || adjustmentType === 'refund') {
+        newTotal = Math.max(0, newTotal - adjustmentAmount);
+      } else if (adjustmentType === 'fee') {
+        newTotal = newTotal + adjustmentAmount;
+      }
+    }
+
+    return newTotal;
+  };
 
   const handleSubmit = async () => {
     if (!order || !adjustmentReason.trim()) {
@@ -65,24 +268,45 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
       return;
     }
 
+    const hasFinancialAdjustment = adjustmentAmount > 0;
+    const hasMealModifications = mealModifications.length > 0;
+
+    if (!hasFinancialAdjustment && !hasMealModifications) {
+      toast({
+        title: "No Changes",
+        description: "Please make at least one adjustment or meal modification.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
+      const requestBody: any = {
+        orderId: order.id,
+        orderType: order.type || 'individual',
+        reason: adjustmentReason
+      };
+
+      if (hasFinancialAdjustment) {
+        requestBody.adjustmentType = adjustmentType;
+        requestBody.amount = adjustmentAmount;
+      }
+
+      if (hasMealModifications) {
+        requestBody.mealModifications = mealModifications;
+      }
+
       const { data, error } = await supabase.functions.invoke('adjust-order', {
-        body: {
-          orderId: order.id,
-          orderType: order.type || 'individual',
-          adjustmentType,
-          amount: adjustmentAmount,
-          reason: adjustmentReason
-        }
+        body: requestBody
       });
 
       if (error) throw error;
       
       toast({
         title: "Order Adjusted",
-        description: data.message || `Order ${order.id.slice(-8)} has been successfully adjusted.`,
+        description: data.message || `Order ${order.id.slice(-8)} has been successfully updated.`,
       });
       
       onOrderUpdated();
@@ -92,6 +316,8 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
       setAdjustmentReason('');
       setAdjustmentAmount(0);
       setAdjustmentType('discount');
+      setMealModifications([]);
+      setActiveTab('financial');
       
     } catch (error: any) {
       console.error('Error adjusting order:', error);
@@ -109,18 +335,18 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
     setAdjustmentReason('');
     setAdjustmentAmount(0);
     setAdjustmentType('discount');
+    setMealModifications([]);
+    setActiveTab('financial');
     onClose();
   };
 
   if (!order) return null;
 
-  const newTotal = adjustmentType === 'fee' 
-    ? order.total_amount + adjustmentAmount
-    : order.total_amount - adjustmentAmount;
+  const newTotal = calculateNewTotal();
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit3 className="h-5 w-5" />
@@ -143,70 +369,173 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                 <span>{order.customer_name}</span>
               </div>
               <div className="flex justify-between text-sm">
+                <span>Type:</span>
+                <Badge variant="outline">{order.type}</Badge>
+              </div>
+              <div className="flex justify-between text-sm">
                 <span>Status:</span>
                 <Badge variant={order.status === 'pending' ? 'secondary' : 'default'}>
                   {order.status}
                 </Badge>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Current Total:</span>
+                <span>Original Total:</span>
                 <span className="font-medium">{formatCurrency(order.total_amount)}</span>
               </div>
             </CardContent>
           </Card>
 
-          {/* Adjustment Settings */}
+          {/* Adjustment Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="financial" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Financial Adjustment
+              </TabsTrigger>
+              <TabsTrigger value="meals" className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                Meal Modifications
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="financial" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Financial Adjustment</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustment-type">Adjustment Type</Label>
+                    <Select value={adjustmentType} onValueChange={(value: any) => setAdjustmentType(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="discount">Discount</SelectItem>
+                        <SelectItem value="refund">Partial Refund</SelectItem>
+                        <SelectItem value="fee">Additional Fee</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustment-amount">Amount ({adjustmentType === 'fee' ? 'Add' : 'Subtract'})</Label>
+                    <Input
+                      id="adjustment-amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max={adjustmentType === 'fee' ? undefined : order.total_amount}
+                      value={adjustmentAmount}
+                      onChange={(e) => setAdjustmentAmount(parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="meals" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Current Items</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {currentItems.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium">
+                            {'meal_name' in item ? item.meal_name : item.meals?.name || 'Unknown Meal'}
+                          </div>
+                          {'unit_price' in item && (
+                            <div className="text-sm text-muted-foreground">
+                              {formatCurrency(item.unit_price)} each
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeMealItem(item.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Add Meal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2">
+                    <Select value={selectedMealToAdd} onValueChange={setSelectedMealToAdd}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select a meal to add" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableMeals.map((meal) => (
+                          <SelectItem key={meal.id} value={meal.id}>
+                            {meal.name} - {formatCurrency(meal.price)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={quantityToAdd}
+                      onChange={(e) => setQuantityToAdd(parseInt(e.target.value) || 1)}
+                      className="w-20"
+                    />
+                    <Button onClick={addMealModification} disabled={!selectedMealToAdd}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Reason Input */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Adjustment Details
-              </CardTitle>
+              <CardTitle className="text-sm">Adjustment Reason</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="adjustment-type">Adjustment Type</Label>
-                <select
-                  id="adjustment-type"
-                  value={adjustmentType}
-                  onChange={(e) => setAdjustmentType(e.target.value as 'discount' | 'refund' | 'fee')}
-                  className="w-full p-2 border border-border rounded-md bg-background"
-                >
-                  <option value="discount">Discount</option>
-                  <option value="refund">Partial Refund</option>
-                  <option value="fee">Additional Fee</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="adjustment-amount">Amount ({adjustmentType === 'fee' ? 'Add' : 'Subtract'})</Label>
-                <Input
-                  id="adjustment-amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={adjustmentType === 'fee' ? undefined : order.total_amount}
-                  value={adjustmentAmount}
-                  onChange={(e) => setAdjustmentAmount(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="adjustment-reason">Reason for Adjustment *</Label>
-                <Textarea
-                  id="adjustment-reason"
-                  value={adjustmentReason}
-                  onChange={(e) => setAdjustmentReason(e.target.value)}
-                  placeholder="Please provide a detailed reason for this adjustment..."
-                  rows={3}
-                />
-              </div>
+            <CardContent>
+              <Textarea
+                value={adjustmentReason}
+                onChange={(e) => setAdjustmentReason(e.target.value)}
+                placeholder="Please provide a detailed reason for this adjustment..."
+                rows={3}
+              />
             </CardContent>
           </Card>
 
           {/* Preview */}
-          {adjustmentAmount > 0 && (
+          {(adjustmentAmount > 0 || mealModifications.length > 0) && (
             <Card className="border-orange-200 bg-orange-50">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
@@ -218,12 +547,20 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                         <span>Original Total:</span>
                         <span>{formatCurrency(order.total_amount)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>{adjustmentType === 'fee' ? 'Additional Fee:' : 'Adjustment:'}</span>
-                        <span className={adjustmentType === 'fee' ? 'text-red-600' : 'text-green-600'}>
-                          {adjustmentType === 'fee' ? '+' : '-'}{formatCurrency(adjustmentAmount)}
-                        </span>
-                      </div>
+                      {mealModifications.length > 0 && (
+                        <div className="flex justify-between">
+                          <span>Meal Modifications:</span>
+                          <span>{mealModifications.length} change(s)</span>
+                        </div>
+                      )}
+                      {adjustmentAmount > 0 && (
+                        <div className="flex justify-between">
+                          <span>{adjustmentType === 'fee' ? 'Additional Fee:' : 'Adjustment:'}</span>
+                          <span className={adjustmentType === 'fee' ? 'text-red-600' : 'text-green-600'}>
+                            {adjustmentType === 'fee' ? '+' : '-'}{formatCurrency(adjustmentAmount)}
+                          </span>
+                        </div>
+                      )}
                       <Separator />
                       <div className="flex justify-between font-medium">
                         <span>New Total:</span>
@@ -243,14 +580,14 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={isSubmitting || !adjustmentReason.trim() || adjustmentAmount <= 0}
+            disabled={isSubmitting || !adjustmentReason.trim() || (adjustmentAmount <= 0 && mealModifications.length === 0)}
           >
             {isSubmitting ? (
               "Processing..."
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Apply Adjustment
+                Apply Changes
               </>
             )}
           </Button>

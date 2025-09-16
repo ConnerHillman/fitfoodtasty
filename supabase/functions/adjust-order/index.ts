@@ -7,12 +7,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface MealModification {
+  action: 'add' | 'remove' | 'update_quantity' | 'replace';
+  mealId: string;
+  quantity?: number;
+  replacementMealId?: string;
+  itemId?: string; // For existing items
+}
+
 interface AdjustOrderRequest {
   orderId: string;
   orderType: 'individual' | 'package';
-  adjustmentType: 'discount' | 'refund' | 'fee';
-  amount: number;
+  adjustmentType?: 'discount' | 'refund' | 'fee';
+  amount?: number;
   reason: string;
+  mealModifications?: MealModification[];
 }
 
 serve(async (req) => {
@@ -47,10 +56,12 @@ serve(async (req) => {
       throw new Error("Admin access required");
     }
 
-    const { orderId, orderType, adjustmentType, amount, reason }: AdjustOrderRequest = await req.json();
+    const { orderId, orderType, adjustmentType, amount, reason, mealModifications }: AdjustOrderRequest = await req.json();
 
-    // Get the order
+    // Get the order with items
     const tableName = orderType === 'package' ? 'package_orders' : 'orders';
+    const itemsTable = orderType === 'package' ? 'package_meal_selections' : 'order_items';
+    
     const { data: order, error: orderError } = await supabaseClient
       .from(tableName)
       .select('*')
@@ -61,13 +72,109 @@ serve(async (req) => {
       throw new Error("Order not found");
     }
 
-    // Calculate new total
     let newTotal = order.total_amount;
-    if (adjustmentType === 'discount' || adjustmentType === 'refund') {
-      newTotal = Math.max(0, newTotal - amount);
-    } else if (adjustmentType === 'fee') {
-      newTotal = newTotal + amount;
+    const oldValues: any = { total_amount: order.total_amount };
+    const newValues: any = {};
+
+    // Process meal modifications if provided
+    if (mealModifications && mealModifications.length > 0) {
+      for (const modification of mealModifications) {
+        if (modification.action === 'add') {
+          // Get meal details for pricing
+          const { data: meal } = await supabaseClient
+            .from('meals')
+            .select('price, name')
+            .eq('id', modification.mealId)
+            .single();
+
+          if (meal) {
+            const quantity = modification.quantity || 1;
+            const totalPrice = meal.price * quantity;
+
+            if (orderType === 'package') {
+              // Add to package meal selections
+              await supabaseClient
+                .from('package_meal_selections')
+                .insert({
+                  package_order_id: orderId,
+                  meal_id: modification.mealId,
+                  quantity
+                });
+            } else {
+              // Add to order items
+              await supabaseClient
+                .from('order_items')
+                .insert({
+                  order_id: orderId,
+                  meal_id: modification.mealId,
+                  meal_name: meal.name,
+                  quantity,
+                  unit_price: meal.price,
+                  total_price: totalPrice
+                });
+              
+              newTotal += totalPrice;
+            }
+          }
+        } else if (modification.action === 'remove' && modification.itemId) {
+          // Get item details before removal
+          const { data: item } = await supabaseClient
+            .from(itemsTable)
+            .select('*')
+            .eq('id', modification.itemId)
+            .single();
+
+          if (item) {
+            // Remove the item
+            await supabaseClient
+              .from(itemsTable)
+              .delete()
+              .eq('id', modification.itemId);
+
+            if (orderType === 'individual') {
+              newTotal -= item.total_price;
+            }
+          }
+        } else if (modification.action === 'update_quantity' && modification.itemId) {
+          const { data: item } = await supabaseClient
+            .from(itemsTable)
+            .select('*')
+            .eq('id', modification.itemId)
+            .single();
+
+          if (item && modification.quantity) {
+            if (orderType === 'package') {
+              await supabaseClient
+                .from('package_meal_selections')
+                .update({ quantity: modification.quantity })
+                .eq('id', modification.itemId);
+            } else {
+              const newTotalPrice = item.unit_price * modification.quantity;
+              await supabaseClient
+                .from('order_items')
+                .update({ 
+                  quantity: modification.quantity,
+                  total_price: newTotalPrice
+                })
+                .eq('id', modification.itemId);
+
+              newTotal = newTotal - item.total_price + newTotalPrice;
+            }
+          }
+        }
+      }
     }
+
+    // Apply financial adjustments if provided
+    if (adjustmentType && amount) {
+      if (adjustmentType === 'discount' || adjustmentType === 'refund') {
+        newTotal = Math.max(0, newTotal - amount);
+      } else if (adjustmentType === 'fee') {
+        newTotal = newTotal + amount;
+      }
+    }
+
+    newValues.total_amount = newTotal;
 
     // Log the change
     await supabaseClient.rpc('log_order_change', {
@@ -75,11 +182,14 @@ serve(async (req) => {
       p_order_type: orderType,
       p_action_type: 'adjust',
       p_performed_by: userData.user.id,
-      p_old_values: { total_amount: order.total_amount },
-      p_new_values: { total_amount: newTotal },
+      p_old_values: oldValues,
+      p_new_values: newValues,
       p_reason: reason,
-      p_amount_changed: adjustmentType === 'fee' ? amount : -amount,
-      p_metadata: { adjustment_type: adjustmentType }
+      p_amount_changed: newTotal - order.total_amount,
+      p_metadata: { 
+        adjustment_type: adjustmentType,
+        meal_modifications: mealModifications || []
+      }
     });
 
     // Update the order
@@ -136,10 +246,22 @@ serve(async (req) => {
       }
     }
 
+    const hasFinancialAdjustment = adjustmentType && amount;
+    const hasMealModifications = mealModifications && mealModifications.length > 0;
+    
+    let message = "Order updated successfully";
+    if (hasFinancialAdjustment && hasMealModifications) {
+      message = `Order ${adjustmentType} and meal modifications applied successfully`;
+    } else if (hasFinancialAdjustment) {
+      message = `Order ${adjustmentType} applied successfully`;
+    } else if (hasMealModifications) {
+      message = "Meal modifications applied successfully";
+    }
+
     return new Response(JSON.stringify({
       success: true,
       order: updatedOrder,
-      message: `Order ${adjustmentType} applied successfully`
+      message
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
