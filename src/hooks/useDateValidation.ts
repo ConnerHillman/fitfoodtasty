@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { format } from "date-fns";
 
 export const useDateValidation = (deliveryZone: any) => {
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
@@ -8,7 +9,7 @@ export const useDateValidation = (deliveryZone: any) => {
   const getMinDeliveryDate = useCallback(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    return format(tomorrow, 'yyyy-MM-dd');
   }, []);
 
   // Memoized calculate production date (corrected logic)
@@ -22,7 +23,7 @@ export const useDateValidation = (deliveryZone: any) => {
     const production = new Date(delivery);
     production.setDate(production.getDate() - leadDays);
     
-    return production.toISOString().split('T')[0];
+    return format(production, 'yyyy-MM-dd');
   }, [deliveryZone?.production_lead_days]);
 
   // Memoized available collection dates (next 14 days)

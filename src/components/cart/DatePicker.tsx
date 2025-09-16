@@ -32,7 +32,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      onDateChange(date.toISOString().split('T')[0]);
+      onDateChange(format(date, 'yyyy-MM-dd'));
       onCalendarOpenChange(false);
     }
   };
@@ -74,7 +74,8 @@ const DatePicker: React.FC<DatePickerProps> = ({
                   return !isDateAvailable(date);
                 }}
                 initialFocus
-                fromDate={new Date(getMinDeliveryDate())}
+                className={cn("p-3 pointer-events-auto")}
+                fromDate={new Date(getMinDeliveryDate() + 'T12:00:00')}
                 toDate={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)} // 2 weeks from now
               />
             </PopoverContent>
