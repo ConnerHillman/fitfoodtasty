@@ -206,7 +206,7 @@ export default function PaymentForm({
             ) : (
               <>
                 <CreditCard className="mr-2 h-5 w-5" />
-                COMPLETE ORDER - £{(totalAmount / 100).toFixed(2)}
+                COMPLETE ORDER
               </>
             )}
           </Button>
