@@ -63,6 +63,8 @@ interface OrderDetails {
   currency: string;
   stripe_session_id?: string;
   referral_code_used?: string;
+  requested_delivery_date?: string;
+  production_date?: string;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
@@ -286,8 +288,98 @@ const OrderDetails: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Order Summary */}
+          {/* Order Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Customer and Delivery Information at Top */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Customer Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Customer Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Name:</span>
+                      <span>{order.customer_name || 'Not provided'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Email:</span>
+                      <span>{order.customer_email || 'Not provided'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">User ID:</span>
+                      <span className="text-xs text-muted-foreground">{order.user_id}</span>
+                    </div>
+                    {order.referral_code_used && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          Referral: {order.referral_code_used}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Delivery Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Delivery Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {order.delivery_address ? (
+                      <div className="flex items-start gap-2">
+                        <Truck className="h-4 w-4 text-muted-foreground mt-1" />
+                        <div>
+                          <p className="font-medium">Delivery Address:</p>
+                          <p className="text-sm text-muted-foreground whitespace-pre-line">{order.delivery_address}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No delivery address provided</p>
+                    )}
+                    
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Delivery Date:</p>
+                        <p className="text-sm text-muted-foreground">
+                          {order.requested_delivery_date 
+                            ? format(new Date(order.requested_delivery_date), 'PPP')
+                            : 'Not scheduled'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Production Date:</p>
+                        <p className="text-sm text-muted-foreground">
+                          {order.production_date 
+                            ? format(new Date(order.production_date), 'PPP')
+                            : 'Not scheduled'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg border">
               <div className="flex flex-wrap gap-2">
@@ -405,66 +497,6 @@ const OrderDetails: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Customer Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Customer Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Name:</span>
-                      <span>{order.customer_name || 'Not provided'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Email:</span>
-                      <span>{order.customer_email || 'Not provided'}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">User ID:</span>
-                      <span className="text-xs text-muted-foreground">{order.user_id}</span>
-                    </div>
-                    {order.referral_code_used && (
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          Referral: {order.referral_code_used}
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Delivery Information */}
-            {order.delivery_address && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Delivery Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start gap-2">
-                    <Truck className="h-4 w-4 text-muted-foreground mt-1" />
-                    <div>
-                      <p className="font-medium">Delivery Address:</p>
-                      <p className="text-muted-foreground whitespace-pre-line">{order.delivery_address}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Order Details Sidebar */}
