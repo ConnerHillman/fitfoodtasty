@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import DataImporter from '@/components/DataImporter';
 import { LabelReport } from '@/components/admin/LabelReport';
+import { SimpleDateRangePicker } from '@/components/ui/simple-date-range-picker';
 import { format as formatDate, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
@@ -42,7 +43,6 @@ const Reports = () => {
     from: startOfDay(new Date()),
     to: endOfDay(new Date())
   });
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [showFullReport, setShowFullReport] = useState(false);
   const [showLabelReport, setShowLabelReport] = useState(false);
@@ -151,24 +151,6 @@ const Reports = () => {
       .sort((a, b) => b.quantity - a.quantity);
   };
 
-  const quickDateOptions = [
-    { label: 'Today', value: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }) },
-    { label: 'Yesterday', value: () => ({ 
-      from: startOfDay(new Date(Date.now() - 24 * 60 * 60 * 1000)), 
-      to: endOfDay(new Date(Date.now() - 24 * 60 * 60 * 1000)) 
-    }) },
-    { label: 'This month', value: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }) },
-    { label: 'Last month', value: () => ({ 
-      from: startOfMonth(subMonths(new Date(), 1)), 
-      to: endOfMonth(subMonths(new Date(), 1)) 
-    }) },
-    { label: 'Year to Date', value: () => ({ from: startOfYear(new Date()), to: endOfDay(new Date()) }) },
-    { label: 'This year', value: () => ({ from: startOfYear(new Date()), to: endOfYear(new Date()) }) },
-    { label: 'Last year', value: () => ({ 
-      from: startOfYear(new Date(new Date().getFullYear() - 1, 0, 1)), 
-      to: endOfYear(new Date(new Date().getFullYear() - 1, 11, 31)) 
-    }) }
-  ];
 
   const generateKitchenReport = (exportFormat: 'csv' | 'xlsx' | 'print') => {
     const reportData = getItemProduction();
@@ -321,76 +303,16 @@ const Reports = () => {
           <p className="text-sm text-muted-foreground">Production planning and order management</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="bg-background/80">
-                <CalendarIcon className="h-4 w-4 mr-2" />
-                {formatDate(dateRange.from, 'MMM d')} - {formatDate(dateRange.to, 'MMM d')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Choose Date Range</DialogTitle>
-              </DialogHeader>
-              <div className="flex gap-6">
-                <div className="space-y-2">
-                  {quickDateOptions.map((option, index) => (
-                    <Button
-                      key={index}
-                      variant="ghost"
-                      className="w-full justify-start text-sm"
-                      onClick={() => {
-                        const newRange = option.value();
-                        setDateRange(newRange);
-                        setShowDatePicker(false);
-                      }}
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
-                <div className="flex gap-4">
-                  <div>
-                    <p className="text-sm font-medium mb-2">From</p>
-                    <Calendar
-                      mode="single"
-                      selected={dateRange.from}
-                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, from: startOfDay(date) }))}
-                      className="pointer-events-auto"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium mb-2">To</p>
-                    <Calendar
-                      mode="single"
-                      selected={dateRange.to}
-                      onSelect={(date) => date && setDateRange(prev => ({ ...prev, to: endOfDay(date) }))}
-                      className="pointer-events-auto"
-                    />
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          
-          <div className="flex gap-1">
-            {quickDateOptions.slice(0, 3).map((option, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                size="sm"
-                className="text-xs px-2"
-                onClick={() => {
-                  const newRange = option.value();
-                  setDateRange(newRange);
-                }}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <SimpleDateRangePicker
+          date={dateRange}
+          onDateChange={(range) => {
+            if (range?.from && range?.to) {
+              setDateRange({ from: startOfDay(range.from), to: endOfDay(range.to) });
+            }
+          }}
+          placeholder="Select date range for reports"
+          className="w-auto"
+        />
       </div>
 
       {/* Main Production Report */}
