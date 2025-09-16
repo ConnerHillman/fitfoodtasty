@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, Eye, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock } from 'lucide-react';
+import { Package, Eye, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock, Edit3, X, RotateCcw, Printer, RotateCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -234,13 +234,88 @@ const AllOrders: React.FC = () => {
     }
   ];
 
+  // Order action handlers
+  const handleViewOrder = (order: Order) => {
+    navigate(`/orders/${order.id}`);
+  };
+
+  const handleAdjustOrder = (order: Order) => {
+    // TODO: Implement adjust order functionality
+    toast({
+      title: "Adjust Order",
+      description: `Adjust functionality for order ${order.id.slice(-8)} will be implemented soon.`,
+    });
+  };
+
+  const handleVoidOrder = (order: Order) => {
+    // TODO: Implement void order functionality
+    toast({
+      title: "Void Order",
+      description: `Void functionality for order ${order.id.slice(-8)} will be implemented soon.`,
+    });
+  };
+
+  const handleRefundOrder = (order: Order) => {
+    // TODO: Implement refund order functionality
+    toast({
+      title: "Refund Order",
+      description: `Refund functionality for order ${order.id.slice(-8)} will be implemented soon.`,
+    });
+  };
+
+  const handlePrintLabels = (order: Order) => {
+    // TODO: Implement print meal labels functionality
+    toast({
+      title: "Print Meal Labels",
+      description: `Print labels functionality for order ${order.id.slice(-8)} will be implemented soon.`,
+    });
+  };
+
+  const handleReOrder = (order: Order) => {
+    // TODO: Implement re-order functionality using existing ReorderConfirmationModal
+    toast({
+      title: "Re-Order",
+      description: `Re-order functionality for order ${order.id.slice(-8)} will be implemented soon.`,
+    });
+  };
+
   // Table actions
   const actions: ActionItem<Order>[] = [
     {
-      label: 'View Details',
+      label: 'View',
       icon: Eye,
-      onClick: (order) => navigate(`/orders/${order.id}`),
+      onClick: handleViewOrder,
       variant: 'outline'
+    },
+    {
+      label: 'Adjust',
+      icon: Edit3,
+      onClick: handleAdjustOrder,
+      variant: 'ghost'
+    },
+    {
+      label: 'Void',
+      icon: X,
+      onClick: handleVoidOrder,
+      variant: 'ghost'
+    },
+    {
+      label: 'Refund',
+      icon: RotateCcw,
+      onClick: handleRefundOrder,
+      variant: 'ghost'
+    },
+    {
+      label: 'Print Meal Labels',
+      icon: Printer,
+      onClick: handlePrintLabels,
+      variant: 'ghost'
+    },
+    {
+      label: 'Re-Order',
+      icon: RotateCw,
+      onClick: handleReOrder,
+      variant: 'ghost'
     }
   ];
 
