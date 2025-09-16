@@ -157,13 +157,13 @@ export const KitchenProductionDashboard: React.FC = () => {
           ]);
         });
 
-        // Add totals
+        // Add totals (filtered count)
         ingredientsExportData.push(
           [], // Empty row before total
           [
             'TOTAL INGREDIENT TYPES:',
             '', 
-            productionData.uniqueIngredientTypes.toString(),
+            sortedIngredientLineItems.length.toString(),
             ''
           ]
         );
@@ -193,7 +193,7 @@ export const KitchenProductionDashboard: React.FC = () => {
         ['PRODUCTION OVERVIEW'],
         ['Total Meals to Prepare:', productionData.totalMeals],
         ['Unique Meal Types:', productionData.uniqueMealTypes],
-        ['Total Ingredient Types:', productionData.uniqueIngredientTypes],
+        ['Total Ingredient Types:', sortedIngredientLineItems.length],
         [], // Empty row
         ['MEAL BREAKDOWN'],
         ['Meal Name', 'Quantity'],
