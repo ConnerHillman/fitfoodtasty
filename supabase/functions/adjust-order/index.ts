@@ -22,6 +22,7 @@ interface AdjustOrderRequest {
   amount?: number;
   reason: string;
   mealModifications?: MealModification[];
+  newDeliveryDate?: string; // ISO date string
 }
 
 serve(async (req) => {
@@ -56,7 +57,7 @@ serve(async (req) => {
       throw new Error("Admin access required");
     }
 
-    const { orderId, orderType, adjustmentType, amount, reason, mealModifications }: AdjustOrderRequest = await req.json();
+    const { orderId, orderType, adjustmentType, amount, reason, mealModifications, newDeliveryDate }: AdjustOrderRequest = await req.json();
 
     // Get the order with items
     const tableName = orderType === 'package' ? 'package_orders' : 'orders';
@@ -73,7 +74,11 @@ serve(async (req) => {
     }
 
     let newTotal = order.total_amount;
-    const oldValues: any = { total_amount: order.total_amount };
+    const oldValues: any = { 
+      total_amount: order.total_amount,
+      requested_delivery_date: order.requested_delivery_date,
+      production_date: order.production_date
+    };
     const newValues: any = {};
 
     // Process meal modifications if provided
@@ -165,6 +170,18 @@ serve(async (req) => {
       }
     }
 
+    // Handle delivery date change if provided
+    if (newDeliveryDate) {
+      const deliveryDate = new Date(newDeliveryDate);
+      newValues.requested_delivery_date = deliveryDate.toISOString().split('T')[0];
+      
+      // Calculate new production date based on delivery date
+      // Get delivery zone if possible to calculate proper production date
+      let newProductionDate = deliveryDate;
+      newProductionDate.setDate(newProductionDate.getDate() - 2); // Default 2 days before
+      newValues.production_date = newProductionDate.toISOString().split('T')[0];
+    }
+
     // Apply financial adjustments if provided
     if (adjustmentType && amount) {
       if (adjustmentType === 'discount' || adjustmentType === 'refund') {
@@ -188,18 +205,26 @@ serve(async (req) => {
       p_amount_changed: newTotal - order.total_amount,
       p_metadata: { 
         adjustment_type: adjustmentType,
-        meal_modifications: mealModifications || []
+        meal_modifications: mealModifications || [],
+        delivery_date_changed: !!newDeliveryDate
       }
     });
 
-    // Update the order
+    // Update the order with all changes
+    const updateData: any = {
+      total_amount: newTotal,
+      last_modified_by: userData.user.id,
+      updated_at: new Date().toISOString()
+    };
+
+    if (newDeliveryDate) {
+      updateData.requested_delivery_date = newValues.requested_delivery_date;
+      updateData.production_date = newValues.production_date;
+    }
+
     const { data: updatedOrder, error: updateError } = await supabaseClient
       .from(tableName)
-      .update({
-        total_amount: newTotal,
-        last_modified_by: userData.user.id,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', orderId)
       .select()
       .single();
@@ -248,14 +273,23 @@ serve(async (req) => {
 
     const hasFinancialAdjustment = adjustmentType && amount;
     const hasMealModifications = mealModifications && mealModifications.length > 0;
+    const hasDateChange = !!newDeliveryDate;
     
     let message = "Order updated successfully";
-    if (hasFinancialAdjustment && hasMealModifications) {
+    if (hasFinancialAdjustment && hasMealModifications && hasDateChange) {
+      message = `Order ${adjustmentType}, meal modifications, and delivery date updated successfully`;
+    } else if (hasFinancialAdjustment && hasMealModifications) {
       message = `Order ${adjustmentType} and meal modifications applied successfully`;
+    } else if (hasFinancialAdjustment && hasDateChange) {
+      message = `Order ${adjustmentType} and delivery date updated successfully`;
+    } else if (hasMealModifications && hasDateChange) {
+      message = "Meal modifications and delivery date updated successfully";
     } else if (hasFinancialAdjustment) {
       message = `Order ${adjustmentType} applied successfully`;
     } else if (hasMealModifications) {
       message = "Meal modifications applied successfully";
+    } else if (hasDateChange) {
+      message = "Delivery date updated successfully";
     }
 
     return new Response(JSON.stringify({

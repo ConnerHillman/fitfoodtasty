@@ -9,10 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit3, Package, CreditCard, AlertTriangle, Save, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Edit3, Package, CreditCard, AlertTriangle, Save, Plus, Minus, ShoppingCart, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 interface OrderItem {
   id: string;
@@ -41,6 +44,8 @@ interface Order {
   total_amount: number;
   status: string;
   created_at: string;
+  requested_delivery_date?: string;
+  production_date?: string;
   order_items?: OrderItem[];
   package_meal_selections?: PackageMealSelection[];
   type: 'individual' | 'package';
@@ -91,10 +96,19 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
   const [quantityToAdd, setQuantityToAdd] = useState(1);
   const [currentItems, setCurrentItems] = useState<(OrderItem | PackageMealSelection)[]>([]);
 
+  // Date modification states
+  const [newDeliveryDate, setNewDeliveryDate] = useState<Date | undefined>();
+  const [isDateChanged, setIsDateChanged] = useState(false);
+
   useEffect(() => {
     if (isOpen && order) {
       fetchAvailableMeals();
       setCurrentItems(order.type === 'package' ? order.package_meal_selections || [] : order.order_items || []);
+      
+      // Initialize delivery date if order has one
+      if (order.requested_delivery_date) {
+        setNewDeliveryDate(new Date(order.requested_delivery_date));
+      }
     }
   }, [isOpen, order]);
 
@@ -270,11 +284,12 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
 
     const hasFinancialAdjustment = adjustmentAmount > 0;
     const hasMealModifications = mealModifications.length > 0;
+    const hasDateChange = isDateChanged && newDeliveryDate;
 
-    if (!hasFinancialAdjustment && !hasMealModifications) {
+    if (!hasFinancialAdjustment && !hasMealModifications && !hasDateChange) {
       toast({
         title: "No Changes",
-        description: "Please make at least one adjustment or meal modification.",
+        description: "Please make at least one adjustment, meal modification, or date change.",
         variant: "destructive",
       });
       return;
@@ -298,6 +313,10 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
         requestBody.mealModifications = mealModifications;
       }
 
+      if (hasDateChange && newDeliveryDate) {
+        requestBody.newDeliveryDate = newDeliveryDate.toISOString();
+      }
+
       const { data, error } = await supabase.functions.invoke('adjust-order', {
         body: requestBody
       });
@@ -318,6 +337,8 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
       setAdjustmentType('discount');
       setMealModifications([]);
       setActiveTab('financial');
+      setNewDeliveryDate(undefined);
+      setIsDateChanged(false);
       
     } catch (error: any) {
       console.error('Error adjusting order:', error);
@@ -337,6 +358,8 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
     setAdjustmentType('discount');
     setMealModifications([]);
     setActiveTab('financial');
+    setNewDeliveryDate(undefined);
+    setIsDateChanged(false);
     onClose();
   };
 
@@ -387,14 +410,18 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
 
           {/* Adjustment Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="financial" className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
-                Financial Adjustment
+                Financial
               </TabsTrigger>
               <TabsTrigger value="meals" className="flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4" />
-                Meal Modifications
+                Meals
+              </TabsTrigger>
+              <TabsTrigger value="delivery" className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                Delivery Date
               </TabsTrigger>
             </TabsList>
 
@@ -517,6 +544,77 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="delivery" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Current Delivery Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span>Current Delivery Date:</span>
+                    <span className="font-medium">
+                      {order.requested_delivery_date 
+                        ? format(new Date(order.requested_delivery_date), 'PPP')
+                        : 'Not set'
+                      }
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Production Date:</span>
+                    <span className="font-medium">
+                      {order.production_date 
+                        ? format(new Date(order.production_date), 'PPP')
+                        : 'Not set'
+                      }
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Change Delivery Date</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Label>New Delivery Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !newDeliveryDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newDeliveryDate ? format(newDeliveryDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={newDeliveryDate}
+                          onSelect={(date) => {
+                            setNewDeliveryDate(date);
+                            setIsDateChanged(true);
+                          }}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {isDateChanged && newDeliveryDate && (
+                      <div className="text-sm text-muted-foreground">
+                        <p>Production will be scheduled for: {format(new Date(newDeliveryDate.getTime() - 2 * 24 * 60 * 60 * 1000), 'PPP')}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
 
           {/* Reason Input */}
@@ -535,7 +633,7 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
           </Card>
 
           {/* Preview */}
-          {(adjustmentAmount > 0 || mealModifications.length > 0) && (
+          {(adjustmentAmount > 0 || mealModifications.length > 0 || isDateChanged) && (
             <Card className="border-orange-200 bg-orange-50">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
@@ -551,6 +649,12 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                         <div className="flex justify-between">
                           <span>Meal Modifications:</span>
                           <span>{mealModifications.length} change(s)</span>
+                        </div>
+                      )}
+                      {isDateChanged && newDeliveryDate && (
+                        <div className="flex justify-between">
+                          <span>New Delivery Date:</span>
+                          <span>{format(newDeliveryDate, 'PPP')}</span>
                         </div>
                       )}
                       {adjustmentAmount > 0 && (
@@ -580,7 +684,7 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={isSubmitting || !adjustmentReason.trim() || (adjustmentAmount <= 0 && mealModifications.length === 0)}
+            disabled={isSubmitting || !adjustmentReason.trim() || (adjustmentAmount <= 0 && mealModifications.length === 0 && !isDateChanged)}
           >
             {isSubmitting ? (
               "Processing..."
