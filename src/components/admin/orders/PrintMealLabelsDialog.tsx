@@ -249,7 +249,7 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
       }));
 
       // Use the edge function to generate PDF
-      const { error } = await supabase.functions.invoke('generate-labels-pdf', {
+      const { data, error } = await supabase.functions.invoke('generate-labels-pdf', {
         body: {
           mealProduction,
           useByDate
@@ -257,6 +257,19 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
       });
 
       if (error) throw error;
+
+      // Create and trigger download
+      if (data) {
+        const blob = new Blob([data], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `meal-labels-${order.id}-${new Date().toISOString().split('T')[0]}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
 
       const totalLabels = selectedLabels.reduce((sum, label) => sum + label.quantity, 0);
       toast.success(`Generated ${totalLabels} labels for ${selectedLabels.length} meals`);
