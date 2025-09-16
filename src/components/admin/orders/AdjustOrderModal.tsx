@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -245,19 +245,34 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
   const calculateNewTotal = () => {
     if (!order) return 0;
     
-    let newTotal = 0;
+    // Start with the original order total
+    let newTotal = order.total_amount;
     
-    if (order.type === 'package') {
-      // For packages, total usually doesn't change with meal modifications
-      newTotal = order.total_amount;
-    } else {
-      // Calculate based on current items
-      newTotal = currentItems.reduce((sum, item) => {
-        if ('total_price' in item) {
-          return sum + item.total_price;
+    // Only apply meal modifications to individual orders (not packages)
+    if (order.type === 'individual' && mealModifications.length > 0) {
+      // Calculate the difference from meal modifications
+      const mealDelta = mealModifications.reduce((delta, mod) => {
+        if (mod.action === 'add') {
+          const meal = availableMeals.find(m => m.id === mod.mealId);
+          if (meal) {
+            return delta + (meal.price * (mod.quantity || 1));
+          }
+        } else if (mod.action === 'remove' && mod.itemId) {
+          const item = (order.order_items || []).find(item => item.id === mod.itemId);
+          if (item) {
+            return delta - item.total_price;
+          }
+        } else if (mod.action === 'update_quantity' && mod.itemId) {
+          const item = (order.order_items || []).find(item => item.id === mod.itemId);
+          if (item && mod.quantity) {
+            const newItemTotal = item.unit_price * mod.quantity;
+            return delta + (newItemTotal - item.total_price);
+          }
         }
-        return sum;
+        return delta;
       }, 0);
+      
+      newTotal += mealDelta;
     }
 
     // Apply financial adjustments
@@ -273,7 +288,17 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!order || !adjustmentReason.trim()) {
+    const hasFinancialAdjustment = adjustmentAmount > 0;
+    const hasMealModifications = mealModifications.length > 0;
+    const hasDateChange = isDateChanged && newDeliveryDate;
+
+    // Auto-fill reason for date-only changes if no reason provided
+    let submissionReason = adjustmentReason.trim();
+    if (!submissionReason && hasDateChange && !hasFinancialAdjustment && !hasMealModifications) {
+      submissionReason = `Delivery date updated to ${newDeliveryDate ? format(newDeliveryDate, 'PPP') : 'new date'}`;
+    }
+
+    if (!submissionReason) {
       toast({
         title: "Missing Information",
         description: "Please provide a reason for the adjustment.",
@@ -281,10 +306,6 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
       });
       return;
     }
-
-    const hasFinancialAdjustment = adjustmentAmount > 0;
-    const hasMealModifications = mealModifications.length > 0;
-    const hasDateChange = isDateChanged && newDeliveryDate;
 
     if (!hasFinancialAdjustment && !hasMealModifications && !hasDateChange) {
       toast({
@@ -301,7 +322,7 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
       const requestBody: any = {
         orderId: order.id,
         orderType: order.type || 'individual',
-        reason: adjustmentReason
+        reason: submissionReason
       };
 
       if (hasFinancialAdjustment) {
@@ -375,6 +396,9 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
             <Edit3 className="h-5 w-5" />
             Adjust Order #{order.id.slice(-8)}
           </DialogTitle>
+          <DialogDescription>
+            Modify order details including financial adjustments, meal selections, and delivery dates.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -414,7 +438,16 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0"
-                    onClick={() => setActiveTab('delivery')}
+                    onClick={() => {
+                      setActiveTab('delivery');
+                      // Small delay to ensure tab content is rendered before focusing
+                      setTimeout(() => {
+                        const dateButton = document.querySelector('[data-testid="delivery-date-trigger"]');
+                        if (dateButton instanceof HTMLElement) {
+                          dateButton.focus();
+                        }
+                      }, 100);
+                    }}
                     title="Edit delivery date"
                   >
                     <Pencil className="h-3 w-3" />
@@ -611,6 +644,7 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
+                          data-testid="delivery-date-trigger"
                           variant="outline"
                           className={cn(
                             "w-full justify-start text-left font-normal",
@@ -652,12 +686,19 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
               <CardTitle className="text-sm">Adjustment Reason</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea
-                value={adjustmentReason}
-                onChange={(e) => setAdjustmentReason(e.target.value)}
-                placeholder="Please provide a detailed reason for this adjustment..."
-                rows={3}
-              />
+              <div className="space-y-2">
+                <Textarea
+                  value={adjustmentReason}
+                  onChange={(e) => setAdjustmentReason(e.target.value)}
+                  placeholder="Please provide a detailed reason for this adjustment..."
+                  rows={3}
+                />
+                {isDateChanged && !mealModifications.length && adjustmentAmount === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Reason is optional for date-only changes - we'll auto-generate one if left empty.
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -697,7 +738,13 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                       <Separator />
                       <div className="flex justify-between font-medium">
                         <span>New Total:</span>
-                        <span>{formatCurrency(newTotal)}</span>
+                        <span>
+                          {newTotal === order.total_amount ? (
+                            <span>{formatCurrency(newTotal)} <span className="text-xs text-muted-foreground">(no change)</span></span>
+                          ) : (
+                            formatCurrency(newTotal)
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -713,7 +760,7 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={isSubmitting || !adjustmentReason.trim() || (adjustmentAmount <= 0 && mealModifications.length === 0 && !isDateChanged)}
+            disabled={isSubmitting || (!adjustmentReason.trim() && !(isDateChanged && !mealModifications.length && adjustmentAmount === 0) && (adjustmentAmount <= 0 && mealModifications.length === 0 && !isDateChanged))}
           >
             {isSubmitting ? (
               "Processing..."
