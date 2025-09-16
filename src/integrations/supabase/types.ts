@@ -456,6 +456,149 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_card_products: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gift_card_transactions: {
+        Row: {
+          amount_used: number
+          created_at: string
+          gift_card_id: string
+          id: string
+          order_id: string | null
+          remaining_balance: number
+          transaction_type: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_used: number
+          created_at?: string
+          gift_card_id: string
+          id?: string
+          order_id?: string | null
+          remaining_balance: number
+          transaction_type: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_used?: number
+          created_at?: string
+          gift_card_id?: string
+          id?: string
+          order_id?: string | null
+          remaining_balance?: number
+          transaction_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_card_transactions_gift_card_id_fkey"
+            columns: ["gift_card_id"]
+            isOneToOne: false
+            referencedRelation: "gift_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gift_cards: {
+        Row: {
+          amount: number
+          balance: number
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          message: string | null
+          order_id: string | null
+          purchased_at: string
+          purchaser_email: string
+          purchaser_name: string
+          purchaser_user_id: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          redeemed_at: string | null
+          redeemed_by_user_id: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          balance: number
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          order_id?: string | null
+          purchased_at?: string
+          purchaser_email: string
+          purchaser_name: string
+          purchaser_user_id?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          redeemed_at?: string | null
+          redeemed_by_user_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          balance?: number
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          order_id?: string | null
+          purchased_at?: string
+          purchaser_email?: string
+          purchaser_name?: string
+          purchaser_user_id?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          redeemed_at?: string | null
+          redeemed_by_user_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       global_fulfillment_schedule: {
         Row: {
           created_at: string
@@ -1438,6 +1581,10 @@ export type Database = {
         Args: { delivery_date: string; zone_id?: string }
         Returns: string
       }
+      generate_gift_card_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_referral_code: {
         Args: { user_email: string }
         Returns: string
@@ -1479,6 +1626,10 @@ export type Database = {
           new_calories: number
           old_calories: number
         }[]
+      }
+      validate_gift_card: {
+        Args: { amount_to_use?: number; gift_card_code: string }
+        Returns: Json
       }
     }
     Enums: {
