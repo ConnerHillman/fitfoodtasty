@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, Users, SlidersHorizontal, Grid, List } from "lucide-react";
+import { Search, Filter, Users, SlidersHorizontal, Grid, List, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,15 @@ export function CustomerFiltersBar({
   onExport,
 }: CustomerFiltersBarProps) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const clearDateRange = () => {
+    // Set a very wide date range to show all customers
+    const allTimeRange = {
+      from: new Date(2020, 0, 1), // Start from 2020
+      to: new Date(), // Until today
+    };
+    onFiltersChange({ dateRange: allTimeRange });
+  };
 
   return (
     <Card>
@@ -181,18 +190,29 @@ export function CustomerFiltersBar({
                   </Select>
                 </div>
 
-                <SimpleDateRangePicker
-                  date={{ from: filters.dateRange.from, to: filters.dateRange.to }}
-                  onDateChange={(range) => 
-                    onFiltersChange({ 
-                      dateRange: { 
-                        from: range?.from || new Date(), 
-                        to: range?.to || new Date() 
-                      } 
-                    })
-                  }
-                  className="w-full"
-                />
+                <div className="flex gap-2">
+                  <SimpleDateRangePicker
+                    date={{ from: filters.dateRange.from, to: filters.dateRange.to }}
+                    onDateChange={(range) => 
+                      onFiltersChange({ 
+                        dateRange: { 
+                          from: range?.from || new Date(), 
+                          to: range?.to || new Date() 
+                        } 
+                      })
+                    }
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearDateRange}
+                    className="px-3"
+                    title="Clear date selection"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -231,7 +251,7 @@ export function CustomerFiltersBar({
               </div>
             </div>
 
-            <div className="hidden sm:block">
+            <div className="hidden sm:flex items-center gap-2">
               <SimpleDateRangePicker
                 date={{ from: filters.dateRange.from, to: filters.dateRange.to }}
                 onDateChange={(range) => 
@@ -243,6 +263,15 @@ export function CustomerFiltersBar({
                   })
                 }
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearDateRange}
+                className="px-3"
+                title="Clear date selection"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>

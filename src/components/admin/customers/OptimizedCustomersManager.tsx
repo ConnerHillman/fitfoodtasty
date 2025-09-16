@@ -34,7 +34,7 @@ const OptimizedCustomersManager = () => {
     filterBy: "all",
     viewMode: "list",
     dateRange: {
-      from: subDays(new Date(), 30),
+      from: new Date(2020, 0, 1), // Show all customers by default
       to: new Date(),
     }
   });
