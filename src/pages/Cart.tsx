@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDeliveryLogic } from "@/hooks/useDeliveryLogic";
 import { useDiscounts } from "@/hooks/useDiscounts";
 import { useDateValidation } from "@/hooks/useDateValidation";
+import { useDebounce } from "@/hooks/useDebounce";
 import OrderSummary from "@/components/cart/OrderSummary";
 import DeliveryOptions from "@/components/cart/DeliveryOptions";
 import DatePicker from "@/components/cart/DatePicker";
@@ -51,57 +52,55 @@ const Cart = () => {
     return discounts.isCoupon100PercentOff(subtotal, fees);
   }, [subtotal, fees, discounts.isCoupon100PercentOff]);
 
-  // Auto-create Stripe PaymentIntent when requirements are met
-  useEffect(() => {
-    const createPI = async () => {
-      try {
-        // Allow early PaymentIntent creation so payment UI is visible
-        if (items.length === 0) return;
+  // Debounced PaymentIntent creation function
+  const createPaymentIntentRef = useRef<() => Promise<void>>();
+  
+  createPaymentIntentRef.current = useCallback(async () => {
+    try {
+      // Allow early PaymentIntent creation so payment UI is visible
+      if (items.length === 0) return;
 
-        // Skip payment intent creation for 100% off coupons
-        if (isCoupon100Off) {
-          setClientSecret("");
-          return;
-        }
-
-        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: {
-            currency: 'gbp',
-            items: items.map(i => ({
-              name: i.name,
-              amount: Math.round(i.price * 100),
-              quantity: i.quantity,
-              description: i.description,
-              meal_id: i.id,
-              type: i.type,
-              packageData: i.packageData,
-            })),
-            delivery_fee: Math.round(fees * 100),
-            delivery_method: deliveryLogic.deliveryMethod,
-            collection_point_id: deliveryLogic.deliveryMethod === 'pickup' ? deliveryLogic.selectedCollectionPoint : null,
-            requested_delivery_date: dateValidation.requestedDeliveryDate,
-            production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
-            customer_email: user?.email,
-            customer_name: (user as any)?.user_metadata?.full_name,
-            coupon_code: discounts.couponApplied ? discounts.appliedCoupon?.code : null,
-            coupon_data: discounts.couponApplied ? discounts.appliedCoupon : null,
-            gift_card_code: discounts.appliedGiftCard?.code || null,
-            gift_card_amount_used: discounts.appliedGiftCard?.amount_used || 0,
-            gift_card_id: discounts.appliedGiftCard?.gift_card_id || null,
-            order_notes: orderNotes.trim() || null,
-          }
-        });
-
-        if (error) throw error;
-        if (data?.clientSecret) {
-          setClientSecret(data.clientSecret);
-        }
-      } catch (err) {
-        console.error('Auto-create payment intent failed:', err);
+      // Skip payment intent creation for 100% off coupons
+      if (isCoupon100Off) {
+        setClientSecret("");
+        return;
       }
-    };
 
-    createPI();
+      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+        body: {
+          currency: 'gbp',
+          items: items.map(i => ({
+            name: i.name,
+            amount: Math.round(i.price * 100),
+            quantity: i.quantity,
+            description: i.description,
+            meal_id: i.id,
+            type: i.type,
+            packageData: i.packageData,
+          })),
+          delivery_fee: Math.round(fees * 100),
+          delivery_method: deliveryLogic.deliveryMethod,
+          collection_point_id: deliveryLogic.deliveryMethod === 'pickup' ? deliveryLogic.selectedCollectionPoint : null,
+          requested_delivery_date: dateValidation.requestedDeliveryDate,
+          production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
+          customer_email: user?.email,
+          customer_name: (user as any)?.user_metadata?.full_name,
+          coupon_code: discounts.couponApplied ? discounts.appliedCoupon?.code : null,
+          coupon_data: discounts.couponApplied ? discounts.appliedCoupon : null,
+          gift_card_code: discounts.appliedGiftCard?.code || null,
+          gift_card_amount_used: discounts.appliedGiftCard?.amount_used || 0,
+          gift_card_id: discounts.appliedGiftCard?.gift_card_id || null,
+          order_notes: orderNotes.trim() || null,
+        }
+      });
+
+      if (error) throw error;
+      if (data?.clientSecret) {
+        setClientSecret(data.clientSecret);
+      }
+    } catch (err) {
+      console.error('Auto-create payment intent failed:', err);
+    }
   }, [
     dateValidation.requestedDeliveryDate, 
     deliveryLogic.deliveryMethod, 
@@ -112,7 +111,31 @@ const Cart = () => {
     discounts.couponApplied, 
     discounts.appliedCoupon,
     orderNotes,
-    isCoupon100Off
+    isCoupon100Off,
+    user?.email,
+    (user as any)?.user_metadata?.full_name,
+    dateValidation.calculateProductionDate
+  ]);
+
+  const debouncedCreatePaymentIntent = useDebounce(useCallback(() => {
+    createPaymentIntentRef.current?.();
+  }, []), 500);
+
+  // Auto-create Stripe PaymentIntent when requirements are met (debounced)
+  useEffect(() => {
+    debouncedCreatePaymentIntent();
+  }, [
+    dateValidation.requestedDeliveryDate, 
+    deliveryLogic.deliveryMethod, 
+    deliveryLogic.selectedCollectionPoint, 
+    deliveryLogic.deliveryZone, 
+    items, 
+    fees, 
+    discounts.couponApplied, 
+    discounts.appliedCoupon,
+    orderNotes,
+    isCoupon100Off,
+    debouncedCreatePaymentIntent
   ]);
 
   // Memoized apply coupon function
