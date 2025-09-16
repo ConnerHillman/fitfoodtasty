@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, TrendingDown, Package, DollarSign, Eye, ShoppingCart, Users, Star, X } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { SimpleDateRangePicker } from "@/components/ui/simple-date-range-picker";
 import * as React from "react";
 
 interface MealAnalyticsData {
@@ -391,9 +391,10 @@ const MealAnalytics = () => {
         {/* Enhanced Date Range Picker */}
         <div className="flex items-center gap-4 justify-between">
           <div className="flex items-center gap-4">
-            <DateRangePicker
+            <SimpleDateRangePicker
               date={dateRange}
               onDateChange={setDateRange}
+              showPresets={true}
               placeholder="Select date range for analytics"
               className="w-auto"
             />

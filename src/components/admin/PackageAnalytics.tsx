@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { SimpleDateRangePicker } from "@/components/ui/simple-date-range-picker";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, TrendingDown, Package, Users, DollarSign, Star, RefreshCw, Calendar, Target, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -262,13 +262,14 @@ const PackageAnalytics = ({ packageId, timeRange = "30" }: PackageAnalyticsProps
             </SelectContent>
           </Select>
 
-          <DateRangePicker
+          <SimpleDateRangePicker
             date={dateRange}
             onDateChange={(range) => {
               if (range?.from && range?.to) {
                 setDateRange({ from: range.from, to: range.to });
               }
             }}
+            showPresets={true}
           />
         </div>
 

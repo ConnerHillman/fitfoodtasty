@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { SimpleDateRangePicker } from '@/components/ui/simple-date-range-picker';
 import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, RefreshCw, Settings, ChefHat, Printer, PlusCircle, Eye, TrendingDown, Activity, FileText, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -430,13 +430,14 @@ const BusinessDashboard = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <DateRangePicker
+              <SimpleDateRangePicker
                 date={dateRange}
                 onDateChange={(range) => {
                   if (range?.from && range?.to) {
                     setDateRange({ from: range.from, to: range.to });
                   }
                 }}
+                showPresets={true}
               />
               <Button
                 onClick={fetchDashboardData}

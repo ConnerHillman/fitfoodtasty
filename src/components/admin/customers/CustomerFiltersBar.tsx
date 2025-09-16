@@ -202,6 +202,7 @@ export function CustomerFiltersBar({
                       })
                     }
                     className="flex-1"
+                    showClearButton={true}
                   />
                   <Button
                     variant="outline"
@@ -262,6 +263,7 @@ export function CustomerFiltersBar({
                     } 
                   })
                 }
+                showClearButton={true}
               />
               <Button
                 variant="outline"

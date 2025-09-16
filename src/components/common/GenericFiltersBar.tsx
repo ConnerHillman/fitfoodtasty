@@ -107,6 +107,7 @@ export function GenericFiltersBar<T extends BaseFilters & ViewModeFilters>({
                 }}
                 placeholder="Select date range"
                 className="w-full sm:w-auto"
+                showClearButton={true}
               />
               {clearDateRange && (
                 <Button
