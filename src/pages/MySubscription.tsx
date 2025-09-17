@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Settings, Pause, Play, CreditCard, Package, MapPin, Loader2, Check, Star, ChefHat } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import SubscriptionMealSelectionDialog from "@/components/subscription/SubscriptionMealSelectionDialog";
@@ -26,7 +28,9 @@ const MySubscription = () => {
   const [mealSelectionOpen, setMealSelectionOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const { user } = useAuth();
+  const { addPackageToCart, clearCart } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Fetch current subscription
@@ -248,29 +252,56 @@ const MySubscription = () => {
     setLoadingPlan(selectedPlan.id);
     
     try {
-      const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
-        body: { 
-          package_id: selectedPlan.id,
-          selected_meals: selectedMeals
-        }
+      // Clear any existing cart items first
+      clearCart();
+      
+      // Create a package cart item with subscription data
+      const packageCartItem = {
+        id: `subscription-${selectedPlan.id}-${Date.now()}`,
+        name: selectedPlan.name,
+        description: `Subscription package with ${selectedPlan.meal_count} meals`,
+        category: 'subscription-package',
+        price: selectedPlan.price,
+        total_calories: 0,
+        total_protein: 0,
+        total_carbs: 0,
+        total_fat: 0,
+        total_fiber: 0,
+        shelf_life_days: 5,
+        image_url: selectedPlan.image_url || '',
+        packageData: {
+          packageId: selectedPlan.id,
+          packageName: selectedPlan.name,
+          mealCount: selectedPlan.meal_count,
+          selectedMeals: selectedMeals,
+        },
+      };
+
+      // Add package to cart
+      addPackageToCart(packageCartItem);
+
+      // Store subscription intent in sessionStorage so cart knows this is a subscription
+      sessionStorage.setItem('subscription_checkout', 'true');
+      sessionStorage.setItem('subscription_package_id', selectedPlan.id);
+      sessionStorage.setItem('subscription_meals', JSON.stringify(selectedMeals));
+
+      toast({
+        title: "Added to Cart",
+        description: "Your subscription package has been added to cart. Complete your subscription checkout.",
       });
 
-      if (error) throw error;
-
-      if (data.url) {
-        sessionStorage.setItem('subscription_checkout', 'true');
-        sessionStorage.setItem('subscription_meals', JSON.stringify(selectedMeals));
-        window.open(data.url, '_blank');
-      }
+      // Navigate to cart
+      navigate('/cart');
     } catch (error) {
-      console.error('Subscription error:', error);
+      console.error('Add to cart error:', error);
       toast({
-        title: "Subscription Error",
-        description: "Failed to start subscription. Please try again.",
+        title: "Error",
+        description: "Failed to add subscription to cart. Please try again.",
         variant: "destructive",
       });
     } finally {
       setLoadingPlan(null);
+      setMealSelectionOpen(false);
     }
   };
 

@@ -207,6 +207,16 @@ const Cart = () => {
     debouncedCreatePaymentIntent
   ]);
 
+  // Check for subscription intent and auto-enable subscription mode
+  useEffect(() => {
+    const isSubscriptionCheckout = sessionStorage.getItem('subscription_checkout');
+    if (isSubscriptionCheckout === 'true') {
+      setIsSubscriptionEnabled(true);
+      // Clear the session storage flag after setting
+      sessionStorage.removeItem('subscription_checkout');
+    }
+  }, []);
+
   // Memoized apply coupon function
   const applyCoupon = useCallback(async () => {
     if (!discounts.couponCode.trim()) return;
