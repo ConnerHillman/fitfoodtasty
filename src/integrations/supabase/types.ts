@@ -1541,38 +1541,106 @@ export type Database = {
       subscription_deliveries: {
         Row: {
           actual_delivery_date: string | null
+          admin_notes: string | null
+          collection_point_id: string | null
+          completed_at: string | null
           created_at: string
+          customer_feedback: string | null
+          customer_rating: number | null
+          delivery_address: string | null
+          delivery_attempt_count: number | null
+          delivery_instructions: string | null
+          delivery_method: string | null
           delivery_notes: string | null
+          delivery_zone_id: string | null
+          discount_amount: number | null
+          final_amount: number | null
           id: string
+          last_delivery_attempt: string | null
           meal_selections: Json | null
+          payment_status: string | null
           planned_delivery_date: string
+          production_date: string | null
+          skipped_reason: string | null
           status: string
+          stripe_invoice_id: string | null
+          total_amount: number | null
           updated_at: string
           user_subscription_id: string
         }
         Insert: {
           actual_delivery_date?: string | null
+          admin_notes?: string | null
+          collection_point_id?: string | null
+          completed_at?: string | null
           created_at?: string
+          customer_feedback?: string | null
+          customer_rating?: number | null
+          delivery_address?: string | null
+          delivery_attempt_count?: number | null
+          delivery_instructions?: string | null
+          delivery_method?: string | null
           delivery_notes?: string | null
+          delivery_zone_id?: string | null
+          discount_amount?: number | null
+          final_amount?: number | null
           id?: string
+          last_delivery_attempt?: string | null
           meal_selections?: Json | null
+          payment_status?: string | null
           planned_delivery_date: string
+          production_date?: string | null
+          skipped_reason?: string | null
           status?: string
+          stripe_invoice_id?: string | null
+          total_amount?: number | null
           updated_at?: string
           user_subscription_id: string
         }
         Update: {
           actual_delivery_date?: string | null
+          admin_notes?: string | null
+          collection_point_id?: string | null
+          completed_at?: string | null
           created_at?: string
+          customer_feedback?: string | null
+          customer_rating?: number | null
+          delivery_address?: string | null
+          delivery_attempt_count?: number | null
+          delivery_instructions?: string | null
+          delivery_method?: string | null
           delivery_notes?: string | null
+          delivery_zone_id?: string | null
+          discount_amount?: number | null
+          final_amount?: number | null
           id?: string
+          last_delivery_attempt?: string | null
           meal_selections?: Json | null
+          payment_status?: string | null
           planned_delivery_date?: string
+          production_date?: string | null
+          skipped_reason?: string | null
           status?: string
+          stripe_invoice_id?: string | null
+          total_amount?: number | null
           updated_at?: string
           user_subscription_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscription_deliveries_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_deliveries_delivery_zone_id_fkey"
+            columns: ["delivery_zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscription_deliveries_user_subscription_id_fkey"
             columns: ["user_subscription_id"]
@@ -1584,48 +1652,63 @@ export type Database = {
       }
       subscription_plans: {
         Row: {
+          cancellation_period_days: number | null
           created_at: string
           delivery_frequency: string
           description: string | null
           discount_percentage: number | null
           id: string
           is_active: boolean
+          max_pauses_per_period: number | null
           meal_count: number
+          minimum_commitment_deliveries: number | null
           name: string
+          pause_duration_days: number | null
           price_per_delivery: number
           sort_order: number | null
           stripe_price_id: string | null
           stripe_product_id: string | null
+          trial_period_days: number | null
           updated_at: string
         }
         Insert: {
+          cancellation_period_days?: number | null
           created_at?: string
           delivery_frequency: string
           description?: string | null
           discount_percentage?: number | null
           id?: string
           is_active?: boolean
+          max_pauses_per_period?: number | null
           meal_count: number
+          minimum_commitment_deliveries?: number | null
           name: string
+          pause_duration_days?: number | null
           price_per_delivery: number
           sort_order?: number | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
+          trial_period_days?: number | null
           updated_at?: string
         }
         Update: {
+          cancellation_period_days?: number | null
           created_at?: string
           delivery_frequency?: string
           description?: string | null
           discount_percentage?: number | null
           id?: string
           is_active?: boolean
+          max_pauses_per_period?: number | null
           meal_count?: number
+          minimum_commitment_deliveries?: number | null
           name?: string
+          pause_duration_days?: number | null
           price_per_delivery?: number
           sort_order?: number | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
+          trial_period_days?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -1704,57 +1787,110 @@ export type Database = {
       }
       user_subscriptions: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          collection_point_id: string | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
           delivery_address: string | null
           delivery_instructions: string | null
+          delivery_method: string | null
+          delivery_zone_id: string | null
           id: string
+          last_charge_date: string | null
           meal_preferences: Json | null
+          metadata: Json | null
+          next_charge_date: string | null
           next_delivery_date: string | null
+          pause_reason: string | null
+          paused_deliveries_count: number | null
           paused_until: string | null
+          skip_next_delivery: boolean | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_plan_id: string
+          total_deliveries_count: number | null
+          trial_ends_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          collection_point_id?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           delivery_address?: string | null
           delivery_instructions?: string | null
+          delivery_method?: string | null
+          delivery_zone_id?: string | null
           id?: string
+          last_charge_date?: string | null
           meal_preferences?: Json | null
+          metadata?: Json | null
+          next_charge_date?: string | null
           next_delivery_date?: string | null
+          pause_reason?: string | null
+          paused_deliveries_count?: number | null
           paused_until?: string | null
+          skip_next_delivery?: boolean | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_plan_id: string
+          total_deliveries_count?: number | null
+          trial_ends_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          collection_point_id?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           delivery_address?: string | null
           delivery_instructions?: string | null
+          delivery_method?: string | null
+          delivery_zone_id?: string | null
           id?: string
+          last_charge_date?: string | null
           meal_preferences?: Json | null
+          metadata?: Json | null
+          next_charge_date?: string | null
           next_delivery_date?: string | null
+          pause_reason?: string | null
+          paused_deliveries_count?: number | null
           paused_until?: string | null
+          skip_next_delivery?: boolean | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_plan_id?: string
+          total_deliveries_count?: number | null
+          trial_ends_at?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_delivery_zone_id_fkey"
+            columns: ["delivery_zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_subscriptions_subscription_plan_id_fkey"
             columns: ["subscription_plan_id"]
