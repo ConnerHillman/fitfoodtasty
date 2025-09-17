@@ -213,6 +213,13 @@ const Header = () => {
                       Meal Packages
                     </Link>
                     <Link 
+                      to="/subscriptions" 
+                      className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Subscriptions
+                    </Link>
+                    <Link 
                       to="/about" 
                       className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -240,6 +247,14 @@ const Header = () => {
                       >
                         <User className="h-4 w-4" />
                         <span>My Orders</span>
+                      </Link>
+                      <Link 
+                        to="/my-subscription" 
+                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px]"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Star className="h-4 w-4" />
+                        <span>My Subscription</span>
                       </Link>
                       <Link 
                         to="/account" 
