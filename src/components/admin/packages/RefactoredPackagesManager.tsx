@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Package, Settings, BarChart3, Image, ChevronUp, ChevronDown, Edit, Trash2, Power } from "lucide-react";
+import { Plus, Package, Settings, BarChart3, Image, ChevronUp, ChevronDown, Edit, Trash2, Power, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
 
@@ -60,6 +62,11 @@ const RefactoredPackagesManager = () => {
     }
   });
 
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [priceFilter, setPriceFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isMealsManagerOpen, setIsMealsManagerOpen] = useState(false);
@@ -70,20 +77,56 @@ const RefactoredPackagesManager = () => {
     fetchData();
   }, [fetchData]);
 
+  // Filtered packages based on search and filters
+  const filteredPackages = useMemo(() => {
+    let filtered = packages;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(pkg => 
+        pkg.name.toLowerCase().includes(term) ||
+        pkg.description?.toLowerCase().includes(term) ||
+        pkg.meal_count.toString().includes(term) ||
+        formatCurrency(pkg.price).toLowerCase().includes(term)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(pkg => 
+        statusFilter === 'active' ? pkg.is_active : !pkg.is_active
+      );
+    }
+
+    // Apply price filter
+    if (priceFilter !== 'all') {
+      filtered = filtered.filter(pkg => {
+        if (priceFilter === 'low') return pkg.price < 15;
+        if (priceFilter === 'medium') return pkg.price >= 15 && pkg.price < 25;
+        if (priceFilter === 'high') return pkg.price >= 25;
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [packages, searchTerm, statusFilter, priceFilter]);
+
   // Stats calculation
   const stats: StatCard[] = useMemo(() => {
-    const activePackages = packages.filter(p => p.is_active);
-    const totalRevenue = packages.reduce((sum, p) => sum + p.price, 0);
-    const avgPrice = packages.length > 0 ? totalRevenue / packages.length : 0;
-    const avgMealCount = packages.length > 0 
-      ? packages.reduce((sum, p) => sum + p.meal_count, 0) / packages.length 
+    const activePackages = filteredPackages.filter(p => p.is_active);
+    const totalRevenue = filteredPackages.reduce((sum, p) => sum + p.price, 0);
+    const avgPrice = filteredPackages.length > 0 ? totalRevenue / filteredPackages.length : 0;
+    const avgMealCount = filteredPackages.length > 0 
+      ? filteredPackages.reduce((sum, p) => sum + p.meal_count, 0) / filteredPackages.length 
       : 0;
 
     return [
       {
         id: 'total',
         title: 'Total Packages',
-        value: packages.length,
+        value: filteredPackages.length,
+        subtitle: packages.length !== filteredPackages.length ? `${packages.length} total` : undefined,
         icon: Package,
         iconColor: 'text-blue-500'
       },
@@ -91,7 +134,7 @@ const RefactoredPackagesManager = () => {
         id: 'active',
         title: 'Active Packages',
         value: activePackages.length,
-        subtitle: `${packages.length - activePackages.length} inactive`,
+        subtitle: `${filteredPackages.length - activePackages.length} inactive`,
         icon: Power,
         iconColor: 'text-green-500'
       },
@@ -111,7 +154,7 @@ const RefactoredPackagesManager = () => {
         iconColor: 'text-orange-500'
       }
     ];
-  }, [packages]);
+  }, [filteredPackages]);
 
   // Table columns
   const columns: ColumnDef<Package>[] = [
@@ -120,7 +163,7 @@ const RefactoredPackagesManager = () => {
       header: 'Order',
       width: '80px',
       accessor: (pkg) => {
-        const index = packages.findIndex(p => p.id === pkg.id);
+        const index = filteredPackages.findIndex(p => p.id === pkg.id);
         return (
           <div className="flex flex-col gap-1">
             <Button
@@ -142,7 +185,7 @@ const RefactoredPackagesManager = () => {
                 e.stopPropagation();
                 movePackage(pkg.id, 'down');
               }}
-              disabled={index === packages.length - 1}
+              disabled={index === filteredPackages.length - 1}
               className="h-6 w-6 p-0"
             >
               <ChevronDown className="h-3 w-3" />
@@ -258,14 +301,14 @@ const RefactoredPackagesManager = () => {
 
 
   const movePackage = async (packageId: string, direction: 'up' | 'down') => {
-    const currentIndex = packages.findIndex(p => p.id === packageId);
+    const currentIndex = filteredPackages.findIndex(p => p.id === packageId);
     if (currentIndex === -1) return;
     
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= packages.length) return;
+    if (newIndex < 0 || newIndex >= filteredPackages.length) return;
 
-    const currentPackage = packages[currentIndex];
-    const targetPackage = packages[newIndex];
+    const currentPackage = filteredPackages[currentIndex];
+    const targetPackage = filteredPackages[newIndex];
 
     // Perform bulk update for sort order swap
     await bulkUpdate([
@@ -291,6 +334,57 @@ const RefactoredPackagesManager = () => {
       icon: Settings,
       content: (
         <div className="space-y-6">
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search packages by name, description, price..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={priceFilter} onValueChange={(value: 'all' | 'low' | 'medium' | 'high') => setPriceFilter(value)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Prices</SelectItem>
+                  <SelectItem value="low">Under £15</SelectItem>
+                  <SelectItem value="medium">£15 - £25</SelectItem>
+                  <SelectItem value="high">Over £25</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter('all');
+                  setPriceFilter('all');
+                }}
+                title="Clear filters"
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
           {/* Stats Grid */}
           <AdminStatsGrid 
             stats={stats} 
@@ -300,17 +394,16 @@ const RefactoredPackagesManager = () => {
 
           {/* Packages Table */}
           <AdminTable
-            title="Packages"
-            data={packages}
+            title={`Packages ${searchTerm || statusFilter !== 'all' || priceFilter !== 'all' ? '(Filtered)' : ''}`}
+            data={filteredPackages}
             columns={columns}
             actions={actions}
             loading={loading}
-            searchable={true}
-            searchPlaceholder="Search packages by name or description..."
+            searchable={false} // We're handling search ourselves now
             onRefresh={fetchData}
             onExport={() => toast({ title: "Export", description: "Export functionality coming soon" })}
-            emptyMessage="No packages found"
-            emptyDescription="Get started by creating your first package"
+            emptyMessage={searchTerm || statusFilter !== 'all' || priceFilter !== 'all' ? "No packages match your filters" : "No packages found"}
+            emptyDescription={searchTerm || statusFilter !== 'all' || priceFilter !== 'all' ? "Try adjusting your search criteria" : "Get started by creating your first package"}
           />
         </div>
       )
