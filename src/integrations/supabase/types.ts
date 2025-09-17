@@ -1502,6 +1502,42 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           created_at: string
@@ -1637,6 +1673,15 @@ export type Database = {
         }
         Returns: string
       }
+      log_sensitive_access: {
+        Args: {
+          p_action_type: string
+          p_metadata?: Json
+          p_record_id?: string
+          p_table_name: string
+        }
+        Returns: undefined
+      }
       recalculate_all_meal_nutrition: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1649,6 +1694,10 @@ export type Database = {
       validate_gift_card: {
         Args: { amount_to_use?: number; gift_card_code: string }
         Returns: Json
+      }
+      validate_referral_code_usage: {
+        Args: { referral_code: string; user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
