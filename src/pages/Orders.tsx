@@ -451,11 +451,21 @@ const Orders = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Orders</h1>
-        <p className="text-muted-foreground">
-          Track your order history and delivery status
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">My Orders</h1>
+          <p className="text-muted-foreground">
+            Track your order history and delivery status
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/my-subscription")}
+          className="flex items-center gap-2"
+        >
+          <Package className="h-4 w-4" />
+          My Subscriptions
+        </Button>
       </div>
 
       <div className="space-y-6">
