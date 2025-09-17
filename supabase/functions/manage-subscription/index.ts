@@ -48,11 +48,14 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Get return URL from request body or use default
+    const requestBody = await req.json().catch(() => ({}));
+    const returnUrl = requestBody.return_url || `${req.headers.get("origin") || "http://localhost:3000"}/subscription`;
+    
     // Create customer portal session
-    const origin = req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/subscription`,
+      return_url: returnUrl,
     });
     logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
 

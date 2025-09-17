@@ -18,6 +18,9 @@ const MySubscription = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [pauseResumeLoading, setPauseResumeLoading] = useState(false);
+  const [scheduleModifyLoading, setScheduleModifyLoading] = useState(false);
+  const [pauseDate, setPauseDate] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -108,6 +111,82 @@ const MySubscription = () => {
       });
     },
   });
+
+  // Pause/Resume subscription
+  const pauseResumeSubscription = useMutation({
+    mutationFn: async ({ action, paused_until }: { action: 'pause' | 'resume', paused_until?: string }) => {
+      const { data, error } = await supabase.functions.invoke('pause-resume-subscription', {
+        body: { action, paused_until }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+      toast({
+        title: `Subscription ${data.action === 'pause' ? 'Paused' : 'Resumed'}`,
+        description: `Your subscription has been ${data.action === 'pause' ? 'paused' : 'resumed'} successfully.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Pause/Resume error:', error);
+      toast({
+        title: "Operation Failed",
+        description: "Failed to update subscription status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Modify delivery schedule
+  const modifyDeliverySchedule = useMutation({
+    mutationFn: async ({ new_plan_id, next_delivery_date }: { new_plan_id: string, next_delivery_date?: string }) => {
+      const { data, error } = await supabase.functions.invoke('modify-delivery-schedule', {
+        body: { new_plan_id, next_delivery_date }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+      toast({
+        title: "Schedule Updated",
+        description: "Your delivery schedule has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error('Schedule modification error:', error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update delivery schedule. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePauseResume = async (action: 'pause' | 'resume') => {
+    setPauseResumeLoading(true);
+    try {
+      await pauseResumeSubscription.mutateAsync({ 
+        action, 
+        paused_until: action === 'pause' ? pauseDate : undefined 
+      });
+    } finally {
+      setPauseResumeLoading(false);
+      setPauseDate("");
+    }
+  };
+
+  const handleScheduleChange = async (planId: string) => {
+    setScheduleModifyLoading(true);
+    try {
+      await modifyDeliverySchedule.mutateAsync({ new_plan_id: planId });
+    } finally {
+      setScheduleModifyLoading(false);
+    }
+  };
 
   const handleManageSubscription = async () => {
     setIsUpdating(true);
@@ -421,8 +500,94 @@ const MySubscription = () => {
                         </>
                       )}
                     </Button>
+
+                    {/* Pause/Resume Controls */}
+                    {subscription.status === 'active' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="pause-date" className="text-sm">Pause until (optional):</Label>
+                        <Input
+                          id="pause-date"
+                          type="date"
+                          value={pauseDate}
+                          onChange={(e) => setPauseDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                        <Button 
+                          variant="outline"
+                          className="w-full" 
+                          onClick={() => handlePauseResume('pause')}
+                          disabled={pauseResumeLoading}
+                        >
+                          {pauseResumeLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Pausing...
+                            </>
+                          ) : (
+                            <>
+                              <Pause className="h-4 w-4 mr-2" />
+                              Pause Subscription
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : subscription.status === 'paused' ? (
+                      <Button 
+                        variant="outline"
+                        className="w-full" 
+                        onClick={() => handlePauseResume('resume')}
+                        disabled={pauseResumeLoading}
+                      >
+                        {pauseResumeLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Resuming...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            Resume Subscription
+                          </>
+                        )}
+                      </Button>
+                    ) : null}
                   </CardContent>
                 </Card>
+
+                {/* Delivery Schedule Modification */}
+                {plans && plans.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Change Delivery Plan</CardTitle>
+                      <CardDescription>Switch to a different meal plan</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {plans
+                        .filter(plan => plan.id !== subscription.subscription_plan_id)
+                        .map((plan) => (
+                          <Button
+                            key={plan.id}
+                            variant="outline"
+                            className="w-full justify-between"
+                            onClick={() => handleScheduleChange(plan.id)}
+                            disabled={scheduleModifyLoading}
+                          >
+                            <div className="text-left">
+                              <div className="font-medium">{plan.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {plan.meal_count} meals • £{plan.price_per_delivery}
+                              </div>
+                            </div>
+                            {scheduleModifyLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Calendar className="h-4 w-4" />
+                            )}
+                          </Button>
+                        ))}
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Card>
                   <CardHeader>
@@ -450,6 +615,13 @@ const MySubscription = () => {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Next Billing:</span>
                         <span>{format(new Date(subscription.current_period_end), 'MMM dd, yyyy')}</span>
+                      </div>
+                    )}
+
+                    {subscription.paused_until && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Paused Until:</span>
+                        <span>{format(new Date(subscription.paused_until), 'MMM dd, yyyy')}</span>
                       </div>
                     )}
                   </CardContent>
