@@ -32,8 +32,6 @@ import GiftCardFailure from "./pages/GiftCardFailure";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
-import EmailConfirmation from "./pages/EmailConfirmation";
-import MySubscription from "./pages/MySubscription";
 
 const queryClient = new QueryClient();
 
@@ -46,7 +44,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Layout><Index /></Layout>} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/menu" element={<Layout><Menu /></Layout>} />
@@ -69,9 +67,6 @@ const App = () => (
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
-            <Route path="/email-confirmation" element={<EmailConfirmation />} />
-            <Route path="/my-subscription" element={<RequireAuth><Layout><MySubscription /></Layout></RequireAuth>} />
-            <Route path="/subscriptions" element={<RequireAuth><Layout><MySubscription /></Layout></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

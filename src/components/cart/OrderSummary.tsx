@@ -16,9 +16,6 @@ interface OrderSummaryProps {
   onToggleExpanded: () => void;
   isMobile: boolean;
   expiryWarning?: string | null;
-  subscriptionDiscountAmount?: number;
-  isSubscriptionEnabled?: boolean;
-  deliveryFrequency?: string;
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -33,9 +30,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   onToggleExpanded,
   isMobile,
   expiryWarning,
-  subscriptionDiscountAmount = 0,
-  isSubscriptionEnabled = false,
-  deliveryFrequency = "bi-weekly",
 }) => {
   if (items.length === 0) return null;
 
@@ -89,13 +83,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             <div className="flex justify-between text-green-600">
               <span>{discountDisplay}</span>
               <span>-£{discountAmount.toFixed(2)}</span>
-            </div>
-          )}
-          
-          {isSubscriptionEnabled && subscriptionDiscountAmount > 0 && (
-            <div className="flex justify-between text-blue-600">
-              <span>Subscription Discount ({deliveryFrequency})</span>
-              <span>-£{subscriptionDiscountAmount.toFixed(2)}</span>
             </div>
           )}
           

@@ -1,6 +1,6 @@
 import { loadStripe } from "@stripe/stripe-js";
 
 // This is your Stripe publishable key - it's safe to expose in the frontend
-const stripePromise = loadStripe("pk_live_51S675rB9XVWvIR2ED1SQNMRSAQJmJRMhrtUefcALNT8I6FlUkfnu1OBfVa7fTw8RuuEmgklVQisMje4o9k2MZ6Pv00fi2jBN0l");
+const stripePromise = loadStripe("pk_test_51S675yPc19yGyC87Q2jWBGALqIWgPERheQTCkH3HpzoYln6XQ8CZq5o0QEeVcPSqmFFoYkYNsx0IOeKtgeonNt9q00HjU2be3j");
 
 export { stripePromise };

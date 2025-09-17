@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
-import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
-import { AuthErrorHandler } from "@/components/auth/AuthErrorHandler";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -20,8 +19,6 @@ const Auth = () => {
   const [postalCode, setPostalCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
@@ -76,12 +73,14 @@ const Auth = () => {
     });
 
     if (error) {
-      setError(error.message);
-      setShowEmailVerification(false);
+      if (error.message.includes("already registered")) {
+        setError("This email is already registered. Try signing in instead.");
+      } else {
+        setError(error.message);
+      }
     } else {
       setError("");
-      setVerificationEmail(email);
-      setShowEmailVerification(true);
+      alert("Check your email for the confirmation link!");
     }
     
     setLoading(false);
@@ -98,7 +97,11 @@ const Auth = () => {
     });
 
     if (error) {
-      setError(error.message);
+      if (error.message.includes("Invalid login credentials")) {
+        setError("Invalid email or password. Please check your credentials.");
+      } else {
+        setError(error.message);
+      }
     }
     
     setLoading(false);
@@ -119,15 +122,6 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {showEmailVerification && (
-            <div className="mb-4">
-              <EmailVerificationBanner 
-                email={verificationEmail}
-                onDismiss={() => setShowEmailVerification(false)}
-              />
-            </div>
-          )}
-          
           <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -217,7 +211,9 @@ const Auth = () => {
             )}
 
             {error && (
-              <AuthErrorHandler error={error} isSignUp={isSignUp} />
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
             <Button 
@@ -235,7 +231,6 @@ const Auth = () => {
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setError("");
-                setShowEmailVerification(false);
               }}
               className="text-sm"
             >

@@ -16,7 +16,7 @@ const Header = () => {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  return <header className="sticky top-0 z-50 bg-background border-b border-green-100">
+  return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
       {/* Promo Banner */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-body-sm font-medium">
         <span className="font-bold">WELCOME OFFER: SAVE20</span> - Save 20% on your first box, 10% on your second box
@@ -41,7 +41,7 @@ const Header = () => {
                 <NavigationMenuTrigger className="text-gray-700 hover:text-green-600 font-medium">
                   OUR MENU
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="z-50 bg-background rounded-lg border shadow-xl">
+                <NavigationMenuContent>
                   <div className="grid gap-3 p-6 w-[400px]">
                     <NavigationMenuLink asChild>
                       <Link to="/menu" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
@@ -63,7 +63,7 @@ const Header = () => {
                 <NavigationMenuTrigger className="text-gray-700 hover:text-green-600 font-medium">
                   EXPLORE
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="z-50 bg-background rounded-lg border shadow-xl">
+                <NavigationMenuContent>
                   <div className="grid gap-3 p-6 w-[300px]">
                     <NavigationMenuLink asChild>
                       <Link to="/about" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
@@ -112,12 +112,6 @@ const Header = () => {
                       <Link to="/orders" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         My Orders
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/my-subscription" className="flex items-center">
-                        <Star className="mr-2 h-4 w-4" />
-                        My Subscription
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -234,14 +228,6 @@ const Header = () => {
                       >
                         <User className="h-4 w-4" />
                         <span>My Orders</span>
-                      </Link>
-                      <Link 
-                        to="/my-subscription" 
-                        className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px]"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Star className="h-4 w-4" />
-                        <span>My Subscription</span>
                       </Link>
                       <Link 
                         to="/account" 
