@@ -1538,6 +1538,50 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_audit_log: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+          performed_by: string | null
+          reason: string | null
+          user_subscription_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_by?: string | null
+          reason?: string | null
+          user_subscription_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          performed_by?: string | null
+          reason?: string | null
+          user_subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_audit_log_user_subscription_id_fkey"
+            columns: ["user_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_deliveries: {
         Row: {
           actual_delivery_date: string | null
