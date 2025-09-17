@@ -163,18 +163,6 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
             <p>• Same meal selection will be delivered each period</p>
             <p>• You can change meals in your subscription settings</p>
           </div>
-
-          {isSubscriptionEnabled && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowOnboardingDialog(true)}
-              className="w-full mt-2"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Customize Preferences
-            </Button>
-          )}
         </CardContent>
       )}
 
