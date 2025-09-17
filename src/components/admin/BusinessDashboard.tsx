@@ -413,7 +413,7 @@ const BusinessDashboard = () => {
   return (
     <div className="space-y-8">
       <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
-        <div className="relative z-10">
+        <div className="relative">
           <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-2">Business Dashboard</h2>
