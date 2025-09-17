@@ -34,153 +34,130 @@ const AdminDashboard = () => {
 
   return (
     <CustomerDetailProvider>
-      <div className="container mx-auto p-6 space-y-8 pt-24 md:pt-32">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <ChefHat className="h-10 w-10 text-primary" />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-primary to-primary/80 rounded-full animate-pulse"></div>
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                Admin Dashboard
-              </h1>
-              <p className="text-muted-foreground text-lg">Manage your premium meal prep business</p>
-            </div>
-          </div>
-          <div className="hidden md:flex items-center space-x-4 px-6 py-3 bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-xl backdrop-blur-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium">Online</span>
-            </div>
-            <div className="w-px h-6 bg-border"></div>
-            <span className="text-sm text-muted-foreground">Premium Access</span>
-          </div>
-        </div>
+      <div className="container mx-auto p-6 space-y-8 pt-6">
 
         <Tabs value={tab} onValueChange={(v) => { setTab(v); setSearchParams({ tab: v }); }} className="space-y-8">
-          <div className="relative z-20 bg-gradient-to-br from-background via-background/98 to-background/95 backdrop-blur-xl border border-primary/10 rounded-2xl p-6 shadow-2xl shadow-primary/5">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 rounded-2xl pointer-events-none z-0"></div>
-            <div className="relative z-10">
-              <TabsList className="w-full bg-transparent h-auto p-0 flex flex-wrap gap-3 justify-center">
+          <div className="bg-background border-b border-border p-4">
+            <div className="relative">
+              <TabsList className="w-full bg-muted/50 h-auto p-1 flex flex-wrap gap-2 justify-center">
                 <TabsTrigger 
                   value="dashboard" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <BarChart3 className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Dashboard</span>
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Dashboard</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="kitchen" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Utensils className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Kitchen</span>
+                  <Utensils className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Kitchen</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="orders" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <ListOrdered className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Orders</span>
+                  <ListOrdered className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Orders</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="subscriptions" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Calendar className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Subscriptions</span>
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Subscriptions</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="customers" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Users className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Customers</span>
+                  <Users className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Customers</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="reports" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <FileText className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Reports</span>
+                  <FileText className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Reports</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="marketing" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Target className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Marketing</span>
+                  <Target className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Marketing</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="fulfillment" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Truck className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Fulfillment</span>
+                  <Truck className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Fulfillment</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="ingredients" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <ShoppingBag className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Ingredients</span>
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Ingredients</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="meals" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <ChefHat className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Meals</span>
+                  <ChefHat className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Meals</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="categories" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Tags className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Categories</span>
+                  <Tags className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Categories</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="packages" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Package className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Packages</span>
+                  <Package className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Packages</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="labels" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Tag className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Labels</span>
+                  <Tag className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Labels</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="import" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <Upload className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Import</span>
+                  <Upload className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Import</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
                   value="users" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
+                  className="group flex flex-col items-center space-y-1 px-4 py-3 rounded-lg transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted text-sm font-medium min-h-[60px] flex-1 min-w-[100px] max-w-[140px]"
                 >
-                  <UserCog className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">User Management</span>
+                  <UserCog className="w-4 h-4" />
+                  <span className="text-xs font-semibold">User Management</span>
                 </TabsTrigger>
               </TabsList>
             </div>
