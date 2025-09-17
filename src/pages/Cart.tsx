@@ -118,7 +118,8 @@ const Cart = () => {
     isCoupon100Off,
     user?.email,
     (user as any)?.user_metadata?.full_name,
-    dateValidation.calculateProductionDate
+    dateValidation.calculateProductionDate,
+    isSubscription // Add isSubscription to dependency array
   ]);
 
   const debouncedCreatePaymentIntent = useDebounce(useCallback(() => {
@@ -139,6 +140,7 @@ const Cart = () => {
     discounts.appliedCoupon,
     orderNotes,
     isCoupon100Off,
+    isSubscription, // Add isSubscription to trigger payment intent updates
     debouncedCreatePaymentIntent
   ]);
 

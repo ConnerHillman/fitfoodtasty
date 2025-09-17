@@ -50,7 +50,7 @@ const AdminSubscriptionsManager = () => {
         .from("user_subscriptions")
         .select(`
           *,
-          profiles(full_name, phone)
+          profiles!user_subscriptions_user_id_fkey(full_name, phone)
         `)
         .order("created_at", { ascending: false });
 

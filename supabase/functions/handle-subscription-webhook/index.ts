@@ -70,7 +70,7 @@ serve(async (req) => {
             break;
           }
 
-          // Create user subscription record
+          // Create user subscription record with subscription items
           const { error: subscriptionError } = await supabaseClient
             .from("user_subscriptions")
             .insert({
@@ -82,9 +82,10 @@ serve(async (req) => {
               current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
               delivery_frequency: "weekly",
               next_delivery_date: session.metadata?.requested_delivery_date || null,
-              subscription_plan_id: null, // Dynamic subscription, no fixed plan
               delivery_notes: session.metadata?.order_notes || null,
-              delivery_method: session.metadata?.delivery_method || "delivery"
+              delivery_method: session.metadata?.delivery_method || "delivery",
+              subscription_items: JSON.parse(session.metadata?.subscription_items || '[]'), // Store the actual items
+              delivery_address: session.metadata?.delivery_address || null
             });
 
           if (subscriptionError) {

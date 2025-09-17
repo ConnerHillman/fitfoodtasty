@@ -139,13 +139,16 @@ serve(async (req) => {
         gift_card_code: gift_card_code || "",
         gift_card_amount_used: gift_card_amount_used?.toString() || "0",
         gift_card_id: gift_card_id || "",
-        is_subscription: "true"
+        is_subscription: "true",
+        subscription_items: JSON.stringify(items), // Store items for webhook processing
+        delivery_address: customer_email === user.email ? "" : "" // TODO: Get from user profile
       },
       subscription_data: {
         metadata: {
           delivery_method: delivery_method || "",
           customer_name: customer_name || "",
           delivery_notes: order_notes || "",
+          subscription_items: JSON.stringify(items) // Also store in subscription metadata
         }
       }
     });
