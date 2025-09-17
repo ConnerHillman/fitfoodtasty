@@ -17,6 +17,7 @@ import CouponSection from "@/components/cart/CouponSection";
 import PaymentSection from "@/components/cart/PaymentSection";
 import CartItemCard from "@/components/cart/CartItemCard";
 import SubscriptionSection from "@/components/cart/SubscriptionSection";
+import SubscriptionPreview from "@/components/subscription/SubscriptionPreview";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, addToCart } = useCart();
@@ -497,7 +498,20 @@ const Cart = () => {
             deliveryFrequency={deliveryFrequency}
             onDeliveryFrequencyChange={setDeliveryFrequency}
             disabled={!user}
+            showOnboarding={true}
           />
+
+          {/* Subscription Preview */}
+          {isSubscriptionEnabled && (
+            <SubscriptionPreview
+              items={items}
+              deliveryFrequency={deliveryFrequency}
+              subscriptionDiscountAmount={subscriptionDiscountAmount}
+              nextDeliveryDate={dateValidation.requestedDeliveryDate}
+              deliveryMethod={deliveryLogic.deliveryMethod}
+              deliveryAddress={(user as any)?.user_metadata?.delivery_address}
+            />
+          )}
 
           {/* Coupons & Gift Cards */}
           <CouponSection

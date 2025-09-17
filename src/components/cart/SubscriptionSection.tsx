@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Calendar, RotateCcw, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, RotateCcw, Star, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import SubscriptionOnboarding from "@/components/subscription/SubscriptionOnboarding";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface SubscriptionSectionProps {
   isSubscriptionEnabled: boolean;
@@ -12,6 +15,7 @@ interface SubscriptionSectionProps {
   deliveryFrequency: "weekly" | "bi-weekly" | "monthly";
   onDeliveryFrequencyChange: (frequency: "weekly" | "bi-weekly" | "monthly") => void;
   disabled?: boolean;
+  showOnboarding?: boolean;
 }
 
 const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
@@ -20,7 +24,9 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
   deliveryFrequency,
   onDeliveryFrequencyChange,
   disabled = false,
+  showOnboarding = false,
 }) => {
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
   const getFrequencyLabel = (frequency: string) => {
     switch (frequency) {
       case "weekly":
@@ -47,6 +53,25 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
     }
   };
 
+  const handleSubscriptionToggle = (enabled: boolean) => {
+    if (enabled && showOnboarding) {
+      setShowOnboardingDialog(true);
+    } else {
+      onSubscriptionToggle(enabled);
+    }
+  };
+
+  const handleOnboardingComplete = (preferences: any) => {
+    console.log('Subscription preferences:', preferences);
+    setShowOnboardingDialog(false);
+    onSubscriptionToggle(true);
+  };
+
+  const handleOnboardingSkip = () => {
+    setShowOnboardingDialog(false);
+    onSubscriptionToggle(true);
+  };
+
   return (
     <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
       <CardHeader>
@@ -61,7 +86,7 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
           </div>
           <Switch
             checked={isSubscriptionEnabled}
-            onCheckedChange={onSubscriptionToggle}
+            onCheckedChange={handleSubscriptionToggle}
             disabled={disabled}
           />
         </div>
@@ -138,8 +163,32 @@ const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({
             <p>• Same meal selection will be delivered each period</p>
             <p>• You can change meals in your subscription settings</p>
           </div>
+
+          {isSubscriptionEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowOnboardingDialog(true)}
+              className="w-full mt-2"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Customize Preferences
+            </Button>
+          )}
         </CardContent>
       )}
+
+      <Dialog open={showOnboardingDialog} onOpenChange={setShowOnboardingDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Subscription Preferences</DialogTitle>
+          </DialogHeader>
+          <SubscriptionOnboarding
+            onComplete={handleOnboardingComplete}
+            onSkip={handleOnboardingSkip}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
