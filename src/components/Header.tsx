@@ -26,7 +26,6 @@ const Header = () => {
               alt="FIT FOOD TASTY Logo" 
               className="h-10 w-auto"
             />
-            <Badge className="bg-green-100 text-green-800 text-caption">PREMIUM MEAL PREP</Badge>
           </Link>
 
           {/* Navigation */}
