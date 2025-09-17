@@ -309,14 +309,22 @@ const MySubscription = () => {
       </div>
 
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="current-plan" disabled={!subscription}>Current Plan</TabsTrigger>
-          <TabsTrigger value="browse-plans">Browse Plans</TabsTrigger>
-          <TabsTrigger value="meal-selection" disabled={!subscription}>Meal Selection</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="current-plan" disabled={!subscription}>
+            <span className="hidden sm:inline">Current Plan</span>
+            <span className="sm:hidden">Current</span>
+          </TabsTrigger>
+          <TabsTrigger value="browse-plans">
+            <span className="hidden sm:inline">Browse Plans</span>
+            <span className="sm:hidden">Browse</span>
+          </TabsTrigger>
+          <TabsTrigger value="meal-selection" disabled={!subscription}>
+            <span className="hidden sm:inline">Meal Selection</span>
+            <span className="sm:hidden">Meals</span>
+          </TabsTrigger>
         </TabsList>
 
-        {/* Current Plan Tab */}
-        <TabsContent value="current-plan" className="space-y-6 mt-6">
+        <TabsContent value="current-plan" className="space-y-6 mt-4">{/* Current Plan Tab */}
           {!subscription ? (
             <Card className="text-center">
               <CardContent className="pt-6">
@@ -632,13 +640,13 @@ const MySubscription = () => {
         </TabsContent>
 
         {/* Browse Plans Tab */}
-        <TabsContent value="browse-plans" className="space-y-6 mt-6">
+        <TabsContent value="browse-plans" className="space-y-6 mt-4">
           {/* Hero Section */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
               Choose Your Meal Plan
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
               Fresh, delicious meals delivered to your door. Choose the plan that fits your lifestyle.
             </p>
           </div>
@@ -659,12 +667,12 @@ const MySubscription = () => {
             </div>
           )}
 
-          {/* Subscription Plans */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plans?.map((plan) => (
-              <Card 
-                key={plan.id} 
-                className={`relative ${isPopular(plan) ? 'border-primary shadow-lg' : ''} ${isCurrentPlan(plan) ? 'ring-2 ring-green-500' : ''}`}
+              {/* Subscription Plans */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {plans?.map((plan) => (
+                  <Card 
+                    key={plan.id} 
+                    className={`relative ${isPopular(plan) ? 'border-primary shadow-lg' : ''} ${isCurrentPlan(plan) ? 'ring-2 ring-green-500' : ''}`}
               >
                 {isPopular(plan) && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -724,27 +732,27 @@ const MySubscription = () => {
             ))}
           </div>
 
-          {/* Features Section */}
-          <div className="mt-16 text-center">
-            <h3 className="text-2xl font-bold mb-8">Why Choose Our Meal Plans?</h3>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div>
-                <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Check className="h-8 w-8 text-primary" />
+              {/* Features Section */}
+              <div className="mt-12 sm:mt-16 text-center">
+                <h3 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Why Choose Our Meal Plans?</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+                  <div>
+                    <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
                 <h4 className="font-semibold mb-2">Premium Quality</h4>
                 <p className="text-muted-foreground">Fresh, locally sourced ingredients prepared by professional chefs.</p>
               </div>
               <div>
-                <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-8 w-8 text-primary" />
+                    <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
                 <h4 className="font-semibold mb-2">Flexible Delivery</h4>
                 <p className="text-muted-foreground">Choose your delivery schedule and pause anytime you need.</p>
               </div>
               <div>
-                <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ChefHat className="h-8 w-8 text-primary" />
+                <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ChefHat className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
                 <h4 className="font-semibold mb-2">Nutrition Focused</h4>
                 <p className="text-muted-foreground">Balanced meals with detailed nutrition information for every dish.</p>
@@ -753,8 +761,7 @@ const MySubscription = () => {
           </div>
         </TabsContent>
 
-        {/* Meal Selection Tab */}
-        <TabsContent value="meal-selection" className="space-y-6 mt-6">
+        <TabsContent value="meal-selection" className="space-y-6 mt-4">{/* Meal Selection Tab */}
           {!subscription ? (
             <Card className="text-center">
               <CardContent className="pt-6">
