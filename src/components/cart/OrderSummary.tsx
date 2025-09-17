@@ -13,9 +13,10 @@ interface OrderSummaryProps {
   giftCardAmount: number;
   finalTotal: number;
   expanded: boolean;
-  onToggleExpanded: () => void;
+  onToggleExpanded: (() => void) | undefined;
   isMobile: boolean;
   expiryWarning?: string | null;
+  isSubscription?: boolean;
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -30,8 +31,11 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   onToggleExpanded,
   isMobile,
   expiryWarning,
+  isSubscription = false,
 }) => {
   if (items.length === 0) return null;
+
+  const subscriptionTotal = isSubscription ? (subtotal + fees) * 0.9 : finalTotal;
 
   return (
     <Card className="bg-muted/30 border border-border/60">
@@ -43,7 +47,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           <CardTitle className="text-lg font-semibold">Order Summary</CardTitle>
           {isMobile && (
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold">£{finalTotal.toFixed(2)}</span>
+              <span className="text-lg font-bold">£{subscriptionTotal.toFixed(2)}</span>
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </div>
           )}
@@ -78,6 +82,13 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
               <span>£{fees.toFixed(2)}</span>
             </div>
           )}
+
+          {isSubscription && (
+            <div className="flex justify-between text-green-600">
+              <span>Subscription Discount (10%)</span>
+              <span>-£{((subtotal + fees) * 0.1).toFixed(2)}</span>
+            </div>
+          )}
           
           {discountAmount > 0 && (
             <div className="flex justify-between text-green-600">
@@ -97,8 +108,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         <hr className="border-border/60" />
 
         <div className="flex justify-between items-center font-bold text-lg">
-          <span>Total</span>
-          <span>£{finalTotal.toFixed(2)}</span>
+          <span>Total{isSubscription ? ' per week' : ''}</span>
+          <span>£{subscriptionTotal.toFixed(2)}</span>
         </div>
 
         {expiryWarning && (

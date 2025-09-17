@@ -32,6 +32,7 @@ import GiftCardFailure from "./pages/GiftCardFailure";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
+import Subscriptions from "./pages/Subscriptions";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/about" element={<AppLayout><About /></AppLayout>} />
             <Route path="/cart" element={<AppLayout><Cart /></AppLayout>} />
             <Route path="/orders" element={<RequireAuth><AppLayout><Orders /></AppLayout></RequireAuth>} />
+            <Route path="/subscriptions" element={<RequireAuth><AppLayout><Subscriptions /></AppLayout></RequireAuth>} />
             <Route path="/orders/all" element={<RequireAuth><AllOrders /></RequireAuth>} />
             <Route path="/orders/:orderId" element={<RequireAuth><OrderDetails /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><AppLayout><AccountSettings /></AppLayout></RequireAuth>} />

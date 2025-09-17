@@ -16,6 +16,7 @@ import DatePicker from "@/components/cart/DatePicker";
 import CouponSection from "@/components/cart/CouponSection";
 import PaymentSection from "@/components/cart/PaymentSection";
 import CartItemCard from "@/components/cart/CartItemCard";
+import SubscriptionToggle from "@/components/cart/SubscriptionToggle";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, addToCart } = useCart();
@@ -31,6 +32,7 @@ const Cart = () => {
   const [clientSecret, setClientSecret] = useState<string>("");
   const [orderSummaryExpanded, setOrderSummaryExpanded] = useState<boolean>(false);
   const [orderNotes, setOrderNotes] = useState("");
+  const [isSubscription, setIsSubscription] = useState(false);
 
   // Memoized calculations
   const subtotal = useMemo(() => getTotalPrice(), [getTotalPrice]);
@@ -66,7 +68,9 @@ const Cart = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      // Use subscription checkout if subscription is selected
+      const functionName = isSubscription ? 'create-subscription-checkout' : 'create-payment-intent';
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
           currency: 'gbp',
           items: items.map(i => ({
@@ -422,6 +426,12 @@ const Cart = () => {
             getMinDeliveryDate={dateValidation.getMinDeliveryDate}
           />
 
+          {/* Subscription Toggle */}
+          <SubscriptionToggle
+            isSubscription={isSubscription}
+            onToggle={setIsSubscription}
+          />
+
           {/* Coupons & Gift Cards */}
           <CouponSection
             couponCode={discounts.couponCode}
@@ -456,6 +466,7 @@ const Cart = () => {
             onToggleExpanded={undefined}
             isMobile={false}
             expiryWarning={discounts.getExpiryWarning}
+            isSubscription={isSubscription}
           />
 
           {/* Payment Section */}
