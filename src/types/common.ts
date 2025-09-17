@@ -38,5 +38,16 @@ export interface BaseEntity {
   id: string;
   created_at: string;
   updated_at?: string;
-  is_active: boolean;
+  is_active?: boolean;
+}
+
+// Generic data filtering interface
+export interface DataFiltersConfig<T> {
+  searchFields?: (keyof T)[];
+  statusField?: keyof T;
+  customFilters?: Array<{
+    field: keyof T;
+    operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'ilike' | 'in';
+    value: any;
+  }>;
 }

@@ -1,6 +1,11 @@
+// Legacy hook - use useStandardizedMealsData for new implementations
 import { useDataManager } from "./useDataManager";
 import type { Meal, Category } from "@/types/meal";
 
+/**
+ * @deprecated Use useStandardizedMealsData instead for better error handling, 
+ * filtering, and pagination support
+ */
 export const useMealsData = () => {
   const mealsManager = useDataManager<Meal>("meals", {
     orderBy: { column: "name", ascending: true }
