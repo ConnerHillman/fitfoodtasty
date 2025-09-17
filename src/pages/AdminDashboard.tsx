@@ -8,6 +8,7 @@ import PackagesManager from "@/components/admin/PackagesManager";
 import ReferralSettingsAdmin from "@/components/admin/ReferralSettingsAdmin";
 import BusinessDashboard from "@/components/admin/BusinessDashboard";
 import Reports from "@/components/admin/Reports";
+import OrdersAndSubscriptionsManager from "@/components/admin/OrdersAndSubscriptionsManager";
 import AllOrders from "@/pages/AllOrders";
 import CustomersManager from "@/components/admin/CustomersManager";
 import CustomerDetailModal from "@/components/admin/CustomerDetailModal";
@@ -186,7 +187,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="orders">
-            <AllOrders />
+            <OrdersAndSubscriptionsManager />
           </TabsContent>
 
           <TabsContent value="customers">
