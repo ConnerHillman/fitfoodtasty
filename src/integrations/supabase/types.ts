@@ -1978,6 +1978,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_modify_subscription_delivery: {
+        Args: { p_target_delivery_date: string; p_user_subscription_id: string }
+        Returns: boolean
+      }
+      check_subscription_plan_eligibility: {
+        Args: { p_subscription_plan_id: string; p_user_id: string }
+        Returns: Json
+      }
       generate_gift_card_code: {
         Args: Record<PropertyKey, never>
         Returns: string
