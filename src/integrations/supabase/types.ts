@@ -1587,6 +1587,10 @@ export type Database = {
         Args: { delivery_date: string; zone_id?: string }
         Returns: string
       }
+      can_access_abandoned_cart: {
+        Args: { cart_session_id: string; cart_user_id: string }
+        Returns: boolean
+      }
       generate_gift_card_code: {
         Args: Record<PropertyKey, never>
         Returns: string
