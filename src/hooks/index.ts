@@ -4,21 +4,24 @@
 export { useEnhancedDataManager } from './useEnhancedDataManager';
 export { useDataManager } from './useDataManager';
 export { useSupabaseData, useSupabaseCrud } from './useSupabaseData';
+export { useErrorHandler } from './useErrorHandler';
+
+// Admin CRUD operations
+export { useAdminCrud } from './useAdminCrud';
 
 // Standardized domain-specific hooks
 export { useStandardizedMealsData } from './useStandardizedMealsData';
 export { useStandardizedCustomersData } from './useStandardizedCustomersData';
 
 // Legacy domain hooks (marked for migration)
-export { useMealsData } from './useMealsData';
-export { useCustomersData } from './useCustomersData';
+export { useMealsData } from './useMealsData'; // @deprecated - use useStandardizedMealsData
+export { useCustomersData } from './useCustomersData'; // @deprecated - use useStandardizedCustomersData
 export { useFulfillmentData } from './useFulfillmentData';
 export { useProductionData } from './useProductionData';
 
 // Utility hooks
 export { useFilteredData } from './useFilteredData';
 export { usePaginatedData } from './usePaginatedData';
-export { useErrorHandler } from './useErrorHandler';
 export { useDebounce } from './useDebounce';
 export { useDebouncedValue } from './useDebouncedValue';
 export { useOptimizedSearch } from './useOptimizedSearch';

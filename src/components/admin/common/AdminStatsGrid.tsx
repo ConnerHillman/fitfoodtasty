@@ -11,7 +11,8 @@ export interface StatCard {
   iconColor?: string;
   trend?: {
     value: number;
-    direction: "up" | "down";
+    isPositive: boolean;
+    label?: string;
   };
 }
 
@@ -71,14 +72,15 @@ export function AdminStatsGrid({
               </p>
             )}
             {stat.trend && (
-              <p className={`text-xs flex items-center gap-1 mt-1 ${
-                stat.trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
+              <div className={`text-xs flex items-center mt-1 ${
+                stat.trend.isPositive ? 'text-green-600' : 'text-red-600'
               }`}>
-                <span className={stat.trend.direction === 'up' ? '↑' : '↓'}>
-                  {Math.abs(stat.trend.value)}%
-                </span>
-                from last month
-              </p>
+                <span className="mr-1">{stat.trend.isPositive ? '↗' : '↘'}</span>
+                <span>{Math.abs(stat.trend.value)}%</span>
+                {stat.trend.label && (
+                  <span className="text-muted-foreground ml-1">{stat.trend.label}</span>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

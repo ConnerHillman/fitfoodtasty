@@ -4,7 +4,12 @@ import type { Meal, Category } from "@/types/meal";
 
 /**
  * @deprecated Use useStandardizedMealsData instead for better error handling, 
- * filtering, and pagination support
+ * filtering, and pagination support. This hook will be removed in a future version.
+ * 
+ * Migration guide:
+ * - Replace useMealsData() with useStandardizedMealsData(filters)
+ * - Update component to use standardized filtering patterns
+ * - Use CRUD operations from the new hook for better error handling
  */
 export const useMealsData = () => {
   const mealsManager = useDataManager<Meal>("meals", {
