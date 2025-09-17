@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Header from "@/components/Header";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -114,12 +114,9 @@ const MySubscription = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </div>
     );
@@ -127,37 +124,31 @@ const MySubscription = () => {
 
   if (!subscription) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
-          <Card className="max-w-2xl mx-auto text-center">
-            <CardHeader>
-              <CardTitle>No Active Subscription</CardTitle>
-              <CardDescription>
-                You don't have an active subscription. Browse our meal plans to get started.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild>
-                <a href="/subscriptions">Browse Meal Plans</a>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-2xl mx-auto text-center">
+          <CardHeader>
+            <CardTitle>No Active Subscription</CardTitle>
+            <CardDescription>
+              You don't have an active subscription. Browse our meal plans to get started.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <a href="/subscriptions">Browse Meal Plans</a>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">My Subscription</h1>
-          <p className="text-muted-foreground">Manage your meal plan and delivery preferences</p>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-2">My Subscription</h1>
+        <p className="text-muted-foreground">Manage your meal plan and delivery preferences</p>
+      </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Subscription Overview */}
@@ -375,7 +366,6 @@ const MySubscription = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
