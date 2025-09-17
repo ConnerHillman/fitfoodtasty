@@ -16,7 +16,7 @@ const Header = () => {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
+  return <header className="sticky top-0 z-50 bg-background border-b border-green-100">
       {/* Promo Banner */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-body-sm font-medium">
         <span className="font-bold">WELCOME OFFER: SAVE20</span> - Save 20% on your first box, 10% on your second box

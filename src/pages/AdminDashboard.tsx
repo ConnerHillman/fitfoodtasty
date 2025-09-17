@@ -34,7 +34,7 @@ const AdminDashboard = () => {
 
   return (
     <CustomerDetailProvider>
-      <div className="container mx-auto p-6 space-y-8 pt-20 md:pt-28">
+      <div className="container mx-auto p-6 space-y-8 pt-24 md:pt-32">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative">
