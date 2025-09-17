@@ -16,6 +16,7 @@ import DatePicker from "@/components/cart/DatePicker";
 import CouponSection from "@/components/cart/CouponSection";
 import PaymentSection from "@/components/cart/PaymentSection";
 import CartItemCard from "@/components/cart/CartItemCard";
+import SubscriptionSection from "@/components/cart/SubscriptionSection";
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, getTotalPrice, addToCart } = useCart();
@@ -31,9 +32,29 @@ const Cart = () => {
   const [clientSecret, setClientSecret] = useState<string>("");
   const [orderSummaryExpanded, setOrderSummaryExpanded] = useState<boolean>(false);
   const [orderNotes, setOrderNotes] = useState("");
+  
+  // Subscription state
+  const [isSubscriptionEnabled, setIsSubscriptionEnabled] = useState<boolean>(false);
+  const [deliveryFrequency, setDeliveryFrequency] = useState<"weekly" | "bi-weekly" | "monthly">("bi-weekly");
 
   // Memoized calculations
   const subtotal = useMemo(() => getTotalPrice(), [getTotalPrice]);
+  
+  // Calculate subscription discount
+  const subscriptionDiscountPercentage = useMemo(() => {
+    if (!isSubscriptionEnabled) return 0;
+    switch (deliveryFrequency) {
+      case "weekly": return 5;
+      case "bi-weekly": return 10;
+      case "monthly": return 15;
+      default: return 0;
+    }
+  }, [isSubscriptionEnabled, deliveryFrequency]);
+  
+  const subscriptionDiscountAmount = useMemo(() => {
+    return (subtotal * subscriptionDiscountPercentage) / 100;
+  }, [subtotal, subscriptionDiscountPercentage]);
+  
   const fees = useMemo(() => {
     return deliveryLogic.deliveryMethod === "delivery" 
       ? deliveryLogic.deliveryFee 
@@ -41,12 +62,15 @@ const Cart = () => {
   }, [deliveryLogic.deliveryMethod, deliveryLogic.deliveryFee, deliveryLogic.getCollectionFee]);
 
   const finalTotal = useMemo(() => {
-    return discounts.getDiscountedTotal(subtotal, fees);
-  }, [subtotal, fees, discounts.getDiscountedTotal]);
+    const couponDiscountedTotal = discounts.getDiscountedTotal(subtotal, fees);
+    // Apply subscription discount after coupon discount
+    return couponDiscountedTotal - subscriptionDiscountAmount;
+  }, [subtotal, fees, subscriptionDiscountAmount, discounts.getDiscountedTotal]);
 
   const discountAmount = useMemo(() => {
-    return discounts.getDiscountAmount(subtotal, fees);
-  }, [subtotal, fees, discounts.getDiscountAmount]);
+    const couponDiscount = discounts.getDiscountAmount(subtotal, fees);
+    return couponDiscount + subscriptionDiscountAmount;
+  }, [subtotal, fees, subscriptionDiscountAmount, discounts.getDiscountAmount]);
 
   const isCoupon100Off = useMemo(() => {
     return discounts.isCoupon100PercentOff(subtotal, fees);
@@ -66,37 +90,75 @@ const Cart = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-        body: {
-          currency: 'gbp',
-          items: items.map(i => ({
-            name: i.name,
-            amount: Math.round(i.price * 100),
-            quantity: i.quantity,
-            description: i.description,
-            meal_id: i.id,
-            type: i.type,
-            packageData: i.packageData,
-          })),
-          delivery_fee: Math.round(fees * 100),
-          delivery_method: deliveryLogic.deliveryMethod,
-          collection_point_id: deliveryLogic.deliveryMethod === 'pickup' ? deliveryLogic.selectedCollectionPoint : null,
-          requested_delivery_date: dateValidation.requestedDeliveryDate,
-          production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
-          customer_email: user?.email,
-          customer_name: (user as any)?.user_metadata?.full_name,
-          coupon_code: discounts.couponApplied ? discounts.appliedCoupon?.code : null,
-          coupon_data: discounts.couponApplied ? discounts.appliedCoupon : null,
-          gift_card_code: discounts.appliedGiftCard?.code || null,
-          gift_card_amount_used: discounts.appliedGiftCard?.amount_used || 0,
-          gift_card_id: discounts.appliedGiftCard?.gift_card_id || null,
-          order_notes: orderNotes.trim() || null,
-        }
-      });
+      // Use different function for subscriptions vs one-time orders
+      const functionName = isSubscriptionEnabled ? 'create-subscription-checkout' : 'create-payment-intent';
+      
+      if (isSubscriptionEnabled) {
+        // For subscriptions, we'll create a checkout session instead of payment intent
+        const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
+          body: {
+            items: items.map(i => ({
+              name: i.name,
+              amount: Math.round(i.price * 100),
+              quantity: i.quantity,
+              description: i.description,
+              meal_id: i.id,
+              type: i.type,
+              packageData: i.packageData,
+            })),
+            delivery_fee: Math.round(fees * 100),
+            delivery_method: deliveryLogic.deliveryMethod,
+            collection_point_id: deliveryLogic.deliveryMethod === 'pickup' ? deliveryLogic.selectedCollectionPoint : null,
+            delivery_frequency: deliveryFrequency,
+            subscription_discount_percentage: subscriptionDiscountPercentage,
+            requested_delivery_date: dateValidation.requestedDeliveryDate,
+            customer_email: user?.email,
+            customer_name: (user as any)?.user_metadata?.full_name,
+            coupon_code: discounts.couponApplied ? discounts.appliedCoupon?.code : null,
+            order_notes: orderNotes.trim() || null,
+          }
+        });
 
-      if (error) throw error;
-      if (data?.clientSecret) {
-        setClientSecret(data.clientSecret);
+        if (error) throw error;
+        if (data?.url) {
+          // Store subscription checkout URL for later use
+          setClientSecret(data.url);
+        }
+      } else {
+        // Original one-time payment logic
+        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+          body: {
+            currency: 'gbp',
+            items: items.map(i => ({
+              name: i.name,
+              amount: Math.round(i.price * 100),
+              quantity: i.quantity,
+              description: i.description,
+              meal_id: i.id,
+              type: i.type,
+              packageData: i.packageData,
+            })),
+            delivery_fee: Math.round(fees * 100),
+            delivery_method: deliveryLogic.deliveryMethod,
+            collection_point_id: deliveryLogic.deliveryMethod === 'pickup' ? deliveryLogic.selectedCollectionPoint : null,
+            requested_delivery_date: dateValidation.requestedDeliveryDate,
+            production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
+            customer_email: user?.email,
+            customer_name: (user as any)?.user_metadata?.full_name,
+            coupon_code: discounts.couponApplied ? discounts.appliedCoupon?.code : null,
+            coupon_data: discounts.couponApplied ? discounts.appliedCoupon : null,
+            gift_card_code: discounts.appliedGiftCard?.code || null,
+            gift_card_amount_used: discounts.appliedGiftCard?.amount_used || 0,
+            gift_card_id: discounts.appliedGiftCard?.gift_card_id || null,
+            order_notes: orderNotes.trim() || null,
+            subscription_discount_percentage: subscriptionDiscountPercentage,
+          }
+        });
+
+        if (error) throw error;
+        if (data?.clientSecret) {
+          setClientSecret(data.clientSecret);
+        }
       }
     } catch (err) {
       console.error('Auto-create payment intent failed:', err);
@@ -114,7 +176,10 @@ const Cart = () => {
     isCoupon100Off,
     user?.email,
     (user as any)?.user_metadata?.full_name,
-    dateValidation.calculateProductionDate
+    dateValidation.calculateProductionDate,
+    isSubscriptionEnabled,
+    deliveryFrequency,
+    subscriptionDiscountPercentage
   ]);
 
   const debouncedCreatePaymentIntent = useDebounce(useCallback(() => {
@@ -135,6 +200,9 @@ const Cart = () => {
     discounts.appliedCoupon,
     orderNotes,
     isCoupon100Off,
+    isSubscriptionEnabled,
+    deliveryFrequency,
+    subscriptionDiscountPercentage,
     debouncedCreatePaymentIntent
   ]);
 
@@ -422,6 +490,15 @@ const Cart = () => {
             getMinDeliveryDate={dateValidation.getMinDeliveryDate}
           />
 
+          {/* Subscription Options */}
+          <SubscriptionSection
+            isSubscriptionEnabled={isSubscriptionEnabled}
+            onSubscriptionToggle={setIsSubscriptionEnabled}
+            deliveryFrequency={deliveryFrequency}
+            onDeliveryFrequencyChange={setDeliveryFrequency}
+            disabled={!user}
+          />
+
           {/* Coupons & Gift Cards */}
           <CouponSection
             couponCode={discounts.couponCode}
@@ -456,6 +533,9 @@ const Cart = () => {
             onToggleExpanded={undefined}
             isMobile={false}
             expiryWarning={discounts.getExpiryWarning}
+            subscriptionDiscountAmount={subscriptionDiscountAmount}
+            isSubscriptionEnabled={isSubscriptionEnabled}
+            deliveryFrequency={deliveryFrequency}
           />
 
           {/* Payment Section */}
@@ -469,6 +549,8 @@ const Cart = () => {
             onCreateFreeOrder={createFreeOrder}
             orderNotes={orderNotes}
             onOrderNotesChange={setOrderNotes}
+            isSubscriptionEnabled={isSubscriptionEnabled}
+            deliveryFrequency={deliveryFrequency}
           />
         </div>
       </div>

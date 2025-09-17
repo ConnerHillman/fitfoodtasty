@@ -18,6 +18,8 @@ interface PaymentSectionProps {
   onCreateFreeOrder: () => Promise<void>;
   orderNotes: string;
   onOrderNotesChange: (notes: string) => void;
+  isSubscriptionEnabled?: boolean;
+  deliveryFrequency?: string;
 }
 
 const PaymentSection: React.FC<PaymentSectionProps> = ({
@@ -30,6 +32,8 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   onCreateFreeOrder,
   orderNotes,
   onOrderNotesChange,
+  isSubscriptionEnabled = false,
+  deliveryFrequency = "bi-weekly",
 }) => {
   const totalAmountInPence = Math.round(finalTotal * 100);
 
@@ -79,6 +83,31 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
           >
             <ShoppingBag className="mr-2 h-5 w-5" />
             COMPLETE FREE ORDER
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Handle subscription checkout URLs (different from clientSecret)
+  if (isSubscriptionEnabled && clientSecret && clientSecret.startsWith('http')) {
+    return (
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="p-6 text-center space-y-4">
+          <div className="space-y-2">
+            <ShoppingBag className="h-12 w-12 mx-auto text-blue-600" />
+            <h3 className="text-lg font-medium">Complete your subscription</h3>
+            <p className="text-muted-foreground">
+              {`You'll be charged £${finalTotal.toFixed(2)} ${deliveryFrequency} starting from your first delivery`}
+            </p>
+          </div>
+          <Button 
+            onClick={() => window.open(clientSecret, '_blank')}
+            className="w-full h-12 text-lg font-semibold bg-blue-600 hover:bg-blue-700"
+            size="lg"
+          >
+            <ShoppingBag className="mr-2 h-5 w-5" />
+            START SUBSCRIPTION
           </Button>
         </CardContent>
       </Card>
