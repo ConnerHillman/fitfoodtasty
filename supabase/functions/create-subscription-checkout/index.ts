@@ -36,9 +36,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { subscription_plan_id } = await req.json();
+    const { subscription_plan_id, selected_meals } = await req.json();
     if (!subscription_plan_id) throw new Error("Subscription plan ID is required");
-    logStep("Request body parsed", { subscription_plan_id });
+    logStep("Request body parsed", { subscription_plan_id, selected_meals });
 
     // Get subscription plan details
     const { data: plan, error: planError } = await supabaseClient
@@ -93,7 +93,8 @@ serve(async (req) => {
       subscription_data: {
         metadata: {
           subscription_plan_id: subscription_plan_id,
-          user_id: user.id
+          user_id: user.id,
+          selected_meals: selected_meals ? JSON.stringify(selected_meals) : null
         }
       }
     });

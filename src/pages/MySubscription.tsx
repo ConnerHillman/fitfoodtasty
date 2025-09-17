@@ -13,6 +13,7 @@ import { Calendar, Settings, Pause, Play, CreditCard, Package, MapPin, Loader2, 
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import SubscriptionMealSelectionDialog from "@/components/subscription/SubscriptionMealSelectionDialog";
 
 const MySubscription = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -21,6 +22,8 @@ const MySubscription = () => {
   const [pauseResumeLoading, setPauseResumeLoading] = useState(false);
   const [scheduleModifyLoading, setScheduleModifyLoading] = useState(false);
   const [pauseDate, setPauseDate] = useState("");
+  const [mealSelectionOpen, setMealSelectionOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -222,17 +225,40 @@ const MySubscription = () => {
       return;
     }
 
-    setLoadingPlan(planId);
+    // Find the selected plan
+    const plan = plans?.find(p => p.id === planId);
+    if (!plan) {
+      toast({
+        title: "Plan Not Found",
+        description: "The selected plan could not be found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Open meal selection dialog first
+    setSelectedPlan(plan);
+    setMealSelectionOpen(true);
+  };
+
+  const handleProceedToCheckout = async (selectedMeals: Record<string, number>) => {
+    if (!selectedPlan) return;
+    
+    setLoadingPlan(selectedPlan.id);
     
     try {
       const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
-        body: { subscription_plan_id: planId }
+        body: { 
+          subscription_plan_id: selectedPlan.id,
+          selected_meals: selectedMeals
+        }
       });
 
       if (error) throw error;
 
       if (data.url) {
         sessionStorage.setItem('subscription_checkout', 'true');
+        sessionStorage.setItem('subscription_meals', JSON.stringify(selectedMeals));
         window.open(data.url, '_blank');
       }
     } catch (error) {
@@ -829,6 +855,14 @@ const MySubscription = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Subscription Meal Selection Dialog */}
+      <SubscriptionMealSelectionDialog
+        open={mealSelectionOpen}
+        onOpenChange={setMealSelectionOpen}
+        plan={selectedPlan}
+        onProceedToCheckout={handleProceedToCheckout}
+      />
     </div>
   );
 };
