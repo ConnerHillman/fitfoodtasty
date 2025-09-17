@@ -44,7 +44,7 @@ serve(async (req) => {
       });
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const line_items = items.map((it: CheckoutItem) => {
       const unitAmount = typeof it.amount === "number" ? Math.round(it.amount) : Math.round((it.price ?? 0) * 100);

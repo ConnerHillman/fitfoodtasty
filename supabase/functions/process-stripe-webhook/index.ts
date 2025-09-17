@@ -21,7 +21,7 @@ serve(async (req) => {
     if (!webhookSecret) throw new Error("STRIPE_WEBHOOK_SECRET is not set");
 
     // Initialize Stripe
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get the signature from headers
     const sig = req.headers.get("stripe-signature");
