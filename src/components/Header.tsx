@@ -41,7 +41,7 @@ const Header = () => {
                 <NavigationMenuTrigger className="text-gray-700 hover:text-green-600 font-medium">
                   OUR MENU
                 </NavigationMenuTrigger>
-                <NavigationMenuContent>
+                <NavigationMenuContent className="z-50 bg-background rounded-lg border shadow-xl">
                   <div className="grid gap-3 p-6 w-[400px]">
                     <NavigationMenuLink asChild>
                       <Link to="/menu" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
@@ -63,7 +63,7 @@ const Header = () => {
                 <NavigationMenuTrigger className="text-gray-700 hover:text-green-600 font-medium">
                   EXPLORE
                 </NavigationMenuTrigger>
-                <NavigationMenuContent>
+                <NavigationMenuContent className="z-50 bg-background rounded-lg border shadow-xl">
                   <div className="grid gap-3 p-6 w-[300px]">
                     <NavigationMenuLink asChild>
                       <Link to="/about" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
