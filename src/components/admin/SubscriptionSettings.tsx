@@ -62,17 +62,20 @@ const SubscriptionSettings = () => {
   const saveSettings = async () => {
     try {
       setSaving(true);
+      console.log('Saving subscription settings:', { discountEnabled, discountPercentage });
 
       const updates = [
         {
           setting_name: 'subscription_discount_enabled',
           setting_value: discountEnabled.toString(),
-          description: 'Enable subscription discount'
+          description: 'Enable subscription discount',
+          is_active: true
         },
         {
           setting_name: 'subscription_discount_percentage',
           setting_value: discountPercentage.toString(),
-          description: 'Subscription discount percentage (0-100)'
+          description: 'Subscription discount percentage (0-100)',
+          is_active: true
         }
       ];
 
@@ -84,12 +87,16 @@ const SubscriptionSettings = () => {
         if (error) throw error;
       }
 
+      console.log('Subscription settings saved successfully');
+
       toast({
-        title: "Settings saved",
+        title: "Settings saved", 
         description: "Subscription discount settings have been updated successfully.",
       });
 
-      fetchSettings();
+      // Wait a moment for database to update, then refetch
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await fetchSettings();
     } catch (error) {
       console.error("Error saving subscription settings:", error);
       toast({
