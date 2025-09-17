@@ -58,15 +58,15 @@ const MySubscription = () => {
     enabled: !!user,
   });
 
-  // Fetch available subscription plans for Browse Plans tab
-  const { data: plans } = useQuery({
-    queryKey: ['subscription-plans'],
+  // Fetch available packages for Browse Plans tab
+  const { data: packages } = useQuery({
+    queryKey: ['packages-for-subscription'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('subscription_plans')
+        .from('packages')
         .select('*')
         .eq('is_active', true)
-        .order('price_per_delivery', { ascending: true });
+        .order('sort_order', { ascending: true });
       
       if (error) throw error;
       return data || [];
@@ -216,7 +216,7 @@ const MySubscription = () => {
     }
   };
 
-  const handleSubscribe = async (planId: string) => {
+  const handleSubscribe = async (packageId: string) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -226,19 +226,19 @@ const MySubscription = () => {
       return;
     }
 
-    // Find the selected plan
-    const plan = plans?.find(p => p.id === planId);
-    if (!plan) {
+    // Find the selected package
+    const pkg = packages?.find(p => p.id === packageId);
+    if (!pkg) {
       toast({
-        title: "Plan Not Found",
-        description: "The selected plan could not be found.",
+        title: "Package Not Found",
+        description: "The selected package could not be found.",
         variant: "destructive",
       });
       return;
     }
 
     // Open meal selection dialog first
-    setSelectedPlan(plan);
+    setSelectedPlan(pkg);
     setMealSelectionOpen(true);
   };
 
@@ -250,7 +250,7 @@ const MySubscription = () => {
     try {
       const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
         body: { 
-          subscription_plan_id: selectedPlan.id,
+          package_id: selectedPlan.id,
           selected_meals: selectedMeals
         }
       });
@@ -286,32 +286,15 @@ const MySubscription = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getPlanFeatures = (plan: any) => {
-    const features = [
-      `${plan.meal_count} meals per delivery`,
-      `${plan.delivery_frequency} delivery`,
-      "Premium quality ingredients",
-      "Nutrition information included",
-      "Customizable meal preferences"
-    ];
+  const getFrequencyOptions = () => [
+    { value: "weekly", label: "Weekly", discount: "5% off" },
+    { value: "bi-weekly", label: "Bi-weekly", discount: "10% off" },
+    { value: "monthly", label: "Monthly", discount: "15% off" }
+  ];
 
-    if (plan.name.toLowerCase().includes('family')) {
-      features.push("Family-size portions", "Kid-friendly options");
-    }
-    
-    if (plan.name.toLowerCase().includes('standard') || plan.name.toLowerCase().includes('family')) {
-      features.push("Priority customer support");
-    }
-
-    return features;
-  };
-
-  const isCurrentPlan = (plan: any) => {
-    return subscription?.subscription_plans?.stripe_product_id === plan.stripe_product_id;
-  };
-
-  const isPopular = (plan: any) => {
-    return plan.name.toLowerCase().includes('standard');
+  const isPopular = (pkg: any) => {
+    // Mark packages with 6-12 meals as popular (standard family size)
+    return pkg.meal_count >= 6 && pkg.meal_count <= 12;
   };
 
   // Determine default tab based on subscription status
@@ -590,36 +573,39 @@ const MySubscription = () => {
                 </Card>
 
                 {/* Delivery Schedule Modification */}
-                {plans && plans.length > 0 && (
+                {packages && packages.length > 0 && (
                   <Card>
                     <CardHeader>
                       <CardTitle>Change Delivery Plan</CardTitle>
                       <CardDescription>Switch to a different meal plan</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {plans
-                        .filter(plan => plan.id !== subscription.subscription_plan_id)
-                        .map((plan) => (
+                      {packages && packages.length > 0 ? (
+                        packages.map((pkg) => (
                           <Button
-                            key={plan.id}
+                            key={pkg.id}
                             variant="outline"
                             className="w-full justify-between"
-                            onClick={() => handleScheduleChange(plan.id)}
-                            disabled={scheduleModifyLoading}
+                            onClick={() => toast({
+                              title: "Feature Coming Soon",
+                              description: "Package-based subscriptions are coming soon!",
+                            })}
+                            disabled={true}
                           >
                             <div className="text-left">
-                              <div className="font-medium">{plan.name}</div>
+                              <div className="font-medium">{pkg.name}</div>
                               <div className="text-xs text-muted-foreground">
-                                {plan.meal_count} meals • £{plan.price_per_delivery}
+                                {pkg.meal_count} meals • £{pkg.price}
                               </div>
                             </div>
-                            {scheduleModifyLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Calendar className="h-4 w-4" />
-                            )}
+                            <Calendar className="h-4 w-4" />
                           </Button>
-                        ))}
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-center py-4">
+                          No packages available for subscription changes.
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 )}
@@ -671,10 +657,10 @@ const MySubscription = () => {
           {/* Hero Section */}
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-              Choose Your Meal Plan
+              Choose Your Subscription
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Fresh, delicious meals delivered to your door. Choose the plan that fits your lifestyle.
+              Turn any package into a recurring subscription and save on every delivery.
             </p>
           </div>
 
@@ -686,7 +672,7 @@ const MySubscription = () => {
                   <div className="flex items-center gap-2">
                     <Check className="h-5 w-5 text-green-600" />
                     <span className="font-medium">
-                      You're currently subscribed to: {subscription.subscription_plans?.name}
+                      You have an active subscription
                     </span>
                   </div>
                 </CardContent>
@@ -694,62 +680,74 @@ const MySubscription = () => {
             </div>
           )}
 
-              {/* Subscription Plans */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {plans?.map((plan) => (
-                  <Card 
-                    key={plan.id} 
-                    className={`relative ${isPopular(plan) ? 'border-primary shadow-lg' : ''} ${isCurrentPlan(plan) ? 'ring-2 ring-green-500' : ''}`}
+          {/* Package-based Subscription Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {packages?.map((pkg) => (
+              <Card 
+                key={pkg.id} 
+                className={`relative transition-all hover:shadow-md ${isPopular(pkg) ? 'border-primary shadow-sm' : ''}`}
               >
-                {isPopular(plan) && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground px-3 py-1">
+                {isPopular(pkg) && (
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground text-xs px-2 py-1">
                       <Star className="h-3 w-3 mr-1" />
-                      Most Popular
+                      Popular
                     </Badge>
                   </div>
                 )}
                 
-                {isCurrentPlan(plan) && (
-                  <div className="absolute -top-3 right-4">
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Current Plan
-                    </Badge>
-                  </div>
-                )}
-
-                <CardHeader className="text-center">
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="pt-4">
-                    <span className="text-3xl font-bold">£{plan.price_per_delivery}</span>
-                    <span className="text-muted-foreground">/{plan.delivery_frequency}</span>
+                <CardHeader className="pb-3">
+                  <div className="text-center">
+                    {pkg.image_url && (
+                      <div className="w-16 h-16 mx-auto mb-3 rounded-lg overflow-hidden bg-muted">
+                        <img 
+                          src={pkg.image_url} 
+                          alt={pkg.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <CardTitle className="text-lg">{pkg.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {pkg.meal_count} meals per delivery
+                    </p>
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    {getPlanFeatures(plan).map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <CardContent className="pt-0 space-y-3">
+                  <div className="text-center">
+                    <span className="text-2xl font-bold">£{pkg.price}</span>
+                    <span className="text-muted-foreground text-sm">/delivery</span>
+                  </div>
+                  
+                  {pkg.description && (
+                    <p className="text-xs text-muted-foreground text-center line-clamp-2">
+                      {pkg.description}
+                    </p>
+                  )}
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-center">Choose frequency:</p>
+                    <div className="grid grid-cols-3 gap-1 text-xs">
+                      {getFrequencyOptions().map((freq) => (
+                        <div key={freq.value} className="text-center p-1 bg-muted rounded">
+                          <div className="font-medium">{freq.label}</div>
+                          <div className="text-green-600">{freq.discount}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
                   <Button
-                    className="w-full"
-                    onClick={() => handleSubscribe(plan.id)}
-                    disabled={loadingPlan === plan.id || isCurrentPlan(plan)}
-                    variant={isCurrentPlan(plan) ? "secondary" : "default"}
+                    className="w-full h-8 text-sm"
+                    onClick={() => handleSubscribe(pkg.id)}
+                    disabled={loadingPlan === pkg.id}
                   >
-                    {loadingPlan === plan.id ? (
+                    {loadingPlan === pkg.id ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                         Processing...
                       </>
-                    ) : isCurrentPlan(plan) ? (
-                      "Current Plan"
                     ) : (
                       "Subscribe Now"
                     )}
@@ -759,30 +757,30 @@ const MySubscription = () => {
             ))}
           </div>
 
-              {/* Features Section */}
-              <div className="mt-12 sm:mt-16 text-center">
-                <h3 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Why Choose Our Meal Plans?</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-                  <div>
-                    <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Check className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+          {/* Benefits Section */}
+          <div className="mt-12 sm:mt-16 text-center">
+            <h3 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Why Subscribe?</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+              <div>
+                <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
-                <h4 className="font-semibold mb-2">Premium Quality</h4>
-                <p className="text-muted-foreground">Fresh, locally sourced ingredients prepared by professional chefs.</p>
+                <h4 className="font-semibold mb-2">Automatic Savings</h4>
+                <p className="text-muted-foreground">Save 5-15% on every delivery with your subscription.</p>
               </div>
               <div>
-                    <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
-                <h4 className="font-semibold mb-2">Flexible Delivery</h4>
-                <p className="text-muted-foreground">Choose your delivery schedule and pause anytime you need.</p>
+                <h4 className="font-semibold mb-2">Flexible Schedule</h4>
+                <p className="text-muted-foreground">Choose weekly, bi-weekly, or monthly deliveries.</p>
               </div>
               <div>
                 <div className="bg-primary/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <ChefHat className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
-                <h4 className="font-semibold mb-2">Nutrition Focused</h4>
-                <p className="text-muted-foreground">Balanced meals with detailed nutrition information for every dish.</p>
+                <h4 className="font-semibold mb-2">Easy Management</h4>
+                <p className="text-muted-foreground">Pause, modify, or cancel anytime through your account.</p>
               </div>
             </div>
           </div>
