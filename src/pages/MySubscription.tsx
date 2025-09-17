@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import SubscriptionMealSelectionDialog from "@/components/subscription/SubscriptionMealSelectionDialog";
+import MealRotationManager from "@/components/subscription/MealRotationManager";
 
 const MySubscription = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -813,58 +814,24 @@ const MySubscription = () => {
                     Choose from our fresh, chef-prepared meals
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {meals?.slice(0, 9).map((meal) => (
-                      <Card key={meal.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          {meal.image_url && (
-                            <img 
-                              src={meal.image_url} 
-                              alt={meal.name}
-                              className="w-full h-32 object-cover rounded-md mb-3"
-                            />
-                          )}
-                          <h4 className="font-semibold mb-1">{meal.name}</h4>
-                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                            {meal.description}
-                          </p>
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="font-medium">£{meal.price}</span>
-                            <span className="text-muted-foreground">{meal.total_calories} cal</span>
-                          </div>
-                          <Button size="sm" className="w-full mt-3">
-                            Select Meal
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-6 text-center">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      This feature is coming soon! You'll be able to customize your weekly meal selection here.
-                    </p>
-                    <Button variant="outline" asChild>
-                      <a href="/menu">View Full Menu</a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                 <CardContent>
+                   <MealRotationManager subscription={subscription} />
+                 </CardContent>
+               </Card>
+             </div>
+           )}
+         </TabsContent>
+       </Tabs>
 
-      {/* Subscription Meal Selection Dialog */}
-      <SubscriptionMealSelectionDialog
-        open={mealSelectionOpen}
-        onOpenChange={setMealSelectionOpen}
-        plan={selectedPlan}
-        onProceedToCheckout={handleProceedToCheckout}
-      />
-    </div>
-  );
-};
+       {/* Subscription Meal Selection Dialog */}
+       <SubscriptionMealSelectionDialog
+         open={mealSelectionOpen}
+         onOpenChange={setMealSelectionOpen}
+         plan={selectedPlan}
+         onProceedToCheckout={handleProceedToCheckout}
+       />
+     </div>
+   );
+ };
 
 export default MySubscription;
