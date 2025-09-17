@@ -60,8 +60,8 @@ const AdminDashboard = () => {
 
         <Tabs value={tab} onValueChange={(v) => { setTab(v); setSearchParams({ tab: v }); }} className="space-y-8">
           <div className="relative z-20 bg-gradient-to-br from-background via-background/98 to-background/95 backdrop-blur-xl border border-primary/10 rounded-2xl p-6 shadow-2xl shadow-primary/5">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 rounded-2xl"></div>
-            <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 rounded-2xl pointer-events-none z-0"></div>
+            <div className="relative z-10">
               <TabsList className="w-full bg-transparent h-auto p-0 flex flex-wrap gap-3 justify-center">
                 <TabsTrigger 
                   value="dashboard" 

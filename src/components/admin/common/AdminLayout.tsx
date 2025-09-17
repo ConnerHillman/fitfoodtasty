@@ -78,7 +78,7 @@ export function AdminLayout({
         </div>
         
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 rounded-xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 rounded-xl pointer-events-none z-0"></div>
       </div>
 
       {/* Content */}
