@@ -1591,6 +1591,15 @@ export type Database = {
         Args: { cart_session_id: string; cart_user_id: string }
         Returns: boolean
       }
+      can_access_gift_card: {
+        Args: {
+          card_purchaser_email: string
+          card_purchaser_user_id: string
+          card_recipient_email: string
+          card_redeemed_by_user_id: string
+        }
+        Returns: boolean
+      }
       generate_gift_card_code: {
         Args: Record<PropertyKey, never>
         Returns: string
