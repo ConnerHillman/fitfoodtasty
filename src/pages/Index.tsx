@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
-import Header from '@/components/Header';
+import Layout from '@/components/Layout';
 import HeroSection from '@/components/HeroSection';
 import Menu from './Menu';
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
-      <Header />
+    <Layout>
       <HeroSection />
       <div className="container mx-auto px-4 py-16">
         <Menu />
@@ -18,7 +17,7 @@ const Index = () => {
           </button>
         </Link>
       </div>
-    </div>
+    </Layout>
   );
 };
 
