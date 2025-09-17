@@ -29,6 +29,9 @@ import GiftCards from "./pages/GiftCards";
 import GiftCardBalance from "./pages/GiftCardBalance";
 import GiftCardSuccess from "./pages/GiftCardSuccess";
 import GiftCardFailure from "./pages/GiftCardFailure";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +64,9 @@ const App = () => (
             <Route path="/gift-card-balance" element={<Layout><GiftCardBalance /></Layout>} />
             <Route path="/gift-card-success" element={<Layout><GiftCardSuccess /></Layout>} />
             <Route path="/gift-card-failure" element={<Layout><GiftCardFailure /></Layout>} />
+            <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
+            <Route path="/terms" element={<Layout><Terms /></Layout>} />
+            <Route path="/contact" element={<Layout><Contact /></Layout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
