@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Layout from "@/components/Layout";
+import AppLayout from "@/components/AppLayout";
 import PackagesBar from "@/components/packages/PackagesBar";
 import PackageSelectionDialog from "@/components/packages/PackageSelectionDialog";
 import { MealPackage } from "@/components/packages/PackagesBar";
@@ -14,7 +14,7 @@ const Packages = () => {
   };
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
@@ -34,7 +34,7 @@ const Packages = () => {
           pkg={selectedPackage}
         />
       </div>
-    </Layout>
+    </AppLayout>
   );
 };
 

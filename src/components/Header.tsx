@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Star, ChevronDown, User, LogOut, Settings, Shield, Menu, X, ShoppingCart } from "lucide-react";
+import { Star, ChevronDown, User, LogOut, Settings, Shield, Menu, X, ShoppingCart, Calendar, Package } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -16,12 +16,7 @@ const Header = () => {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  return <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100">
-      {/* Promo Banner */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 text-center text-body-sm font-medium">
-        <span className="font-bold">WELCOME OFFER: SAVE20</span> - Save 20% on your first box, 10% on your second box
-      </div>
-      
+  return <header className="sticky top-0 z-50 bg-white backdrop-blur-sm border-b border-green-100">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -60,22 +55,28 @@ const Header = () => {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-gray-700 hover:text-green-600 font-medium">
-                  EXPLORE
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 w-[300px]">
-                    <NavigationMenuLink asChild>
-                      <Link to="/about" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
-                        <div className="font-semibold text-green-700">About Us</div>
-                        <p className="text-body-sm text-gray-600">Our story and mission</p>
-                      </Link>
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
+                <NavigationMenuLink asChild>
+                  <Link to="/about" className="text-gray-700 hover:text-green-600 font-medium px-3 py-2">
+                    ABOUT US
+                  </Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
 
-              
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link to="/orders" className="text-gray-700 hover:text-green-600 font-medium px-3 py-2">
+                    MY ORDERS
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link to="/subscriptions" className="text-gray-700 hover:text-green-600 font-medium px-3 py-2">
+                    MY SUBSCRIPTIONS
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
 
@@ -206,6 +207,14 @@ const Header = () => {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       About Us
+                    </Link>
+                    <Link 
+                      to="/subscriptions" 
+                      className="flex items-center space-x-2 text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px]"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Calendar className="h-4 w-4" />
+                      <span>My Subscriptions</span>
                     </Link>
                   </div>
 

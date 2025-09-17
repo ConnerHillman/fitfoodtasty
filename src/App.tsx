@@ -17,7 +17,7 @@ import AllOrders from "./pages/AllOrders";
 import OrderDetails from "./pages/OrderDetails";
 
 import RequireAuth from "./components/RequireAuth";
-import Layout from "./components/Layout";
+import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -44,29 +44,29 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Layout><Index /></Layout>} />
+            <Route path="/" element={<AppLayout><Index /></AppLayout>} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/menu" element={<Layout><Menu /></Layout>} />
-            <Route path="/packages" element={<Layout><Packages /></Layout>} />
-            <Route path="/about" element={<Layout><About /></Layout>} />
-            <Route path="/cart" element={<Layout><Cart /></Layout>} />
-            <Route path="/orders" element={<RequireAuth><Layout><Orders /></Layout></RequireAuth>} />
+            <Route path="/menu" element={<AppLayout><Menu /></AppLayout>} />
+            <Route path="/packages" element={<AppLayout><Packages /></AppLayout>} />
+            <Route path="/about" element={<AppLayout><About /></AppLayout>} />
+            <Route path="/cart" element={<AppLayout><Cart /></AppLayout>} />
+            <Route path="/orders" element={<RequireAuth><AppLayout><Orders /></AppLayout></RequireAuth>} />
             <Route path="/orders/all" element={<RequireAuth><AllOrders /></RequireAuth>} />
             <Route path="/orders/:orderId" element={<RequireAuth><OrderDetails /></RequireAuth>} />
-            <Route path="/account" element={<RequireAuth><Layout><AccountSettings /></Layout></RequireAuth>} />
-            <Route path="/payment-success" element={<Layout><PaymentSuccess /></Layout>} />
-            <Route path="/admin" element={<RequireAuth><Layout><AdminDashboard /></Layout></RequireAuth>} />
-            <Route path="/business/settings" element={<RequireAuth><Layout><BusinessSettings /></Layout></RequireAuth>} />
-            <Route path="/referral-reports" element={<RequireAuth><Layout><ReferralReports /></Layout></RequireAuth>} />
+            <Route path="/account" element={<RequireAuth><AppLayout><AccountSettings /></AppLayout></RequireAuth>} />
+            <Route path="/payment-success" element={<AppLayout><PaymentSuccess /></AppLayout>} />
+            <Route path="/admin" element={<RequireAuth><AppLayout><AdminDashboard /></AppLayout></RequireAuth>} />
+            <Route path="/business/settings" element={<RequireAuth><AppLayout><BusinessSettings /></AppLayout></RequireAuth>} />
+            <Route path="/referral-reports" element={<RequireAuth><AppLayout><ReferralReports /></AppLayout></RequireAuth>} />
             <Route path="/labels" element={<RequireAuth><LabelGenerator /></RequireAuth>} />
-            <Route path="/gift-cards" element={<Layout><GiftCards /></Layout>} />
-            <Route path="/gift-card-balance" element={<Layout><GiftCardBalance /></Layout>} />
-            <Route path="/gift-card-success" element={<Layout><GiftCardSuccess /></Layout>} />
-            <Route path="/gift-card-failure" element={<Layout><GiftCardFailure /></Layout>} />
-            <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
-            <Route path="/terms" element={<Layout><Terms /></Layout>} />
-            <Route path="/contact" element={<Layout><Contact /></Layout>} />
+            <Route path="/gift-cards" element={<AppLayout><GiftCards /></AppLayout>} />
+            <Route path="/gift-card-balance" element={<AppLayout><GiftCardBalance /></AppLayout>} />
+            <Route path="/gift-card-success" element={<AppLayout><GiftCardSuccess /></AppLayout>} />
+            <Route path="/gift-card-failure" element={<AppLayout><GiftCardFailure /></AppLayout>} />
+            <Route path="/privacy" element={<AppLayout><Privacy /></AppLayout>} />
+            <Route path="/terms" element={<AppLayout><Terms /></AppLayout>} />
+            <Route path="/contact" element={<AppLayout><Contact /></AppLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,12 +1,12 @@
 import React from 'react';
-import Layout from '@/components/Layout';
+import AppLayout from '@/components/AppLayout';
 import { LabelGenerator as LabelGeneratorComponent } from '@/components/LabelGenerator';
 
 const LabelGenerator: React.FC = () => {
   return (
-    <Layout>
+    <AppLayout>
       <LabelGeneratorComponent />
-    </Layout>
+    </AppLayout>
   );
 };
 
