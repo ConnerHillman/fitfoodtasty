@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Repeat, Pause, Play, X, Settings, Eye, Calendar, User, CreditCard, RefreshCw } from "lucide-react";
 import CustomerLink from "./CustomerLink";
+import SubscriptionSettings from "./SubscriptionSettings";
 
 interface AdminSubscription {
   id: string;
@@ -179,8 +180,14 @@ const AdminSubscriptionsManager = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
+    <Tabs defaultValue="subscriptions" className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+        <TabsTrigger value="settings">Settings</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="subscriptions" className="space-y-6">
+        {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -407,7 +414,12 @@ const AdminSubscriptionsManager = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+      </TabsContent>
+
+      <TabsContent value="settings">
+        <SubscriptionSettings />
+      </TabsContent>
+    </Tabs>
   );
 };
 

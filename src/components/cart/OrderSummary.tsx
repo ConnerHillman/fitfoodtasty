@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { CartItem } from "@/types/cart";
+import { useSubscriptionSettings } from "@/hooks/useSubscriptionSettings";
 
 interface OrderSummaryProps {
   items: CartItem[];
@@ -33,9 +34,13 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   expiryWarning,
   isSubscription = false,
 }) => {
+  const { discountEnabled, discountPercentage, loading } = useSubscriptionSettings();
   if (items.length === 0) return null;
 
-  const subscriptionTotal = isSubscription ? (subtotal + fees) * 0.9 : finalTotal;
+  const subscriptionDiscount = (!loading && isSubscription && discountEnabled && discountPercentage > 0) 
+    ? (subtotal + fees) * (discountPercentage / 100) 
+    : 0;
+  const subscriptionTotal = isSubscription ? (subtotal + fees) - subscriptionDiscount : finalTotal;
 
   return (
     <Card className="bg-muted/30 border border-border/60">
@@ -83,10 +88,10 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             </div>
           )}
 
-          {isSubscription && (
+          {!loading && isSubscription && discountEnabled && discountPercentage > 0 && (
             <div className="flex justify-between text-green-600">
-              <span>Subscription Discount (10%)</span>
-              <span>-£{((subtotal + fees) * 0.1).toFixed(2)}</span>
+              <span>Subscription Discount ({discountPercentage}%)</span>
+              <span>-£{((subtotal + fees) * (discountPercentage / 100)).toFixed(2)}</span>
             </div>
           )}
           
