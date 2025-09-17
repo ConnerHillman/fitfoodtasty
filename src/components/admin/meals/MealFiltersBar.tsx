@@ -26,8 +26,8 @@ export function MealFiltersBar({
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search meals by name, description, or category..."
-            value={filters.searchTerm}
-            onChange={(e) => onFiltersChange({ searchTerm: e.target.value })}
+            value={filters.searchQuery}
+            onChange={(e) => onFiltersChange({ searchQuery: e.target.value })}
             className="pl-10"
           />
         </div>

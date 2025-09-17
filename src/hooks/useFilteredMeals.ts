@@ -3,7 +3,7 @@ import type { Meal, MealFilters } from "@/types/meal";
 
 export const useFilteredMeals = (meals: Meal[], filters: MealFilters) => {
   return useFilteredData(meals, {
-    searchTerm: filters.searchTerm,
+    searchTerm: filters.searchQuery,
     searchFields: ['name', 'description', 'category'] as (keyof Meal)[],
     statusField: 'is_active' as keyof Meal,
     statusFilter: filters.statusFilter,

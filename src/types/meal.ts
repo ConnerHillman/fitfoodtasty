@@ -31,8 +31,8 @@ export interface MealFormData {
   shelf_life_days: number;
 }
 
-export interface MealFilters extends BaseFilters {
-  searchTerm: string;
+export interface MealFilters extends Omit<BaseFilters, 'searchTerm'> {
+  searchQuery: string;
   statusFilter: EntityStatus;
   categoryFilter: string;
   viewMode: 'grid' | 'list';

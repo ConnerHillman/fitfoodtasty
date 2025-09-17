@@ -1,41 +1,19 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Package, Settings, BarChart3, Image, Edit, Trash2, Power, Search, Filter, GripVertical } from "lucide-react";
+import { Plus, Package, Settings, BarChart3, Image, ChevronUp, ChevronDown, Edit, Trash2, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
-
-// Drag and drop imports
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import {
-  CSS,
-} from '@dnd-kit/utilities';
 
 // Import new admin components
 import { 
   AdminLayout, 
+  AdminTable, 
   AdminStatsGrid, 
   AdminFormModal, 
   AdminTabsLayout 
 } from "../common";
-import type { StatCard, TabConfig } from "../common";
+import type { ColumnDef, ActionItem, StatCard, TabConfig } from "../common";
 
 // Import specific components
 import PackageAnalytics from "../PackageAnalytics";
@@ -82,11 +60,6 @@ const RefactoredPackagesManager = () => {
     }
   });
 
-  // Search and filter states
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [priceFilter, setPriceFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
-
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isMealsManagerOpen, setIsMealsManagerOpen] = useState(false);
@@ -97,56 +70,20 @@ const RefactoredPackagesManager = () => {
     fetchData();
   }, [fetchData]);
 
-  // Filtered packages based on search and filters
-  const filteredPackages = useMemo(() => {
-    let filtered = packages;
-
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(pkg => 
-        pkg.name.toLowerCase().includes(term) ||
-        pkg.description?.toLowerCase().includes(term) ||
-        pkg.meal_count.toString().includes(term) ||
-        formatCurrency(pkg.price).toLowerCase().includes(term)
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(pkg => 
-        statusFilter === 'active' ? pkg.is_active : !pkg.is_active
-      );
-    }
-
-    // Apply price filter
-    if (priceFilter !== 'all') {
-      filtered = filtered.filter(pkg => {
-        if (priceFilter === 'low') return pkg.price < 15;
-        if (priceFilter === 'medium') return pkg.price >= 15 && pkg.price < 25;
-        if (priceFilter === 'high') return pkg.price >= 25;
-        return true;
-      });
-    }
-
-    return filtered;
-  }, [packages, searchTerm, statusFilter, priceFilter]);
-
   // Stats calculation
   const stats: StatCard[] = useMemo(() => {
-    const activePackages = filteredPackages.filter(p => p.is_active);
-    const totalRevenue = filteredPackages.reduce((sum, p) => sum + p.price, 0);
-    const avgPrice = filteredPackages.length > 0 ? totalRevenue / filteredPackages.length : 0;
-    const avgMealCount = filteredPackages.length > 0 
-      ? filteredPackages.reduce((sum, p) => sum + p.meal_count, 0) / filteredPackages.length 
+    const activePackages = packages.filter(p => p.is_active);
+    const totalRevenue = packages.reduce((sum, p) => sum + p.price, 0);
+    const avgPrice = packages.length > 0 ? totalRevenue / packages.length : 0;
+    const avgMealCount = packages.length > 0 
+      ? packages.reduce((sum, p) => sum + p.meal_count, 0) / packages.length 
       : 0;
 
     return [
       {
         id: 'total',
         title: 'Total Packages',
-        value: filteredPackages.length,
-        subtitle: packages.length !== filteredPackages.length ? `${packages.length} total` : undefined,
+        value: packages.length,
         icon: Package,
         iconColor: 'text-blue-500'
       },
@@ -154,7 +91,7 @@ const RefactoredPackagesManager = () => {
         id: 'active',
         title: 'Active Packages',
         value: activePackages.length,
-        subtitle: `${filteredPackages.length - activePackages.length} inactive`,
+        subtitle: `${packages.length - activePackages.length} inactive`,
         icon: Power,
         iconColor: 'text-green-500'
       },
@@ -174,128 +111,101 @@ const RefactoredPackagesManager = () => {
         iconColor: 'text-orange-500'
       }
     ];
-  }, [filteredPackages]);
+  }, [packages]);
 
-  // Drag and drop setup
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // Sortable Package Item Component
-  const SortablePackageItem = ({ pkg }: { pkg: Package }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: pkg.id });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`group relative bg-card border rounded-lg p-4 hover:shadow-md transition-all ${
-          isDragging ? 'z-50 shadow-lg' : ''
-        }`}
-      >
-        {/* Drag Handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute left-2 top-2 cursor-grab hover:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </div>
-
-        <div className="flex items-start gap-4 ml-6">
-          {/* Package Image */}
-          <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-            {pkg.image_url ? (
-              <img
-                src={pkg.image_url}
-                alt={pkg.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Image className="h-6 w-6 text-muted-foreground" />
-            )}
+  // Table columns
+  const columns: ColumnDef<Package>[] = [
+    {
+      key: 'sort_order',
+      header: 'Order',
+      width: '80px',
+      accessor: (pkg) => {
+        const index = packages.findIndex(p => p.id === pkg.id);
+        return (
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                movePackage(pkg.id, 'up');
+              }}
+              disabled={index === 0}
+              className="h-6 w-6 p-0"
+            >
+              <ChevronUp className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                movePackage(pkg.id, 'down');
+              }}
+              disabled={index === packages.length - 1}
+              className="h-6 w-6 p-0"
+            >
+              <ChevronDown className="h-3 w-3" />
+            </Button>
           </div>
-
-          {/* Package Details */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold text-lg">{pkg.name}</h3>
-                {pkg.description && (
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                    {pkg.description}
-                  </p>
-                )}
-                <div className="flex items-center gap-4 mt-2">
-                  <Badge variant="secondary">
-                    {pkg.meal_count} meals
-                  </Badge>
-                  <span className="font-semibold text-lg">
-                    {formatCurrency(pkg.price)}
-                  </span>
-                  <Badge variant={pkg.is_active ? "default" : "secondary"}>
-                    {pkg.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleManageMeals(pkg)}
-                >
-                  <Settings className="h-4 w-4 mr-1" />
-                  Meals
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(pkg)}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toggle(pkg.id, 'is_active')}
-                >
-                  <Power className="h-4 w-4 mr-1" />
-                  Toggle
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(pkg)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
+        );
+      }
+    },
+    {
+      key: 'image_url',
+      header: 'Image',
+      width: '60px',
+      accessor: (pkg) => (
+        pkg.image_url ? (
+          <img
+            src={pkg.image_url}
+            alt={pkg.name}
+            className="w-12 h-12 object-cover rounded-md"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
+            <Image className="h-4 w-4 text-muted-foreground" />
+          </div>
+        )
+      )
+    },
+    {
+      key: 'name',
+      header: 'Package Name',
+      accessor: (pkg) => (
+        <div>
+          <div className="font-medium">{pkg.name}</div>
+          {pkg.description && (
+            <div className="text-sm text-muted-foreground line-clamp-2">
+              {pkg.description}
             </div>
-          </div>
+          )}
         </div>
-      </div>
-    );
-  };
+      )
+    },
+    {
+      key: 'meal_count',
+      header: 'Meals',
+      cell: (value: number) => (
+        <Badge variant="secondary">{value} meals</Badge>
+      )
+    },
+    {
+      key: 'price',
+      header: 'Price',
+      cell: (value: number) => formatCurrency(value),
+      className: 'text-right'
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
+      accessor: (pkg) => (
+        <Badge variant={pkg.is_active ? "default" : "secondary"}>
+          {pkg.is_active ? "Active" : "Inactive"}
+        </Badge>
+      )
+    }
+  ];
 
   // Event handlers
   const handleCreateNew = () => {
@@ -318,47 +228,57 @@ const RefactoredPackagesManager = () => {
     setIsMealsManagerOpen(true);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = filteredPackages.findIndex(pkg => pkg.id === active.id);
-      const newIndex = filteredPackages.findIndex(pkg => pkg.id === over.id);
-      
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const reorderedPackages = arrayMove(filteredPackages, oldIndex, newIndex);
-        
-        // Update sort_order values based on new positions
-        const updatePromises = reorderedPackages.map((pkg, index) => 
-          update(pkg.id, { sort_order: index })
-        );
-        
-        try {
-          await Promise.all(updatePromises);
-          toast({
-            title: "Success",
-            description: "Package order updated successfully"
-          });
-          // Refresh data to get updated sort orders
-          fetchData();
-        } catch (error) {
-          toast({
-            title: "Error",
-            description: "Failed to update package order",
-            variant: "destructive"
-          });
-        }
-      }
+  // Table actions
+  const actions: ActionItem<Package>[] = [
+    {
+      label: 'Manage Meals',
+      icon: Settings,
+      onClick: handleManageMeals,
+      variant: 'outline'
+    },
+    {
+      label: 'Edit',
+      icon: Edit,
+      onClick: handleEdit,
+      variant: 'outline'
+    },
+    {
+      label: 'Toggle Status',
+      icon: Power,
+      onClick: (pkg) => toggle(pkg.id, 'is_active'),
+      variant: 'outline'
+    },
+    {
+      label: 'Delete',
+      icon: Trash2,
+      onClick: handleDelete,
+      variant: 'destructive'
     }
+  ];
+
+
+  const movePackage = async (packageId: string, direction: 'up' | 'down') => {
+    const currentIndex = packages.findIndex(p => p.id === packageId);
+    if (currentIndex === -1) return;
+    
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= packages.length) return;
+
+    const currentPackage = packages[currentIndex];
+    const targetPackage = packages[newIndex];
+
+    // Perform bulk update for sort order swap
+    await bulkUpdate([
+      { id: currentPackage.id, data: { sort_order: targetPackage.sort_order } },
+      { id: targetPackage.id, data: { sort_order: currentPackage.sort_order } }
+    ]);
   };
 
   const handleFormSuccess = async (packageData: any) => {
     if (editingPackage) {
       await update(editingPackage.id, packageData);
     } else {
-      // Set sort_order to be the last position
-      const maxSortOrder = Math.max(...packages.map(p => p.sort_order || 0), -1);
-      await create({ ...packageData, sort_order: maxSortOrder + 1 });
+      await create(packageData);
     }
     setIsFormOpen(false);
   };
@@ -371,57 +291,6 @@ const RefactoredPackagesManager = () => {
       icon: Settings,
       content: (
         <div className="space-y-6">
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search packages by name, description, price..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={priceFilter} onValueChange={(value: 'all' | 'low' | 'medium' | 'high') => setPriceFilter(value)}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Prices</SelectItem>
-                  <SelectItem value="low">Under £15</SelectItem>
-                  <SelectItem value="medium">£15 - £25</SelectItem>
-                  <SelectItem value="high">Over £25</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter('all');
-                  setPriceFilter('all');
-                }}
-                title="Clear filters"
-              >
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
           {/* Stats Grid */}
           <AdminStatsGrid 
             stats={stats} 
@@ -429,55 +298,20 @@ const RefactoredPackagesManager = () => {
             columns={4} 
           />
 
-          {/* Packages - Drag and Drop Grid */}
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">
-                  Packages {searchTerm || statusFilter !== 'all' || priceFilter !== 'all' ? '(Filtered)' : ''}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Drag packages to reorder them
-                </p>
-              </div>
-              
-              <SortableContext items={filteredPackages.map(pkg => pkg.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-3">
-                  {filteredPackages.map((pkg) => (
-                    <SortablePackageItem key={pkg.id} pkg={pkg} />
-                  ))}
-                </div>
-              </SortableContext>
-              
-              {filteredPackages.length === 0 && (
-                <div className="text-center py-12 border-2 border-dashed border-muted rounded-lg">
-                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    {searchTerm || statusFilter !== 'all' || priceFilter !== 'all' 
-                      ? "No packages match your filters" 
-                      : "No packages found"
-                    }
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchTerm || statusFilter !== 'all' || priceFilter !== 'all' 
-                      ? "Try adjusting your search criteria" 
-                      : "Get started by creating your first package"
-                    }
-                  </p>
-                  {(!searchTerm && statusFilter === 'all' && priceFilter === 'all') && (
-                    <Button onClick={handleCreateNew}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Package
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </DndContext>
+          {/* Packages Table */}
+          <AdminTable
+            title="Packages"
+            data={packages}
+            columns={columns}
+            actions={actions}
+            loading={loading}
+            searchable={true}
+            searchPlaceholder="Search packages by name or description..."
+            onRefresh={fetchData}
+            onExport={() => toast({ title: "Export", description: "Export functionality coming soon" })}
+            emptyMessage="No packages found"
+            emptyDescription="Get started by creating your first package"
+          />
         </div>
       )
     },
