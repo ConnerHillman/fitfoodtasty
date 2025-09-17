@@ -55,6 +55,12 @@ const Header = () => {
                         <p className="text-body-sm text-gray-600">Curated meal combinations</p>
                       </Link>
                     </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link to="/subscriptions" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
+                        <div className="font-semibold text-green-700">Subscriptions</div>
+                        <p className="text-body-sm text-gray-600">Regular meal delivery plans</p>
+                      </Link>
+                    </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -112,6 +118,12 @@ const Header = () => {
                       <Link to="/orders" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         My Orders
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/my-subscription" className="flex items-center">
+                        <Star className="mr-2 h-4 w-4" />
+                        My Subscription
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>

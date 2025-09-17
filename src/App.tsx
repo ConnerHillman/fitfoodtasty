@@ -33,6 +33,8 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import EmailConfirmation from "./pages/EmailConfirmation";
+import Subscriptions from "./pages/Subscriptions";
+import MySubscription from "./pages/MySubscription";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,8 @@ const App = () => (
             <Route path="/terms" element={<Layout><Terms /></Layout>} />
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
             <Route path="/email-confirmation" element={<EmailConfirmation />} />
+            <Route path="/subscriptions" element={<Layout><Subscriptions /></Layout>} />
+            <Route path="/my-subscription" element={<RequireAuth><Layout><MySubscription /></Layout></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
