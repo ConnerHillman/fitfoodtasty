@@ -1953,6 +1953,14 @@ export type Database = {
         Args: { meal_id_param: string }
         Returns: undefined
       }
+      calculate_next_delivery_date: {
+        Args: {
+          p_current_date: string
+          p_delivery_frequency: string
+          p_delivery_zone_id?: string
+        }
+        Returns: string
+      }
       calculate_production_date: {
         Args: { delivery_date: string; zone_id?: string }
         Returns: string
@@ -1986,6 +1994,17 @@ export type Database = {
         Args: { target_day?: string; zone_id: string }
         Returns: string
       }
+      get_subscription_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_subscriptions: number
+          cancelled_subscriptions: number
+          monthly_revenue: number
+          paused_subscriptions: number
+          total_subscriptions: number
+          trial_subscriptions: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2015,6 +2034,17 @@ export type Database = {
           p_table_name: string
         }
         Returns: undefined
+      }
+      log_subscription_change: {
+        Args: {
+          p_action_type: string
+          p_metadata?: Json
+          p_new_values?: Json
+          p_old_values?: Json
+          p_reason?: string
+          p_user_subscription_id: string
+        }
+        Returns: string
       }
       recalculate_all_meal_nutrition: {
         Args: Record<PropertyKey, never>
