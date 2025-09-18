@@ -623,10 +623,10 @@ const BusinessDashboard = () => {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-3">
-              <div className="flex justify-between text-sm font-semibold text-muted-foreground border-b pb-2">
-                <span>Item</span>
-                <span>Qty</span>
-                <span>Revenue</span>
+              <div className="grid grid-cols-12 gap-4 text-sm font-semibold text-muted-foreground border-b pb-2">
+                <span className="col-span-6">Item</span>
+                <span className="col-span-3 text-center">Qty</span>
+                <span className="col-span-3 text-right">Revenue</span>
               </div>
               {topSellingItems.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">
@@ -635,10 +635,10 @@ const BusinessDashboard = () => {
                 </div>
               ) : (
                 topSellingItems.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm py-2 border-b border-muted/50 last:border-0">
-                    <span className="font-medium">{item.title}</span>
-                    <span className="text-primary font-semibold">{item.quantity}</span>
-                    <span className="font-semibold">£{item.total.toFixed(2)}</span>
+                  <div key={index} className="grid grid-cols-12 gap-4 items-center text-sm py-2 border-b border-muted/50 last:border-0">
+                    <span className="col-span-6 font-medium truncate" title={item.title}>{item.title}</span>
+                    <span className="col-span-3 text-center text-primary font-semibold">{item.quantity}</span>
+                    <span className="col-span-3 text-right font-semibold">£{item.total.toFixed(2)}</span>
                   </div>
                 ))
               )}
@@ -656,10 +656,10 @@ const BusinessDashboard = () => {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-3">
-              <div className="flex justify-between text-sm font-semibold text-muted-foreground border-b pb-2">
-                <span>Package</span>
-                <span>Qty</span>
-                <span>Revenue</span>
+              <div className="grid grid-cols-12 gap-4 text-sm font-semibold text-muted-foreground border-b pb-2">
+                <span className="col-span-6">Package</span>
+                <span className="col-span-3 text-center">Qty</span>
+                <span className="col-span-3 text-right">Revenue</span>
               </div>
               {topSellingPackages.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">
@@ -668,10 +668,10 @@ const BusinessDashboard = () => {
                 </div>
               ) : (
                 topSellingPackages.map((pkg, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm py-2 border-b border-muted/50 last:border-0">
-                    <span className="font-medium">{pkg.title}</span>
-                    <span className="text-primary font-semibold">{pkg.quantity}</span>
-                    <span className="font-semibold">£{pkg.total.toFixed(2)}</span>
+                  <div key={index} className="grid grid-cols-12 gap-4 items-center text-sm py-2 border-b border-muted/50 last:border-0">
+                    <span className="col-span-6 font-medium truncate" title={pkg.title}>{pkg.title}</span>
+                    <span className="col-span-3 text-center text-primary font-semibold">{pkg.quantity}</span>
+                    <span className="col-span-3 text-right font-semibold">£{pkg.total.toFixed(2)}</span>
                   </div>
                 ))
               )}
