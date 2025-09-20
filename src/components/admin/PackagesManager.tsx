@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Upload, Image, Settings, ChevronUp, ChevronDown, Ba
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PackageAnalytics from "./PackageAnalytics";
+import PackageMealsManager from "./packages/PackageMealsManager";
 
 interface Package {
   id: string;
@@ -516,66 +517,27 @@ const PackagesManager = () => {
 
       {/* Meal Selection Dialog */}
       <Dialog open={isMealsDialogOpen} onOpenChange={setIsMealsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>
               Manage Meals for {selectedPackageForMeals?.name}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              Select which meals customers can choose from when purchasing this package.
-              Selected: {packageMeals.length} meals
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableMeals.map((meal) => {
-                const isSelected = packageMeals.includes(meal.id);
-                return (
-                  <Card 
-                    key={meal.id} 
-                    className={`cursor-pointer transition-colors ${
-                      isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
-                    }`}
-                    onClick={() => handleMealToggle(meal.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{meal.name}</h4>
-                          <Badge variant="outline" className="mt-1">
-                            {meal.category}
-                          </Badge>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          isSelected 
-                            ? 'bg-primary border-primary' 
-                            : 'border-muted-foreground'
-                        }`}>
-                          {isSelected && (
-                            <div className="w-2 h-2 bg-white rounded-full" />
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-            
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsMealsDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={saveMealSelections}>
-                Save Meal Selection
-              </Button>
-            </div>
-          </div>
+          {selectedPackageForMeals && (
+            <PackageMealsManager
+              package={selectedPackageForMeals}
+              onSuccess={() => {
+                setIsMealsDialogOpen(false);
+                fetchPackages();
+                toast({
+                  title: "Success",
+                  description: "Package meals updated successfully",
+                });
+              }}
+              onCancel={() => setIsMealsDialogOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
         </TabsContent>
