@@ -344,6 +344,7 @@ export type Database = {
           order_cutoffs: Json | null
           postcode_prefixes: string[] | null
           postcodes: string[]
+          priority: number | null
           production_day_offset: number | null
           production_lead_days: number | null
           production_notes: string | null
@@ -364,6 +365,7 @@ export type Database = {
           order_cutoffs?: Json | null
           postcode_prefixes?: string[] | null
           postcodes: string[]
+          priority?: number | null
           production_day_offset?: number | null
           production_lead_days?: number | null
           production_notes?: string | null
@@ -384,6 +386,7 @@ export type Database = {
           order_cutoffs?: Json | null
           postcode_prefixes?: string[] | null
           postcodes?: string[]
+          priority?: number | null
           production_day_offset?: number | null
           production_lead_days?: number | null
           production_notes?: string | null
@@ -2016,6 +2019,14 @@ export type Database = {
         Args: { p_subscription_plan_id: string; p_user_id: string }
         Returns: Json
       }
+      detect_zone_conflicts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          postcode: string
+          zone_count: number
+          zones: string
+        }[]
+      }
       generate_gift_card_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2027,6 +2038,17 @@ export type Database = {
       get_delivery_zone_for_postcode: {
         Args: { customer_postcode: string }
         Returns: string
+      }
+      get_delivery_zone_for_postcode_prioritized: {
+        Args: { customer_postcode: string }
+        Returns: {
+          delivery_days: string[]
+          delivery_fee: number
+          match_type: string
+          priority: number
+          zone_id: string
+          zone_name: string
+        }[]
       }
       get_next_delivery_date: {
         Args: { target_day?: string; zone_id: string }

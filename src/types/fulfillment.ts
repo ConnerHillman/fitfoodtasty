@@ -31,6 +31,7 @@ export interface DeliveryZone extends BaseEntity {
   production_notes?: string | null;
   order_cutoffs?: Record<string, { cutoff_day: string; cutoff_time: string }> | any;
   business_hours_override?: Record<string, { is_open: boolean; override_reason?: string }> | null;
+  priority?: number;
 }
 
 export interface CollectionPoint extends BaseEntity {

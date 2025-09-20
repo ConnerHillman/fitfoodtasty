@@ -38,49 +38,39 @@ export const useDeliveryLogic = () => {
     fetchCollectionPoints();
   }, []);
 
-  // Memoized function to fetch delivery zone by postcode
+  // Memoized function to fetch delivery zone by postcode with priority-based matching
   const fetchDeliveryZoneByPostcode = useCallback(async (postcode: string) => {
     if (!postcode) return;
     
     try {
-      // Clean and format the postcode consistently
-      const cleanPostcode = postcode.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const outcodeMatch = cleanPostcode.match(/^[A-Z]{1,2}\d[A-Z\d]?/);
-      const outcode = outcodeMatch ? outcodeMatch[0] : cleanPostcode;
-      
-      // Find delivery zone for this postcode
+      // Use the new prioritized delivery zone function
       const { data: zones, error: zonesError } = await supabase
-        .from('delivery_zones')
-        .select('*')
-        .eq('is_active', true);
+        .rpc('get_delivery_zone_for_postcode_prioritized', {
+          customer_postcode: postcode
+        });
 
       if (zonesError) throw zonesError;
 
-      // Find matching zone
-      const matchingZone = zones?.find(zone => {
-        // Check exact postcode match
-        if (zone.postcodes?.some((zonePostcode: string) => 
-          zonePostcode.toUpperCase().replace(/[^A-Z0-9]/g, '') === cleanPostcode
-        )) {
-          return true;
-        }
-        
-        // Check prefix match
-        if (zone.postcode_prefixes?.some((prefix: string) => {
-          const cleanPrefix = prefix.toUpperCase().replace(/[^A-Z0-9]/g, '');
-          return cleanPostcode.startsWith(cleanPrefix) || outcode.startsWith(cleanPrefix);
-        })) {
-          return true;
-        }
-        
-        return false;
-      });
+      // Get the highest priority zone (first in the sorted results)
+      const prioritizedZone = zones?.[0];
 
-      if (matchingZone) {
-        setDeliveryZone(matchingZone);
+      if (prioritizedZone) {
+        // Fetch full zone details
+        const { data: fullZone, error: fullZoneError } = await supabase
+          .from('delivery_zones')
+          .select('*')
+          .eq('id', prioritizedZone.zone_id)
+          .single();
+
+        if (fullZoneError) throw fullZoneError;
+
+        console.log(`Postcode ${postcode} matched to zone: ${prioritizedZone.zone_name} (priority: ${prioritizedZone.priority}, match: ${prioritizedZone.match_type})`);
+        
+        setDeliveryZone({ ...fullZone, match_type: prioritizedZone.match_type, priority: prioritizedZone.priority });
         setPostcodeChecked(true);
-        if (matchingZone.delivery_fee) setDeliveryFee(matchingZone.delivery_fee);
+        if (prioritizedZone.delivery_fee) setDeliveryFee(prioritizedZone.delivery_fee);
       } else {
+        console.log(`No delivery zone found for postcode: ${postcode}`);
         setDeliveryZone(null);
         setPostcodeChecked(true);
       }

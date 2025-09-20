@@ -48,6 +48,7 @@ export function DeliveryZonesTab({ deliveryZones, globalSchedule, onZoneSubmit }
               <TableHeader>
                 <TableRow>
                   <TableHead>Zone Name</TableHead>
+                  <TableHead>Priority</TableHead>
                   <TableHead>Delivery Days</TableHead>
                   <TableHead>Fee</TableHead>
                   <TableHead>Min Order</TableHead>
@@ -65,6 +66,14 @@ export function DeliveryZonesTab({ deliveryZones, globalSchedule, onZoneSubmit }
                           <Badge variant="outline" className="text-xs">Override</Badge>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={zone.priority <= 20 ? "default" : zone.priority <= 50 ? "secondary" : "outline"}
+                        className="font-mono"
+                      >
+                        {zone.priority || 100}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
