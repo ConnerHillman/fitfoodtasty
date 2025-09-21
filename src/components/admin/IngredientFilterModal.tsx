@@ -99,11 +99,18 @@ export const IngredientFilterModal: React.FC<IngredientFilterModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md h-[600px] flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="relative">
           <DialogTitle>Filter Ingredients</DialogTitle>
           <p className="text-sm text-muted-foreground">
             Select which ingredients to include in reports
           </p>
+          <Button 
+            onClick={handleApply}
+            size="sm"
+            className="absolute top-0 right-8"
+          >
+            Apply Filter ({selectedCount})
+          </Button>
         </DialogHeader>
 
         <div className="flex-1 flex flex-col space-y-4">
