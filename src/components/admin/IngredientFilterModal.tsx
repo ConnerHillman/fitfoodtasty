@@ -107,7 +107,7 @@ export const IngredientFilterModal: React.FC<IngredientFilterModalProps> = ({
           <Button 
             onClick={handleApply}
             size="sm"
-            className="absolute top-0 right-8"
+            className="absolute top-0 right-12"
           >
             Apply Filter ({selectedCount})
           </Button>
