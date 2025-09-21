@@ -38,10 +38,30 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
  }) => {
   const [showFilterModal, setShowFilterModal] = useState(false);
 
-  // Initialize selectedIngredients with all ingredients when data first loads
+  // Initialize selectedIngredients with saved preferences or all ingredients when data first loads
   useEffect(() => {
     if (sortedIngredientLineItems.length > 0 && selectedIngredients.size === 0) {
       const allIngredientNames = new Set(sortedIngredientLineItems.map(item => item.ingredientName));
+      
+      // Try to load saved filter preferences
+      try {
+        const saved = localStorage.getItem('kitchen-ingredient-filter-preferences');
+        if (saved) {
+          const savedPreferences = new Set(JSON.parse(saved) as string[]);
+          // Only use saved preferences if they match available ingredients
+          const validSavedIngredients = new Set(
+            Array.from(savedPreferences).filter(name => allIngredientNames.has(name))
+          );
+          if (validSavedIngredients.size > 0) {
+            setSelectedIngredients(validSavedIngredients);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load ingredient filter preferences:', error);
+      }
+      
+      // Fallback to selecting all ingredients
       setSelectedIngredients(allIngredientNames);
     }
   }, [sortedIngredientLineItems.length, selectedIngredients.size, setSelectedIngredients]);

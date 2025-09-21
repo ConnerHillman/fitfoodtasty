@@ -28,10 +28,31 @@ export const IngredientFilterModal: React.FC<IngredientFilterModalProps> = ({
   // Initialize local state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setLocalSelected(new Set(selectedIngredients));
+      // Load saved preferences or use current selection
+      try {
+        const saved = localStorage.getItem('kitchen-ingredient-filter-preferences');
+        if (saved) {
+          const savedPreferences = new Set(JSON.parse(saved) as string[]);
+          // Only use saved preferences if they match available ingredients
+          const availableIngredients = new Set(ingredients.map(ing => ing.ingredientName));
+          const validSavedIngredients = new Set(
+            Array.from(savedPreferences).filter(name => availableIngredients.has(name))
+          );
+          if (validSavedIngredients.size > 0) {
+            setLocalSelected(validSavedIngredients);
+          } else {
+            setLocalSelected(new Set(selectedIngredients));
+          }
+        } else {
+          setLocalSelected(new Set(selectedIngredients));
+        }
+      } catch (error) {
+        console.warn('Failed to load ingredient filter preferences:', error);
+        setLocalSelected(new Set(selectedIngredients));
+      }
       setSearchQuery('');
     }
-  }, [isOpen, selectedIngredients]);
+  }, [isOpen, selectedIngredients, ingredients]);
 
   // Filter ingredients based on search query
   const filteredIngredients = ingredients.filter(ingredient =>
@@ -59,6 +80,12 @@ export const IngredientFilterModal: React.FC<IngredientFilterModalProps> = ({
 
   const handleApply = () => {
     onApply(localSelected);
+    // Save filter preferences to localStorage
+    try {
+      localStorage.setItem('kitchen-ingredient-filter-preferences', JSON.stringify(Array.from(localSelected)));
+    } catch (error) {
+      console.warn('Failed to save ingredient filter preferences:', error);
+    }
     onClose();
   };
 
