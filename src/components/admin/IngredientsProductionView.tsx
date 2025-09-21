@@ -198,8 +198,8 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
             <tbody>
               {ingredientsData.ingredientLineItems.length > 0 ? (
                 ingredientsData.ingredientLineItems.map((ingredient, index) => (
-                  <tr key={`${ingredient.ingredientName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid">
-                    <td className="py-3 px-3 text-center align-top">
+                   <tr key={`${ingredient.ingredientName}-${index}`} className="border-b border-border/50 hover:bg-muted/30 print:hover:bg-transparent print:break-inside-avoid kitchen-ingredient-row">
+                    <td className="py-3 px-3 text-center align-top print:py-1 kitchen-ingredient-quantity">
                       <div className="flex flex-col items-center">
                         <span className="inline-flex items-center justify-center min-w-8 h-8 rounded-full bg-secondary text-secondary-foreground text-sm font-bold print:bg-transparent print:text-black print:rounded-none">
                           {ingredient.totalQuantity}
@@ -209,10 +209,10 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-sm font-medium text-foreground align-top">
+                    <td className="py-3 px-3 text-sm font-medium text-foreground align-top print:py-1 kitchen-ingredient-name">
                       {ingredient.ingredientName}
                     </td>
-                    <td className="py-3 px-3 text-xs text-muted-foreground align-top print:hidden">
+                    <td className="py-3 px-3 text-xs text-muted-foreground align-top print:hidden print:py-1">
                       <div className="space-y-1">
                         {ingredient.mealBreakdown.map((meal, mealIndex) => (
                           <div key={mealIndex} className="flex justify-between items-center">

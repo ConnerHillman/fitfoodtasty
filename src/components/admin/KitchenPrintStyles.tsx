@@ -75,6 +75,44 @@ export const KitchenPrintStyles: React.FC = () => {
           font-weight: 500;
         }
         
+        /* Ingredient-specific print styles */
+        .kitchen-ingredient-row {
+          border-bottom: 1px solid #ddd;
+          page-break-inside: avoid;
+        }
+        
+        .kitchen-ingredient-quantity {
+          font-size: 12pt;
+          font-weight: bold;
+          padding: 1mm;
+          text-align: center;
+          border-right: 1px solid #ddd;
+          width: 15mm;
+        }
+        
+        .kitchen-ingredient-quantity div {
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 2mm !important;
+        }
+        
+        .kitchen-ingredient-quantity span:first-child {
+          font-size: 14pt !important;
+          font-weight: 800 !important;
+          margin: 0 !important;
+        }
+        
+        .kitchen-ingredient-quantity span:last-child {
+          font-size: 10pt !important;
+          margin: 0 !important;
+        }
+        
+        .kitchen-ingredient-name {
+          font-size: 11pt;
+          padding: 1mm 2mm;
+          font-weight: 500;
+        }
+        
         .kitchen-total {
           border: 3px solid #000;
           padding: 3mm;
