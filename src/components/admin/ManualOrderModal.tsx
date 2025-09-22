@@ -71,21 +71,33 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
           .rpc('search_customers', { search_term: debouncedSearchTerm });
 
         if (error) {
-          console.error('Error searching customers:', error);
+          console.error('Error searching customers:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            fullError: error
+          });
           toast({
             title: "Search Error",
-            description: "Failed to search customers",
+            description: `Failed to search customers: ${error.message || 'Unknown error'}`,
             variant: "destructive",
           });
           return;
         }
 
         setCustomers(customerData || []);
-      } catch (error) {
-        console.error('Error searching customers:', error);
+      } catch (error: any) {
+        console.error('Error searching customers (catch block):', {
+          code: error?.code,
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          fullError: error
+        });
         toast({
           title: "Search Error",
-          description: "Failed to search customers",
+          description: `Failed to search customers: ${error?.message || 'Unknown error'}`,
           variant: "destructive",
         });
       } finally {
