@@ -11,6 +11,9 @@ export interface ManualOrderData {
   order_notes: string;
   delivery_fee: number;
   discount_amount: number;
+  delivery_method: 'delivery' | 'collection';
+  collection_point_id?: string;
+  collection_point_name?: string;
   meal_selections: Array<{
     meal_id: string;
     meal_name: string;

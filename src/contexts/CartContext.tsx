@@ -25,6 +25,9 @@ interface CartState {
     orderNotes: string;
     deliveryFee: number;
     discountAmount: number;
+    deliveryMethod: 'delivery' | 'collection';
+    collectionPointId?: string;
+    collectionPointName?: string;
   };
 }
 

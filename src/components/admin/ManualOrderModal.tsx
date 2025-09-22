@@ -25,6 +25,9 @@ interface CustomerData {
   order_notes: string;
   delivery_fee: number;
   discount_amount: number;
+  delivery_method: 'delivery' | 'collection';
+  collection_point_id?: string;
+  collection_point_name?: string;
 }
 
 interface ManualOrderModalProps {
@@ -60,6 +63,9 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
     order_notes: '',
     delivery_fee: 0,
     discount_amount: 0,
+    delivery_method: 'delivery',
+    collection_point_id: '',
+    collection_point_name: '',
   });
 
   useEffect(() => {
@@ -171,6 +177,9 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
       order_notes: '',
       delivery_fee: 0,
       discount_amount: 0,
+      delivery_method: 'delivery',
+      collection_point_id: '',
+      collection_point_name: '',
     });
   };
 
