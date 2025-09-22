@@ -63,6 +63,17 @@ export const TemplateEditDialog = ({ template, isOpen, onClose, templateType }: 
 
   const saveTemplateMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      // If setting this template as active, first deactivate all other templates of the same type
+      if (data.is_active) {
+        const { error: deactivateError } = await supabase
+          .from('order_email_templates')
+          .update({ is_active: false })
+          .eq('template_type', templateType)
+          .neq('id', template?.id || '00000000-0000-0000-0000-000000000000');
+        
+        if (deactivateError) throw deactivateError;
+      }
+
       if (template) {
         // Update existing template
         const { error } = await supabase

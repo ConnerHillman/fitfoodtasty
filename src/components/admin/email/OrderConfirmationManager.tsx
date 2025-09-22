@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminTable } from "@/components/admin/common/AdminTable";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Eye, TestTube } from "lucide-react";
+import { Plus, Edit, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { TemplateEditDialog } from "./TemplateEditDialog";
@@ -104,34 +104,6 @@ export const OrderConfirmationManager = () => {
     }
   });
 
-  const sendTestEmailMutation = useMutation({
-    mutationFn: async (template: OrderEmailTemplate) => {
-      const { data, error } = await supabase.functions.invoke('send-test-email', {
-        body: {
-          template_id: template.id,
-          template_type: 'order_confirmation',
-          recipient_email: 'test@example.com'
-        }
-      });
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Test email sent",
-        description: "Test email sent successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to send test email.",
-        variant: "destructive",
-      });
-      console.error('Error sending test email:', error);
-    }
-  });
 
   const columns = [
     {
@@ -188,13 +160,6 @@ export const OrderConfirmationManager = () => {
             onClick={() => setEditingTemplate(item)}
           >
             <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => sendTestEmailMutation.mutate(item)}
-          >
-            <TestTube className="h-4 w-4" />
           </Button>
         </div>
       ),
