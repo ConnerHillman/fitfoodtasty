@@ -8,7 +8,7 @@ import { LogIn, UserPlus, Shield, User, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import PaymentForm from "@/components/PaymentForm";
-import { HybridAdminPaymentForm } from "@/components/cart/HybridAdminPaymentForm";
+import { AdminPaymentForm } from "@/components/cart/AdminPaymentForm";
 
 interface PaymentSectionProps {
   user: any;
@@ -47,7 +47,7 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <HybridAdminPaymentForm
+          <AdminPaymentForm
             adminOrderData={adminOrderData}
             totalAmount={finalTotal}
             deliveryMethod={deliveryMethod}

@@ -127,14 +127,13 @@ serve(async (req) => {
         customer_email: orderData.customer_email,
         delivery_address: orderData.delivery_address || '',
         total_amount: totalAmount,
-        status: (orderData.payment_method === 'complimentary' || orderData.payment_status === 'paid') ? 'confirmed' : 'pending',
+        status: orderData.payment_method === 'complimentary' ? 'confirmed' : 'pending',
         currency: 'gbp',
         order_notes: `Manual Order (${orderData.order_type}) - Payment: ${orderData.payment_method}${orderData.order_notes ? '\n' + orderData.order_notes : ''}`,
         requested_delivery_date: deliveryDate.toISOString().split('T')[0],
         production_date: productionDate.toISOString().split('T')[0],
         discount_amount: orderData.discount_amount || 0,
-        last_modified_by: userData.user.id,
-        payment_intent_id: orderData.payment_intent_id || null
+        last_modified_by: userData.user.id
       })
       .select()
       .single();

@@ -38,8 +38,6 @@ serve(async (req) => {
       coupon_data,
       discount_percentage,
       order_notes,
-      is_admin_order,
-      admin_order_data,
     } = await req.json().catch(() => ({ items: [] }));
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -110,15 +108,6 @@ serve(async (req) => {
         coupon_free_delivery: coupon_data?.free_delivery?.toString() || 'false',
         coupon_free_item_id: coupon_data?.free_item_id || '',
         expires_at: coupon_data?.expires_at || '',
-        is_admin_order: is_admin_order?.toString() || 'false',
-        admin_customer_name: admin_order_data?.customerName || '',
-        admin_customer_phone: admin_order_data?.customerPhone || '',
-        admin_delivery_address: admin_order_data?.deliveryAddress || '',
-        admin_postcode: admin_order_data?.postcode || '',
-        admin_order_type: admin_order_data?.orderType || '',
-        admin_order_notes: admin_order_data?.orderNotes || '',
-        admin_collection_point_id: admin_order_data?.collectionPointId || '',
-        admin_collection_point_name: admin_order_data?.collectionPointName || '',
         items: JSON.stringify(items.map(item => ({
           meal_id: item.meal_id,
           name: item.name,

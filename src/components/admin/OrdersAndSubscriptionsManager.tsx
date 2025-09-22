@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Package, Repeat, Plus } from "lucide-react";
 import AllOrders from "@/pages/AllOrders";
 import AdminSubscriptionsManager from "./AdminSubscriptionsManager";
-import ManualOrderModal from "./ManualOrderModal";
+import { ManualOrderModal } from "./ManualOrderModal";
 
 const OrdersAndSubscriptionsManager = () => {
   const [showManualOrderModal, setShowManualOrderModal] = useState(false);
