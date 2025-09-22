@@ -42,14 +42,16 @@ export interface CartContextType {
   adminOrderData?: {
     customerName: string;
     customerEmail: string;
-    customerPhone: string;
+    customerPhone?: string;
     deliveryAddress: string;
     postcode: string;
     orderType: 'phone' | 'complimentary' | 'special' | 'adjustment';
     paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
     orderNotes: string;
-    deliveryFee: number;
-    discountAmount: number;
+    deliveryFee: number; // Auto-calculated
+    deliveryMethod: 'delivery' | 'collection';
+    collectionPointId?: string;
+    collectionPointName?: string;
   };
   setAdminOrderData?: (data: CartContextType['adminOrderData']) => void;
   clearAdminOrderData?: () => void;

@@ -57,7 +57,9 @@ export const AdminPaymentForm: React.FC<AdminPaymentFormProps> = ({
           payment_method: adminOrderData.paymentMethod,
           order_notes: `${adminOrderData.orderNotes}\n\nAdmin Notes: ${adminNotes}`.trim(),
           delivery_fee: adminOrderData.deliveryFee,
-          discount_amount: adminOrderData.discountAmount,
+          delivery_method: adminOrderData.deliveryMethod,
+          collection_point_id: adminOrderData.collectionPointId,
+          collection_point_name: adminOrderData.collectionPointName,
           requested_delivery_date: requestedDeliveryDate?.toISOString().split('T')[0],
           meal_selections: items.map(item => ({
             meal_id: item.id,
@@ -136,16 +138,18 @@ export const AdminPaymentForm: React.FC<AdminPaymentFormProps> = ({
               <span className="text-sm font-medium">Delivery Fee:</span>
               <span>£{adminOrderData.deliveryFee.toFixed(2)}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Discount:</span>
-              <span>£{adminOrderData.discountAmount.toFixed(2)}</span>
-            </div>
+            {adminOrderData.deliveryMethod === 'collection' && adminOrderData.collectionPointName && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Collection Point:</span>
+                <span className="text-sm">{adminOrderData.collectionPointName}</span>
+              </div>
+            )}
           </div>
 
           <div className="pt-2 border-t">
             <div className="flex items-center justify-between text-lg font-semibold">
               <span>Total Amount:</span>
-              <span>£{(totalAmount + adminOrderData.deliveryFee - adminOrderData.discountAmount).toFixed(2)}</span>
+              <span>£{(totalAmount + adminOrderData.deliveryFee).toFixed(2)}</span>
             </div>
           </div>
         </CardContent>

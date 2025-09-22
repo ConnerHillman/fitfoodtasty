@@ -17,14 +17,13 @@ interface CartState {
   adminOrderData?: {
     customerName: string;
     customerEmail: string;
-    customerPhone: string;
+    customerPhone?: string;
     deliveryAddress: string;
     postcode: string;
     orderType: 'phone' | 'complimentary' | 'special' | 'adjustment';
     paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
     orderNotes: string;
-    deliveryFee: number;
-    discountAmount: number;
+    deliveryFee: number; // Auto-calculated
     deliveryMethod: 'delivery' | 'collection';
     collectionPointId?: string;
     collectionPointName?: string;
@@ -474,7 +473,9 @@ export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
     startReorder,
     reorderData: state.reorderData,
     adminOrderData: state.adminOrderData,
-    setAdminOrderData,
+    setAdminOrderData: (data: CartState['adminOrderData']) => {
+      dispatch({ type: 'SET_ADMIN_ORDER_DATA', payload: data });
+    },
     clearAdminOrderData,
   };
 

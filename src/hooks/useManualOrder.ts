@@ -5,15 +5,15 @@ import { supabase } from '@/integrations/supabase/client';
 export interface ManualOrderData {
   customer_email: string;
   customer_name: string;
+  customer_phone?: string;
   delivery_address: string;
   order_type: 'phone' | 'complimentary' | 'special' | 'adjustment';
   payment_method: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
   order_notes: string;
-  delivery_fee: number;
-  discount_amount: number;
   delivery_method: 'delivery' | 'collection';
   collection_point_id?: string;
   collection_point_name?: string;
+  delivery_fee: number; // Auto-calculated, not user input
   meal_selections: Array<{
     meal_id: string;
     meal_name: string;
