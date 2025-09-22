@@ -12,8 +12,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, CreditCard, Banknote, Building, Gift, CheckCircle, AlertTriangle } from 'lucide-react';
-import PaymentForm from '@/components/PaymentForm';
+import { User, CreditCard, Banknote, Building, Gift, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { AdminPaymentElement } from './AdminPaymentElement';
 
 interface HybridAdminPaymentFormProps {
   adminOrderData: NonNullable<ReturnType<typeof useCart>['adminOrderData']>;
@@ -111,58 +111,48 @@ export const HybridAdminPaymentForm: React.FC<HybridAdminPaymentFormProps> = ({
     }
   };
 
-  const handleCreateStripeCheckout = async () => {
+  const handleCreatePaymentIntent = async () => {
     setLoadingPayment(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
+      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: {
           items: items.map(item => ({
             name: item.name,
             amount: Math.round(item.price * 100), // Convert to pence
             quantity: item.quantity,
             description: item.description || '',
+            meal_id: item.id,
           })),
           currency: 'gbp',
           delivery_fee: adminOrderData.deliveryFee > 0 ? Math.round(adminOrderData.deliveryFee * 100) : null,
           delivery_method: adminOrderData.deliveryMethod,
-          email: adminOrderData.customerEmail,
+          customer_email: adminOrderData.customerEmail,
+          customer_name: adminOrderData.customerName,
           requested_delivery_date: requestedDeliveryDate?.toISOString().split('T')[0],
-          metadata: {
-            is_admin_order: 'true',
-            admin_order_type: adminOrderData.orderType,
-            customer_name: adminOrderData.customerName,
-            customer_phone: adminOrderData.customerPhone || '',
-            delivery_address: adminOrderData.deliveryAddress,
+          is_admin_order: true,
+          admin_order_data: {
+            customerName: adminOrderData.customerName,
+            customerPhone: adminOrderData.customerPhone || '',
+            deliveryAddress: adminOrderData.deliveryAddress,
             postcode: adminOrderData.postcode,
-            collection_point_id: adminOrderData.collectionPointId || '',
-            collection_point_name: adminOrderData.collectionPointName || '',
-            order_notes: `${adminOrderData.orderNotes}\n\nAdmin Notes: ${adminNotes}`.trim(),
+            orderType: adminOrderData.orderType,
+            orderNotes: `${adminOrderData.orderNotes}\n\nAdmin Notes: ${adminNotes}`.trim(),
+            collectionPointId: adminOrderData.collectionPointId || '',
+            collectionPointName: adminOrderData.collectionPointName || '',
           }
         }
       });
 
       if (error) throw error;
 
-      if (data?.url) {
-        // Open Stripe checkout in new tab
-        window.open(data.url, '_blank');
-        
-        // Clear cart and admin data after opening checkout
-        clearCart();
-        clearAdminOrderData?.();
-        
-        toast({
-          title: "Checkout Opened",
-          description: "Stripe checkout opened in new tab. Order will be processed after payment.",
-        });
-        
-        navigate('/admin?tab=orders');
+      if (data?.clientSecret) {
+        setClientSecret(data.clientSecret);
       }
     } catch (error: any) {
-      console.error('Error creating checkout:', error);
+      console.error('Error creating payment intent:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create checkout session",
+        description: error.message || "Failed to create payment intent",
         variant: "destructive",
       });
     } finally {
@@ -275,21 +265,56 @@ export const HybridAdminPaymentForm: React.FC<HybridAdminPaymentFormProps> = ({
 
       {/* Action Buttons */}
       {isCardAtCheckout ? (
-        <Button 
-          onClick={handleCreateStripeCheckout} 
-          disabled={loadingPayment}
-          size="lg"
-          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-        >
-          {loadingPayment ? (
-            "Opening Checkout..."
+        <>
+          {!clientSecret ? (
+            <Button 
+              onClick={handleCreatePaymentIntent} 
+              disabled={loadingPayment}
+              size="lg"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            >
+              {loadingPayment ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Preparing Payment...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5 mr-2" />
+                  Proceed to Payment
+                </>
+              )}
+            </Button>
           ) : (
-            <>
-              <CreditCard className="h-5 w-5 mr-2" />
-              Open Stripe Checkout
-            </>
+            <Elements 
+              stripe={stripePromise} 
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: 'stripe',
+                  variables: {
+                    colorPrimary: '#0570de',
+                    colorBackground: '#ffffff',
+                    colorText: '#30313d',
+                    colorDanger: '#df1b41',
+                    fontFamily: 'system-ui, sans-serif',
+                    spacingUnit: '2px',
+                    borderRadius: '4px',
+                  }
+                }
+              }}
+            >
+              <AdminPaymentElement
+                clientSecret={clientSecret}
+                totalAmount={Math.round((totalAmount + adminOrderData.deliveryFee) * 100)}
+                deliveryMethod={deliveryMethod}
+                requestedDeliveryDate={requestedDeliveryDate?.toISOString().split('T')[0] || ''}
+                adminOrderData={adminOrderData}
+                adminNotes={adminNotes}
+              />
+            </Elements>
           )}
-        </Button>
+        </>
       ) : (
         <Button 
           onClick={handleCreateManualOrder} 

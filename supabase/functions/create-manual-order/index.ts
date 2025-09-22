@@ -133,7 +133,8 @@ serve(async (req) => {
         requested_delivery_date: deliveryDate.toISOString().split('T')[0],
         production_date: productionDate.toISOString().split('T')[0],
         discount_amount: orderData.discount_amount || 0,
-        last_modified_by: userData.user.id
+        last_modified_by: userData.user.id,
+        payment_intent_id: orderData.payment_intent_id || null
       })
       .select()
       .single();
