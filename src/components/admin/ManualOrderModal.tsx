@@ -8,11 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Loader2, Users, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Users, AlertCircle, Truck, MapPin, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useDeliveryLogic } from '@/hooks/useDeliveryLogic';
 
 interface CustomerData {
   customer_email: string;
@@ -25,7 +27,7 @@ interface CustomerData {
   order_notes: string;
   delivery_fee: number;
   discount_amount: number;
-  delivery_method: 'delivery' | 'collection';
+  delivery_method: 'delivery' | 'pickup';
   collection_point_id?: string;
   collection_point_name?: string;
 }
@@ -67,6 +69,21 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
     collection_point_id: '',
     collection_point_name: '',
   });
+
+  // Initialize delivery logic
+  const {
+    deliveryMethod,
+    setDeliveryMethod,
+    selectedCollectionPoint,
+    setSelectedCollectionPoint,
+    collectionPoints,
+    deliveryFee: calculatedDeliveryFee,
+    deliveryZone,
+    manualPostcode,
+    postcodeChecked,
+    handlePostcodeChange,
+    getCollectionFee,
+  } = useDeliveryLogic();
 
   useEffect(() => {
     if (open) {
@@ -124,7 +141,7 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    // Validation
+    // Basic validation
     if (!formData.customer_name || !formData.customer_email) {
       toast({
         title: "Validation Error",
@@ -134,28 +151,67 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
       return;
     }
 
-    if (!formData.postcode) {
-      toast({
-        title: "Validation Error", 
-        description: "Please enter a postcode for delivery validation",
-        variant: "destructive",
-      });
-      return;
+    // Delivery method specific validation
+    if (deliveryMethod === 'delivery') {
+      if (!formData.delivery_address) {
+        toast({
+          title: "Validation Error",
+          description: "Delivery address is required for delivery orders",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!manualPostcode) {
+        toast({
+          title: "Validation Error", 
+          description: "Postcode is required for delivery orders",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (postcodeChecked && !deliveryZone) {
+        toast({
+          title: "Validation Error",
+          description: "Delivery is not available for this postcode",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else if (deliveryMethod === 'pickup') {
+      if (!selectedCollectionPoint) {
+        toast({
+          title: "Validation Error",
+          description: "Collection point is required for collection orders",
+          variant: "destructive",
+        });
+        return;
+      }
     }
+
+    // Get collection point details if selected
+    const collectionPoint = collectionPoints.find(cp => cp.id === selectedCollectionPoint);
+    
+    // Calculate final delivery fee
+    const finalDeliveryFee = deliveryMethod === 'delivery' 
+      ? (deliveryZone?.delivery_fee || calculatedDeliveryFee)
+      : getCollectionFee();
 
     // Set admin order data and navigate to menu
     setAdminOrderData?.({
       customerName: formData.customer_name,
       customerEmail: formData.customer_email,
       customerPhone: formData.customer_phone,
-      deliveryAddress: formData.delivery_address,
-      postcode: formData.postcode,
+      deliveryAddress: deliveryMethod === 'delivery' ? formData.delivery_address : (collectionPoint?.address || ''),
+      postcode: deliveryMethod === 'delivery' ? manualPostcode : (collectionPoint?.postcode || ''),
       orderType: formData.order_type,
       paymentMethod: formData.payment_method,
       orderNotes: formData.order_notes,
-      deliveryFee: formData.delivery_fee,
+      deliveryFee: finalDeliveryFee,
       discountAmount: formData.discount_amount,
-    });
+      deliveryMethod: deliveryMethod === 'pickup' ? 'collection' : 'delivery' as 'delivery' | 'collection', // Map pickup back to collection for consistency
+      collectionPointId: deliveryMethod === 'pickup' ? selectedCollectionPoint : undefined,
+      collectionPointName: deliveryMethod === 'pickup' ? collectionPoint?.point_name : undefined,
+    } as any); // Temporary fix for TypeScript
     onOpenChange(false);
     navigate('/menu?admin_order=true');
     
@@ -331,6 +387,110 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
             </CardContent>
           </Card>
 
+          {/* Delivery Method Selection */}
+          <Card className="bg-background border border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5" />
+                Delivery Method
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Delivery Method Selection */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod("delivery")}
+                  className={`p-3 border-2 rounded-lg text-left transition-colors ${
+                    deliveryMethod === "delivery"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="font-medium">Delivery</div>
+                  <div className="text-sm text-muted-foreground">
+                    {calculatedDeliveryFee > 0 ? `£${calculatedDeliveryFee.toFixed(2)}` : "Free"}
+                  </div>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod("pickup")}
+                  className={`p-3 border-2 rounded-lg text-left transition-colors ${
+                    deliveryMethod === "pickup"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="font-medium">Collection</div>
+                  <div className="text-sm text-muted-foreground">
+                    {getCollectionFee() > 0 ? `£${getCollectionFee().toFixed(2)}` : "Free"}
+                  </div>
+                </button>
+              </div>
+
+              {/* Delivery-specific options */}
+              {deliveryMethod === "delivery" && (
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="postcode">Postcode</Label>
+                    <Input
+                      id="postcode"
+                      value={manualPostcode}
+                      onChange={(e) => handlePostcodeChange(e.target.value)}
+                      placeholder="Enter postcode"
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  {postcodeChecked && !deliveryZone && (
+                    <div className="mt-2">
+                      <Badge variant="destructive">
+                        Delivery not available for this postcode
+                      </Badge>
+                    </div>
+                  )}
+
+                  {deliveryZone && (
+                    <div className="mt-2">
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {deliveryZone.zone_name} - £{deliveryZone.delivery_fee?.toFixed(2)}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Collection-specific options */}
+              {deliveryMethod === "pickup" && (
+                <div>
+                  <Label htmlFor="collection-point">Collection Point</Label>
+                  <Select value={selectedCollectionPoint} onValueChange={setSelectedCollectionPoint}>
+                    <SelectTrigger id="collection-point" className="mt-1">
+                      <SelectValue placeholder="Select a collection point" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {collectionPoints.map((point) => (
+                        <SelectItem key={point.id} value={point.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{point.point_name}</span>
+                            <span className="text-sm text-muted-foreground">{point.address}</span>
+                            {point.collection_fee > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                Fee: £{point.collection_fee.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Customer Information */}
           <Card>
             <CardHeader>
@@ -380,16 +540,20 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="delivery_address">Delivery Address</Label>
-                <Textarea
-                  id="delivery_address"
-                  value={formData.delivery_address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, delivery_address: e.target.value }))}
-                  placeholder="Enter full delivery address"
-                  rows={3}
-                />
-              </div>
+              {/* Only show delivery address for delivery orders */}
+              {deliveryMethod === "delivery" && (
+                <div>
+                  <Label htmlFor="delivery_address">Delivery Address *</Label>
+                  <Textarea
+                    id="delivery_address"
+                    value={formData.delivery_address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, delivery_address: e.target.value }))}
+                    placeholder="Enter full delivery address"
+                    rows={3}
+                    required
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
