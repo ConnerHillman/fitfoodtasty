@@ -127,7 +127,7 @@ serve(async (req) => {
         customer_email: orderData.customer_email,
         delivery_address: orderData.delivery_address || '',
         total_amount: totalAmount,
-        status: orderData.payment_method === 'complimentary' ? 'confirmed' : 'pending',
+        status: (orderData.payment_method === 'complimentary' || orderData.payment_status === 'paid') ? 'confirmed' : 'pending',
         currency: 'gbp',
         order_notes: `Manual Order (${orderData.order_type}) - Payment: ${orderData.payment_method}${orderData.order_notes ? '\n' + orderData.order_notes : ''}`,
         requested_delivery_date: deliveryDate.toISOString().split('T')[0],

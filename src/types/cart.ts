@@ -46,7 +46,7 @@ export interface CartContextType {
     deliveryAddress: string;
     postcode: string;
     orderType: 'phone' | 'complimentary' | 'special' | 'adjustment';
-    paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
+    paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'card_at_checkout';
     orderNotes: string;
     deliveryFee: number; // Auto-calculated
     deliveryMethod: 'delivery' | 'collection';

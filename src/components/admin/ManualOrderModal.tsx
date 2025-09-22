@@ -22,7 +22,7 @@ interface CustomerData {
   customer_phone: string;
   delivery_address: string;
   order_type: 'phone' | 'complimentary' | 'special' | 'adjustment';
-  payment_method: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
+  payment_method: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'card_at_checkout';
   order_notes: string;
 }
 
@@ -51,7 +51,7 @@ const ManualOrderModal: React.FC<ManualOrderModalProps> = ({ open, onOpenChange 
     customer_phone: '',
     delivery_address: '',
     order_type: 'phone',
-    payment_method: 'stripe',
+    payment_method: 'card_at_checkout',
     order_notes: '',
   });
 
@@ -212,7 +212,7 @@ const ManualOrderModal: React.FC<ManualOrderModalProps> = ({ open, onOpenChange 
       customer_phone: '',
       delivery_address: '',
       order_type: 'phone',
-      payment_method: 'stripe',
+      payment_method: 'card_at_checkout',
       order_notes: '',
     });
     setSearchInput('');
@@ -536,7 +536,7 @@ const ManualOrderModal: React.FC<ManualOrderModalProps> = ({ open, onOpenChange 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="stripe">Stripe</SelectItem>
+                        <SelectItem value="card_at_checkout">Card at Checkout</SelectItem>
                         <SelectItem value="cash">Cash</SelectItem>
                         <SelectItem value="card">Card</SelectItem>
                         <SelectItem value="bank_transfer">Bank Transfer</SelectItem>

@@ -8,7 +8,7 @@ export interface ManualOrderData {
   customer_phone?: string;
   delivery_address: string;
   order_type: 'phone' | 'complimentary' | 'special' | 'adjustment';
-  payment_method: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
+  payment_method: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'card_at_checkout';
   order_notes: string;
   delivery_method: 'delivery' | 'collection';
   collection_point_id?: string;
