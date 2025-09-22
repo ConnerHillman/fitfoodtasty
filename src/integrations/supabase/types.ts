@@ -961,6 +961,99 @@ export type Database = {
         }
         Relationships: []
       }
+      order_email_templates: {
+        Row: {
+          created_at: string
+          html_content: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          subject_template: string
+          template_name: string
+          template_type: string
+          text_content: string | null
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string
+          html_content: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          subject_template: string
+          template_name: string
+          template_type?: string
+          text_content?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string
+          html_content?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          subject_template?: string
+          template_name?: string
+          template_type?: string
+          text_content?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      order_emails: {
+        Row: {
+          clicked_at: string | null
+          created_at: string
+          email_type: string
+          html_content: string
+          id: string
+          metadata: Json | null
+          opened_at: string | null
+          order_id: string
+          order_type: string
+          recipient_email: string
+          sent_at: string
+          subject: string
+          template_id: string | null
+          text_content: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          created_at?: string
+          email_type?: string
+          html_content: string
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          order_id: string
+          order_type?: string
+          recipient_email: string
+          sent_at?: string
+          subject: string
+          template_id?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          created_at?: string
+          email_type?: string
+          html_content?: string
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          order_id?: string
+          order_type?: string
+          recipient_email?: string
+          sent_at?: string
+          subject?: string
+          template_id?: string | null
+          text_content?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -1024,6 +1117,7 @@ export type Database = {
           customer_name: string | null
           delivery_address: string | null
           discount_amount: number | null
+          email_notifications_enabled: boolean
           id: string
           last_modified_by: string | null
           order_notes: string | null
@@ -1054,6 +1148,7 @@ export type Database = {
           customer_name?: string | null
           delivery_address?: string | null
           discount_amount?: number | null
+          email_notifications_enabled?: boolean
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null
@@ -1084,6 +1179,7 @@ export type Database = {
           customer_name?: string | null
           delivery_address?: string | null
           discount_amount?: number | null
+          email_notifications_enabled?: boolean
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null
@@ -1171,6 +1267,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           delivery_address: string | null
+          email_notifications_enabled: boolean
           id: string
           last_modified_by: string | null
           order_notes: string | null
@@ -1195,6 +1292,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          email_notifications_enabled?: boolean
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null
@@ -1219,6 +1317,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          email_notifications_enabled?: boolean
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null

@@ -46,6 +46,8 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
   const { setAdminOrderData } = useCart();
   const navigate = useNavigate();
 
+  const [sendEmail, setSendEmail] = useState(true);
+  
   const [formData, setFormData] = useState<CustomerData>({
     customerEmail: '',
     customerName: '',
@@ -199,6 +201,7 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
         postcode: formData.postcode,
         deliveryZoneId: deliveryZoneId,
         isNewAccount: formData.createAccount,
+        sendEmail: sendEmail,
       });
 
       onOpenChange(false);
@@ -336,17 +339,30 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
               />
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="createAccount"
-                checked={formData.createAccount}
-                onCheckedChange={(checked) => 
-                  setFormData(prev => ({ ...prev, createAccount: checked as boolean }))
-                }
-              />
-              <Label htmlFor="createAccount" className="text-sm">
-                Create customer account (they can log in later)
-              </Label>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="createAccount"
+                  checked={formData.createAccount}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, createAccount: checked as boolean }))
+                  }
+                />
+                <Label htmlFor="createAccount" className="text-sm">
+                  Create customer account (they can log in later)
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="sendEmail"
+                  checked={sendEmail}
+                  onCheckedChange={(checked) => setSendEmail(checked as boolean)}
+                />
+                <Label htmlFor="sendEmail" className="text-sm">
+                  Send order confirmation email to customer
+                </Label>
+              </div>
             </div>
           </div>
         </div>

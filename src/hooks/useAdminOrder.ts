@@ -46,7 +46,7 @@ export const useAdminOrder = () => {
     setTotalOverride(null);
   };
 
-  const createManualOrder = async (orderNotes: string, deliveryMethod: string, requestedDeliveryDate?: Date) => {
+  const createManualOrder = async (orderNotes: string, deliveryMethod: string, requestedDeliveryDate?: Date, sendEmail: boolean = true) => {
     if (!adminOrderData) {
       throw new Error('No admin order data available');
     }
@@ -89,6 +89,7 @@ export const useAdminOrder = () => {
         admin_notes: orderNotes,
         delivery_zone_id: adminOrderData.deliveryZoneId,
         is_new_customer: adminOrderData.isNewAccount,
+        email_notifications_enabled: sendEmail,
       };
 
       // Call the create order function (we'll create this as an edge function)

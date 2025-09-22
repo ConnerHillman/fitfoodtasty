@@ -22,6 +22,7 @@ interface CartState {
     postcode: string;
     deliveryZoneId?: string;
     isNewAccount?: boolean;
+    sendEmail?: boolean;
   };
 }
 
