@@ -143,9 +143,9 @@ export const OrderConfirmationManager = () => {
       key: "subject_template", 
       header: "Subject",
       accessorKey: "subject_template",
-      cell: ({ row }: any) => (
+      cell: (value: string, item: OrderEmailTemplate) => (
         <div className="max-w-[200px] truncate">
-          {row.original.subject_template}
+          {item.subject_template}
         </div>
       ),
     },
@@ -153,19 +153,19 @@ export const OrderConfirmationManager = () => {
       key: "is_active",
       header: "Status", 
       accessorKey: "is_active",
-      cell: ({ row }: any) => (
+      cell: (value: boolean, item: OrderEmailTemplate) => (
         <div className="flex items-center space-x-2">
           <Switch
-            checked={row.original.is_active}
+            checked={item.is_active}
             onCheckedChange={(checked) => 
               toggleActiveMutation.mutate({ 
-                id: row.original.id, 
+                id: item.id, 
                 isActive: checked 
               })
             }
           />
-          <Badge variant={row.original.is_active ? "default" : "secondary"}>
-            {row.original.is_active ? "Active" : "Inactive"}
+          <Badge variant={item.is_active ? "default" : "secondary"}>
+            {item.is_active ? "Active" : "Inactive"}
           </Badge>
         </div>
       ),
@@ -173,27 +173,26 @@ export const OrderConfirmationManager = () => {
     {
       key: "actions",
       header: "Actions",
-      id: "actions",
-      cell: ({ row }: any) => (
+      cell: (value: any, item: OrderEmailTemplate) => (
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPreviewTemplate(row.original)}
+            onClick={() => setPreviewTemplate(item)}
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setEditingTemplate(row.original)}
+            onClick={() => setEditingTemplate(item)}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => sendTestEmailMutation.mutate(row.original)}
+            onClick={() => sendTestEmailMutation.mutate(item)}
           >
             <TestTube className="h-4 w-4" />
           </Button>
