@@ -1,5 +1,5 @@
 import { AdminTabsLayout, TabConfig } from "@/components/admin/common/AdminTabsLayout";
-import { EmailTemplatesManager } from "@/components/admin/EmailTemplatesManager";
+import { OrderConfirmationManager } from "./OrderConfirmationManager";
 import { WelcomeEmailsManager } from "./WelcomeEmailsManager";
 import { AuthEmailsManager } from "./AuthEmailsManager";
 import { AbandonedCartsManager } from "./AbandonedCartsManager";
@@ -12,7 +12,7 @@ export const EmailsSection = () => {
       value: "order-confirmation",
       label: "Order Confirmation",
       icon: Mail,
-      content: <EmailTemplatesManager />
+      content: <OrderConfirmationManager />
     },
     {
       value: "abandoned-cart", 
