@@ -25,6 +25,10 @@ export const useAdminOrder = () => {
     }, 0);
   };
 
+  const resetAllPrices = () => {
+    setPriceOverrides({});
+  };
+
   const createManualOrder = async (orderNotes: string, deliveryMethod: string, requestedDeliveryDate?: Date) => {
     if (!adminOrderData) {
       throw new Error('No admin order data available');
@@ -120,5 +124,6 @@ export const useAdminOrder = () => {
     createManualOrder,
     exitAdminMode,
     adminOrderData,
+    resetAllPrices,
   };
 };

@@ -408,6 +408,8 @@ const Cart = () => {
               totalAmount={adminOrder.calculateTotalWithOverrides()}
               finalTotal={adminOrder.calculateTotalWithOverrides()}
               loading={adminOrder.loading}
+              priceOverrides={adminOrder.priceOverrides}
+              onResetAllPrices={adminOrder.resetAllPrices}
             />
           )}
 
@@ -491,6 +493,8 @@ const Cart = () => {
             isMobile={false}
             expiryWarning={discounts.getExpiryWarning}
             isSubscription={isSubscription}
+            isAdminMode={!!isAdminMode}
+            adminPriceOverrides={adminOrder.priceOverrides}
           />
 
           {/* Payment Section */}

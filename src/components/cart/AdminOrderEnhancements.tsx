@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCart } from '@/contexts/CartContext';
-import { Shield, User, Edit3, DollarSign, Calendar, MapPin } from 'lucide-react';
+import { calculateAdminTotals } from '@/lib/adminPriceCalculations';
+import { Shield, User, Edit3, DollarSign, Calendar, MapPin, RotateCcw } from 'lucide-react';
 
 interface AdminOrderEnhancementsProps {
   onPriceOverride: (itemId: string, newPrice: number) => void;
@@ -17,6 +18,8 @@ interface AdminOrderEnhancementsProps {
   totalAmount: number;
   finalTotal: number;
   loading?: boolean;
+  priceOverrides?: Record<string, number>;
+  onResetAllPrices?: () => void;
 }
 
 export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
@@ -27,9 +30,14 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   totalAmount,
   finalTotal,
   loading = false,
+  priceOverrides = {},
+  onResetAllPrices,
 }) => {
   const { adminOrderData, items } = useCart();
   const [priceEdits, setPriceEdits] = useState<Record<string, number>>({});
+  
+  // Calculate totals using the unified system
+  const adminCalculation = calculateAdminTotals(items, priceOverrides);
 
   if (!adminOrderData) return null;
 
@@ -65,59 +73,87 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
       {/* Price Override Section */}
       <Card className="border-orange-200">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-orange-600" />
-            Admin Price Adjustments
+          <CardTitle className="text-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-orange-600" />
+              Admin Price Adjustments
+            </div>
+            {adminCalculation.hasOverrides && onResetAllPrices && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onResetAllPrices}
+                className="text-xs"
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset All Prices
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex-1">
-                <div className="font-medium">{item.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  Qty: {item.quantity} • Original: £{item.price.toFixed(2)}
+          {items.map((item) => {
+            const calculation = adminCalculation.itemCalculations.find(calc => calc.id === item.id);
+            const isOverridden = calculation?.isOverridden ?? false;
+            const currentPrice = calculation?.currentPrice ?? item.price;
+            
+            return (
+              <div key={item.id} className={`flex items-center justify-between p-3 border rounded-lg ${isOverridden ? 'border-orange-300 bg-orange-50' : ''}`}>
+                <div className="flex-1">
+                  <div className="font-medium flex items-center gap-2">
+                    {item.name}
+                    {isOverridden && <Edit3 className="h-3 w-3 text-orange-500" />}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Qty: {item.quantity} • Original: £{item.price.toFixed(2)}
+                    {isOverridden && (
+                      <span className="text-orange-600 font-medium ml-2">
+                        → Current: £{currentPrice.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={`price-${item.id}`} className="sr-only">
+                    Override price for {item.name}
+                  </Label>
+                  <Input
+                    id={`price-${item.id}`}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="w-24"
+                    placeholder={item.price.toFixed(2)}
+                    value={priceEdits[item.id] || (isOverridden ? currentPrice.toFixed(2) : '')}
+                    onChange={(e) => {
+                      const newPrice = parseFloat(e.target.value) || item.price;
+                      handlePriceEdit(item.id, newPrice);
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setPriceEdits(prev => {
+                        const newEdits = { ...prev };
+                        delete newEdits[item.id];
+                        return newEdits;
+                      });
+                      onPriceOverride(item.id, item.price);
+                    }}
+                    title="Reset to original price"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor={`price-${item.id}`} className="sr-only">
-                  Override price for {item.name}
-                </Label>
-                <Input
-                  id={`price-${item.id}`}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="w-24"
-                  placeholder={item.price.toFixed(2)}
-                  value={priceEdits[item.id] || ''}
-                  onChange={(e) => {
-                    const newPrice = parseFloat(e.target.value) || item.price;
-                    handlePriceEdit(item.id, newPrice);
-                  }}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setPriceEdits(prev => {
-                      const newEdits = { ...prev };
-                      delete newEdits[item.id];
-                      return newEdits;
-                    });
-                    onPriceOverride(item.id, item.price);
-                  }}
-                >
-                  <Edit3 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           
-          {Object.keys(priceEdits).length > 0 && (
+          {adminCalculation.hasOverrides && (
             <div className="pt-3 border-t">
               <div className="text-sm text-orange-600 font-medium">
-                Price adjustments applied to {Object.keys(priceEdits).length} item(s)
+                Price adjustments applied to {adminCalculation.totalOverrides} item(s)
               </div>
             </div>
           )}
@@ -156,12 +192,12 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="space-y-1">
-              <div className="font-medium">Subtotal:</div>
-              <div>£{totalAmount.toFixed(2)}</div>
+              <div className="font-medium">Subtotal{adminCalculation.hasOverrides ? ' (with adjustments)' : ''}:</div>
+              <div>£{adminCalculation.subtotal.toFixed(2)}</div>
             </div>
             <div className="space-y-1">
               <div className="font-medium">Final Total:</div>
-              <div className="text-lg font-semibold">£{finalTotal.toFixed(2)}</div>
+              <div className="text-lg font-semibold">£{adminCalculation.subtotal.toFixed(2)}</div>
             </div>
           </div>
 
