@@ -46,10 +46,13 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   const adminCalculation = isAdminMode ? calculateAdminTotals(items, adminPriceOverrides) : null;
   const effectiveSubtotal = adminCalculation ? adminCalculation.subtotal : subtotal;
   
+  // Calculate final total including fees
+  const effectiveFinalTotal = isAdminMode ? effectiveSubtotal + fees : finalTotal;
+  
   const subscriptionDiscount = (!loading && isSubscription && discountEnabled && discountPercentage > 0) 
     ? (effectiveSubtotal + fees) * (discountPercentage / 100) 
     : 0;
-  const subscriptionTotal = isSubscription ? (effectiveSubtotal + fees) - subscriptionDiscount : finalTotal;
+  const subscriptionTotal = isSubscription ? (effectiveSubtotal + fees) - subscriptionDiscount : effectiveFinalTotal;
 
   return (
     <Card className="bg-muted/30 border border-border/60">

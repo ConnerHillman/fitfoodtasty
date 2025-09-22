@@ -406,10 +406,11 @@ const Cart = () => {
                 await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined);
               }}
               totalAmount={adminOrder.calculateTotalWithOverrides()}
-              finalTotal={adminOrder.calculateTotalWithOverrides()}
+              finalTotal={adminOrder.calculateTotalWithOverrides() + fees}
               loading={adminOrder.loading}
               priceOverrides={adminOrder.priceOverrides}
               onResetAllPrices={adminOrder.resetAllPrices}
+              deliveryFees={fees}
             />
           )}
 

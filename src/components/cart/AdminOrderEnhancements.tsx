@@ -20,6 +20,7 @@ interface AdminOrderEnhancementsProps {
   loading?: boolean;
   priceOverrides?: Record<string, number>;
   onResetAllPrices?: () => void;
+  deliveryFees?: number;
 }
 
 export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
@@ -32,12 +33,16 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   loading = false,
   priceOverrides = {},
   onResetAllPrices,
+  deliveryFees = 0,
 }) => {
   const { adminOrderData, items } = useCart();
   const [priceEdits, setPriceEdits] = useState<Record<string, number>>({});
   
   // Calculate totals using the unified system
   const adminCalculation = calculateAdminTotals(items, priceOverrides);
+  
+  // Calculate the true final total including delivery fees
+  const trueFinalTotal = adminCalculation.subtotal + deliveryFees;
 
   if (!adminOrderData) return null;
 
@@ -196,8 +201,15 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
               <div>£{adminCalculation.subtotal.toFixed(2)}</div>
             </div>
             <div className="space-y-1">
-              <div className="font-medium">Final Total:</div>
-              <div className="text-lg font-semibold">£{adminCalculation.subtotal.toFixed(2)}</div>
+              <div className="font-medium">Delivery Fee:</div>
+              <div>£{deliveryFees.toFixed(2)}</div>
+            </div>
+          </div>
+          
+          <div className="pt-2 border-t">
+            <div className="flex justify-between items-center">
+              <div className="font-bold text-lg">Final Total:</div>
+              <div className="text-xl font-bold text-green-600">£{trueFinalTotal.toFixed(2)}</div>
             </div>
           </div>
 
