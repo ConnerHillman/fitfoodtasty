@@ -27,15 +27,9 @@ export const EmailsSection = () => {
       content: <WelcomeEmailsManager />
     },
     {
-      value: "password-reset",
-      label: "Password Reset",
+      value: "authentication",
+      label: "Authentication",
       icon: Shield,
-      content: <AuthEmailsManager />
-    },
-    {
-      value: "verification",
-      label: "Account Verification", 
-      icon: CheckCircle,
       content: <AuthEmailsManager />
     }
   ];
