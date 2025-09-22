@@ -23,6 +23,8 @@ interface AdminOrderEnhancementsProps {
   deliveryFees?: number;
   totalOverride?: number | null;
   onTotalOverride?: (total: number | null) => void;
+  sendEmail?: boolean;
+  onSendEmailChange?: (sendEmail: boolean) => void;
 }
 
 export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
@@ -38,6 +40,8 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   deliveryFees = 0,
   totalOverride,
   onTotalOverride,
+  sendEmail = true,
+  onSendEmailChange,
 }) => {
   const { adminOrderData, items } = useCart();
   const [priceEdits, setPriceEdits] = useState<Record<string, number>>({});
@@ -210,8 +214,23 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
             <div className="space-y-1">
               <div className="font-medium">Delivery Fee:</div>
               <div>£{deliveryFees.toFixed(2)}</div>
-            </div>
           </div>
+          
+          {/* Email Notification Preference */}
+          {onSendEmailChange && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={sendEmail}
+                  onChange={(e) => onSendEmailChange(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm">Send order confirmation email to customer</span>
+              </Label>
+            </div>
+          )}
+        </div>
           
 
           <Button 

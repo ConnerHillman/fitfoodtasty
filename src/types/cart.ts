@@ -47,6 +47,7 @@ export interface CartContextType {
     postcode: string;
     deliveryZoneId?: string;
     isNewAccount?: boolean;
+    sendEmail?: boolean;
   };
   setAdminOrderData?: (data: CartContextType['adminOrderData']) => void;
   clearAdminOrderData?: () => void;

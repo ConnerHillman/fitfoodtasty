@@ -39,6 +39,7 @@ const Cart = () => {
   const [orderSummaryExpanded, setOrderSummaryExpanded] = useState<boolean>(false);
   const [orderNotes, setOrderNotes] = useState("");
   const [isSubscription, setIsSubscription] = useState(false);
+  const [sendEmail, setSendEmail] = useState(adminOrderData?.sendEmail ?? true);
 
   // Memoized calculations
   const subtotal = useMemo(() => getTotalPrice(), [getTotalPrice]);
@@ -411,6 +412,8 @@ const Cart = () => {
               priceOverrides={adminOrder.priceOverrides}
               onResetAllPrices={adminOrder.resetAllPrices}
               deliveryFees={fees}
+              sendEmail={sendEmail}
+              onSendEmailChange={setSendEmail}
             />
           )}
 
