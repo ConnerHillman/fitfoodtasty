@@ -57,6 +57,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       
       if (existingItem) {
         return {
+          ...state,
           items: state.items.map(item =>
             item.id === action.payload.id && item.type !== 'package'
               ? { ...item, quantity: item.quantity + 1 }
@@ -65,6 +66,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         };
       } else {
         return {
+          ...state,
           items: [...state.items, { ...action.payload, quantity: 1, type: 'meal' }]
         };
       }
@@ -72,16 +74,19 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     
     case 'ADD_PACKAGE':
       return {
+        ...state,
         items: [...state.items, { ...action.payload, quantity: 1, type: 'package' }]
       };
     
     case 'UPDATE_QUANTITY': {
       if (action.payload.quantity <= 0) {
         return {
+          ...state,
           items: state.items.filter(item => item.id !== action.payload.id)
         };
       }
       return {
+        ...state,
         items: state.items.map(item =>
           item.id === action.payload.id
             ? { ...item, quantity: action.payload.quantity }
@@ -92,6 +97,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     
     case 'REMOVE_ITEM':
       return {
+        ...state,
         items: state.items.filter(item => item.id !== action.payload)
       };
     
