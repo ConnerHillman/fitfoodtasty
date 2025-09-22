@@ -62,18 +62,27 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
 
   const loadCustomers = async () => {
     try {
-      const { data, error } = await supabase
+      // Get all user data from auth.users (admin access required)
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) throw authError;
+
+      // Get profiles data
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, phone, delivery_address, city, postal_code')
         .order('full_name');
 
-      if (error) throw error;
-      
-      // Create customer list with email placeholders
-      const customerList = (data || []).map(profile => ({
-        ...profile,
-        email: `user_${profile.user_id.slice(0, 8)}@customer.local` // Placeholder email
-      }));
+      if (profilesError) throw profilesError;
+
+      // Combine auth users with profiles data
+      const customerList = (profiles || []).map(profile => {
+        const authUser = authUsers?.users?.find((user: any) => user.id === profile.user_id);
+        return {
+          ...profile,
+          email: authUser?.email || `user_${profile.user_id.slice(0, 8)}@customer.local`
+        };
+      }).filter(customer => customer.email); // Only include customers with emails
       
       setCustomers(customerList);
     } catch (error) {
