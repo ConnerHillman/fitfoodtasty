@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Search, Loader2, Users, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 interface CustomerData {
   customer_email: string;
@@ -35,11 +37,17 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
   onOpenChange,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [customersLoading, setCustomersLoading] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const { toast } = useToast();
   const { setAdminOrderData } = useCart();
   const navigate = useNavigate();
+  
+  // Debounce search to improve performance
+  const debouncedSearch = useDebouncedValue(customerSearch, 300);
 
   const [formData, setFormData] = useState<CustomerData>({
     customer_email: '',
@@ -57,41 +65,44 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
   useEffect(() => {
     if (open) {
       loadCustomers();
+      resetForm(); // Reset form when modal opens
     }
   }, [open]);
 
   const loadCustomers = async () => {
+    setCustomersLoading(true);
+    setError(null);
+    setWarning(null);
+    
     try {
-      // Get all user data from auth.users (admin access required)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      console.log('Loading customers via edge function...');
+      const { data, error } = await supabase.functions.invoke('get-customers-for-admin');
       
-      if (authError) throw authError;
-
-      // Get profiles data
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, phone, delivery_address, city, postal_code')
-        .order('full_name');
-
-      if (profilesError) throw profilesError;
-
-      // Combine auth users with profiles data
-      const customerList = (profiles || []).map(profile => {
-        const authUser = authUsers?.users?.find((user: any) => user.id === profile.user_id);
-        return {
-          ...profile,
-          email: authUser?.email || `user_${profile.user_id.slice(0, 8)}@customer.local`
-        };
-      }).filter(customer => customer.email); // Only include customers with emails
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to fetch customers');
+      }
       
+      if (data?.warning) {
+        setWarning(data.warning);
+      }
+      
+      const customerList = data?.customers || [];
+      console.log(`Loaded ${customerList.length} customers`);
       setCustomers(customerList);
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error loading customers:', error);
+      setError(error.message || 'Failed to load customers');
+      
+      // Show toast for user feedback
       toast({
-        title: "Error",
-        description: "Failed to load customers",
+        title: "Error Loading Customers",
+        description: error.message || "Failed to load customer data",
         variant: "destructive",
       });
+    } finally {
+      setCustomersLoading(false);
     }
   };
 
@@ -163,10 +174,26 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
     });
   };
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.full_name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    customer.email.toLowerCase().includes(customerSearch.toLowerCase())
-  );
+  // Filter customers based on debounced search
+  const filteredCustomers = customers.filter(customer => {
+    const searchLower = debouncedSearch.toLowerCase();
+    return (
+      customer.full_name?.toLowerCase().includes(searchLower) ||
+      customer.email?.toLowerCase().includes(searchLower) ||
+      customer.phone?.toLowerCase().includes(searchLower) ||
+      customer.postal_code?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Show recent customers when no search term
+  const displayCustomers = debouncedSearch 
+    ? filteredCustomers.slice(0, 8)  // Show up to 8 search results
+    : customers.slice(0, 10);        // Show 10 most recent customers
+
+  const clearForm = () => {
+    resetForm();
+    setCustomerSearch('');
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,35 +207,116 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="h-5 w-5" />
+                <Users className="h-5 w-5" />
                 Select Existing Customer
+                {customers.length > 0 && (
+                  <Badge variant="secondary" className="ml-auto">
+                    {customers.length} customers
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
+              {/* Search Input */}
+              <div className="relative">
                 <Label>Search Customers</Label>
-                <Input
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  placeholder="Type to search by name or email..."
-                />
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    placeholder="Search by name, email, phone, or postcode..."
+                    className="pl-10"
+                    disabled={customersLoading}
+                  />
+                  {customersLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
+                  )}
+                </div>
               </div>
-              
-              {customerSearch && filteredCustomers.length > 0 && (
-                <div className="max-h-32 overflow-y-auto border rounded-md">
-                  {filteredCustomers.slice(0, 5).map((customer) => (
-                    <div
-                      key={customer.user_id}
-                      className="p-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
-                      onClick={() => {
-                        selectCustomer(customer);
-                        setCustomerSearch('');
-                      }}
-                    >
-                      <div className="font-medium">{customer.full_name}</div>
-                      <div className="text-sm text-muted-foreground">{customer.email}</div>
+
+              {/* Warning/Error Messages */}
+              {warning && (
+                <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm">{warning}</span>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-800">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm">{error}</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto"
+                    onClick={loadCustomers}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              )}
+
+              {/* Customer List */}
+              {!customersLoading && !error && (
+                <>
+                  {!debouncedSearch && customers.length > 0 && (
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Recent customers (showing {Math.min(customers.length, 10)})
                     </div>
-                  ))}
+                  )}
+                  
+                  {debouncedSearch && (
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Found {filteredCustomers.length} customer(s) matching "{debouncedSearch}"
+                    </div>
+                  )}
+
+                  {displayCustomers.length > 0 ? (
+                    <div className="max-h-64 overflow-y-auto border rounded-md divide-y">
+                      {displayCustomers.map((customer) => (
+                        <div
+                          key={customer.user_id}
+                          className="p-3 hover:bg-accent cursor-pointer transition-colors"
+                          onClick={() => {
+                            selectCustomer(customer);
+                            setCustomerSearch('');
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium">{customer.full_name}</div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                <span>{customer.email}</span>
+                                {!customer.email_verified && (
+                                  <Badge variant="outline" className="text-xs">placeholder</Badge>
+                                )}
+                              </div>
+                              {customer.phone && (
+                                <div className="text-xs text-muted-foreground">{customer.phone}</div>
+                              )}
+                              {customer.postal_code && (
+                                <div className="text-xs text-muted-foreground">{customer.postal_code}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {debouncedSearch ? 'No customers found matching your search' : 'No customers available'}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Loading State */}
+              {customersLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span className="text-muted-foreground">Loading customers...</span>
                 </div>
               )}
             </CardContent>
@@ -359,13 +467,20 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
           </Card>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Setting up...' : 'Continue to Menu'}
-          </Button>
+        <DialogFooter className="flex justify-between">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={clearForm} size="sm">
+              Clear Form
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading}>
+              {loading ? 'Setting up...' : 'Continue to Menu'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
