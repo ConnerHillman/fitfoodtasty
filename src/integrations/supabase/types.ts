@@ -2115,6 +2115,17 @@ export type Database = {
           old_calories: number
         }[]
       }
+      search_customers: {
+        Args: { search_term: string }
+        Returns: {
+          delivery_address: string
+          email: string
+          full_name: string
+          phone: string
+          postal_code: string
+          user_id: string
+        }[]
+      }
       validate_gift_card: {
         Args: { amount_to_use?: number; gift_card_code: string }
         Returns: Json
