@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCart } from '@/contexts/CartContext';
 import { calculateAdminTotals } from '@/lib/adminPriceCalculations';
-import { Shield, User, Edit3, DollarSign, Calendar, MapPin, RotateCcw } from 'lucide-react';
+import { Shield, User, Edit3, DollarSign, Calendar, MapPin, RotateCcw, Pencil, Check, X } from 'lucide-react';
 
 interface AdminOrderEnhancementsProps {
   onPriceOverride: (itemId: string, newPrice: number) => void;
@@ -21,6 +21,8 @@ interface AdminOrderEnhancementsProps {
   priceOverrides?: Record<string, number>;
   onResetAllPrices?: () => void;
   deliveryFees?: number;
+  totalOverride?: number | null;
+  onTotalOverride?: (total: number | null) => void;
 }
 
 export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
@@ -34,15 +36,20 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   priceOverrides = {},
   onResetAllPrices,
   deliveryFees = 0,
+  totalOverride,
+  onTotalOverride,
 }) => {
   const { adminOrderData, items } = useCart();
   const [priceEdits, setPriceEdits] = useState<Record<string, number>>({});
+  const [isEditingTotal, setIsEditingTotal] = useState(false);
+  const [tempTotalValue, setTempTotalValue] = useState('');
   
   // Calculate totals using the unified system
   const adminCalculation = calculateAdminTotals(items, priceOverrides);
   
   // Calculate the true final total including delivery fees
-  const trueFinalTotal = adminCalculation.subtotal + deliveryFees;
+  const calculatedTotal = adminCalculation.subtotal + deliveryFees;
+  const displayTotal = totalOverride !== null ? totalOverride : calculatedTotal;
 
   if (!adminOrderData) return null;
 
@@ -209,7 +216,89 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
           <div className="pt-2 border-t">
             <div className="flex justify-between items-center">
               <div className="font-bold text-lg">Final Total:</div>
-              <div className="text-xl font-bold text-green-600">£{trueFinalTotal.toFixed(2)}</div>
+              <div className="flex items-center gap-2">
+                {isEditingTotal ? (
+                  <>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="w-24 text-right font-bold"
+                      value={tempTotalValue}
+                      onChange={(e) => setTempTotalValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newTotal = parseFloat(tempTotalValue);
+                          if (!isNaN(newTotal) && newTotal >= 0) {
+                            onTotalOverride?.(newTotal);
+                          }
+                          setIsEditingTotal(false);
+                        }
+                        if (e.key === 'Escape') {
+                          setIsEditingTotal(false);
+                          setTempTotalValue('');
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const newTotal = parseFloat(tempTotalValue);
+                        if (!isNaN(newTotal) && newTotal >= 0) {
+                          onTotalOverride?.(newTotal);
+                        }
+                        setIsEditingTotal(false);
+                      }}
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsEditingTotal(false);
+                        setTempTotalValue('');
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xl font-bold text-green-600">
+                      £{displayTotal.toFixed(2)}
+                      {totalOverride !== null && (
+                        <span className="text-sm text-orange-600 ml-2">(overridden)</span>
+                      )}
+                    </div>
+                    {onTotalOverride && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setTempTotalValue(displayTotal.toFixed(2));
+                          setIsEditingTotal(true);
+                        }}
+                        title="Edit total"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {totalOverride !== null && onTotalOverride && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onTotalOverride(null)}
+                        title="Reset to calculated total"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
 

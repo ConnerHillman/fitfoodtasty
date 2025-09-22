@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useAdminOrder = () => {
   const [loading, setLoading] = useState(false);
   const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>({});
+  const [totalOverride, setTotalOverride] = useState<number | null>(null);
   const { items, adminOrderData, clearCart, clearAdminOrderData } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,8 +26,18 @@ export const useAdminOrder = () => {
     }, 0);
   };
 
+  const handleTotalOverride = (newTotal: number | null) => {
+    setTotalOverride(newTotal);
+  };
+
+  const getFinalTotal = (deliveryFees: number = 0) => {
+    const calculatedTotal = calculateTotalWithOverrides() + deliveryFees;
+    return totalOverride !== null ? totalOverride : calculatedTotal;
+  };
+
   const resetAllPrices = () => {
     setPriceOverrides({});
+    setTotalOverride(null);
   };
 
   const createManualOrder = async (orderNotes: string, deliveryMethod: string, requestedDeliveryDate?: Date) => {
@@ -65,7 +76,7 @@ export const useAdminOrder = () => {
         
         // Totals
         subtotal: calculateTotalWithOverrides(),
-        total_amount: calculateTotalWithOverrides(),
+        total_amount: totalOverride !== null ? totalOverride : calculateTotalWithOverrides(),
         
         // Admin specific
         created_by_admin: true,
@@ -119,8 +130,11 @@ export const useAdminOrder = () => {
   return {
     loading,
     priceOverrides,
+    totalOverride,
     handlePriceOverride,
+    handleTotalOverride,
     calculateTotalWithOverrides,
+    getFinalTotal,
     createManualOrder,
     exitAdminMode,
     adminOrderData,
