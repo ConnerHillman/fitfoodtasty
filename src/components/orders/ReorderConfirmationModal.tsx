@@ -140,7 +140,7 @@ const ReorderConfirmationModal = ({
           {/* Action Buttons - Top */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
-              onClick={onReorderAsIs}
+              onClick={onEditInCart}
               className="flex-1 flex items-center gap-2 h-12"
               size="lg"
             >
@@ -148,7 +148,7 @@ const ReorderConfirmationModal = ({
               Reorder & Checkout
             </Button>
             <Button
-              onClick={onEditInCart}
+              onClick={onReorderAsIs}
               variant="outline"
               className="flex-1 flex items-center gap-2 h-12"
               size="lg"
@@ -306,7 +306,7 @@ const ReorderConfirmationModal = ({
           {/* Action Buttons - Bottom */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
-              onClick={onReorderAsIs}
+              onClick={onEditInCart}
               className="flex-1 flex items-center gap-2 h-12"
               size="lg"
             >
@@ -314,7 +314,7 @@ const ReorderConfirmationModal = ({
               Reorder & Checkout
             </Button>
             <Button
-              onClick={onEditInCart}
+              onClick={onReorderAsIs}
               variant="outline"
               className="flex-1 flex items-center gap-2 h-12"
               size="lg"

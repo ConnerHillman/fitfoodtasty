@@ -81,8 +81,8 @@ export const useAdminReorder = () => {
       orderId: selectedOrder.id,
       orderType: selectedOrderType,
       onSuccess: () => {
-        // Admin might want to navigate to cart or create order directly
-        // For now, we'll just show the success message
+        // Navigate to menu for continued shopping
+        window.location.href = '/menu';
       }
     });
   };
@@ -95,7 +95,7 @@ export const useAdminReorder = () => {
       orderType: selectedOrderType,
       onSuccess: (result) => {
         if (!result.needsReplacements) {
-          // Navigate to cart for review
+          // Navigate to cart for checkout
           window.location.href = '/cart';
         }
       }
