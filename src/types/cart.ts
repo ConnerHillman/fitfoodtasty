@@ -39,6 +39,20 @@ export interface CartContextType {
     unavailableMeals: any[];
     replacements: Record<string, string>;
   };
+  adminOrderData?: {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    deliveryAddress: string;
+    postcode: string;
+    orderType: 'phone' | 'complimentary' | 'special' | 'adjustment';
+    paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
+    orderNotes: string;
+    deliveryFee: number;
+    discountAmount: number;
+  };
+  setAdminOrderData?: (data: CartContextType['adminOrderData']) => void;
+  clearAdminOrderData?: () => void;
 }
 
 // Simplified cart item for abandoned cart tracking

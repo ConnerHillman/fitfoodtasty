@@ -1,25 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Package, Repeat, Plus } from "lucide-react";
 import AllOrders from "@/pages/AllOrders";
 import AdminSubscriptionsManager from "./AdminSubscriptionsManager";
 import { ManualOrderModal } from "./ManualOrderModal";
-import { useManualOrder } from "@/hooks/useManualOrder";
 
 const OrdersAndSubscriptionsManager = () => {
-  const manualOrder = useManualOrder();
-
-  const handleOrderCreated = () => {
-    // Trigger refresh in AllOrders component
-    window.location.reload();
-  };
+  const [showManualOrderModal, setShowManualOrderModal] = useState(false);
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Orders & Subscriptions</h2>
-        <Button onClick={manualOrder.openModal} className="flex items-center gap-2">
+        <Button onClick={() => setShowManualOrderModal(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Create Manual Order
         </Button>
@@ -47,9 +41,8 @@ const OrdersAndSubscriptionsManager = () => {
       </Tabs>
 
       <ManualOrderModal
-        open={manualOrder.showModal}
-        onOpenChange={manualOrder.closeModal}
-        onOrderCreated={handleOrderCreated}
+        open={showManualOrderModal}
+        onOpenChange={setShowManualOrderModal}
       />
     </div>
   );

@@ -477,7 +477,7 @@ const Cart = () => {
             clientSecret={clientSecret}
             finalTotal={finalTotal}
             deliveryMethod={deliveryLogic.deliveryMethod}
-            requestedDeliveryDate={dateValidation.requestedDeliveryDate}
+            requestedDeliveryDate={dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : null}
             isCoupon100PercentOff={isCoupon100Off}
             onCreateFreeOrder={createFreeOrder}
             orderNotes={orderNotes}

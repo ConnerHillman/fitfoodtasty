@@ -1,5 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { ShieldCheck, User } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 import Header from './Header';
 
 interface AppLayoutProps {
@@ -7,9 +10,30 @@ interface AppLayoutProps {
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
+  const [searchParams] = useSearchParams();
+  const { adminOrderData } = useCart();
+  const isAdminMode = searchParams.get('admin_order') === 'true' || adminOrderData;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      {/* Admin Mode Banner */}
+      {isAdminMode && adminOrderData && (
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4">
+          <div className="container mx-auto flex items-center justify-center gap-3">
+            <ShieldCheck className="h-5 w-5" />
+            <span className="font-medium">Admin Mode Active</span>
+            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              <User className="h-3 w-3 mr-1" />
+              {adminOrderData.customerName}
+            </Badge>
+            <span className="text-sm opacity-90">
+              Creating order • {adminOrderData.orderType} • {adminOrderData.paymentMethod}
+            </span>
+          </div>
+        </div>
+      )}
       
       <main>{children}</main>
       

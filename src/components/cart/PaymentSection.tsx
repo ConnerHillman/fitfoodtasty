@@ -1,19 +1,21 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Elements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
-import { Link } from "react-router-dom";
-import { ShoppingBag, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LogIn, UserPlus, Shield, User, ShoppingBag } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 import PaymentForm from "@/components/PaymentForm";
+import { AdminPaymentForm } from "@/components/cart/AdminPaymentForm";
 
 interface PaymentSectionProps {
   user: any;
   clientSecret: string;
   finalTotal: number;
   deliveryMethod: "delivery" | "pickup";
-  requestedDeliveryDate: string;
+  requestedDeliveryDate: Date | null;
   isCoupon100PercentOff: boolean;
   onCreateFreeOrder: () => Promise<void>;
   orderNotes: string;
@@ -31,7 +33,31 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   orderNotes,
   onOrderNotesChange,
 }) => {
+  const { adminOrderData } = useCart();
   const totalAmountInPence = Math.round(finalTotal * 100);
+
+  // Handle admin orders
+  if (adminOrderData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-blue-600" />
+            Admin Order Payment
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminPaymentForm
+            adminOrderData={adminOrderData}
+            totalAmount={finalTotal}
+            deliveryMethod={deliveryMethod}
+            requestedDeliveryDate={requestedDeliveryDate}
+            orderNotes={orderNotes}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!user) {
     return (
@@ -123,7 +149,7 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
         clientSecret={clientSecret}
         totalAmount={totalAmountInPence}
         deliveryMethod={deliveryMethod}
-        requestedDeliveryDate={requestedDeliveryDate}
+        requestedDeliveryDate={requestedDeliveryDate?.toISOString().split('T')[0] || ''}
         orderNotes={orderNotes}
         onOrderNotesChange={onOrderNotesChange}
       />

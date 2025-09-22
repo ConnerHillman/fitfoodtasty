@@ -14,6 +14,18 @@ interface CartState {
     unavailableMeals: any[];
     replacements: Record<string, string>;
   };
+  adminOrderData?: {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    deliveryAddress: string;
+    postcode: string;
+    orderType: 'phone' | 'complimentary' | 'special' | 'adjustment';
+    paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
+    orderNotes: string;
+    deliveryFee: number;
+    discountAmount: number;
+  };
 }
 
 type CartAction = 
@@ -23,7 +35,9 @@ type CartAction =
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'CLEAR_CART' }
-  | { type: 'SET_REORDER_DATA'; payload: { originalOrderId: string; packageData: any; unavailableMeals: any[] } };
+  | { type: 'SET_REORDER_DATA'; payload: { originalOrderId: string; packageData: any; unavailableMeals: any[] } }
+  | { type: 'SET_ADMIN_ORDER_DATA'; payload: CartState['adminOrderData'] }
+  | { type: 'CLEAR_ADMIN_ORDER_DATA' };
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
@@ -85,7 +99,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       };
     
     case 'CLEAR_CART':
-      return { items: [], reorderData: undefined };
+      return { items: [], reorderData: undefined, adminOrderData: undefined };
+    
+    case 'SET_ADMIN_ORDER_DATA':
+      return { ...state, adminOrderData: action.payload };
+    
+    case 'CLEAR_ADMIN_ORDER_DATA':
+      return { ...state, adminOrderData: undefined };
     
     default:
       return state;
@@ -97,7 +117,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const useCart = createContextHook(CartContext, 'Cart');
 
 export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(cartReducer, { items: [], reorderData: undefined });
+  const [state, dispatch] = useReducer(cartReducer, { items: [], reorderData: undefined, adminOrderData: undefined });
   const { user } = useAuth();
 
   // Memoized calculations for better performance
@@ -165,6 +185,14 @@ export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
       trackCartRecovery();
     }
     dispatch({ type: 'CLEAR_CART' });
+  };
+
+  const setAdminOrderData = (data: CartState['adminOrderData']) => {
+    dispatch({ type: 'SET_ADMIN_ORDER_DATA', payload: data });
+  };
+
+  const clearAdminOrderData = () => {
+    dispatch({ type: 'CLEAR_ADMIN_ORDER_DATA' });
   };
 
   const startReorder = async (orderId: string, orderType: 'package' | 'regular' = 'package') => {
@@ -442,6 +470,9 @@ export const CartProvider: React.FC<ContextProviderProps> = ({ children }) => {
     getTotalPrice: calculations.getTotalPrice,
     startReorder,
     reorderData: state.reorderData,
+    adminOrderData: state.adminOrderData,
+    setAdminOrderData,
+    clearAdminOrderData,
   };
 
   return (
