@@ -4,10 +4,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, User, UserPlus, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
@@ -18,11 +18,7 @@ interface CustomerData {
   customer_phone: string;
   delivery_address: string;
   postcode: string;
-  order_type: 'phone' | 'complimentary' | 'special' | 'adjustment';
-  payment_method: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
-  order_notes: string;
-  delivery_fee: number;
-  discount_amount: number;
+  create_account: boolean;
 }
 
 interface ManualOrderModalProps {
@@ -30,13 +26,23 @@ interface ManualOrderModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface Customer {
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  delivery_address?: string;
+  postal_code?: string;
+}
+
 export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
   open,
   onOpenChange,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
+  const [showResults, setShowResults] = useState(false);
   const { toast } = useToast();
   const { setAdminOrderData } = useCart();
   const navigate = useNavigate();
@@ -47,55 +53,74 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
     customer_phone: '',
     delivery_address: '',
     postcode: '',
-    order_type: 'phone',
-    payment_method: 'cash',
-    order_notes: '',
-    delivery_fee: 0,
-    discount_amount: 0,
+    create_account: false,
   });
 
+  // Load customers when search changes
   useEffect(() => {
-    if (open) {
-      loadCustomers();
-    }
-  }, [open]);
+    const searchCustomers = async () => {
+      if (customerSearch.length < 2) {
+        setCustomers([]);
+        setShowResults(false);
+        return;
+      }
 
-  const loadCustomers = async () => {
-    try {
-      // Get all user data from auth.users (admin access required)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) throw authError;
+      try {
+        // Get profiles with user emails
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select(`
+            user_id,
+            full_name,
+            phone,
+            delivery_address,
+            postal_code
+          `)
+          .or(`full_name.ilike.%${customerSearch}%,phone.ilike.%${customerSearch}%,postal_code.ilike.%${customerSearch}%`)
+          .order('full_name')
+          .limit(10);
 
-      // Get profiles data
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, phone, delivery_address, city, postal_code')
-        .order('full_name');
+        if (profilesError) throw profilesError;
 
-      if (profilesError) throw profilesError;
+        // Get auth users to get email addresses
+        const userIds = profiles?.map(p => p.user_id) || [];
+        if (userIds.length === 0) {
+          setCustomers([]);
+          setShowResults(true);
+          return;
+        }
 
-      // Combine auth users with profiles data
-      const customerList = (profiles || []).map(profile => {
-        const authUser = authUsers?.users?.find((user: any) => user.id === profile.user_id);
-        return {
-          ...profile,
-          email: authUser?.email || `user_${profile.user_id.slice(0, 8)}@customer.local`
-        };
-      }).filter(customer => customer.email); // Only include customers with emails
-      
-      setCustomers(customerList);
-    } catch (error) {
-      console.error('Error loading customers:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load customers",
-        variant: "destructive",
-      });
-    }
-  };
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+        if (authError) throw authError;
 
-  const selectCustomer = (customer: any) => {
+        // Combine profiles with auth user data
+        const customerList = profiles.map(profile => {
+          const authUser = authUsers?.users?.find((user: any) => user.id === profile.user_id);
+          return {
+            ...profile,
+            email: authUser?.email || '',
+          };
+        }).filter(customer =>
+          customer.email.toLowerCase().includes(customerSearch.toLowerCase()) ||
+          customer.full_name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+          customer.phone?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+          customer.postal_code?.toLowerCase().includes(customerSearch.toLowerCase())
+        );
+
+        setCustomers(customerList);
+        setShowResults(true);
+      } catch (error) {
+        console.error('Error searching customers:', error);
+        setCustomers([]);
+        setShowResults(true);
+      }
+    };
+
+    const debounce = setTimeout(searchCustomers, 300);
+    return () => clearTimeout(debounce);
+  }, [customerSearch]);
+
+  const selectCustomer = (customer: Customer) => {
     setFormData(prev => ({
       ...prev,
       customer_name: customer.full_name,
@@ -103,49 +128,117 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
       customer_phone: customer.phone || '',
       delivery_address: customer.delivery_address || '',
       postcode: customer.postal_code || '',
+      create_account: false, // Existing customer, don't create account
     }));
+    setCustomerSearch(customer.full_name);
+    setShowResults(false);
+  };
+
+  const detectDeliveryZone = async (postcode: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_delivery_zone_for_postcode', { customer_postcode: postcode });
+      
+      if (error) {
+        console.error('Delivery zone detection error:', error);
+        return null;
+      }
+      return data;
+    } catch (error) {
+      console.error('Error detecting delivery zone:', error);
+      return null;
+    }
+  };
+
+  const createCustomerAccount = async () => {
+    try {
+      // Create user in auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: formData.customer_email,
+        password: Math.random().toString(36).slice(-12), // Random password
+        email_confirm: true,
+        user_metadata: {
+          full_name: formData.customer_name,
+          phone: formData.customer_phone,
+          delivery_address: formData.delivery_address,
+          postal_code: formData.postcode,
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Profile will be created automatically via trigger
+      toast({
+        title: "Customer Account Created",
+        description: `Account created for ${formData.customer_name}`,
+      });
+
+      return authData.user.id;
+    } catch (error: any) {
+      console.error('Error creating customer account:', error);
+      toast({
+        title: "Account Creation Failed",
+        description: error.message || "Failed to create customer account",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const handleSubmit = async () => {
-    // Validation
-    if (!formData.customer_name || !formData.customer_email) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in customer name and email",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.postcode) {
-      toast({
-        title: "Validation Error", 
-        description: "Please enter a postcode for delivery validation",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Set admin order data and navigate to menu
-    setAdminOrderData?.({
-      customerName: formData.customer_name,
-      customerEmail: formData.customer_email,
-      customerPhone: formData.customer_phone,
-      deliveryAddress: formData.delivery_address,
-      postcode: formData.postcode,
-      orderType: formData.order_type,
-      paymentMethod: formData.payment_method,
-      orderNotes: formData.order_notes,
-      deliveryFee: formData.delivery_fee,
-      discountAmount: formData.discount_amount,
-    });
-    onOpenChange(false);
-    navigate('/menu?admin_order=true');
+    setLoading(true);
     
-    toast({
-      title: "Admin Mode Active",
-      description: `Creating order for ${formData.customer_name}. Select meals and packages from the menu.`,
-    });
+    try {
+      // Validation
+      if (!formData.customer_name || !formData.customer_email) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in customer name and email",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!formData.postcode) {
+        toast({
+          title: "Validation Error", 
+          description: "Please enter a postcode for delivery validation",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create customer account if requested
+      if (formData.create_account) {
+        await createCustomerAccount();
+      }
+
+      // Detect delivery zone
+      const deliveryZoneId = await detectDeliveryZone(formData.postcode);
+      
+      // Set admin order data and navigate to menu
+      setAdminOrderData?.({
+        customerName: formData.customer_name,
+        customerEmail: formData.customer_email,
+        customerPhone: formData.customer_phone,
+        deliveryAddress: formData.delivery_address,
+        postcode: formData.postcode,
+        deliveryZoneId: deliveryZoneId,
+        isNewAccount: formData.create_account,
+      });
+
+      onOpenChange(false);
+      navigate('/menu?admin_order=true');
+      
+      toast({
+        title: "Admin Mode Activated",
+        description: `Creating order for ${formData.customer_name}. Select meals from the menu.`,
+      });
+    } catch (error) {
+      // Error already handled in createCustomerAccount
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -155,69 +248,85 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
       customer_phone: '',
       delivery_address: '',
       postcode: '',
-      order_type: 'phone',
-      payment_method: 'cash',
-      order_notes: '',
-      delivery_fee: 0,
-      discount_amount: 0,
+      create_account: false,
     });
+    setCustomerSearch('');
+    setShowResults(false);
   };
-
-  const filteredCustomers = customers.filter(customer =>
-    customer.full_name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    customer.email.toLowerCase().includes(customerSearch.toLowerCase())
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Manual Order - Customer Details</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Create Manual Order
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Customer Search */}
+          {/* Live Customer Search */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Search className="h-5 w-5" />
-                Select Existing Customer
+                Find Existing Customer
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Search Customers</Label>
+                <Label>Search by name, email, phone, or postcode</Label>
                 <Input
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
-                  placeholder="Type to search by name or email..."
+                  placeholder="Start typing to search customers..."
+                  className="w-full"
                 />
               </div>
               
-              {customerSearch && filteredCustomers.length > 0 && (
-                <div className="max-h-32 overflow-y-auto border rounded-md">
-                  {filteredCustomers.slice(0, 5).map((customer) => (
-                    <div
-                      key={customer.user_id}
-                      className="p-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
-                      onClick={() => {
-                        selectCustomer(customer);
-                        setCustomerSearch('');
-                      }}
-                    >
-                      <div className="font-medium">{customer.full_name}</div>
-                      <div className="text-sm text-muted-foreground">{customer.email}</div>
+              {showResults && customerSearch.length >= 2 && (
+                <div className="border rounded-md max-h-48 overflow-y-auto">
+                  {customers.length > 0 ? (
+                    customers.map((customer) => (
+                      <div
+                        key={customer.user_id}
+                        className="p-3 hover:bg-accent cursor-pointer border-b last:border-b-0 transition-colors"
+                        onClick={() => selectCustomer(customer)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium">{customer.full_name}</div>
+                            <div className="text-sm text-muted-foreground">{customer.email}</div>
+                            {customer.phone && (
+                              <div className="text-sm text-muted-foreground">{customer.phone}</div>
+                            )}
+                          </div>
+                          {customer.postal_code && (
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              {customer.postal_code}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-muted-foreground">
+                      No customers found. Enter details below to create a new order.
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Customer Information */}
+          {/* Customer Information Form */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Customer Information</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Customer Details
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -227,11 +336,11 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
                     id="customer_name"
                     value={formData.customer_name}
                     onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
-                    placeholder="Enter customer name"
+                    placeholder="Enter full name"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="customer_email">Email *</Label>
+                  <Label htmlFor="customer_email">Email Address *</Label>
                   <Input
                     id="customer_email"
                     type="email"
@@ -244,7 +353,7 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="customer_phone">Phone</Label>
+                  <Label htmlFor="customer_phone">Phone Number</Label>
                   <Input
                     id="customer_phone"
                     value={formData.customer_phone}
@@ -257,8 +366,8 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
                   <Input
                     id="postcode"
                     value={formData.postcode}
-                    onChange={(e) => setFormData(prev => ({ ...prev, postcode: e.target.value }))}
-                    placeholder="Postcode for delivery"
+                    onChange={(e) => setFormData(prev => ({ ...prev, postcode: e.target.value.toUpperCase() }))}
+                    placeholder="Enter postcode"
                   />
                 </div>
               </div>
@@ -273,94 +382,25 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
                   rows={3}
                 />
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Order Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Order Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="order_type">Order Type</Label>
-                  <Select 
-                    value={formData.order_type} 
-                    onValueChange={(value: any) => setFormData(prev => ({ ...prev, order_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="phone">Phone Order</SelectItem>
-                      <SelectItem value="complimentary">Complimentary</SelectItem>
-                      <SelectItem value="special">Special Order</SelectItem>
-                      <SelectItem value="adjustment">Adjustment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="payment_method">Payment Method</Label>
-                  <Select 
-                    value={formData.payment_method} 
-                    onValueChange={(value: any) => setFormData(prev => ({ ...prev, payment_method: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="complimentary">Complimentary</SelectItem>
-                      <SelectItem value="stripe">Stripe</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="delivery_fee">Delivery Fee (£)</Label>
-                  <Input
-                    id="delivery_fee"
-                    type="number"
-                    value={formData.delivery_fee}
-                    onChange={(e) => setFormData(prev => ({ ...prev, delivery_fee: parseFloat(e.target.value) || 0 }))}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="discount_amount">Discount (£)</Label>
-                  <Input
-                    id="discount_amount"
-                    type="number"
-                    value={formData.discount_amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, discount_amount: parseFloat(e.target.value) || 0 }))}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="order_notes">Order Notes</Label>
-                <Textarea
-                  id="order_notes"
-                  value={formData.order_notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, order_notes: e.target.value }))}
-                  placeholder="Add any special instructions..."
-                  rows={3}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="create_account"
+                  checked={formData.create_account}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, create_account: checked as boolean }))
+                  }
                 />
+                <Label htmlFor="create_account" className="text-sm">
+                  Create customer account (they can log in later)
+                </Label>
               </div>
             </CardContent>
           </Card>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => { onOpenChange(false); resetForm(); }}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>

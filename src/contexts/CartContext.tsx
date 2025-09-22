@@ -20,11 +20,8 @@ interface CartState {
     customerPhone: string;
     deliveryAddress: string;
     postcode: string;
-    orderType: 'phone' | 'complimentary' | 'special' | 'adjustment';
-    paymentMethod: 'cash' | 'card' | 'bank_transfer' | 'complimentary' | 'stripe';
-    orderNotes: string;
-    deliveryFee: number;
-    discountAmount: number;
+    deliveryZoneId?: string;
+    isNewAccount?: boolean;
   };
 }
 

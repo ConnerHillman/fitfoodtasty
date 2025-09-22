@@ -8,7 +8,7 @@ import { LogIn, UserPlus, Shield, User, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import PaymentForm from "@/components/PaymentForm";
-import { AdminPaymentForm } from "@/components/cart/AdminPaymentForm";
+
 
 interface PaymentSectionProps {
   user: any;
@@ -36,28 +36,6 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   const { adminOrderData } = useCart();
   const totalAmountInPence = Math.round(finalTotal * 100);
 
-  // Handle admin orders
-  if (adminOrderData) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
-            Admin Order Payment
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AdminPaymentForm
-            adminOrderData={adminOrderData}
-            totalAmount={finalTotal}
-            deliveryMethod={deliveryMethod}
-            requestedDeliveryDate={requestedDeliveryDate}
-            orderNotes={orderNotes}
-          />
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (!user) {
     return (

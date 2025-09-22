@@ -29,7 +29,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               {adminOrderData.customerName}
             </Badge>
             <span className="text-sm opacity-90">
-              Creating order • {adminOrderData.orderType} • {adminOrderData.paymentMethod}
+              Creating manual order
             </span>
           </div>
         </div>

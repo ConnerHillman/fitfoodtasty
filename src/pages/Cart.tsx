@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, ArrowLeft, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -10,6 +11,7 @@ import { useDeliveryLogic } from "@/hooks/useDeliveryLogic";
 import { useDiscounts } from "@/hooks/useDiscounts";
 import { useDateValidation } from "@/hooks/useDateValidation";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useAdminOrder } from "@/hooks/useAdminOrder";
 import OrderSummary from "@/components/cart/OrderSummary";
 import DeliveryOptions from "@/components/cart/DeliveryOptions";
 import DatePicker from "@/components/cart/DatePicker";
@@ -17,16 +19,20 @@ import CouponSection from "@/components/cart/CouponSection";
 import PaymentSection from "@/components/cart/PaymentSection";
 import CartItemCard from "@/components/cart/CartItemCard";
 import SubscriptionToggle from "@/components/cart/SubscriptionToggle";
+import { AdminOrderEnhancements } from "@/components/cart/AdminOrderEnhancements";
 
 const Cart = () => {
-  const { items, updateQuantity, removeFromCart, getTotalPrice, addToCart } = useCart();
+  const { items, updateQuantity, removeFromCart, getTotalPrice, addToCart, adminOrderData } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const isAdminMode = searchParams.get('admin_order') === 'true' || adminOrderData;
   
   // Custom hooks for cart logic
   const deliveryLogic = useDeliveryLogic();
   const discounts = useDiscounts();
   const dateValidation = useDateValidation(deliveryLogic.deliveryZone);
+  const adminOrder = useAdminOrder();
   
   // State variables
   const [clientSecret, setClientSecret] = useState<string>("");
@@ -389,6 +395,21 @@ const Cart = () => {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Admin Order Enhancements */}
+          {isAdminMode && (
+            <AdminOrderEnhancements
+              onPriceOverride={adminOrder.handlePriceOverride}
+              onOrderNotesChange={setOrderNotes}
+              orderNotes={orderNotes}
+              onCashOrderConfirm={async () => {
+                await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod);
+              }}
+              totalAmount={adminOrder.calculateTotalWithOverrides()}
+              finalTotal={adminOrder.calculateTotalWithOverrides()}
+              loading={adminOrder.loading}
+            />
+          )}
+
           {/* Cart Items */}
           <div className="space-y-4">
             {items.map((item) => (
