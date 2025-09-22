@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Search, User, UserPlus, MapPin } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useCart } from '@/contexts/CartContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/contexts/CartContext";
+import { Search, User, X } from "lucide-react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 interface CustomerData {
-  customer_email: string;
-  customer_name: string;
-  customer_phone: string;
-  delivery_address: string;
+  customerEmail: string;
+  customerName: string;
+  customerPhone: string;
+  deliveryAddress: string;
   postcode: string;
-  create_account: boolean;
+  createAccount: boolean;
 }
 
 interface ManualOrderModalProps {
@@ -42,96 +41,72 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerSearch, setCustomerSearch] = useState('');
-  const [showResults, setShowResults] = useState(false);
+  const debouncedSearchTerm = useDebouncedValue(customerSearch, 300);
   const { toast } = useToast();
   const { setAdminOrderData } = useCart();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<CustomerData>({
-    customer_email: '',
-    customer_name: '',
-    customer_phone: '',
-    delivery_address: '',
+    customerEmail: '',
+    customerName: '',
+    customerPhone: '',
+    deliveryAddress: '',
     postcode: '',
-    create_account: false,
+    createAccount: false,
   });
 
-  // Load customers when search changes
+  // Search for existing customers
   useEffect(() => {
     const searchCustomers = async () => {
-      if (customerSearch.length < 2) {
+      if (!debouncedSearchTerm || debouncedSearchTerm.length < 2) {
         setCustomers([]);
-        setShowResults(false);
         return;
       }
 
       try {
-        // Get profiles with user emails
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select(`
-            user_id,
-            full_name,
-            phone,
-            delivery_address,
-            postal_code
-          `)
-          .or(`full_name.ilike.%${customerSearch}%,phone.ilike.%${customerSearch}%,postal_code.ilike.%${customerSearch}%`)
-          .order('full_name')
-          .limit(10);
+        setLoading(true);
+        
+        // Use the new RPC function for customer search
+        const { data: customerData, error } = await supabase
+          .rpc('search_customers', { search_term: debouncedSearchTerm });
 
-        if (profilesError) throw profilesError;
-
-        // Get auth users to get email addresses
-        const userIds = profiles?.map(p => p.user_id) || [];
-        if (userIds.length === 0) {
-          setCustomers([]);
-          setShowResults(true);
+        if (error) {
+          console.error('Error searching customers:', error);
+          toast({
+            title: "Search Error",
+            description: "Failed to search customers",
+            variant: "destructive",
+          });
           return;
         }
 
-        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-        if (authError) throw authError;
-
-        // Combine profiles with auth user data
-        const customerList = profiles.map(profile => {
-          const authUser = authUsers?.users?.find((user: any) => user.id === profile.user_id);
-          return {
-            ...profile,
-            email: authUser?.email || '',
-          };
-        }).filter(customer =>
-          customer.email.toLowerCase().includes(customerSearch.toLowerCase()) ||
-          customer.full_name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-          customer.phone?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-          customer.postal_code?.toLowerCase().includes(customerSearch.toLowerCase())
-        );
-
-        setCustomers(customerList);
-        setShowResults(true);
+        setCustomers(customerData || []);
       } catch (error) {
         console.error('Error searching customers:', error);
-        setCustomers([]);
-        setShowResults(true);
+        toast({
+          title: "Search Error",
+          description: "Failed to search customers",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    const debounce = setTimeout(searchCustomers, 300);
-    return () => clearTimeout(debounce);
-  }, [customerSearch]);
+    searchCustomers();
+  }, [debouncedSearchTerm, toast]);
 
   const selectCustomer = (customer: Customer) => {
-    setFormData(prev => ({
-      ...prev,
-      customer_name: customer.full_name,
-      customer_email: customer.email,
-      customer_phone: customer.phone || '',
-      delivery_address: customer.delivery_address || '',
+    setFormData({
+      customerName: customer.full_name || '',
+      customerEmail: customer.email,
+      customerPhone: customer.phone || '',
+      deliveryAddress: customer.delivery_address || '',
       postcode: customer.postal_code || '',
-      create_account: false, // Existing customer, don't create account
-    }));
-    setCustomerSearch(customer.full_name);
-    setShowResults(false);
+      createAccount: false
+    });
+    setCustomerSearch('');
+    setCustomers([]);
   };
 
   const detectDeliveryZone = async (postcode: string) => {
@@ -151,38 +126,25 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
   };
 
   const createCustomerAccount = async () => {
-    try {
-      // Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.customer_email,
-        password: Math.random().toString(36).slice(-12), // Random password
-        email_confirm: true,
-        user_metadata: {
-          full_name: formData.customer_name,
-          phone: formData.customer_phone,
-          delivery_address: formData.delivery_address,
-          postal_code: formData.postcode,
-        }
-      });
-
-      if (authError) throw authError;
-
-      // Profile will be created automatically via trigger
-      toast({
-        title: "Customer Account Created",
-        description: `Account created for ${formData.customer_name}`,
-      });
-
-      return authData.user.id;
-    } catch (error: any) {
-      console.error('Error creating customer account:', error);
-      toast({
-        title: "Account Creation Failed",
-        description: error.message || "Failed to create customer account",
-        variant: "destructive",
-      });
-      throw error;
+    if (!formData.customerEmail || !formData.customerName) {
+      throw new Error('Customer email and name are required');
     }
+
+    const { data, error } = await supabase.functions.invoke('admin-create-customer', {
+      body: {
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        deliveryAddress: formData.deliveryAddress,
+        postcode: formData.postcode
+      }
+    });
+
+    if (error || !data?.success) {
+      throw new Error(data?.error || 'Failed to create customer account');
+    }
+
+    return data.user_id;
   };
 
   const handleSubmit = async () => {
@@ -190,7 +152,7 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
     
     try {
       // Validation
-      if (!formData.customer_name || !formData.customer_email) {
+      if (!formData.customerName || !formData.customerEmail) {
         toast({
           title: "Validation Error",
           description: "Please fill in customer name and email",
@@ -209,7 +171,7 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
       }
 
       // Create customer account if requested
-      if (formData.create_account) {
+      if (formData.createAccount) {
         await createCustomerAccount();
       }
 
@@ -218,13 +180,13 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
       
       // Set admin order data and navigate to menu
       setAdminOrderData?.({
-        customerName: formData.customer_name,
-        customerEmail: formData.customer_email,
-        customerPhone: formData.customer_phone,
-        deliveryAddress: formData.delivery_address,
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone,
+        deliveryAddress: formData.deliveryAddress,
         postcode: formData.postcode,
         deliveryZoneId: deliveryZoneId,
-        isNewAccount: formData.create_account,
+        isNewAccount: formData.createAccount,
       });
 
       onOpenChange(false);
@@ -232,10 +194,14 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
       
       toast({
         title: "Admin Mode Activated",
-        description: `Creating order for ${formData.customer_name}. Select meals from the menu.`,
+        description: `Creating order for ${formData.customerName}. Select meals from the menu.`,
       });
-    } catch (error) {
-      // Error already handled in createCustomerAccount
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to set up manual order",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -243,160 +209,134 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
 
   const resetForm = () => {
     setFormData({
-      customer_email: '',
-      customer_name: '',
-      customer_phone: '',
-      delivery_address: '',
+      customerEmail: '',
+      customerName: '',
+      customerPhone: '',
+      deliveryAddress: '',
       postcode: '',
-      create_account: false,
+      createAccount: false,
     });
     setCustomerSearch('');
-    setShowResults(false);
+    setCustomers([]);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Create Manual Order
-          </DialogTitle>
+          <DialogTitle>Create Manual Order</DialogTitle>
+          <DialogDescription>
+            Search for an existing customer or create a new one to process a manual order.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Live Customer Search */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Find Existing Customer
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Customer Search */}
+          <div className="space-y-2">
+            <Label htmlFor="customer-search">Search Existing Customers</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="customer-search"
+                placeholder="Search by name, email, phone, or postcode..."
+                value={customerSearch}
+                onChange={(e) => setCustomerSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {customers.length > 0 && (
+              <div className="border rounded-md max-h-48 overflow-y-auto bg-background">
+                {customers.map((customer) => (
+                  <div
+                    key={customer.user_id} 
+                    className="p-3 border-b last:border-b-0 cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() => selectCustomer(customer)}
+                  >
+                    <div className="font-medium">{customer.full_name || 'No name'}</div>
+                    <div className="text-sm text-muted-foreground">{customer.email}</div>
+                    {customer.phone && (
+                      <div className="text-sm text-muted-foreground">{customer.phone}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Customer Details Form */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-lg font-medium">
+              <User className="h-5 w-5" />
+              Customer Details
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Search by name, email, phone, or postcode</Label>
+                <Label htmlFor="customerName">Customer Name *</Label>
                 <Input
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  placeholder="Start typing to search customers..."
-                  className="w-full"
+                  id="customerName"
+                  value={formData.customerName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
+                  placeholder="Enter full name"
                 />
               </div>
-              
-              {showResults && customerSearch.length >= 2 && (
-                <div className="border rounded-md max-h-48 overflow-y-auto">
-                  {customers.length > 0 ? (
-                    customers.map((customer) => (
-                      <div
-                        key={customer.user_id}
-                        className="p-3 hover:bg-accent cursor-pointer border-b last:border-b-0 transition-colors"
-                        onClick={() => selectCustomer(customer)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="font-medium">{customer.full_name}</div>
-                            <div className="text-sm text-muted-foreground">{customer.email}</div>
-                            {customer.phone && (
-                              <div className="text-sm text-muted-foreground">{customer.phone}</div>
-                            )}
-                          </div>
-                          {customer.postal_code && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3 w-3" />
-                              {customer.postal_code}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-3 text-center text-muted-foreground">
-                      No customers found. Enter details below to create a new order.
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Customer Information Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Customer Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="customer_name">Customer Name *</Label>
-                  <Input
-                    id="customer_name"
-                    value={formData.customer_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
-                    placeholder="Enter full name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="customer_email">Email Address *</Label>
-                  <Input
-                    id="customer_email"
-                    type="email"
-                    value={formData.customer_email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, customer_email: e.target.value }))}
-                    placeholder="customer@email.com"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="customer_phone">Phone Number</Label>
-                  <Input
-                    id="customer_phone"
-                    value={formData.customer_phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, customer_phone: e.target.value }))}
-                    placeholder="Phone number"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="postcode">Postcode *</Label>
-                  <Input
-                    id="postcode"
-                    value={formData.postcode}
-                    onChange={(e) => setFormData(prev => ({ ...prev, postcode: e.target.value.toUpperCase() }))}
-                    placeholder="Enter postcode"
-                  />
-                </div>
-              </div>
-
               <div>
-                <Label htmlFor="delivery_address">Delivery Address</Label>
-                <Textarea
-                  id="delivery_address"
-                  value={formData.delivery_address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, delivery_address: e.target.value }))}
-                  placeholder="Enter full delivery address"
-                  rows={3}
+                <Label htmlFor="customerEmail">Email Address *</Label>
+                <Input
+                  id="customerEmail"
+                  type="email"
+                  value={formData.customerEmail}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customerEmail: e.target.value }))}
+                  placeholder="customer@email.com"
                 />
               </div>
+            </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="create_account"
-                  checked={formData.create_account}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, create_account: checked as boolean }))
-                  }
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customerPhone">Phone Number</Label>
+                <Input
+                  id="customerPhone"
+                  value={formData.customerPhone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
+                  placeholder="Phone number"
                 />
-                <Label htmlFor="create_account" className="text-sm">
-                  Create customer account (they can log in later)
-                </Label>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <Label htmlFor="postcode">Postcode *</Label>
+                <Input
+                  id="postcode"
+                  value={formData.postcode}
+                  onChange={(e) => setFormData(prev => ({ ...prev, postcode: e.target.value.toUpperCase() }))}
+                  placeholder="Enter postcode"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="deliveryAddress">Delivery Address</Label>
+              <Input
+                id="deliveryAddress"
+                value={formData.deliveryAddress}
+                onChange={(e) => setFormData(prev => ({ ...prev, deliveryAddress: e.target.value }))}
+                placeholder="Enter full delivery address"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="createAccount"
+                checked={formData.createAccount}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, createAccount: checked as boolean }))
+                }
+              />
+              <Label htmlFor="createAccount" className="text-sm">
+                Create customer account (they can log in later)
+              </Label>
+            </div>
+          </div>
         </div>
 
         <DialogFooter>

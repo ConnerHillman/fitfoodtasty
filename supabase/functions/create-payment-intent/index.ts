@@ -15,6 +15,16 @@ interface PaymentItem {
   meal_id?: string;
 }
 
+interface AdminOrderData {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  postcode: string;
+  deliveryZoneId?: string;
+  isNewAccount?: boolean;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -38,6 +48,7 @@ serve(async (req) => {
       coupon_data,
       discount_percentage,
       order_notes,
+      adminOrderData,
     } = await req.json().catch(() => ({ items: [] }));
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -85,37 +96,52 @@ serve(async (req) => {
       deliveryInfo
     });
 
+    // Create comprehensive metadata for the payment intent
+    const metadata: Record<string, string> = {
+      delivery_method: delivery_method || '',
+      collection_point_id: collection_point_id || '',
+      requested_delivery_date: requested_delivery_date || '',
+      production_date: production_date || '',
+      customer_email: customer_email || '',
+      customer_name: customer_name || '',
+      coupon_code: coupon_code || '',
+      discount_percentage: discount_percentage?.toString() || '0',
+      coupon_type: coupon_data?.discount_amount ? 'fixed_amount' : 
+                 coupon_data?.free_delivery ? 'free_delivery' : 
+                 coupon_data?.free_item_id ? 'free_item' : 'percentage',
+      coupon_discount_amount: coupon_data?.discount_amount?.toString() || '0',
+      coupon_discount_percentage: discount_percentage?.toString() || '0',
+      coupon_free_delivery: coupon_data?.free_delivery?.toString() || 'false',
+      coupon_free_item_id: coupon_data?.free_item_id || '',
+      expires_at: coupon_data?.expires_at || '',
+      items: JSON.stringify(items.map(item => ({
+        meal_id: item.meal_id,
+        name: item.name,
+        quantity: item.quantity,
+        amount: typeof item.amount === "number" ? item.amount : Math.round((item.price ?? 0) * 100)
+      }))),
+      order_notes: order_notes || '',
+    };
+
+    // Add admin order metadata if present
+    if (adminOrderData) {
+      metadata.is_admin_order = 'true';
+      metadata.admin_customer_name = adminOrderData.customerName;
+      metadata.admin_customer_email = adminOrderData.customerEmail;
+      metadata.admin_customer_phone = adminOrderData.customerPhone || '';
+      metadata.admin_delivery_address = adminOrderData.deliveryAddress || '';
+      metadata.admin_postcode = adminOrderData.postcode;
+      metadata.admin_delivery_zone_id = adminOrderData.deliveryZoneId || '';
+      metadata.admin_create_account = adminOrderData.isNewAccount ? 'true' : 'false';
+    }
+
     // Create Payment Intent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmount,
       currency,
       automatic_payment_methods: { enabled: true },
       description: requested_delivery_date ? deliveryInfo : undefined,
-        metadata: {
-        delivery_method: delivery_method || '',
-        collection_point_id: collection_point_id || '',
-        requested_delivery_date: requested_delivery_date || '',
-        production_date: production_date || '',
-        customer_email: customer_email || '',
-        customer_name: customer_name || '',
-        coupon_code: coupon_code || '',
-        discount_percentage: discount_percentage?.toString() || '0',
-        coupon_type: coupon_data?.discount_amount ? 'fixed_amount' : 
-                   coupon_data?.free_delivery ? 'free_delivery' : 
-                   coupon_data?.free_item_id ? 'free_item' : 'percentage',
-        coupon_discount_amount: coupon_data?.discount_amount?.toString() || '0',
-        coupon_discount_percentage: discount_percentage?.toString() || '0',
-        coupon_free_delivery: coupon_data?.free_delivery?.toString() || 'false',
-        coupon_free_item_id: coupon_data?.free_item_id || '',
-        expires_at: coupon_data?.expires_at || '',
-        items: JSON.stringify(items.map(item => ({
-          meal_id: item.meal_id,
-          name: item.name,
-          quantity: item.quantity,
-          amount: typeof item.amount === "number" ? item.amount : Math.round((item.price ?? 0) * 100)
-        }))),
-        order_notes: order_notes || '',
-      },
+      metadata,
     });
 
     return new Response(JSON.stringify({ 

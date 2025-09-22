@@ -101,6 +101,7 @@ const Cart = () => {
           gift_card_amount_used: discounts.appliedGiftCard?.amount_used || 0,
           gift_card_id: discounts.appliedGiftCard?.gift_card_id || null,
           order_notes: orderNotes.trim() || null,
+          adminOrderData: isAdminMode ? adminOrderData : undefined,
         }
       });
 
@@ -402,7 +403,7 @@ const Cart = () => {
               onOrderNotesChange={setOrderNotes}
               orderNotes={orderNotes}
               onCashOrderConfirm={async () => {
-                await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod);
+                await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined);
               }}
               totalAmount={adminOrder.calculateTotalWithOverrides()}
               finalTotal={adminOrder.calculateTotalWithOverrides()}

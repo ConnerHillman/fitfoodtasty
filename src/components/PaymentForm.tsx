@@ -22,6 +22,7 @@ interface PaymentFormProps {
   requestedDeliveryDate: string;
   orderNotes?: string;
   onOrderNotesChange?: (notes: string) => void;
+  adminOrderData?: any;
 }
 
 export default function PaymentForm({ 
@@ -30,7 +31,8 @@ export default function PaymentForm({
   deliveryMethod, 
   requestedDeliveryDate,
   orderNotes: externalOrderNotes,
-  onOrderNotesChange: externalOnOrderNotesChange
+  onOrderNotesChange: externalOnOrderNotesChange,
+  adminOrderData
 }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();

@@ -20,6 +20,7 @@ interface PaymentSectionProps {
   onCreateFreeOrder: () => Promise<void>;
   orderNotes: string;
   onOrderNotesChange: (notes: string) => void;
+  adminOrderData?: any;
 }
 
 const PaymentSection: React.FC<PaymentSectionProps> = ({
@@ -32,8 +33,8 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   onCreateFreeOrder,
   orderNotes,
   onOrderNotesChange,
+  adminOrderData,
 }) => {
-  const { adminOrderData } = useCart();
   const totalAmountInPence = Math.round(finalTotal * 100);
 
 
@@ -130,6 +131,7 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
         requestedDeliveryDate={requestedDeliveryDate?.toISOString().split('T')[0] || ''}
         orderNotes={orderNotes}
         onOrderNotesChange={onOrderNotesChange}
+        adminOrderData={adminOrderData}
       />
     </Elements>
   );
