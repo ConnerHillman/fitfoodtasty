@@ -19,6 +19,8 @@ import { AdjustOrderModal } from "@/components/admin/orders/AdjustOrderModal";
 import { VoidOrderDialog } from "@/components/admin/orders/VoidOrderDialog";
 import { RefundOrderDialog } from "@/components/admin/orders/RefundOrderDialog";
 import { PrintMealLabelsDialog } from "@/components/admin/orders/PrintMealLabelsDialog";
+import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
+import { useAdminReorder } from "@/hooks/useAdminReorder";
 
 interface Order {
   id: string;
@@ -69,6 +71,8 @@ const AllOrders: React.FC = () => {
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [printLabelsDialogOpen, setPrintLabelsDialogOpen] = useState(false);
+  
+  const adminReorder = useAdminReorder();
 
   useEffect(() => {
     fetchAllOrders();
@@ -293,11 +297,9 @@ const AllOrders: React.FC = () => {
   };
 
   const handleReOrder = (order: Order) => {
-    // TODO: Implement re-order functionality using existing ReorderConfirmationModal
-    toast({
-      title: "Re-Order",
-      description: `Re-order functionality for order ${order.id.slice(-8)} will be implemented soon.`,
-    });
+    // Check if this is a package order based on the type field  
+    const orderType: 'package' | 'regular' = order.type === 'package' ? 'package' : 'regular';
+    adminReorder.initiateReorder(order, orderType);
   };
 
   // Table actions

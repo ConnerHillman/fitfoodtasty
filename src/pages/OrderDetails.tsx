@@ -31,6 +31,8 @@ import { AdjustOrderModal } from '@/components/admin/orders/AdjustOrderModal';
 import { VoidOrderDialog } from '@/components/admin/orders/VoidOrderDialog';
 import { RefundOrderDialog } from '@/components/admin/orders/RefundOrderDialog';
 import { PrintMealLabelsDialog } from '@/components/admin/orders/PrintMealLabelsDialog';
+import ReorderConfirmationModal from '@/components/orders/ReorderConfirmationModal';
+import { useAdminReorder } from '@/hooks/useAdminReorder';
 
 interface OrderItem {
   id: string;
@@ -90,6 +92,8 @@ const OrderDetails: React.FC = () => {
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [printLabelsDialogOpen, setPrintLabelsDialogOpen] = useState(false);
+  
+  const adminReorder = useAdminReorder();
 
   useEffect(() => {
     if (orderId) {
@@ -231,10 +235,10 @@ const OrderDetails: React.FC = () => {
   };
 
   const handleReOrder = () => {
-    toast({
-      title: "Re-Order",
-      description: "Re-order functionality will be implemented soon.",
-    });
+    if (!order) return;
+    
+    const orderType = isPackageOrder ? 'package' : 'regular';
+    adminReorder.initiateReorder(order, orderType);
   };
 
   const handleOrderUpdated = () => {
@@ -658,6 +662,15 @@ const OrderDetails: React.FC = () => {
                 ...order,
                 order_type: isPackageOrder ? 'package' : 'individual'
               }}
+            />
+
+            <ReorderConfirmationModal
+              open={adminReorder.showReorderModal}
+              onOpenChange={adminReorder.closeModal}
+              order={adminReorder.selectedOrder}
+              orderType={adminReorder.selectedOrderType}
+              onReorderAsIs={adminReorder.handleReorderAsIs}
+              onEditInCart={adminReorder.handleEditInCart}
             />
           </>
         )}
