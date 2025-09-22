@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import IngredientsManager from "@/components/admin/IngredientsManager";
-import MealsManager from "@/components/admin/MealsManager";
-import CategoriesManager from "@/components/admin/CategoriesManager";
-import PackagesManager from "@/components/admin/PackagesManager";
+import { MenuManager } from "@/components/admin/MenuManager";
 import ReferralSettingsAdmin from "@/components/admin/ReferralSettingsAdmin";
 import BusinessDashboard from "@/components/admin/BusinessDashboard";
 import Reports from "@/components/admin/Reports";
@@ -128,27 +126,11 @@ const AdminDashboard = () => {
                 </TabsTrigger>
                 
                 <TabsTrigger 
-                  value="meals" 
+                  value="menu" 
                   className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
                 >
                   <ChefHat className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Meals</span>
-                </TabsTrigger>
-                
-                <TabsTrigger 
-                  value="categories" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
-                >
-                  <Tags className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Categories</span>
-                </TabsTrigger>
-                
-                <TabsTrigger 
-                  value="packages" 
-                  className="group flex flex-col items-center space-y-2 px-6 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/10 data-[state=active]:to-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-muted/30 hover:scale-105 text-sm font-medium min-h-[80px] bg-transparent border-0 flex-1 min-w-[120px] max-w-[180px]"
-                >
-                  <Package className="w-5 h-5 group-data-[state=active]:text-primary transition-colors" />
-                  <span className="text-sm font-bold">Packages</span>
+                  <span className="text-sm font-bold">Menu Manager</span>
                 </TabsTrigger>
                 
                 <TabsTrigger 
@@ -202,16 +184,8 @@ const AdminDashboard = () => {
             <IngredientsManager />
           </TabsContent>
 
-          <TabsContent value="meals">
-            <MealsManager />
-          </TabsContent>
-
-          <TabsContent value="categories">
-            <CategoriesManager />
-          </TabsContent>
-
-          <TabsContent value="packages">
-            <PackagesManager />
+          <TabsContent value="menu">
+            <MenuManager />
           </TabsContent>
 
           <TabsContent value="import">
