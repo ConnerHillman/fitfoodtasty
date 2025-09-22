@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Edit3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ChevronDown, ChevronUp, Edit3, Pencil, RotateCcw } from "lucide-react";
 import type { CartItem } from "@/types/cart";
 import { useSubscriptionSettings } from "@/hooks/useSubscriptionSettings";
 import { calculateAdminTotals, type AdminPriceOverrides } from "@/lib/adminPriceCalculations";
@@ -21,6 +23,9 @@ interface OrderSummaryProps {
   isSubscription?: boolean;
   isAdminMode?: boolean;
   adminPriceOverrides?: AdminPriceOverrides;
+  // Admin total editing
+  adminTotalOverride?: number | null;
+  onAdminTotalChange?: (newTotal: number | null) => void;
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -38,21 +43,57 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   isSubscription = false,
   isAdminMode = false,
   adminPriceOverrides = {},
+  adminTotalOverride,
+  onAdminTotalChange,
 }) => {
   const { discountEnabled, discountPercentage, loading } = useSubscriptionSettings();
+  const [isEditingTotal, setIsEditingTotal] = useState(false);
+  const [tempTotalValue, setTempTotalValue] = useState("");
+  
   if (items.length === 0) return null;
 
   // Calculate using admin overrides if in admin mode
   const adminCalculation = isAdminMode ? calculateAdminTotals(items, adminPriceOverrides) : null;
   const effectiveSubtotal = adminCalculation ? adminCalculation.subtotal : subtotal;
   
-  // Calculate final total including fees
-  const effectiveFinalTotal = isAdminMode ? effectiveSubtotal + fees : finalTotal;
+  // In admin mode, use the unified total calculation
+  let effectiveFinalTotal: number;
+  if (isAdminMode) {
+    const calculatedTotal = effectiveSubtotal + fees - discountAmount - giftCardAmount;
+    effectiveFinalTotal = adminTotalOverride !== null ? adminTotalOverride : calculatedTotal;
+  } else {
+    effectiveFinalTotal = finalTotal;
+  }
   
   const subscriptionDiscount = (!loading && isSubscription && discountEnabled && discountPercentage > 0) 
     ? (effectiveSubtotal + fees) * (discountPercentage / 100) 
     : 0;
   const subscriptionTotal = isSubscription ? (effectiveSubtotal + fees) - subscriptionDiscount : effectiveFinalTotal;
+
+  // Admin total editing handlers
+  const handleEditTotal = () => {
+    setTempTotalValue(effectiveFinalTotal.toFixed(2));
+    setIsEditingTotal(true);
+  };
+
+  const handleSaveTotal = () => {
+    const newTotal = parseFloat(tempTotalValue);
+    if (!isNaN(newTotal) && newTotal >= 0 && onAdminTotalChange) {
+      onAdminTotalChange(newTotal);
+    }
+    setIsEditingTotal(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingTotal(false);
+    setTempTotalValue("");
+  };
+
+  const handleResetTotal = () => {
+    if (onAdminTotalChange) {
+      onAdminTotalChange(null);
+    }
+  };
 
   return (
     <Card className="bg-muted/30 border border-border/60">
@@ -143,7 +184,60 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
 
         <div className="flex justify-between items-center font-bold text-lg">
           <span>Total{isSubscription ? ' per week' : ''}</span>
-          <span>£{subscriptionTotal.toFixed(2)}</span>
+          <div className="flex items-center gap-2">
+            {isAdminMode && !isEditingTotal && (
+              <>
+                <span className={adminTotalOverride !== null ? "text-orange-600" : ""}>
+                  £{subscriptionTotal.toFixed(2)}
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleEditTotal}
+                  title="Edit total"
+                  className="h-6 w-6 p-0"
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+                {adminTotalOverride !== null && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleResetTotal}
+                    title="Reset to calculated total"
+                    className="h-6 w-6 p-0"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </Button>
+                )}
+              </>
+            )}
+            {isAdminMode && isEditingTotal && (
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={tempTotalValue}
+                  onChange={(e) => setTempTotalValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveTotal();
+                    if (e.key === 'Escape') handleCancelEdit();
+                  }}
+                  className="w-20 h-6 text-right text-sm"
+                  autoFocus
+                />
+                <Button size="sm" variant="ghost" onClick={handleSaveTotal} className="h-6 w-6 p-0 text-green-600">
+                  ✓
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="h-6 w-6 p-0 text-red-600">
+                  ✕
+                </Button>
+              </div>
+            )}
+            {!isAdminMode && (
+              <span>£{subscriptionTotal.toFixed(2)}</span>
+            )}
+          </div>
         </div>
 
         {expiryWarning && (

@@ -406,13 +406,11 @@ const Cart = () => {
                 await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined);
               }}
               totalAmount={adminOrder.calculateTotalWithOverrides()}
-              finalTotal={adminOrder.getFinalTotal(fees)}
+              finalTotal={adminOrder.calculateUnifiedTotal(fees)}
               loading={adminOrder.loading}
               priceOverrides={adminOrder.priceOverrides}
               onResetAllPrices={adminOrder.resetAllPrices}
               deliveryFees={fees}
-              totalOverride={adminOrder.totalOverride}
-              onTotalOverride={adminOrder.handleTotalOverride}
             />
           )}
 
@@ -498,6 +496,8 @@ const Cart = () => {
             isSubscription={isSubscription}
             isAdminMode={!!isAdminMode}
             adminPriceOverrides={adminOrder.priceOverrides}
+            adminTotalOverride={adminOrder.totalOverride}
+            onAdminTotalChange={adminOrder.handleTotalOverride}
           />
 
           {/* Payment Section */}

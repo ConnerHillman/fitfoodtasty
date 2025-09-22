@@ -30,9 +30,15 @@ export const useAdminOrder = () => {
     setTotalOverride(newTotal);
   };
 
-  const getFinalTotal = (deliveryFees: number = 0) => {
-    const calculatedTotal = calculateTotalWithOverrides() + deliveryFees;
+  // Unified calculation that considers all overrides and fees
+  const calculateUnifiedTotal = (fees: number = 0) => {
+    const subtotalWithOverrides = calculateTotalWithOverrides();
+    const calculatedTotal = subtotalWithOverrides + fees;
     return totalOverride !== null ? totalOverride : calculatedTotal;
+  };
+
+  const getFinalTotal = (deliveryFees: number = 0) => {
+    return calculateUnifiedTotal(deliveryFees);
   };
 
   const resetAllPrices = () => {
@@ -134,6 +140,7 @@ export const useAdminOrder = () => {
     handlePriceOverride,
     handleTotalOverride,
     calculateTotalWithOverrides,
+    calculateUnifiedTotal,
     getFinalTotal,
     createManualOrder,
     exitAdminMode,
