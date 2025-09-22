@@ -458,6 +458,15 @@ const AllOrders: React.FC = () => {
         order={selectedOrder}
       />
 
+      <ReorderConfirmationModal
+        open={adminReorder.showReorderModal}
+        onOpenChange={adminReorder.closeModal}
+        order={adminReorder.selectedOrder}
+        orderType={adminReorder.selectedOrderType}
+        onReorderAsIs={adminReorder.handleReorderAsIs}
+        onEditInCart={adminReorder.handleEditInCart}
+      />
+
     </div>
   );
 };
