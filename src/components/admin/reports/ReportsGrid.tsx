@@ -39,7 +39,6 @@ export function ReportsGrid() {
     from: startOfDay(new Date()),
     to: endOfDay(new Date())
   });
-  const [labelsDate, setLabelsDate] = useState<Date | undefined>(new Date());
   const [orderSummaryDate, setOrderSummaryDate] = useState<{ from: Date; to: Date }>({
     from: startOfDay(new Date()),
     to: endOfDay(new Date())
@@ -73,10 +72,11 @@ export function ReportsGrid() {
     });
   };
 
-  // Export Customers Handler
+  // Export Customers Handler - Fixed to avoid admin API calls
   const handleExportCustomers = async () => {
     try {
-      const { data: customers, error } = await supabase
+      // Fetch all profiles
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select(`
           user_id,
@@ -91,27 +91,37 @@ export function ReportsGrid() {
         `)
         .order('full_name');
 
-      if (error) throw error;
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw new Error('Failed to fetch customer profiles');
+      }
 
-      // Get user emails from auth
-      const userIds = customers?.map(c => c.user_id) || [];
-      const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) throw authError;
-      
-      const emailMap = new Map(authUsers?.map(u => [u.id, u.email] as const) || []);
+      if (!profiles || profiles.length === 0) {
+        toast({
+          title: "No Customers Found",
+          description: "There are no customers to export",
+        });
+        return;
+      }
 
-      // Get order statistics
-      const { data: orderStats, error: orderError } = await supabase
+      const userIds = profiles.map(p => p.user_id);
+
+      // Fetch order statistics - optimized single query
+      const { data: orders, error: orderError } = await supabase
         .from('orders')
         .select('user_id, total_amount, created_at')
+        .in('user_id', userIds)
         .in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'completed']);
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('Order stats error:', orderError);
+        // Continue without order stats rather than failing
+      }
 
-      // Aggregate order stats
+      // Aggregate order statistics
       const statsMap = new Map<string, { total_orders: number; total_spent: number; last_order_date: string | null }>();
-      orderStats?.forEach(order => {
+      
+      orders?.forEach(order => {
         const existing = statsMap.get(order.user_id) || { total_orders: 0, total_spent: 0, last_order_date: null };
         existing.total_orders += 1;
         existing.total_spent += Number(order.total_amount || 0);
@@ -121,13 +131,14 @@ export function ReportsGrid() {
         statsMap.set(order.user_id, existing);
       });
 
-      // Format customer data
-      const formattedCustomers = customers?.map(customer => {
+      // Format customer data with proper typing
+      const formattedCustomers = profiles.map(customer => {
         const stats = statsMap.get(customer.user_id) || { total_orders: 0, total_spent: 0, last_order_date: null };
         return {
+          id: customer.user_id,
           user_id: customer.user_id,
           full_name: customer.full_name,
-          email: emailMap.get(customer.user_id) || '',
+          email: '', // Email removed - requires admin API or edge function
           phone: customer.phone || '',
           delivery_address: customer.delivery_address || '',
           city: customer.city || '',
@@ -135,23 +146,25 @@ export function ReportsGrid() {
           county: customer.county || '',
           total_orders: stats.total_orders,
           total_spent: stats.total_spent,
-          last_order_date: stats.last_order_date,
+          last_order_date: stats.last_order_date || undefined,
+          order_count: stats.total_orders,
+          package_order_count: 0,
           created_at: customer.created_at,
           delivery_instructions: customer.delivery_instructions || '',
         };
-      }) || [];
+      });
 
-      await exportCustomers(formattedCustomers as any, { format: 'csv' });
+      await exportCustomers(formattedCustomers, { format: 'csv' });
 
       toast({
         title: "Export Successful",
         description: `Exported ${formattedCustomers.length} customers to CSV`,
       });
-    } catch (error) {
-      console.error('Export error:', error);
+    } catch (error: any) {
+      console.error('Customer export error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to export customer data",
+        description: error?.message || "Failed to export customer data. Please try again.",
         variant: "destructive",
       });
     }
