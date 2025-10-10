@@ -79,62 +79,6 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
     [selected]
   );
 
-  useEffect(() => {
-    if (open) {
-      setSelected({});
-      setSearchTerm("");
-      (async () => {
-        setLoading(true);
-        
-        if (pkg) {
-          // First get the meal IDs for this package
-          const { data: packageMealData, error: packageError } = await supabase
-            .from("package_meals")
-            .select("meal_id")
-            .eq("package_id", pkg.id);
-            
-          if (packageError) {
-            console.error("Error fetching package meals:", packageError);
-            setLoading(false);
-            return;
-          }
-          
-          // If no meals are assigned to this package, show all active meals
-          if (!packageMealData || packageMealData.length === 0) {
-            const { data, error } = await supabase
-              .from("meals")
-              .select("id,name,description,category,price,image_url,total_calories,total_protein,total_carbs,total_fat,total_fiber")
-              .eq("is_active", true)
-              .order("category", { ascending: true })
-              .order("name", { ascending: true });
-            if (!error) {
-              const mealsData = (data || []) as Meal[];
-              setMeals(mealsData);
-              await fetchAllergensForMeals(mealsData.map(m => m.id));
-            }
-          } else {
-            // Get the actual meal data for the assigned meals
-            const mealIds = packageMealData.map(pm => pm.meal_id);
-            const { data, error } = await supabase
-              .from("meals")
-              .select("id,name,description,category,price,image_url,total_calories,total_protein,total_carbs,total_fat,total_fiber")
-              .in("id", mealIds)
-              .eq("is_active", true)
-              .order("category", { ascending: true })
-              .order("name", { ascending: true });
-            if (!error) {
-              const mealsData = (data || []) as Meal[];
-              setMeals(mealsData);
-              await fetchAllergensForMeals(mealsData.map(m => m.id));
-            }
-          }
-        }
-        
-        setLoading(false);
-      })();
-    }
-  }, [open]);
-
   const fetchAllergensForMeals = async (mealIds: string[]) => {
     if (mealIds.length === 0) return;
     
@@ -197,6 +141,62 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
       setLoadingIngredients(prev => ({ ...prev, [mealId]: false }));
     }
   };
+
+  useEffect(() => {
+    if (open) {
+      setSelected({});
+      setSearchTerm("");
+      (async () => {
+        setLoading(true);
+        
+        if (pkg) {
+          // First get the meal IDs for this package
+          const { data: packageMealData, error: packageError } = await supabase
+            .from("package_meals")
+            .select("meal_id")
+            .eq("package_id", pkg.id);
+            
+          if (packageError) {
+            console.error("Error fetching package meals:", packageError);
+            setLoading(false);
+            return;
+          }
+          
+          // If no meals are assigned to this package, show all active meals
+          if (!packageMealData || packageMealData.length === 0) {
+            const { data, error } = await supabase
+              .from("meals")
+              .select("id,name,description,category,price,image_url,total_calories,total_protein,total_carbs,total_fat,total_fiber")
+              .eq("is_active", true)
+              .order("category", { ascending: true })
+              .order("name", { ascending: true });
+            if (!error) {
+              const mealsData = (data || []) as Meal[];
+              setMeals(mealsData);
+              await fetchAllergensForMeals(mealsData.map(m => m.id));
+            }
+          } else {
+            // Get the actual meal data for the assigned meals
+            const mealIds = packageMealData.map(pm => pm.meal_id);
+            const { data, error } = await supabase
+              .from("meals")
+              .select("id,name,description,category,price,image_url,total_calories,total_protein,total_carbs,total_fat,total_fiber")
+              .in("id", mealIds)
+              .eq("is_active", true)
+              .order("category", { ascending: true })
+              .order("name", { ascending: true });
+            if (!error) {
+              const mealsData = (data || []) as Meal[];
+              setMeals(mealsData);
+              await fetchAllergensForMeals(mealsData.map(m => m.id));
+            }
+          }
+        }
+        
+        setLoading(false);
+      })();
+    }
+  }, [open, pkg]);
 
   const handleIngredientsToggle = (mealId: string) => {
     if (!expandedIngredients[mealId] && !mealIngredients[mealId]) {
