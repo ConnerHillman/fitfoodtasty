@@ -23,12 +23,20 @@ import { startOfDay, endOfDay } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { LabelReport } from '@/components/admin/LabelReport';
 import { exportCustomers } from '@/lib/customerExport';
+import { MealProductionReport } from './MealProductionReport';
+import { IngredientsProductionReport } from './IngredientsProductionReport';
+import { OrderItemSummaryReport } from './OrderItemSummaryReport';
+import { NewCustomerReport } from './NewCustomerReport';
 
 export function ReportsGrid() {
   const { toast } = useToast();
   
   // Modal states
   const [showLabelReport, setShowLabelReport] = useState(false);
+  const [showMealProduction, setShowMealProduction] = useState(false);
+  const [showIngredientsProduction, setShowIngredientsProduction] = useState(false);
+  const [showOrderItemSummary, setShowOrderItemSummary] = useState(false);
+  const [showNewCustomerReport, setShowNewCustomerReport] = useState(false);
   
   // Date states for each report
   const [itemProductionDate, setItemProductionDate] = useState<{ from: Date; to: Date }>({
@@ -173,6 +181,26 @@ export function ReportsGrid() {
   return (
     <>
       <LabelReport isOpen={showLabelReport} onClose={() => setShowLabelReport(false)} />
+      <MealProductionReport 
+        isOpen={showMealProduction} 
+        onClose={() => setShowMealProduction(false)} 
+        dateRange={itemProductionDate}
+      />
+      <IngredientsProductionReport 
+        isOpen={showIngredientsProduction} 
+        onClose={() => setShowIngredientsProduction(false)} 
+        dateRange={ingredientsProductionDate}
+      />
+      <OrderItemSummaryReport 
+        isOpen={showOrderItemSummary} 
+        onClose={() => setShowOrderItemSummary(false)} 
+        dateRange={orderSummaryDate}
+      />
+      <NewCustomerReport 
+        isOpen={showNewCustomerReport} 
+        onClose={() => setShowNewCustomerReport(false)} 
+        dateRange={newCustomerDate}
+      />
       
       <div className="space-y-8">
       {/* Page Header */}
@@ -195,7 +223,7 @@ export function ReportsGrid() {
             title="Item/Meal Production"
             description="View meal quantities needed for selected date range"
             icon={Calculator}
-            onClick={() => handleComingSoon("Item/Meal Production")}
+            onClick={() => setShowMealProduction(true)}
             datePickerSlot={
               <SimpleDateRangePicker
                 date={itemProductionDate}
@@ -213,7 +241,7 @@ export function ReportsGrid() {
             title="Ingredients Production"
             description="Calculate ingredient quantities for production"
             icon={Package}
-            onClick={() => handleComingSoon("Ingredients Production")}
+            onClick={() => setShowIngredientsProduction(true)}
             datePickerSlot={
               <SimpleDateRangePicker
                 date={ingredientsProductionDate}
@@ -279,7 +307,7 @@ export function ReportsGrid() {
             title="Order Item Summary"
             description="See which meals are for which customers"
             icon={FileText}
-            onClick={() => handleComingSoon("Order Item Summary")}
+            onClick={() => setShowOrderItemSummary(true)}
             datePickerSlot={
               <SimpleDateRangePicker
                 date={orderSummaryDate}
@@ -297,7 +325,7 @@ export function ReportsGrid() {
             title="New Customer Report"
             description="Track first-time customers and acquisition trends"
             icon={UserPlus}
-            onClick={() => handleComingSoon("New Customer Report")}
+            onClick={() => setShowNewCustomerReport(true)}
             datePickerSlot={
               <SimpleDateRangePicker
                 date={newCustomerDate}
