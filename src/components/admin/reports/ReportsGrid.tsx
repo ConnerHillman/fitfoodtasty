@@ -20,9 +20,15 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { LabelReport } from '@/components/admin/LabelReport';
+import { exportCustomers } from '@/lib/customerExport';
 
 export function ReportsGrid() {
   const { toast } = useToast();
+  
+  // Modal states
+  const [showLabelReport, setShowLabelReport] = useState(false);
   
   // Date states for each report
   const [itemProductionDate, setItemProductionDate] = useState<{ from: Date; to: Date }>({
@@ -67,8 +73,95 @@ export function ReportsGrid() {
     });
   };
 
+  // Export Customers Handler
+  const handleExportCustomers = async () => {
+    try {
+      const { data: customers, error } = await supabase
+        .from('profiles')
+        .select(`
+          user_id,
+          full_name,
+          phone,
+          delivery_address,
+          city,
+          postal_code,
+          county,
+          delivery_instructions,
+          created_at
+        `)
+        .order('full_name');
+
+      if (error) throw error;
+
+      // Get user emails from auth
+      const userIds = customers?.map(c => c.user_id) || [];
+      const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) throw authError;
+      
+      const emailMap = new Map(authUsers?.map(u => [u.id, u.email] as const) || []);
+
+      // Get order statistics
+      const { data: orderStats, error: orderError } = await supabase
+        .from('orders')
+        .select('user_id, total_amount, created_at')
+        .in('status', ['confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'completed']);
+
+      if (orderError) throw orderError;
+
+      // Aggregate order stats
+      const statsMap = new Map<string, { total_orders: number; total_spent: number; last_order_date: string | null }>();
+      orderStats?.forEach(order => {
+        const existing = statsMap.get(order.user_id) || { total_orders: 0, total_spent: 0, last_order_date: null };
+        existing.total_orders += 1;
+        existing.total_spent += Number(order.total_amount || 0);
+        if (!existing.last_order_date || order.created_at > existing.last_order_date) {
+          existing.last_order_date = order.created_at;
+        }
+        statsMap.set(order.user_id, existing);
+      });
+
+      // Format customer data
+      const formattedCustomers = customers?.map(customer => {
+        const stats = statsMap.get(customer.user_id) || { total_orders: 0, total_spent: 0, last_order_date: null };
+        return {
+          user_id: customer.user_id,
+          full_name: customer.full_name,
+          email: emailMap.get(customer.user_id) || '',
+          phone: customer.phone || '',
+          delivery_address: customer.delivery_address || '',
+          city: customer.city || '',
+          postal_code: customer.postal_code || '',
+          county: customer.county || '',
+          total_orders: stats.total_orders,
+          total_spent: stats.total_spent,
+          last_order_date: stats.last_order_date,
+          created_at: customer.created_at,
+          delivery_instructions: customer.delivery_instructions || '',
+        };
+      }) || [];
+
+      await exportCustomers(formattedCustomers as any, { format: 'csv' });
+
+      toast({
+        title: "Export Successful",
+        description: `Exported ${formattedCustomers.length} customers to CSV`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export customer data",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <>
+      <LabelReport isOpen={showLabelReport} onClose={() => setShowLabelReport(false)} />
+      
+      <div className="space-y-8">
       {/* Page Header */}
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background rounded-lg p-6 border">
         <h1 className="text-3xl font-bold mb-2">Reports</h1>
@@ -125,15 +218,7 @@ export function ReportsGrid() {
             title="Labels For Meals"
             description="Generate meal labels for a specific delivery day"
             icon={Tag}
-            onClick={() => handleComingSoon("Labels For Meals")}
-            requiresDate
-            datePickerSlot={
-              <SimpleDatePicker
-                date={labelsDate}
-                onDateChange={setLabelsDate}
-                placeholder="Select delivery date"
-              />
-            }
+            onClick={() => setShowLabelReport(true)}
           />
 
           <ReportButton
@@ -157,7 +242,7 @@ export function ReportsGrid() {
             title="Export Customers"
             description="Download complete customer database as CSV/Excel"
             icon={Users}
-            onClick={() => handleComingSoon("Export Customers")}
+            onClick={handleExportCustomers}
           />
 
           <ReportButton
@@ -326,5 +411,6 @@ export function ReportsGrid() {
         </div>
       </section>
     </div>
+    </>
   );
 }
