@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, BarChart3, FlaskConical, FileText, Calculator, Edit, ImageIcon, Eye, Power } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMealsData } from "@/hooks/useMealsData";
-import { useFilteredMeals } from "@/hooks/useFilteredMeals";
+import { useStandardizedMealsData } from "@/hooks/useStandardizedMealsData";
 import { formatCurrency } from "@/lib/utils";
 
 // Import new generic components
@@ -24,7 +23,6 @@ import type { StatCardData, ColumnDef, ActionItem } from "@/components/common";
 
 const MealsManager = () => {
   const { toast } = useToast();
-  const { meals, categories, loading, fetchMeals, toggleMealActive } = useMealsData();
   
   // Filter state
   const [filters, setFilters] = useState<MealFilters>({
@@ -36,13 +34,31 @@ const MealsManager = () => {
     sortOrder: 'desc'
   });
 
+  // Use standardized hook with built-in filtering and pagination
+  const {
+    allMeals,
+    categories,
+    loading,
+    error,
+    toggleMealActive,
+    refetch
+  } = useStandardizedMealsData({
+    searchTerm: filters.searchQuery,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+    statusFilter: filters.statusFilter,
+    categoryFilter: filters.categoryFilter,
+    viewMode: filters.viewMode
+  });
+
   // Dialog states
   const [isNewMealFormOpen, setIsNewMealFormOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
 
-  const filteredMeals = useFilteredMeals(meals, filters);
+  // Use allMeals for display (already filtered by the standardized hook)
+  const filteredMeals = allMeals;
 
   // Convert filters to match GenericFiltersBar interface
   const genericFilters = useMemo(() => ({
@@ -90,16 +106,16 @@ const MealsManager = () => {
 
   // Stats data for the new StatsCardsGrid
   const statsData: StatCardData[] = useMemo(() => {
-    const activeMeals = meals.filter(m => m.is_active);
-    const inactiveMeals = meals.filter(m => !m.is_active);
-    const avgPrice = meals.reduce((sum, m) => sum + (m.price || 0), 0) / meals.length || 0;
-    const avgCalories = meals.reduce((sum, m) => sum + (m.total_calories || 0), 0) / meals.length || 0;
+    const activeMeals = allMeals.filter(m => m.is_active);
+    const inactiveMeals = allMeals.filter(m => !m.is_active);
+    const avgPrice = allMeals.reduce((sum, m) => sum + (m.price || 0), 0) / allMeals.length || 0;
+    const avgCalories = allMeals.reduce((sum, m) => sum + (m.total_calories || 0), 0) / allMeals.length || 0;
 
     return [
       {
         id: 'total',
         title: 'Total Meals',
-        value: meals.length,
+        value: allMeals.length,
         icon: FlaskConical,
         iconColor: 'text-blue-500'
       },
@@ -127,7 +143,7 @@ const MealsManager = () => {
         iconColor: 'text-orange-500'
       }
     ];
-  }, [meals]);
+  }, [allMeals]);
 
   // Table columns for the new GenericDataTable
   const columns: ColumnDef<Meal>[] = [
@@ -287,7 +303,7 @@ const MealsManager = () => {
           <GenericFiltersBar
             filters={genericFilters}
             onFiltersChange={handleFiltersChange}
-            totalCount={meals.length}
+            totalCount={allMeals.length}
             filteredCount={filteredMeals.length}
             searchPlaceholder="Search meals by name, description, or category..."
             customFilters={[
@@ -346,7 +362,7 @@ const MealsManager = () => {
             <MealFormWithIngredients
               onSuccess={() => {
                 setIsNewMealFormOpen(false);
-                fetchMeals();
+                refetch();
               }}
               onCancel={() => setIsNewMealFormOpen(false)}
             />
@@ -364,7 +380,7 @@ const MealsManager = () => {
               <MealBuilder
                 mealId={selectedMealId}
                 onClose={() => setIsBuilderOpen(false)}
-                onNutritionUpdate={() => fetchMeals()}
+                onNutritionUpdate={() => refetch()}
               />
             )}
           </GenericModal>
@@ -414,7 +430,7 @@ const MealsManager = () => {
           setIsDetailModalOpen(false);
           setSelectedMealId(null);
         }}
-        onUpdate={fetchMeals}
+        onUpdate={refetch}
       />
     </div>
   );
