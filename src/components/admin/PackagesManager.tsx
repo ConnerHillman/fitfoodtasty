@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,20 +13,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PackageAnalytics from "./PackageAnalytics";
 import PackageMealsManager from "./packages/PackageMealsManager";
-
-interface Package {
-  id: string;
-  name: string;
-  description?: string;
-  meal_count: number;
-  price: number;
-  image_url?: string;
-  is_active: boolean;
-  sort_order: number;
-}
+import { useStandardizedPackagesData, type Package } from "@/hooks/useStandardizedPackagesData";
+import { logger } from "@/lib/logger";
 
 const PackagesManager = () => {
-  const [packages, setPackages] = useState<Package[]>([]);
+  const { toast } = useToast();
+  const {
+    allPackages: packages,
+    loading,
+    refetch,
+    updatePackage,
+    deletePackage,
+    toggleActive: togglePackageActive
+  } = useStandardizedPackagesData();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMealsDialogOpen, setIsMealsDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
@@ -41,24 +41,6 @@ const PackagesManager = () => {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    fetchPackages();
-  }, []);
-
-  const fetchPackages = async () => {
-    const { data, error } = await supabase
-      .from("packages")
-      .select("*")
-      .order("sort_order", { ascending: true });
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to fetch packages", variant: "destructive" });
-    } else {
-      setPackages(data || []);
-    }
-  };
 
   const handleImageUpload = async (file: File): Promise<string | null> => {
     try {
@@ -79,7 +61,7 @@ const PackagesManager = () => {
 
       return data.publicUrl;
     } catch (error) {
-      console.error('Error uploading image:', error);
+      logger.error('Error uploading image', error);
       toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
       return null;
     } finally {
@@ -107,25 +89,23 @@ const PackagesManager = () => {
       image_url: imageUrl || null,
     };
 
-    let error;
-    if (editingPackage) {
-      ({ error } = await supabase
-        .from("packages")
-        .update(packageData)
-        .eq("id", editingPackage.id));
-    } else {
-      ({ error } = await supabase
-        .from("packages")
-        .insert([packageData]));
-    }
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to save package", variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: `Package ${editingPackage ? "updated" : "created"} successfully` });
+    try {
+      if (editingPackage) {
+        await updatePackage(editingPackage.id, packageData);
+      } else {
+        const { error } = await supabase
+          .from("packages")
+          .insert([packageData]);
+        if (error) throw error;
+        toast({ title: "Success", description: "Package created successfully" });
+      }
+      
       setIsDialogOpen(false);
       resetForm();
-      fetchPackages();
+      refetch();
+    } catch (error) {
+      logger.error('Failed to save package', error);
+      toast({ title: "Error", description: "Failed to save package", variant: "destructive" });
     }
   };
 
@@ -148,32 +128,11 @@ const PackagesManager = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this package?")) return;
-
-    const { error } = await supabase
-      .from("packages")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to delete package", variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: "Package deleted successfully" });
-      fetchPackages();
-    }
+    await deletePackage(id);
   };
 
   const toggleActive = async (pkg: Package) => {
-    const { error } = await supabase
-      .from("packages")
-      .update({ is_active: !pkg.is_active })
-      .eq("id", pkg.id);
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to update package status", variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: `Package ${!pkg.is_active ? "activated" : "deactivated"}` });
-      fetchPackages();
-    }
+    await togglePackageActive(pkg.id);
   };
 
   const handleManageMeals = async (pkg: Package) => {
@@ -245,7 +204,7 @@ const PackagesManager = () => {
       });
       setIsMealsDialogOpen(false);
     } catch (error) {
-      console.error("Error saving meal selections:", error);
+      logger.error("Error saving meal selections", error);
       toast({ 
         title: "Error", 
         description: "Failed to save meal selections", 
@@ -279,7 +238,7 @@ const PackagesManager = () => {
       toast({ title: "Error", description: "Failed to reorder packages", variant: "destructive" });
     } else {
       toast({ title: "Success", description: "Package order updated" });
-      fetchPackages();
+      refetch();
     }
   };
 
@@ -529,7 +488,7 @@ const PackagesManager = () => {
               package={selectedPackageForMeals}
               onSuccess={() => {
                 setIsMealsDialogOpen(false);
-                fetchPackages();
+                refetch();
                 toast({
                   title: "Success",
                   description: "Package meals updated successfully",

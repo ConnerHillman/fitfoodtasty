@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,8 @@ import { GenericDataTable } from "@/components/common/GenericDataTable";
 import { GenericFiltersBar } from "@/components/common/GenericFiltersBar";
 import { StatsCardsGrid } from "@/components/common/StatsCards";
 import { GenericModal } from "@/components/common/GenericModal";
+import { useStandardizedIngredientsData, type Ingredient } from "@/hooks/useStandardizedIngredientsData";
+import { logger } from "@/lib/logger";
 
 interface Allergen {
   id: string;
@@ -19,33 +21,29 @@ interface Allergen {
   description?: string;
 }
 
-interface Ingredient {
-  id: string;
-  name: string;
-  description: string;
-  calories_per_100g: number;
-  protein_per_100g: number;
-  carbs_per_100g: number;
-  fat_per_100g: number;
-  saturated_fat_per_100g: number;
-  fiber_per_100g: number;
-  sugar_per_100g: number;
-  salt_per_100g: number;
-  default_unit: string;
-  allergens?: Allergen[];
-}
-
 const IngredientsManager = () => {
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [allergens, setAllergens] = useState<Allergen[]>([]);
-  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBy, setFilterBy] = useState("all");
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  
+  const {
+    filteredIngredients,
+    loading,
+    stats,
+    refetch
+  } = useStandardizedIngredientsData({
+    searchTerm: searchQuery,
+    sortBy,
+    sortOrder,
+    filterBy: filterBy as any
+  });
+
+  const [allergens, setAllergens] = useState<Allergen[]>([]);
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
-  const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -60,46 +58,8 @@ const IngredientsManager = () => {
     salt_per_100g: "",
     default_unit: "g"
   });
-  
-  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchIngredients();
-    fetchAllergens();
-  }, []);
-
-  const fetchIngredients = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("ingredients")
-      .select(`
-        *,
-        ingredient_allergens(
-          allergen_id,
-          allergens(
-            id,
-            name,
-            description
-          )
-        )
-      `)
-      .order("name");
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to fetch ingredients", variant: "destructive" });
-    } else {
-      const ingredientsWithAllergens = data?.map(ingredient => ({
-        ...ingredient,
-        saturated_fat_per_100g: ingredient.saturated_fat_per_100g || 0,
-        salt_per_100g: ingredient.salt_per_100g || 0,
-        allergens: ingredient.ingredient_allergens?.map((ia: any) => ia.allergens) || []
-      })) || [];
-      setIngredients(ingredientsWithAllergens);
-    }
-    setLoading(false);
-  };
-
-  const fetchAllergens = async () => {
+  const fetchAllergens = useCallback(async () => {
     const { data, error } = await supabase
       .from("allergens")
       .select("*")
@@ -110,32 +70,12 @@ const IngredientsManager = () => {
     } else {
       setAllergens(data || []);
     }
-  };
+  }, [toast]);
 
-  const filteredIngredients = ingredients.filter(ingredient => {
-    const matchesSearch = ingredient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (ingredient.description && ingredient.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesFilter = filterBy === "all" || 
-                         (filterBy === "high-protein" && ingredient.protein_per_100g > 15) ||
-                         (filterBy === "low-calorie" && ingredient.calories_per_100g < 100) ||
-                         (filterBy === "with-allergens" && ingredient.allergens && ingredient.allergens.length > 0);
-    
-    return matchesSearch && matchesFilter;
-  }).sort((a, b) => {
-    const aValue = a[sortBy as keyof Ingredient];
-    const bValue = b[sortBy as keyof Ingredient];
-    
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortOrder === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-    }
-    
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
-    }
-    
-    return 0;
-  });
+  // Load allergens on mount
+  useEffect(() => {
+    fetchAllergens();
+  }, [fetchAllergens]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +141,7 @@ const IngredientsManager = () => {
     }
 
     toast({ title: "Success", description: `Ingredient ${editingIngredient ? 'updated' : 'created'} successfully` });
-    await fetchIngredients();
+    await refetch();
     setIsModalOpen(false);
     resetForm();
   };
@@ -235,7 +175,7 @@ const IngredientsManager = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Success", description: "Ingredient deleted successfully" });
-      fetchIngredients();
+      refetch();
     }
   };
 
@@ -269,28 +209,28 @@ const IngredientsManager = () => {
     {
       id: "total-ingredients",
       title: "Total Ingredients",
-      value: ingredients.length.toString(),
+      value: stats.total.toString(),
       subtitle: "Available ingredients",
       icon: Package2,
     },
     {
       id: "avg-calories", 
       title: "Avg Calories",
-      value: Math.round(ingredients.reduce((sum, ing) => sum + ing.calories_per_100g, 0) / ingredients.length || 0).toString(),
+      value: stats.avgCalories.toString(),
       subtitle: "Per 100g average",
       icon: Zap,
     },
     {
       id: "high-protein",
       title: "High Protein",
-      value: ingredients.filter(ing => ing.protein_per_100g > 15).length.toString(),
+      value: stats.highProtein.toString(),
       subtitle: "Over 15g protein per 100g",
       icon: Target,
     },
     {
       id: "with-allergens",
       title: "With Allergens",
-      value: ingredients.filter(ing => ing.allergens && ing.allergens.length > 0).length.toString(),
+      value: stats.withAllergens.toString(),
       subtitle: "Contain allergens",
       icon: Package2,
     },
@@ -409,8 +349,8 @@ const IngredientsManager = () => {
           if (newFilters.sortBy !== undefined) setSortBy(newFilters.sortBy);
           if (newFilters.sortOrder !== undefined) setSortOrder(newFilters.sortOrder);
         }}
-        totalCount={ingredients.length}
-        filteredCount={filteredIngredients.length}
+        totalCount={stats.total}
+        filteredCount={stats.filtered}
         entityName="ingredient"
         entityNamePlural="ingredients"
         customFilters={filterOptions}
