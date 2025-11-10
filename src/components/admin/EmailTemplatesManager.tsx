@@ -5,13 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Send, Trash2, Plus, Eye } from "lucide-react";
 import { SafeHtml } from "@/components/common/SafeHtml";
+import { useStandardizedEmailTemplatesData } from "@/hooks/useStandardizedEmailTemplatesData";
 
 interface EmailTemplate {
   id: string;
@@ -29,25 +28,18 @@ interface EmailTemplate {
 
 export const EmailTemplatesManager = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const {
+    templates,
+    loading,
+    createTemplate,
+    updateTemplate,
+    deleteTemplate
+  } = useStandardizedEmailTemplatesData();
+
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [previewData, setPreviewData] = useState<any>(null);
-
-  // Fetch email templates
-  const { data: templates, isLoading } = useQuery({
-    queryKey: ['email-templates'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('order_email_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as EmailTemplate[];
-    }
-  });
 
   const handleTestEmail = async (template: EmailTemplate) => {
     if (!testEmail) {
@@ -150,68 +142,17 @@ export const EmailTemplatesManager = () => {
   };
 
   const handleSaveTemplate = async (templateData: any) => {
-    try {
-      let result;
-      
-      if (selectedTemplate?.id) {
-        // Update existing template
-        result = await supabase
-          .from('order_email_templates')
-          .update(templateData)
-          .eq('id', selectedTemplate.id);
-      } else {
-        // Create new template
-        result = await supabase
-          .from('order_email_templates')
-          .insert(templateData);
-      }
-
-      if (result.error) throw result.error;
-
-      await queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      setIsEditing(false);
-      setSelectedTemplate(null);
-
-      toast({
-        title: "Success",
-        description: selectedTemplate?.id ? "Template updated successfully" : "Template created successfully",
-      });
-    } catch (error: any) {
-      console.error('Error saving template:', error);
-      toast({
-        title: "Error",
-        description: `Failed to save template: ${error.message}`,
-        variant: "destructive",
-      });
+    if (selectedTemplate?.id) {
+      await updateTemplate(selectedTemplate.id, templateData);
+    } else {
+      await createTemplate(templateData as any);
     }
+    
+    setIsEditing(false);
+    setSelectedTemplate(null);
   };
 
-  const handleDeleteTemplate = async (templateId: string) => {
-    try {
-      const { error } = await supabase
-        .from('order_email_templates')
-        .delete()
-        .eq('id', templateId);
-
-      if (error) throw error;
-
-      await queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-      
-      toast({
-        title: "Success",
-        description: "Template deleted successfully",
-      });
-    } catch (error: any) {
-      console.error('Error deleting template:', error);
-      toast({
-        title: "Error",
-        description: `Failed to delete template: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isLoading) {
+  if (loading) {
     return <div>Loading email templates...</div>;
   }
 
@@ -277,7 +218,7 @@ export const EmailTemplatesManager = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleDeleteTemplate(template.id)}
+                  onClick={() => deleteTemplate(template.id)}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
