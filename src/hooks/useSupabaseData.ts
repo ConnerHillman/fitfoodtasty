@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 
 // Generic data fetching hook with common patterns
 export const useSupabaseData = <T>(
@@ -56,7 +57,7 @@ export const useSupabaseData = <T>(
       if (error) throw error;
       setData(result || []);
     } catch (error: any) {
-      console.error(`Error fetching ${config.table}:`, error);
+      logger.dbError('fetch', config.table, error);
       toast({
         title: "Error",
         description: `Failed to fetch ${config.table}`,

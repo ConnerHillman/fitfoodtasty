@@ -5,6 +5,7 @@ import { Upload, CheckCircle, AlertCircle, Loader2, Package, Utensils, FileText 
 import { useToast } from '@/hooks/use-toast';
 import { importGoPrepMenu, importGoPrepIngredients, importGoPrepMealIngredients } from '@/utils/importGoPrep';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 // Function to parse pasted recipe data and import meal-ingredient relationships
 const importPastedRecipes = async (pasteData: string) => {
@@ -138,7 +139,7 @@ const importPastedRecipes = async (pasteData: string) => {
       warning: warnings || undefined
     };
   } catch (error) {
-    console.error('Error importing pasted recipes:', error);
+    logger.error('Error importing pasted recipes', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'

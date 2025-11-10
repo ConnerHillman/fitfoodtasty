@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { Search, User, X } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { logger } from "@/lib/logger";
 
 interface CustomerData {
   customerEmail: string;
@@ -73,12 +74,8 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
           .rpc('search_customers', { search_term: debouncedSearchTerm });
 
         if (error) {
-          console.error('Error searching customers:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            fullError: error
+          logger.dbError('search_customers', 'customers', error, {
+            search_term: debouncedSearchTerm
           });
           toast({
             title: "Search Error",
@@ -90,12 +87,8 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
 
         setCustomers(customerData || []);
       } catch (error: any) {
-        console.error('Error searching customers (catch block):', {
-          code: error?.code,
-          message: error?.message,
-          details: error?.details,
-          hint: error?.hint,
-          fullError: error
+        logger.dbError('search_customers', 'customers', error, {
+          search_term: debouncedSearchTerm
         });
         toast({
           title: "Search Error",
@@ -129,12 +122,12 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
         .rpc('get_delivery_zone_for_postcode', { customer_postcode: postcode });
       
       if (error) {
-        console.error('Delivery zone detection error:', error);
+        logger.dbError('get_delivery_zone_for_postcode', 'delivery_zones', error, { postcode });
         return null;
       }
       return data;
     } catch (error) {
-      console.error('Error detecting delivery zone:', error);
+      logger.dbError('get_delivery_zone_for_postcode', 'delivery_zones', error, { postcode });
       return null;
     }
   };

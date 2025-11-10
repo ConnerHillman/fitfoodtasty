@@ -7,6 +7,7 @@ import { Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 
 interface Allergen {
@@ -106,7 +107,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
         setIngredients(ingredientsList);
       }
     } catch (error) {
-      console.error("Error fetching ingredients:", error);
+      logger.dbError('fetch', 'meal_ingredients', error, { meal_id: meal.id });
     } finally {
       setLoadingIngredients(false);
     }

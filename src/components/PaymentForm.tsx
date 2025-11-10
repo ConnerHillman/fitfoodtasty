@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -76,7 +77,7 @@ export default function PaymentForm({
     });
 
     if (error) {
-      console.error("Payment failed:", error);
+      logger.error("Payment failed", error);
       toast({
         title: "Payment failed",
         description: error.message || "An unexpected error occurred",
@@ -108,7 +109,7 @@ export default function PaymentForm({
         });
         navigate("/payment-success");
       } catch (orderError) {
-        console.error("Failed to create order:", orderError);
+        logger.apiError('create-order-from-payment', orderError);
         toast({
           title: "Payment successful, but order creation failed",
           description: "Please contact support for assistance.",

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { ApiError, CrudResponse } from '@/types/api';
+import { logger } from '@/lib/logger';
 
 interface UseAdminCrudConfig {
   table: string;
@@ -26,9 +27,10 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
   const [error, setError] = useState<ApiError | null>(null);
 
   const handleError = useCallback((error: any, operation: 'create' | 'update' | 'delete') => {
-    console.error(`Error ${operation}ing ${config.entityName}:`, error);
     const errorMessage = config.onError?.[operation] || 
       `Failed to ${operation} ${config.entityName}`;
+    
+    logger.dbError(operation, config.table, error, { entityName: config.entityName });
     
     toast({
       title: "Error",

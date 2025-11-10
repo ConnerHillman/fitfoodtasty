@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useToast } from './use-toast';
 import type { ApiError, ApiErrorCode } from '@/types/api';
 import { ErrorMessages } from '@/types/api';
+import { logger } from '@/lib/logger';
 
 export const useErrorHandler = () => {
   const { toast } = useToast();
@@ -42,10 +43,9 @@ export const useErrorHandler = () => {
     }
 
     // Log error for debugging
-    console.error(`[${context || 'API'}] Error:`, {
+    logger.error(`${context || 'API'} Error`, error, {
       code: apiError.code,
       message: apiError.message,
-      originalError: error,
       timestamp: apiError.timestamp
     });
 

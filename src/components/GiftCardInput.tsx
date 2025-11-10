@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Gift, CheckCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface GiftCardInputProps {
   onGiftCardApplied: (giftCardData: {
@@ -77,7 +78,7 @@ const GiftCardInput = ({
       });
 
     } catch (error: any) {
-      console.error('Error applying gift card:', error);
+      logger.apiError('validate-gift-card', error);
       toast({
         title: "Error",
         description: "Failed to validate gift card",
