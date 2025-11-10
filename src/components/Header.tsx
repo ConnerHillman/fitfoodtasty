@@ -145,7 +145,7 @@ const Header = () => {
                 <ShoppingCart className="h-4 w-4" />
                 <span>CART</span>
                 {getTotalItems() > 0 && (
-                  <Badge className="bg-white text-green-600 text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center ml-2">
+                  <Badge className="bg-card text-primary text-xs rounded-full min-w-[1.25rem] h-5 flex items-center justify-center ml-2">
                     {getTotalItems()}
                   </Badge>
                 )}
@@ -161,7 +161,7 @@ const Header = () => {
                 <ShoppingCart className="h-4 w-4" />
                 <span>CART</span>
                 {getTotalItems() > 0 && (
-                  <Badge className="bg-white text-green-600 text-xs rounded-full min-w-[1rem] h-4 flex items-center justify-center ml-1">
+                  <Badge className="bg-card text-primary text-xs rounded-full min-w-[1rem] h-4 flex items-center justify-center ml-1">
                     {getTotalItems()}
                   </Badge>
                 )}

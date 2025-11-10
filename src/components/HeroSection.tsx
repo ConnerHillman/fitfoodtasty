@@ -34,14 +34,14 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-4 py-20 lg:py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
-          <div className="text-white space-y-8">
+          <div className="text-foreground space-y-8">
             <div className="space-y-4">
               <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-sm px-4 py-2">
                 Premium Meal Prep
               </Badge>
               
               <h1 className="text-display-lg">
-                <span className="text-white">PREMIUM</span>
+                <span className="text-primary-foreground">PREMIUM</span>
                 <br />
                 <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                   MEAL PREP
@@ -76,13 +76,13 @@ const HeroSection = () => {
                </Button>
                
                <div className="flex items-center space-x-4">
-                 <Button asChild variant="outline" size="lg" className="border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold px-6 py-3 rounded-full backdrop-blur-sm">
-                   <Link to="/auth">Create Free Account</Link>
-                 </Button>
-                 
-                 <Button asChild variant="ghost" size="lg" className="text-white hover:bg-white/20 font-medium px-6 py-3 rounded-full">
-                   <Link to="/menu">Browse Menu</Link>
-                 </Button>
+              <Button asChild variant="outline" size="lg" className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-bold px-6 py-3 rounded-full backdrop-blur-sm">
+                <Link to="/auth">Create Free Account</Link>
+              </Button>
+              
+              <Button asChild variant="ghost" size="lg" className="text-primary-foreground hover:bg-primary-foreground/20 font-medium px-6 py-3 rounded-full">
+                <Link to="/menu">Browse Menu</Link>
+              </Button>
                </div>
                
                
@@ -92,8 +92,8 @@ const HeroSection = () => {
           {/* Right Content - Social Proof */}
           <div className="space-y-8">
             {/* Stats */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-              <h3 className="text-heading-lg text-white mb-6">
+            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20">
+              <h3 className="text-heading-lg text-primary-foreground mb-6">
                 Over 500,000 Meals Delivered
               </h3>
               
@@ -103,33 +103,33 @@ const HeroSection = () => {
                   <div className="flex items-center space-x-1">
                     {[...Array(5)].map((_, i) => <Star key={i} size={16} className="fill-green-400 text-green-400" />)}
                   </div>
-                  <span className="text-white font-semibold">4.8/5</span>
-                  <span className="text-gray-300 text-sm">Excellent on Trustpilot</span>
+                  <span className="text-primary-foreground font-semibold">4.8/5</span>
+                  <span className="text-primary-foreground/70 text-sm">Excellent on Trustpilot</span>
                 </div>
 
                 {/* Sample Reviews */}
                 <div className="space-y-4">
                   <div className="border-l-4 border-green-400 pl-4">
-                    <p className="text-white text-sm mb-2">
+                    <p className="text-primary-foreground text-sm mb-2">
                       "The best meal prep service I have used. Quality is outstanding and the convenience is unmatched."
                     </p>
                     <div className="flex items-center space-x-2">
                       <div className="flex">
                         {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-green-400 text-green-400" />)}
                       </div>
-                      <span className="text-gray-300 text-xs">- Sarah M.</span>
+                      <span className="text-primary-foreground/70 text-xs">- Sarah M.</span>
                     </div>
                   </div>
 
                   <div className="border-l-4 border-green-400 pl-4">
-                    <p className="text-white text-sm mb-2">
+                    <p className="text-primary-foreground text-sm mb-2">
                       "Perfect portions, amazing flavours. Has completely changed my approach to healthy eating."
                     </p>
                     <div className="flex items-center space-x-2">
                       <div className="flex">
                         {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-green-400 text-green-400" />)}
                       </div>
-                      <span className="text-gray-300 text-xs">- James R.</span>
+                      <span className="text-primary-foreground/70 text-xs">- James R.</span>
                     </div>
                   </div>
                 </div>

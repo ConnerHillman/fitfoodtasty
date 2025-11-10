@@ -17,7 +17,7 @@ const CategoryTag = ({
   // Handle null/undefined category gracefully
   if (!category) {
     return (
-      <Badge className="bg-gray-200 text-gray-600 px-2 py-1 text-xs font-medium rounded-full">
+      <Badge className="bg-muted text-muted-foreground px-2 py-1 text-xs font-medium rounded-full">
         Uncategorized
       </Badge>
     );
@@ -89,7 +89,7 @@ const CategoryTag = ({
   const variantClasses = {
     subtle: `${styles.gradient} ${styles.text} bg-opacity-80 backdrop-blur-sm`,
     bold: `${styles.gradient} ${styles.text} shadow-lg ${styles.shadow}`,
-    outline: `border-2 bg-white/95 backdrop-blur-sm text-foreground`
+    outline: `border-2 bg-card/95 backdrop-blur-sm text-foreground`
   };
 
   const formatDisplayName = (name: string) => {

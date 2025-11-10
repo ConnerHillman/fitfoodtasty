@@ -24,7 +24,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           <div className="container mx-auto flex items-center justify-center gap-3">
             <ShieldCheck className="h-5 w-5" />
             <span className="font-medium">Admin Mode Active</span>
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+            <Badge variant="secondary" className="bg-card/20 text-primary-foreground border-primary-foreground/30">
               <User className="h-3 w-3 mr-1" />
               {adminOrderData.customerName}
             </Badge>

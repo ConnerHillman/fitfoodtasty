@@ -5,6 +5,7 @@ export { GenericDataTable } from './GenericDataTable';
 export { GenericModal, ConfirmationModal } from './GenericModal';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { CustomerErrorBoundary } from './CustomerErrorBoundary';
+export { SafeHtml } from './SafeHtml';
 
 // Export types for component consumers
 export type { 

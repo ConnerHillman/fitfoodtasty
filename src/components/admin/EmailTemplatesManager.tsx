@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Send, Trash2, Plus, Eye } from "lucide-react";
+import { SafeHtml } from "@/components/common/SafeHtml";
 
 interface EmailTemplate {
   id: string;
@@ -317,9 +318,9 @@ export const EmailTemplatesManager = () => {
               </div>
               <div>
                 <Label className="font-semibold">Email Content:</Label>
-                <div 
-                  className="border rounded-lg p-4 mt-2 bg-white"
-                  dangerouslySetInnerHTML={{ __html: previewData.htmlContent }}
+                <SafeHtml 
+                  html={previewData.htmlContent}
+                  className="border rounded-lg p-4 mt-2 bg-background"
                 />
               </div>
             </div>
