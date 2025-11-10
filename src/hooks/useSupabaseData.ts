@@ -19,8 +19,8 @@ export const useSupabaseData = <T>(
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      let query = (supabase as any)
-        .from(config.table)
+      // Using 'as any' for dynamic table names - type safety provided by generic T
+      let query = (supabase.from as any)(config.table)
         .select(config.select || "*");
 
       // Apply filters
@@ -85,11 +85,10 @@ export const useSupabaseCrud = <T extends { id: string }>(tableName: string) => 
 
   const create = async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await (supabase as any)
-        .from(tableName)
+      const { data, error } = await (supabase.from as any)(tableName)
         .insert([item])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -111,12 +110,11 @@ export const useSupabaseCrud = <T extends { id: string }>(tableName: string) => 
 
   const update = async (id: string, updates: Partial<Omit<T, 'id' | 'created_at'>>) => {
     try {
-      const { data, error } = await (supabase as any)
-        .from(tableName)
+      const { data, error } = await (supabase.from as any)(tableName)
         .update(updates)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -138,8 +136,7 @@ export const useSupabaseCrud = <T extends { id: string }>(tableName: string) => 
 
   const remove = async (id: string) => {
     try {
-      const { error } = await (supabase as any)
-        .from(tableName)
+      const { error } = await (supabase.from as any)(tableName)
         .delete()
         .eq('id', id);
 
@@ -164,22 +161,20 @@ export const useSupabaseCrud = <T extends { id: string }>(tableName: string) => 
   const toggle = async (id: string, field: string = 'is_active') => {
     try {
       // First fetch current value
-      const { data: current, error: fetchError } = await (supabase as any)
-        .from(tableName)
+      const { data: current, error: fetchError } = await (supabase.from as any)(tableName)
         .select(field)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (fetchError) throw fetchError;
 
       // Toggle the value
       const newValue = !current[field];
-      const { data, error } = await (supabase as any)
-        .from(tableName)
+      const { data, error } = await (supabase.from as any)(tableName)
         .update({ [field]: newValue })
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

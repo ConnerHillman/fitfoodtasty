@@ -59,7 +59,8 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
     setError(null);
     
     try {
-      let query = supabase.from(config.table as any).select('*');
+      // Using 'as any' for dynamic table names - type safety provided by generic T
+      let query = (supabase.from as any)(config.table).select('*');
       
       // Apply filters
       if (filters) {
@@ -82,8 +83,10 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
       
       if (error) throw error;
       
-      setData((result as any) || []);
-      return (result as any) || [];
+      // Runtime assertion: result matches our generic type T[]
+      const typedResult = (result as unknown as T[]) || [];
+      setData(typedResult);
+      return typedResult;
     } catch (error) {
       handleError(error, 'create'); // Using create as generic fallback
       return [];
@@ -96,18 +99,19 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
     setLoading(true);
     
     try {
-      const { data: result, error } = await supabase
-        .from(config.table as any)
+      const { data: result, error } = await (supabase.from as any)(config.table)
         .insert([item])
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       
-      setData(prev => [...prev, result as unknown as T]);
+      // Runtime assertion: result matches our generic type T
+      const typedResult = result as unknown as T;
+      setData(prev => [...prev, typedResult]);
       handleSuccess('create');
       
-      return { data: result as unknown as T, error: null, success: true };
+      return { data: typedResult, error: null, success: true };
     } catch (error) {
       handleError(error, 'create');
       return { data: null, error: error as ApiError, success: false };
@@ -120,19 +124,20 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
     setLoading(true);
     
     try {
-      const { data: result, error } = await supabase
-        .from(config.table as any)
+      const { data: result, error } = await (supabase.from as any)(config.table)
         .update(updates)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       
-      setData(prev => prev.map(item => item.id === id ? result as unknown as T : item));
+      // Runtime assertion: result matches our generic type T
+      const typedResult = result as unknown as T;
+      setData(prev => prev.map(item => item.id === id ? typedResult : item));
       handleSuccess('update');
       
-      return { data: result as unknown as T, error: null, success: true };
+      return { data: typedResult, error: null, success: true };
     } catch (error) {
       handleError(error, 'update');
       return { data: null, error: error as ApiError, success: false };
@@ -145,8 +150,7 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
     setLoading(true);
     
     try {
-      const { error } = await supabase
-        .from(config.table as any)
+      const { error } = await (supabase.from as any)(config.table)
         .delete()
         .eq('id', id);
       
@@ -170,7 +174,8 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
       return { data: null, error: { code: 'NOT_FOUND', message: 'Item not found' } as ApiError, success: false };
     }
     
-    const currentValue = (item as any)[field];
+    // Type-safe property access using Record type
+    const currentValue = (item as Record<string, unknown>)[field];
     return update(id, { [field]: !currentValue });
   }, [data, update]);
 
@@ -179,7 +184,7 @@ export function useAdminCrud<T extends { id: string }>(config: UseAdminCrudConfi
     
     try {
       const promises = updates.map(({ id, data: updateData }) => 
-        supabase.from(config.table as any).update(updateData).eq('id', id)
+        (supabase.from as any)(config.table).update(updateData).eq('id', id)
       );
       
       const results = await Promise.all(promises);

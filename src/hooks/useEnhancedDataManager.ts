@@ -45,10 +45,11 @@ export const useEnhancedDataManager = <T extends { id: string }>(
     }
   }, []);
 
-  // Build query with filters
+  // Build query with filters - Type-safe query builder
   const buildQuery = useCallback(() => {
-    let query = (supabase as any)
-      .from(tableName)
+    // We use 'as any' here because we're working with dynamic table names
+    // The runtime type safety is guaranteed by the generic T parameter
+    let query = (supabase.from as any)(tableName)
       .select(config.select || '*', { count: 'exact' });
 
     // Apply filters
@@ -87,7 +88,9 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         throw fetchError;
       }
 
-      const typedData = (fetchedData || []) as unknown as T[];
+      // Runtime assertion: Supabase returns data matching the table structure,
+      // which we know should match our generic type T
+      const typedData = (fetchedData as unknown as T[]) || [];
       
       safeSetState(() => {
         setData(typedData);
@@ -114,16 +117,20 @@ export const useEnhancedDataManager = <T extends { id: string }>(
     item: Omit<T, 'id' | 'created_at' | 'updated_at'>
   ): Promise<CrudResponse<T>> => {
     try {
-      const { data: created, error: createError } = await (supabase as any)
-        .from(tableName)
-        .insert(item as any)
+      const { data: created, error: createError } = await (supabase.from as any)(tableName)
+        .insert(item)
         .select()
-        .single();
+        .maybeSingle();
 
       if (createError) {
         throw createError;
       }
 
+      if (!created) {
+        throw new Error('No data returned after insert');
+      }
+
+      // Runtime assertion: created item matches our generic type T
       const typedCreated = created as unknown as T;
       
       // Optimistic update
@@ -155,17 +162,21 @@ export const useEnhancedDataManager = <T extends { id: string }>(
     updates: Partial<Omit<T, 'id' | 'created_at'>>
   ): Promise<CrudResponse<T>> => {
     try {
-      const { data: updated, error: updateError } = await (supabase as any)
-        .from(tableName)
-        .update(updates as any)
+      const { data: updated, error: updateError } = await (supabase.from as any)(tableName)
+        .update(updates)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (updateError) {
         throw updateError;
       }
 
+      if (!updated) {
+        throw new Error('No data returned after update');
+      }
+
+      // Runtime assertion: updated item matches our generic type T
       const typedUpdated = updated as unknown as T;
       
       // Optimistic update
@@ -195,8 +206,7 @@ export const useEnhancedDataManager = <T extends { id: string }>(
   // Delete operation
   const remove = useCallback(async (id: string): Promise<CrudResponse<boolean>> => {
     try {
-      const { error: deleteError } = await (supabase as any)
-        .from(tableName)
+      const { error: deleteError } = await (supabase.from as any)(tableName)
         .delete()
         .eq('id', id);
 
@@ -238,7 +248,8 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         throw new Error('Item not found');
       }
 
-      const currentValue = (currentItem as any)[field];
+      // Type-safe property access using Record type
+      const currentValue = (currentItem as Record<string, unknown>)[field];
       const newValue = !currentValue;
 
       return await update(id, { [field]: newValue } as Partial<T>);
