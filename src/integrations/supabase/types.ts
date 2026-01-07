@@ -2119,21 +2119,15 @@ export type Database = {
         Returns: Json
       }
       detect_zone_conflicts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           postcode: string
           zone_count: number
           zones: string
         }[]
       }
-      generate_gift_card_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_referral_code: {
-        Args: { user_email: string }
-        Returns: string
-      }
+      generate_gift_card_code: { Args: never; Returns: string }
+      generate_referral_code: { Args: { user_email: string }; Returns: string }
       get_delivery_zone_for_postcode: {
         Args: { customer_postcode: string }
         Returns: string
@@ -2154,7 +2148,7 @@ export type Database = {
         Returns: string
       }
       get_subscription_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_subscriptions: number
           cancelled_subscriptions: number
@@ -2213,7 +2207,7 @@ export type Database = {
         Returns: string
       }
       recalculate_all_meal_nutrition: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           meal_id: string
           meal_name: string

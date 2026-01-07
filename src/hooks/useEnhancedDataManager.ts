@@ -1,15 +1,16 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useErrorHandler } from "./useErrorHandler";
 import { useToast } from "./use-toast";
-import type { BaseEntity } from "@/types/common";
 import type { 
   DataManagerConfig, 
   DataManagerResult, 
   CrudResponse,
-  ApiError,
-  ApiErrorCode 
+  ApiError 
 } from "@/types/api";
+
+// Fetch cooldown to prevent rapid successive fetches
+const FETCH_COOLDOWN_MS = 100;
 
 // Enhanced data manager with better error handling, caching, and performance
 export const useEnhancedDataManager = <T extends { id: string }>(
@@ -22,10 +23,17 @@ export const useEnhancedDataManager = <T extends { id: string }>(
   const [total, setTotal] = useState(0);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
   
-  const { handleError, createApiError } = useErrorHandler();
+  const { handleError } = useErrorHandler();
   const { toast } = useToast();
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastFetchTimeRef = useRef<number>(0);
+
+  // Stabilize config to prevent infinite loops - use JSON stringify for deep comparison
+  const stableSelect = config.select;
+  const stableFiltersKey = useMemo(() => JSON.stringify(config.filters || []), [config.filters]);
+  const stableOrderByKey = useMemo(() => JSON.stringify(config.orderBy || {}), [config.orderBy]);
+  const stableDependenciesKey = useMemo(() => JSON.stringify(config.dependencies || []), [config.dependencies]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -45,32 +53,39 @@ export const useEnhancedDataManager = <T extends { id: string }>(
     }
   }, []);
 
-  // Build query with filters - Type-safe query builder
+  // Build query with filters - stable dependencies
   const buildQuery = useCallback(() => {
-    // We use 'as any' here because we're working with dynamic table names
-    // The runtime type safety is guaranteed by the generic T parameter
     let query = (supabase.from as any)(tableName)
-      .select(config.select || '*', { count: 'exact' });
+      .select(stableSelect || '*', { count: 'exact' });
 
-    // Apply filters
-    if (config.filters) {
-      config.filters.forEach(filter => {
+    // Apply filters - parse from stable key
+    const filters = JSON.parse(stableFiltersKey);
+    if (filters.length > 0) {
+      filters.forEach((filter: { column: string; operator: string; value: any }) => {
         query = query.filter(filter.column, filter.operator, filter.value);
       });
     }
 
-    // Apply ordering
-    if (config.orderBy) {
-      query = query.order(config.orderBy.column, { 
-        ascending: config.orderBy.ascending ?? true 
+    // Apply ordering - parse from stable key
+    const orderBy = JSON.parse(stableOrderByKey);
+    if (orderBy.column) {
+      query = query.order(orderBy.column, { 
+        ascending: orderBy.ascending ?? true 
       });
     }
 
     return query;
-  }, [tableName, config]);
+  }, [tableName, stableSelect, stableFiltersKey, stableOrderByKey]);
 
-  // Fetch data with proper error handling
+  // Fetch data with proper error handling and cooldown
   const fetchData = useCallback(async (): Promise<T[]> => {
+    // Prevent rapid successive fetches
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < FETCH_COOLDOWN_MS) {
+      return data;
+    }
+    lastFetchTimeRef.current = now;
+
     try {
       setError(null);
       setLoading(true);
@@ -88,8 +103,6 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         throw fetchError;
       }
 
-      // Runtime assertion: Supabase returns data matching the table structure,
-      // which we know should match our generic type T
       const typedData = (fetchedData as unknown as T[]) || [];
       
       safeSetState(() => {
@@ -110,7 +123,7 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         setLoading(false);
       });
     }
-  }, [buildQuery, handleError, tableName, safeSetState]);
+  }, [buildQuery, handleError, tableName, safeSetState, data]);
 
   // Create operation
   const create = useCallback(async (
@@ -130,10 +143,8 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         throw new Error('No data returned after insert');
       }
 
-      // Runtime assertion: created item matches our generic type T
       const typedCreated = created as unknown as T;
       
-      // Optimistic update
       safeSetState(() => {
         setData(prev => [...prev, typedCreated]);
         setTotal(prev => prev + 1);
@@ -176,10 +187,8 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         throw new Error('No data returned after update');
       }
 
-      // Runtime assertion: updated item matches our generic type T
       const typedUpdated = updated as unknown as T;
       
-      // Optimistic update
       safeSetState(() => {
         setData(prev => prev.map(item => 
           item.id === id ? typedUpdated : item
@@ -214,7 +223,6 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         throw deleteError;
       }
 
-      // Optimistic update
       safeSetState(() => {
         setData(prev => prev.filter(item => item.id !== id));
         setTotal(prev => prev - 1);
@@ -248,7 +256,6 @@ export const useEnhancedDataManager = <T extends { id: string }>(
         throw new Error('Item not found');
       }
 
-      // Type-safe property access using Record type
       const currentValue = (currentItem as Record<string, unknown>)[field];
       const newValue = !currentValue;
 
@@ -273,12 +280,13 @@ export const useEnhancedDataManager = <T extends { id: string }>(
     });
   }, [safeSetState]);
 
-  // Auto-fetch on mount and dependency changes
+  // Auto-fetch on mount and dependency changes - use stable keys only
   useEffect(() => {
     fetchData().catch(() => {
       // Error already handled in fetchData
     });
-  }, [fetchData, ...(config.dependencies || [])]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableName, stableSelect, stableFiltersKey, stableOrderByKey, stableDependenciesKey]);
 
   return {
     data,
