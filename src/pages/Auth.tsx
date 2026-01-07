@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from '@supabase/supabase-js';
+import { Mail, CheckCircle, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -107,6 +110,122 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const redirectUrl = `${window.location.origin}/auth`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setResetEmailSent(true);
+    }
+    
+    setLoading(false);
+  };
+
+  const handleBackToSignIn = () => {
+    setIsResetPassword(false);
+    setResetEmailSent(false);
+    setError("");
+  };
+
+  // Reset Password Success View
+  if (resetEmailSent) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="w-6 h-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+            <CardDescription className="mt-2">
+              We've sent a password reset link to <span className="font-medium text-foreground">{email}</span>. 
+              Click the link in your email to reset your password.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={handleBackToSignIn}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Reset Password Form View
+  if (isResetPassword) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Mail className="w-6 h-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+            <CardDescription>
+              Enter your email and we'll send you a link to reset your password
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </form>
+
+            <div className="mt-4 text-center">
+              <Button
+                variant="link"
+                onClick={handleBackToSignIn}
+                className="text-sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back to Sign In
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Main Sign In / Sign Up View
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -136,7 +255,22 @@ const Auth = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {!isSignUp && (
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => {
+                      setIsResetPassword(true);
+                      setError("");
+                    }}
+                    className="text-xs p-0 h-auto text-muted-foreground hover:text-primary"
+                  >
+                    Forgot password?
+                  </Button>
+                )}
+              </div>
               <Input
                 id="password"
                 type="password"
