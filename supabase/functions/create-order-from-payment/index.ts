@@ -89,6 +89,15 @@ serve(async (req) => {
 
     // Check if this is a package order
     const hasPackageItems = items.some((item: any) => item.type === 'package');
+    
+    // Variables to store order data for response
+    let createdOrderId: string;
+    let orderType: 'package' | 'individual';
+    let itemCount: number;
+    let customerEmail: string;
+    let customerName: string;
+    let deliveryAddress: string | null;
+    let requestedDeliveryDate: string | null;
 
     if (hasPackageItems) {
       // Handle package order creation
@@ -142,6 +151,15 @@ serve(async (req) => {
 
       console.log('Package order created successfully:', packageOrderData.id);
       
+      // Store order data for response
+      createdOrderId = packageOrderData.id;
+      orderType = 'package';
+      itemCount = Object.values(packageItem.packageData.selectedMeals).reduce((sum: number, qty: any) => sum + qty, 0);
+      customerEmail = packageOrderData.customer_email || user.email || '';
+      customerName = packageOrderData.customer_name || '';
+      deliveryAddress = packageOrderData.delivery_address;
+      requestedDeliveryDate = packageOrderData.requested_delivery_date;
+      
       // Update gift card transaction with order ID if gift card was used
       if (giftCardId && giftCardAmountUsed > 0) {
         const { error: updateError } = await supabaseClient
@@ -157,6 +175,20 @@ serve(async (req) => {
         if (updateError) {
           console.error('Failed to update gift card transaction with order ID:', updateError);
         }
+      }
+
+      // Send order confirmation email
+      try {
+        await supabaseClient.functions.invoke('send-order-confirmation', {
+          body: {
+            orderId: packageOrderData.id,
+            orderType: 'package'
+          }
+        });
+        console.log('Order confirmation email triggered for package order:', packageOrderData.id);
+      } catch (emailError) {
+        console.error('Failed to trigger order confirmation email:', emailError);
+        // Don't fail the order if email fails
       }
 
     } else {
@@ -233,6 +265,15 @@ serve(async (req) => {
 
       console.log('Order created successfully:', orderData.id);
       
+      // Store order data for response
+      createdOrderId = orderData.id;
+      orderType = 'individual';
+      itemCount = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      customerEmail = orderData.customer_email || user.email || '';
+      customerName = orderData.customer_name || '';
+      deliveryAddress = orderData.delivery_address;
+      requestedDeliveryDate = orderData.requested_delivery_date;
+      
       // Update gift card transaction with order ID if gift card was used
       if (giftCardId && giftCardAmountUsed > 0) {
         const { error: updateError } = await supabaseClient
@@ -249,11 +290,36 @@ serve(async (req) => {
           console.error('Failed to update gift card transaction with order ID:', updateError);
         }
       }
+
+      // Send order confirmation email
+      try {
+        await supabaseClient.functions.invoke('send-order-confirmation', {
+          body: {
+            orderId: orderData.id,
+            orderType: 'individual'
+          }
+        });
+        console.log('Order confirmation email triggered for order:', orderData.id);
+      } catch (emailError) {
+        console.error('Failed to trigger order confirmation email:', emailError);
+        // Don't fail the order if email fails
+      }
     }
 
+    // Return enhanced order data
     return new Response(JSON.stringify({ 
       success: true, 
-      message: hasPackageItems ? 'Package order created successfully' : 'Order created successfully'
+      orderId: createdOrderId,
+      orderNumber: createdOrderId.substring(0, 8).toUpperCase(),
+      totalAmount: finalAmount / 100,
+      currency: paymentIntent.currency,
+      requestedDeliveryDate,
+      deliveryAddress,
+      customerEmail,
+      customerName,
+      orderType,
+      itemCount,
+      message: orderType === 'package' ? 'Package order created successfully' : 'Order created successfully'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

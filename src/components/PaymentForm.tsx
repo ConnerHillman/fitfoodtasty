@@ -107,7 +107,15 @@ export default function PaymentForm({
             year: 'numeric'
           })}`,
         });
-        navigate("/payment-success");
+        
+        // Navigate with order data in state
+        navigate("/payment-success", { 
+          state: { 
+            orderData: data,
+            deliveryMethod,
+            requestedDeliveryDate 
+          } 
+        });
       } catch (orderError) {
         logger.apiError('create-order-from-payment', orderError);
         toast({
