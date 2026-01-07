@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import { useEnhancedDataManager } from "./useEnhancedDataManager";
 import { useFilteredData } from "./useFilteredData";
 import { usePaginatedData } from "./usePaginatedData";
 import type { Meal, Category } from "@/types/meal";
 import type { BaseFilters, EntityStatus } from "@/types/common";
+import type { DataManagerConfig } from "@/types/api";
 
 interface MealFilters extends BaseFilters {
   statusFilter: EntityStatus;
@@ -11,18 +13,23 @@ interface MealFilters extends BaseFilters {
 }
 
 export const useStandardizedMealsData = (filters: MealFilters) => {
-  // Use enhanced data manager for meals
-  const mealsManager = useEnhancedDataManager<Meal>("meals", {
+  // Memoize config to prevent recreation on every render
+  const mealsConfig: DataManagerConfig = useMemo(() => ({
     orderBy: { column: "sort_order", ascending: true },
     dependencies: [filters.statusFilter, filters.categoryFilter]
-  });
+  }), [filters.statusFilter, filters.categoryFilter]);
 
-  // Use enhanced data manager for categories
-  const categoriesManager = useEnhancedDataManager<Category>("categories", {
+  const categoriesConfig: DataManagerConfig = useMemo(() => ({
     select: "id, name, color, sort_order",
     filters: [{ column: "is_active", operator: "eq", value: true }],
     orderBy: { column: "sort_order", ascending: true }
-  });
+  }), []);
+
+  // Use enhanced data manager for meals with stable config
+  const mealsManager = useEnhancedDataManager<Meal>("meals", mealsConfig);
+
+  // Use enhanced data manager for categories with stable config
+  const categoriesManager = useEnhancedDataManager<Category>("categories", categoriesConfig);
 
   // Apply filtering to meals
   const filteredMeals = useFilteredData(mealsManager.data, {
