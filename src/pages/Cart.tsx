@@ -235,6 +235,16 @@ const Cart = () => {
 
   // Memoized create free order for 100% off coupons
   const createFreeOrder = useCallback(async () => {
+    // Validate required date field
+    if (!dateValidation.requestedDeliveryDate) {
+      toast({
+        title: "Please select a date",
+        description: `Choose a ${deliveryLogic.deliveryMethod === "pickup" ? "collection" : "delivery"} date to continue.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       let deliveryFeeToUse = fees;
       
@@ -514,6 +524,7 @@ const Cart = () => {
             onCreateFreeOrder={createFreeOrder}
             orderNotes={orderNotes}
             onOrderNotesChange={setOrderNotes}
+            hasSelectedDate={!!dateValidation.requestedDeliveryDate}
           />
         </div>
       </div>

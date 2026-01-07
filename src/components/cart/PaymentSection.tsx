@@ -21,6 +21,7 @@ interface PaymentSectionProps {
   orderNotes: string;
   onOrderNotesChange: (notes: string) => void;
   adminOrderData?: any;
+  hasSelectedDate?: boolean;
 }
 
 const PaymentSection: React.FC<PaymentSectionProps> = ({
@@ -34,6 +35,7 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   orderNotes,
   onOrderNotesChange,
   adminOrderData,
+  hasSelectedDate = true,
 }) => {
   const totalAmountInPence = Math.round(finalTotal * 100);
 
@@ -81,9 +83,10 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
             onClick={onCreateFreeOrder}
             className="w-full h-12 text-lg font-semibold"
             size="lg"
+            disabled={!hasSelectedDate}
           >
             <ShoppingBag className="mr-2 h-5 w-5" />
-            COMPLETE FREE ORDER
+            {hasSelectedDate ? 'COMPLETE FREE ORDER' : 'SELECT A DATE TO CONTINUE'}
           </Button>
         </CardContent>
       </Card>
