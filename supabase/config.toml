@@ -16,19 +16,19 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-labels-pdf]
-verify_jwt = true
+verify_jwt = false
 
 [functions.adjust-order]
-verify_jwt = true
+verify_jwt = false
 
 [functions.void-order]
-verify_jwt = true
+verify_jwt = false
 
 [functions.process-refund]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-reorder]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-gift-card-payment]
 verify_jwt = false
@@ -61,16 +61,16 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-create-customer]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-admin-order]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-manual-order]
-verify_jwt = true
+verify_jwt = false
 
 [functions.customer-portal]
-verify_jwt = true
+verify_jwt = false
 
 [functions.find-postcodes-in-polygon]
 verify_jwt = false
@@ -82,7 +82,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-subscription-checkout]
-verify_jwt = true
+verify_jwt = false
 
 [functions.track-view]
+verify_jwt = false
+
+[functions.admin-list-users]
 verify_jwt = false
