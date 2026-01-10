@@ -41,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to the business
     const businessEmailResponse = await resend.emails.send({
-      from: "Fit Food Tasty Website <orders@fitfoodtasty.co.uk>",
+      from: "Fit Food Tasty Website <orders@orders.fitfoodtasty.co.uk>",
       to: ["info@fitfoodtasty.co.uk"],
       replyTo: email,
       subject: `[Website Contact] ${subject}`,
@@ -76,7 +76,7 @@ ${message}
 
     // Send confirmation email to the customer
     const customerEmailResponse = await resend.emails.send({
-      from: "Fit Food Tasty <orders@fitfoodtasty.co.uk>",
+      from: "Fit Food Tasty <orders@orders.fitfoodtasty.co.uk>",
       to: [email],
       subject: "We've received your message - Fit Food Tasty",
       html: `
