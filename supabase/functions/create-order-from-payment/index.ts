@@ -209,11 +209,24 @@ serve(async (req) => {
 
     } else {
       // Handle regular order creation
+      console.log('[create-order-from-payment] Creating order with data:', {
+        user_id: user.id,
+        total_amount: finalAmount / 100,
+        discount_amount: discountAmount / 100,
+        currency: paymentIntent.currency,
+        status: 'confirmed',
+        customer_email: metadata.customer_email || user.email,
+        customer_name: metadata.customer_name,
+        requested_delivery_date: metadata.requested_delivery_date,
+        production_date: metadata.production_date,
+        delivery_address: profileDeliveryAddress,
+      });
+
       const { data: orderData, error: orderError } = await supabaseClient
         .from('orders')
         .insert({
           user_id: user.id,
-          total_amount: finalAmount / 100, // Convert back to dollars
+          total_amount: finalAmount / 100,
           discount_amount: discountAmount / 100,
           currency: paymentIntent.currency,
           status: 'confirmed',
@@ -228,14 +241,16 @@ serve(async (req) => {
           coupon_discount_amount: parseFloat(metadata.coupon_discount_amount || '0'),
           coupon_free_delivery: metadata.coupon_free_delivery === 'true',
           coupon_free_item_id: metadata.coupon_free_item_id || null,
-          
           stripe_session_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
         })
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('[create-order-from-payment] Order insert error:', orderError);
+        throw orderError;
+      }
 
       // Create order items (excluding free items that are already in cart)
       const orderItems = items
