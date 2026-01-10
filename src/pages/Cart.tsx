@@ -525,6 +525,8 @@ const Cart = () => {
             orderNotes={orderNotes}
             onOrderNotesChange={setOrderNotes}
             hasSelectedDate={!!dateValidation.requestedDeliveryDate}
+            customerName={(user as any)?.user_metadata?.full_name || ''}
+            customerEmail={user?.email || ''}
           />
         </div>
       </div>
