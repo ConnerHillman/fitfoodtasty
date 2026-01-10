@@ -2,15 +2,13 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useErrorHandler } from "./useErrorHandler";
 import { useToast } from "./use-toast";
+import { FETCH_COOLDOWN_MS } from "@/lib/constants";
 import type { 
   DataManagerConfig, 
   DataManagerResult, 
   CrudResponse,
   ApiError 
 } from "@/types/api";
-
-// Fetch cooldown to prevent rapid successive fetches
-const FETCH_COOLDOWN_MS = 100;
 
 // Enhanced data manager with better error handling, caching, and performance
 export const useEnhancedDataManager = <T extends { id: string }>(
