@@ -231,6 +231,10 @@ serve(async (req) => {
                          !orderData.delivery_address;
     const deliveryMethod = isCollection ? 'Collection' : 'Delivery';
 
+    // Determine order type for reorder URL
+    const reorderOrderType = orderType === 'package' ? 'package' : 'regular';
+    const reorderUrl = `https://fitfoodtasty.co.uk/reorder/${orderId}?type=${reorderOrderType}`;
+
     // Build comprehensive variables object
     const variables = {
       // Customer info
@@ -241,6 +245,7 @@ serve(async (req) => {
       
       // Order info
       order_id: orderId.split('-')[0].toUpperCase(),
+      full_order_id: orderId,
       order_date: new Date(orderData.created_at).toLocaleDateString('en-GB', {
         weekday: 'long',
         year: 'numeric',
@@ -278,6 +283,10 @@ serve(async (req) => {
       // Order notes
       order_notes: orderData.order_notes || '',
       has_order_notes: !!orderData.order_notes,
+      
+      // Reorder functionality
+      order_type: reorderOrderType,
+      reorder_url: reorderUrl,
       
       // Business info
       business_name: 'Fit Food Tasty',
