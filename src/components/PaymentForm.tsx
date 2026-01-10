@@ -73,7 +73,7 @@ export default function PaymentForm({
     setIsLoading(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/payment-success`,
@@ -81,23 +81,35 @@ export default function PaymentForm({
         redirect: "if_required"
       });
 
-      if (error) {
-        logger.error("Payment failed", error);
+      if (result.error) {
+        logger.error("Payment failed", result.error);
         toast({
           title: "Payment failed",
-          description: error.message || "An unexpected error occurred",
+          description: result.error.message || "An unexpected error occurred",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if payment succeeded - with redirect: "if_required", we get paymentIntent in the result
+      const paymentIntent = result.paymentIntent;
+      if (!paymentIntent || paymentIntent.status !== 'succeeded') {
+        // Payment might require additional action or is still processing
+        logger.error("Payment not completed", { status: paymentIntent?.status });
+        toast({
+          title: "Payment not completed",
+          description: "Your payment requires additional verification or is still processing. Please try again.",
           variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
       
-      // Payment succeeded - create order in database
-      const paymentIntentId = clientSecret.split('_secret_')[0];
-      
+      // Payment succeeded - create order in database using the actual payment intent ID
       const { data, error: orderError } = await supabase.functions.invoke('create-order-from-payment', {
         body: { 
-          payment_intent_id: paymentIntentId,
+          payment_intent_id: paymentIntent.id,
           order_notes: orderNotes.trim() || null
         }
       });
