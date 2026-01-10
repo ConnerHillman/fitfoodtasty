@@ -115,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
         
         try {
           const emailResponse = await resend.emails.send({
-            from: "Fit Food Tasty <orders@fitfoodtasty.com>",
+            from: "Fit Food Tasty <orders@fitfoodtasty.co.uk>",
             to: [cart.customer_email],
             subject: emailContent.subject,
             html: emailContent.html,
