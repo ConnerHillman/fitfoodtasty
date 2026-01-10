@@ -225,11 +225,70 @@ serve(async (req) => {
       `${item.meal_name} x ${item.quantity} - £${(item.total_price || 0).toFixed(2)}`
     ).join('\n');
 
-    // Determine delivery method from address
-    const isCollection = orderData.delivery_address?.toLowerCase().includes('collection') || 
-                         orderData.delivery_address?.toLowerCase().includes('pickup') ||
-                         !orderData.delivery_address;
+    // Fetch all active collection points to match against delivery address
+    const { data: collectionPoints } = await supabase
+      .from('collection_points')
+      .select('id, point_name, address, city, postcode')
+      .eq('is_active', true);
+
+    console.log(`Fetched ${collectionPoints?.length || 0} collection points for matching`);
+
+    // Determine if this is a collection order by matching against collection points
+    let isCollection = false;
+    let matchedCollectionPoint: { point_name: string; address: string } | null = null;
+
+    if (orderData.delivery_address && collectionPoints?.length) {
+      const deliveryAddressLower = orderData.delivery_address.toLowerCase();
+      
+      // Try to match against collection point addresses
+      for (const cp of collectionPoints) {
+        const cpAddressLower = cp.address?.toLowerCase() || '';
+        const cpNameLower = cp.point_name?.toLowerCase() || '';
+        const cpCityLower = cp.city?.toLowerCase() || '';
+        
+        // Check if delivery address contains collection point details
+        if (
+          deliveryAddressLower.includes(cpAddressLower) ||
+          deliveryAddressLower.includes(cpNameLower) ||
+          cpAddressLower.includes(deliveryAddressLower.split(',')[0]) ||
+          (cpNameLower && deliveryAddressLower.includes(cpNameLower))
+        ) {
+          isCollection = true;
+          matchedCollectionPoint = {
+            point_name: cp.point_name,
+            address: [cp.address, cp.city, cp.postcode].filter(Boolean).join(', ')
+          };
+          console.log(`Matched collection point: ${cp.point_name}`);
+          break;
+        }
+      }
+    }
+
+    // Fallback detection if no collection point matched
+    if (!isCollection && orderData.delivery_address) {
+      const addressLower = orderData.delivery_address.toLowerCase();
+      isCollection = addressLower.includes('collection') || 
+                     addressLower.includes('pickup') ||
+                     addressLower.includes('collect');
+    }
+
+    // If no delivery address at all, assume collection
+    if (!orderData.delivery_address) {
+      isCollection = true;
+    }
+
     const deliveryMethod = isCollection ? 'Collection' : 'Delivery';
+    
+    // Set dynamic labels based on fulfillment type
+    const fulfillmentLabel = isCollection ? 'Collection Date' : 'Delivery Date';
+    const addressLabel = isCollection ? 'Collection Point' : 'Delivery Address';
+    
+    // Smart address display - use collection point name if matched, otherwise use stored address
+    const displayAddress = isCollection 
+      ? (matchedCollectionPoint?.point_name || orderData.delivery_address || 'Collection Point')
+      : (orderData.delivery_address || 'To be confirmed');
+
+    console.log(`Order fulfillment: ${deliveryMethod}, isCollection: ${isCollection}, displayAddress: ${displayAddress}`);
 
     // Determine order type for reorder URL
     const reorderOrderType = orderType === 'package' ? 'package' : 'regular';
@@ -253,7 +312,24 @@ serve(async (req) => {
         day: 'numeric'
       }),
       
-      // Delivery info
+      // Fulfillment info with dynamic labels
+      is_collection: isCollection,
+      is_delivery: !isCollection,
+      fulfillment_label: fulfillmentLabel,
+      address_label: addressLabel,
+      collection_point_name: matchedCollectionPoint?.point_name || null,
+      has_collection_point: !!matchedCollectionPoint,
+      
+      // Delivery/Collection date
+      requested_delivery_date: orderData.requested_delivery_date 
+        ? new Date(orderData.requested_delivery_date).toLocaleDateString('en-GB', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : null,
+      has_requested_delivery_date: !!orderData.requested_delivery_date,
       delivery_date: orderData.requested_delivery_date 
         ? new Date(orderData.requested_delivery_date).toLocaleDateString('en-GB', {
             weekday: 'long',
@@ -262,7 +338,11 @@ serve(async (req) => {
             day: 'numeric'
           })
         : 'To be confirmed',
-      delivery_address: orderData.delivery_address || 'Collection',
+      
+      // Address display
+      delivery_address: displayAddress,
+      has_delivery_address: !!displayAddress && displayAddress !== 'To be confirmed',
+      full_delivery_address: orderData.delivery_address || null,
       delivery_method: deliveryMethod,
       
       // Order items - array for {{#each}}
@@ -301,6 +381,11 @@ serve(async (req) => {
       customer_name: variables.customer_name,
       order_id: variables.order_id,
       order_items_count: orderItemsArray.length,
+      is_collection: variables.is_collection,
+      fulfillment_label: variables.fulfillment_label,
+      address_label: variables.address_label,
+      delivery_address: variables.delivery_address,
+      collection_point_name: variables.collection_point_name,
       subtotal: variables.subtotal,
       discount_amount: variables.discount_amount,
       delivery_fee: variables.delivery_fee,
