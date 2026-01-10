@@ -209,16 +209,24 @@ serve(async (req) => {
 
     } else {
       // Handle regular order creation
+      // Normalize empty strings to null for date fields
+      const normalizedRequestedDeliveryDate = metadata.requested_delivery_date && metadata.requested_delivery_date !== '' 
+        ? metadata.requested_delivery_date 
+        : null;
+      const normalizedProductionDate = metadata.production_date && metadata.production_date !== '' 
+        ? metadata.production_date 
+        : null;
+
       console.log('[create-order-from-payment] Creating order with data:', {
         user_id: user.id,
         total_amount: finalAmount / 100,
         discount_amount: discountAmount / 100,
         currency: paymentIntent.currency,
         status: 'confirmed',
-          customer_email: metadata.customer_email || user.email,
-          customer_name: metadata.customer_name || null,
-          requested_delivery_date: metadata.requested_delivery_date || null,
-        production_date: metadata.production_date,
+        customer_email: metadata.customer_email || user.email,
+        customer_name: metadata.customer_name || null,
+        requested_delivery_date: normalizedRequestedDeliveryDate,
+        production_date: normalizedProductionDate,
         delivery_address: profileDeliveryAddress,
       });
 
@@ -231,9 +239,9 @@ serve(async (req) => {
           currency: paymentIntent.currency,
           status: 'confirmed',
           customer_email: metadata.customer_email || user.email,
-          customer_name: metadata.customer_name,
-          requested_delivery_date: metadata.requested_delivery_date,
-          production_date: metadata.production_date || null,
+          customer_name: metadata.customer_name || null,
+          requested_delivery_date: normalizedRequestedDeliveryDate,
+          production_date: normalizedProductionDate,
           delivery_address: profileDeliveryAddress,
           referral_code_used: metadata.coupon_code || null,
           coupon_type: metadata.coupon_type || null,
