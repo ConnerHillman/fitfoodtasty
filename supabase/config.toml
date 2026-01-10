@@ -3,6 +3,12 @@ project_id = "aicpnaomarzgborltdkt"
 [functions.create-payment]
 verify_jwt = false
 
+[functions.create-payment-intent]
+verify_jwt = false
+
+[functions.create-order-from-payment]
+verify_jwt = false
+
 [functions.create-test-order]
 verify_jwt = false
 

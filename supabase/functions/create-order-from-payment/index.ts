@@ -8,6 +8,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('[create-order-from-payment] Function invoked', {
+    method: req.method,
+    url: req.url,
+    timestamp: new Date().toISOString()
+  });
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
