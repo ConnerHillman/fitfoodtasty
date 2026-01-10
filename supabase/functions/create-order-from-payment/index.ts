@@ -341,8 +341,16 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+  } catch (error: any) {
+    // Better error handling to capture all error types
+    let message: string;
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      message = JSON.stringify(error);
+    } else {
+      message = String(error);
+    }
     console.error("[create-order-from-payment] Error:", message);
     return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
