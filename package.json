@@ -54,6 +54,7 @@
     "embla-carousel-react": "^8.6.0",
     "fabric": "^6.7.1",
     "file-saver": "^2.0.5",
+    "handlebars": "^4.7.8",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
     "jspdf": "^3.0.2",
