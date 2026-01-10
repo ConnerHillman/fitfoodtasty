@@ -26,6 +26,12 @@ interface AdminOrderData {
 }
 
 serve(async (req) => {
+  console.log('[create-payment-intent] Function invoked', {
+    method: req.method,
+    url: req.url,
+    timestamp: new Date().toISOString()
+  });
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
