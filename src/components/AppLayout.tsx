@@ -132,7 +132,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">Help & FAQ</Link></li>
+                <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
+                <li><Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact Us</Link></li>
                 <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
                 <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
                 <li><a href="mailto:info@fitfoodtasty.co.uk" className="text-muted-foreground hover:text-foreground transition-colors">Email Support</a></li>
