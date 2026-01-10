@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Package, Truck, RotateCcw, ChevronRight } from "lucide-react";
+import { Calendar, Package, Truck, RotateCcw, ChevronRight, MapPin, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import MealReplacementDialog from "@/components/packages/MealReplacementDialog";
 import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
@@ -71,6 +71,18 @@ interface PackageOrder {
   };
   package_meal_selections: PackageOrderItem[];
 }
+
+// Helper function to determine if address is a collection point
+const isCollectionPoint = (address?: string): boolean => {
+  if (!address) return false;
+  const collectionKeywords = ['fit food tasty', 'collection point', 'pickup', 'collect from'];
+  return collectionKeywords.some(keyword => address.toLowerCase().includes(keyword));
+};
+
+// Helper function to calculate original subtotal from items
+const calculateOriginalSubtotal = (order: Order): number => {
+  return order.order_items.reduce((sum, item) => sum + item.total_price, 0);
+};
 
 const Orders = () => {
   const { user } = useAuth();
@@ -207,6 +219,14 @@ const Orders = () => {
       day: "numeric",
       month: "long",
       year: "numeric",
+    });
+  };
+
+  const formatShortDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
     });
   };
 
@@ -462,6 +482,7 @@ const Orders = () => {
         {/* Package Orders */}
         {packageOrders.map((order) => {
           const mealCount = order.packages?.meal_count || order.package_meal_selections?.reduce((sum, sel) => sum + sel.quantity, 0) || 0;
+          const isCollection = isCollectionPoint(order.delivery_address);
           
           return (
             <Collapsible key={`package-${order.id}`}>
@@ -476,11 +497,21 @@ const Orders = () => {
                             <Package className="h-5 w-5" />
                             Order #{order.id.slice(-8)}
                           </CardTitle>
-                          <CardDescription className="flex items-center gap-4">
+                          <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
-                              {formatDate(order.created_at)}
+                              Ordered {formatShortDate(order.created_at)}
                             </span>
+                            {order.requested_delivery_date && (
+                              <span className="flex items-center gap-1">
+                                {isCollection ? (
+                                  <MapPin className="h-4 w-4 text-primary" />
+                                ) : (
+                                  <Truck className="h-4 w-4 text-primary" />
+                                )}
+                                {isCollection ? 'Collection' : 'Delivery'}: {formatShortDate(order.requested_delivery_date)}
+                              </span>
+                            )}
                             <span>{mealCount} meals</span>
                           </CardDescription>
                         </div>
@@ -553,10 +584,22 @@ const Orders = () => {
                         </div>
                       )}
 
-                      {/* Delivery Information */}
+                      {/* Delivery/Collection Information */}
                       {order.delivery_address && (
                         <div className="pt-4 border-t">
-                          <h4 className="font-medium mb-2">Delivery Address</h4>
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            {isCollection ? (
+                              <>
+                                <MapPin className="h-4 w-4" />
+                                Collection Point
+                              </>
+                            ) : (
+                              <>
+                                <Truck className="h-4 w-4" />
+                                Delivery Address
+                              </>
+                            )}
+                          </h4>
                           <p className="text-muted-foreground">{order.delivery_address}</p>
                         </div>
                       )}
@@ -581,7 +624,11 @@ const Orders = () => {
 
         {/* Regular Meal Orders */}
         {orders.map((order) => {
-          const mealCount = order.order_items?.length || 0;
+          const totalItems = order.order_items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+          const originalSubtotal = calculateOriginalSubtotal(order);
+          const discountAmount = originalSubtotal - order.total_amount;
+          const hasDiscount = discountAmount > 0 && order.coupon_type;
+          const isCollection = isCollectionPoint(order.delivery_address);
           
           return (
             <Collapsible key={order.id}>
@@ -595,12 +642,22 @@ const Orders = () => {
                           <CardTitle className="text-lg">
                             Order #{order.id.slice(-8)}
                           </CardTitle>
-                          <CardDescription className="flex items-center gap-4">
+                          <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
-                              {formatDate(order.created_at)}
+                              Ordered {formatShortDate(order.created_at)}
                             </span>
-                            <span>{mealCount} meals</span>
+                            {order.requested_delivery_date && (
+                              <span className="flex items-center gap-1">
+                                {isCollection ? (
+                                  <MapPin className="h-4 w-4 text-primary" />
+                                ) : (
+                                  <Truck className="h-4 w-4 text-primary" />
+                                )}
+                                {isCollection ? 'Collection' : 'Delivery'}: {formatShortDate(order.requested_delivery_date)}
+                              </span>
+                            )}
+                            <span>{totalItems} meals</span>
                           </CardDescription>
                         </div>
                       </div>
@@ -621,6 +678,11 @@ const Orders = () => {
                           <Badge className={getStatusColor(order.status)}>
                             {order.status.replace("_", " ")}
                           </Badge>
+                          {hasDiscount && (
+                            <div className="text-sm text-muted-foreground line-through">
+                              {formatCurrency(originalSubtotal, order.currency)}
+                            </div>
+                          )}
                           <div className="font-semibold text-lg">
                             {formatCurrency(order.total_amount, order.currency)}
                           </div>
@@ -633,7 +695,7 @@ const Orders = () => {
                 <CollapsibleContent>
                   <CardContent className="p-6">
                     <div className="space-y-4">
-                      {/* Order Items */}
+                      {/* Order Items with Unit Price */}
                       <div>
                         <h4 className="font-medium mb-3 flex items-center gap-2">
                           <Package className="h-4 w-4" />
@@ -648,7 +710,7 @@ const Orders = () => {
                               <div>
                                 <span className="font-medium">{item.meal_name}</span>
                                 <span className="text-muted-foreground ml-2">
-                                  × {item.quantity}
+                                  × {item.quantity} @ {formatCurrency(item.unit_price, order.currency)} each
                                 </span>
                               </div>
                               <span className="font-medium">
@@ -659,10 +721,61 @@ const Orders = () => {
                         </div>
                       </div>
 
-                      {/* Delivery Information */}
+                      {/* Order Summary Section */}
+                      <div className="pt-4 border-t">
+                        <h4 className="font-medium mb-3">Order Summary</h4>
+                        <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                          {/* Subtotal */}
+                          <div className="flex justify-between text-sm">
+                            <span>Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
+                            <span>{formatCurrency(originalSubtotal, order.currency)}</span>
+                          </div>
+                          
+                          {/* Discount Line (if applicable) */}
+                          {hasDiscount && (
+                            <div className="flex justify-between text-sm text-green-600">
+                              <span className="flex items-center gap-2">
+                                <Tag className="h-3 w-3" />
+                                Discount ({order.coupon_type}
+                                {order.coupon_discount_percentage && ` - ${order.coupon_discount_percentage}% off`})
+                              </span>
+                              <span>-{formatCurrency(discountAmount, order.currency)}</span>
+                            </div>
+                          )}
+                          
+                          {/* Total Paid */}
+                          <div className="flex justify-between font-semibold text-base pt-2 border-t border-muted">
+                            <span>Total Paid</span>
+                            <span>{formatCurrency(order.total_amount, order.currency)}</span>
+                          </div>
+                          
+                          {/* Savings Banner */}
+                          {discountAmount > 0 && (
+                            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center mt-3">
+                              <span className="text-green-700 dark:text-green-400 font-medium text-sm">
+                                ✨ You saved {formatCurrency(discountAmount, order.currency)} on this order!
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Delivery/Collection Information */}
                       {order.delivery_address && (
                         <div className="pt-4 border-t">
-                          <h4 className="font-medium mb-2">Delivery Address</h4>
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            {isCollection ? (
+                              <>
+                                <MapPin className="h-4 w-4" />
+                                Collection Point
+                              </>
+                            ) : (
+                              <>
+                                <Truck className="h-4 w-4" />
+                                Delivery Address
+                              </>
+                            )}
+                          </h4>
                           <p className="text-muted-foreground">{order.delivery_address}</p>
                         </div>
                       )}
