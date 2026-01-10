@@ -23,6 +23,7 @@ import { KitchenPrintStyles } from './KitchenPrintStyles';
 import { IngredientsProductionView } from './IngredientsProductionView';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import * as XLSX from 'xlsx';
 import type { ProductionSummary, SortBy } from '@/types/kitchen';
 
@@ -240,7 +241,7 @@ export const KitchenProductionDashboard: React.FC = () => {
       });
 
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error', error);
       toast({
         title: "Export Failed",
         description: error instanceof Error ? error.message : "Failed to export production data. Please try again.",
