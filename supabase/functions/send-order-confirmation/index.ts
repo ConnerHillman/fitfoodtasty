@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { Resend } from "npm:resend@4.0.0";
+import Handlebars from "npm:handlebars@4.7.8";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -182,59 +183,114 @@ serve(async (req) => {
       }
     }
 
-    // Prepare template variables
+    // Calculate financial values
+    const subtotal = orderItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    const discountAmount = orderData.discount_amount || 0;
+    // Delivery fee = total - subtotal + discount (since discount reduces total)
+    const deliveryFee = Math.max(0, orderData.total_amount - subtotal + discountAmount);
+
+    // Prepare order items as array for Handlebars {{#each}}
+    const orderItemsArray = orderItems.map(item => ({
+      meal_name: item.meal_name,
+      unit_price: (item.unit_price || 0).toFixed(2),
+      quantity: item.quantity,
+      total_price: (item.total_price || 0).toFixed(2)
+    }));
+
+    // Legacy: pre-rendered HTML for backwards compatibility with simple templates
     const orderItemsHtml = orderItems.map(item => `
-      <div class="item">
-        <strong>${item.meal_name}</strong> x ${item.quantity}
-        <span style="float: right;">£${(item.total_price || 0).toFixed(2)}</span>
-      </div>
+      <tr>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e0e0e0;">${item.meal_name}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e0e0e0; text-align: center;">£${(item.unit_price || 0).toFixed(2)}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e0e0e0; text-align: center;">${item.quantity}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">£${(item.total_price || 0).toFixed(2)}</td>
+      </tr>
     `).join('');
 
     const orderItemsText = orderItems.map(item => 
       `${item.meal_name} x ${item.quantity} - £${(item.total_price || 0).toFixed(2)}`
     ).join('\n');
 
+    // Determine delivery method from address
+    const isCollection = orderData.delivery_address?.toLowerCase().includes('collection') || 
+                         orderData.delivery_address?.toLowerCase().includes('pickup') ||
+                         !orderData.delivery_address;
+    const deliveryMethod = isCollection ? 'Collection' : 'Delivery';
+
+    // Build comprehensive variables object
     const variables = {
+      // Customer info
       customer_name: customerName || 'Valued Customer',
+      customer_email: customerEmail,
+      
+      // Order info
       order_id: orderId.split('-')[0].toUpperCase(),
-      order_date: new Date(orderData.created_at).toLocaleDateString('en-GB'),
-      delivery_date: orderData.requested_delivery_date ? 
-        new Date(orderData.requested_delivery_date).toLocaleDateString('en-GB') : 'TBD',
+      order_date: new Date(orderData.created_at).toLocaleDateString('en-GB', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      
+      // Delivery info
+      delivery_date: orderData.requested_delivery_date 
+        ? new Date(orderData.requested_delivery_date).toLocaleDateString('en-GB', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : 'To be confirmed',
       delivery_address: orderData.delivery_address || 'Collection',
-      order_items: orderItemsHtml,
+      delivery_method: deliveryMethod,
+      
+      // Order items - array for {{#each}}
+      order_items: orderItemsArray,
+      
+      // Legacy HTML versions for backwards compatibility
+      order_items_html: orderItemsHtml,
       order_items_text: orderItemsText,
+      
+      // Pricing
+      subtotal: subtotal.toFixed(2),
+      discount_amount: discountAmount.toFixed(2),
+      has_discount: discountAmount > 0,
+      delivery_fee: deliveryFee.toFixed(2),
+      has_delivery_fee: deliveryFee > 0,
       total_amount: orderData.total_amount.toFixed(2),
+      
+      // Order notes
       order_notes: orderData.order_notes || '',
+      has_order_notes: !!orderData.order_notes,
+      
+      // Business info
+      business_name: 'Fit Food Tasty',
+      business_address: 'Unit F, Cartwright Mill Business Centre, Brue Avenue, Bridgwater, Somerset, TA6 5LT',
+      business_phone: '07961 719602',
+      
+      // Any custom data passed in
       ...customData
     };
 
-    // Replace template variables
-    let subject = template.subject_template;
-    let htmlContent = template.html_content;
-    let textContent = template.text_content;
-
-    // Simple template variable replacement
-    Object.entries(variables).forEach(([key, value]) => {
-      const regex = new RegExp(`{{${key}}}`, 'g');
-      subject = subject.replace(regex, value);
-      htmlContent = htmlContent.replace(regex, value);
-      if (textContent) {
-        textContent = textContent.replace(regex, value);
-      }
+    console.log('Template variables prepared:', {
+      customer_name: variables.customer_name,
+      order_id: variables.order_id,
+      order_items_count: orderItemsArray.length,
+      subtotal: variables.subtotal,
+      discount_amount: variables.discount_amount,
+      delivery_fee: variables.delivery_fee,
+      total_amount: variables.total_amount
     });
 
-    // Handle conditional sections (simple {{#if}} blocks)
-    if (variables.order_notes) {
-      htmlContent = htmlContent.replace(/{{#if order_notes}}([\s\S]*?){{\/if}}/g, '$1');
-      if (textContent) {
-        textContent = textContent.replace(/{{#if order_notes}}([\s\S]*?){{\/if}}/g, '$1');
-      }
-    } else {
-      htmlContent = htmlContent.replace(/{{#if order_notes}}[\s\S]*?{{\/if}}/g, '');
-      if (textContent) {
-        textContent = textContent.replace(/{{#if order_notes}}[\s\S]*?{{\/if}}/g, '');
-      }
-    }
+    // Compile templates with Handlebars
+    const compiledSubject = Handlebars.compile(template.subject_template);
+    const compiledHtml = Handlebars.compile(template.html_content);
+    const compiledText = template.text_content ? Handlebars.compile(template.text_content) : null;
+
+    // Render with variables
+    const subject = compiledSubject(variables);
+    const htmlContent = compiledHtml(variables);
+    const textContent = compiledText ? compiledText(variables) : null;
 
     // Send email
     const emailData: any = {
