@@ -22,7 +22,9 @@ import {
   X,
   RotateCcw,
   Printer,
-  RotateCw
+  RotateCw,
+  Tag,
+  AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -78,6 +80,16 @@ interface OrderDetails {
     description: string;
     meal_count: number;
   };
+  // Coupon fields
+  coupon_type?: string;
+  coupon_discount_percentage?: number;
+  coupon_discount_amount?: number;
+  coupon_free_delivery?: boolean;
+  // Refund/void fields
+  refund_amount?: number;
+  refund_reason?: string;
+  voided_at?: string;
+  voided_by?: string;
 }
 
 const OrderDetails: React.FC = () => {
@@ -217,6 +229,24 @@ const OrderDetails: React.FC = () => {
     }
   };
 
+  // Calculate subtotal from actual item prices (matching customer page logic)
+  const calculateSubtotal = (): number => {
+    if (isPackageOrder) {
+      return order.package_meal_selections?.reduce((sum, s) => 
+        sum + (s.meals?.price || 0) * s.quantity, 0) || 0;
+    }
+    return order.order_items?.reduce((sum, item) => sum + item.total_price, 0) || 0;
+  };
+
+  // Check if this is a collection point order
+  const isCollectionPoint = (): boolean => {
+    if (!order.delivery_address) return false;
+    const address = order.delivery_address.toLowerCase();
+    return address.includes('fit food tasty') || 
+           address.includes('collection point') ||
+           address.includes('cartwright mill');
+  };
+
   // Action handlers
   const handleAdjustOrder = () => {
     setAdjustModalOpen(true);
@@ -341,32 +371,44 @@ const OrderDetails: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Delivery Information */}
+              {/* Delivery/Collection Information */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Delivery Information
+                    {isCollectionPoint() ? (
+                      <MapPin className="h-5 w-5" />
+                    ) : (
+                      <Truck className="h-5 w-5" />
+                    )}
+                    {isCollectionPoint() ? 'Collection Point' : 'Delivery Information'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {order.delivery_address ? (
                       <div className="flex items-start gap-2">
-                        <Truck className="h-4 w-4 text-muted-foreground mt-1" />
+                        {isCollectionPoint() ? (
+                          <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                        ) : (
+                          <Truck className="h-4 w-4 text-muted-foreground mt-1" />
+                        )}
                         <div>
-                          <p className="font-medium">Delivery Address:</p>
+                          <p className="font-medium">
+                            {isCollectionPoint() ? 'Collection Address:' : 'Delivery Address:'}
+                          </p>
                           <p className="text-sm text-muted-foreground whitespace-pre-line">{order.delivery_address}</p>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No delivery address provided</p>
+                      <p className="text-sm text-muted-foreground">No address provided</p>
                     )}
                     
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">Delivery Date:</p>
+                        <p className="font-medium">
+                          {isCollectionPoint() ? 'Collection Date:' : 'Delivery Date:'}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {order.requested_delivery_date 
                             ? format(new Date(order.requested_delivery_date), 'PPP')
@@ -477,31 +519,33 @@ const OrderDetails: React.FC = () => {
                           </p>
                         </div>
                       )}
-                      {order.package_meal_selections?.map((selection, index) => (
-                        <div key={selection.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      {order.package_meal_selections?.map((selection) => (
+                        <div key={selection.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                           <div className="flex-1">
-                            <h4 className="font-medium">{selection.meals?.name || 'Unknown Meal'}</h4>
-                            <p className="text-sm text-muted-foreground">Quantity: {selection.quantity}</p>
+                            <span className="font-medium">{selection.meals?.name || 'Unknown Meal'}</span>
+                            <span className="text-muted-foreground ml-2">
+                              × {selection.quantity} @ {selection.meals?.price ? formatCurrency(selection.meals.price) : 'N/A'} each
+                            </span>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium">
+                            <span className="font-medium">
                               {selection.meals?.price ? formatCurrency(selection.meals.price * selection.quantity) : 'N/A'}
-                            </p>
+                            </span>
                           </div>
                         </div>
                       ))}
                     </>
                   ) : (
-                    order.order_items?.map((item, index) => (
-                      <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    order.order_items?.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                         <div className="flex-1">
-                          <h4 className="font-medium">{item.meal_name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {formatCurrency(item.unit_price)} × {item.quantity}
-                          </p>
+                          <span className="font-medium">{item.meal_name}</span>
+                          <span className="text-muted-foreground ml-2">
+                            × {item.quantity} @ {formatCurrency(item.unit_price)} each
+                          </span>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">{formatCurrency(item.total_price)}</p>
+                          <span className="font-medium">{formatCurrency(item.total_price)}</span>
                         </div>
                       </div>
                     ))
@@ -523,26 +567,103 @@ const OrderDetails: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{formatCurrency((order.total_amount || 0) + (order.discount_amount || 0))}</span>
-                </div>
-                {order.discount_amount && order.discount_amount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount:</span>
-                    <span>-{formatCurrency(order.discount_amount)}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between font-medium text-lg">
-                  <span>Total:</span>
-                  <span>{formatCurrency(order.total_amount)}</span>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Currency: {order.currency?.toUpperCase() || 'GBP'}
-                </div>
+                {(() => {
+                  const subtotal = calculateSubtotal();
+                  const discountAmount = subtotal - order.total_amount;
+                  const hasDiscount = discountAmount > 0;
+                  
+                  return (
+                    <>
+                      {/* Subtotal with item count */}
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal ({getTotalMealsCount()} items)</span>
+                        <span>{formatCurrency(subtotal)}</span>
+                      </div>
+                      
+                      {/* Discount line with coupon details */}
+                      {hasDiscount && (
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span className="flex items-center gap-2">
+                            <Tag className="h-3 w-3" />
+                            Discount
+                            {order.coupon_type && (
+                              <span className="text-xs">
+                                ({order.coupon_type}
+                                {order.coupon_discount_percentage && ` - ${order.coupon_discount_percentage}% off`})
+                              </span>
+                            )}
+                          </span>
+                          <span>-{formatCurrency(discountAmount)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Free delivery indicator */}
+                      {order.coupon_free_delivery && (
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span className="flex items-center gap-2">
+                            <Truck className="h-3 w-3" />
+                            Free Delivery
+                          </span>
+                          <span>FREE</span>
+                        </div>
+                      )}
+                      
+                      <Separator />
+                      
+                      {/* Total Paid */}
+                      <div className="flex justify-between font-semibold text-lg">
+                        <span>Total Paid</span>
+                        <span>{formatCurrency(order.total_amount)}</span>
+                      </div>
+                      
+                      {/* Savings Banner */}
+                      {hasDiscount && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                          <span className="text-green-700 font-medium text-sm">
+                            ✨ Customer saved {formatCurrency(discountAmount)} on this order!
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-muted-foreground">
+                        Currency: {order.currency?.toUpperCase() || 'GBP'}
+                      </div>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
+
+            {/* Refund/Void Information */}
+            {(order.refund_amount || order.voided_at) && (
+              <Card className="border-amber-200 bg-amber-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-800">
+                    <AlertTriangle className="h-5 w-5" />
+                    {order.voided_at ? 'Order Voided' : 'Refund Issued'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {order.refund_amount && order.refund_amount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-amber-800">Refund Amount:</span>
+                      <span className="font-medium text-amber-800">{formatCurrency(order.refund_amount)}</span>
+                    </div>
+                  )}
+                  {order.refund_reason && (
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Reason:</p>
+                      <p className="text-sm text-amber-700">{order.refund_reason}</p>
+                    </div>
+                  )}
+                  {order.voided_at && (
+                    <div className="text-xs text-amber-600">
+                      Voided on {format(new Date(order.voided_at), 'PPP')}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Order Notes */}
             {order.order_notes && (
