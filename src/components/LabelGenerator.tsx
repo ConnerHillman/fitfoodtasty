@@ -11,6 +11,7 @@ import { Printer, Download, Save, Plus, Trash2, BookOpen, Calendar, FileText } f
 import { toast } from 'sonner';
 import { LabelSheet } from './labels/LabelSheet';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 import { MealSelector } from './MealSelector';
 import { LabelReport } from './admin/LabelReport';
@@ -88,7 +89,7 @@ export const LabelGenerator: React.FC = () => {
       }
 
       // Supabase failed, fallback to localStorage
-      console.warn('Supabase query failed, falling back to localStorage:', error);
+      logger.warn('Supabase query failed, falling back to localStorage', { error });
       toast.info('Loading meals from local storage');
       
       const saved = localStorage.getItem('fitfoodtasty_saved_meals');
@@ -105,7 +106,7 @@ export const LabelGenerator: React.FC = () => {
       }
       
     } catch (error) {
-      console.error('Error loading saved meals:', error);
+      logger.error('Error loading saved meals', error);
       toast.error('Failed to load saved meals from both database and local storage');
       
       // Final fallback - try localStorage even if parsing failed
@@ -123,7 +124,7 @@ export const LabelGenerator: React.FC = () => {
           setSavedMeals([]);
         }
       } catch (localError) {
-        console.error('Local storage fallback also failed:', localError);
+        logger.error('Local storage fallback also failed', localError);
         setSavedMeals([]);
       }
     }
@@ -181,7 +182,7 @@ export const LabelGenerator: React.FC = () => {
       }
 
       // Supabase failed, fallback to localStorage
-      console.warn('Supabase save failed, falling back to localStorage:', supabaseError);
+      logger.warn('Supabase save failed, falling back to localStorage', { supabaseError });
       toast.info('Database save failed, saving to local storage instead');
       
       const mealToSave: SavedMeal = {
@@ -208,7 +209,7 @@ export const LabelGenerator: React.FC = () => {
       loadSavedMeals();
       
     } catch (error) {
-      console.error('Error saving meal:', error);
+      logger.error('Error saving meal', error);
       toast.error('Failed to save meal - please try again');
       
       // Final fallback attempt to localStorage
@@ -268,7 +269,7 @@ export const LabelGenerator: React.FC = () => {
           .eq('id', id);
 
         if (supabaseError) {
-          console.warn('Supabase delete failed:', supabaseError);
+          logger.warn('Supabase delete failed', { supabaseError });
           toast.error('Failed to delete meal from database. Please try again.');
           return;
         }
@@ -292,7 +293,7 @@ export const LabelGenerator: React.FC = () => {
       loadSavedMeals();
       
     } catch (error) {
-      console.error('Error deleting meal:', error);
+      logger.error('Error deleting meal', error);
       toast.error('Failed to delete meal - please try again');
     }
   };
@@ -321,7 +322,7 @@ export const LabelGenerator: React.FC = () => {
       pdf.save(`${labelData.mealName.replace(/[^a-zA-Z0-9]/g, '_')}_labels.pdf`);
       toast.success('PDF generated successfully');
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      logger.error('Error generating PDF', error);
       toast.error('Failed to generate PDF');
     } finally {
       setIsGenerating(false);

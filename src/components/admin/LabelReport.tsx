@@ -23,6 +23,7 @@ import { LabelSheet } from '@/components/labels/LabelSheet';
 import { LabelPrintPreview } from '@/components/admin/LabelPrintPreview';
 import { format as formatDate, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -211,7 +212,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         });
       }
     } catch (error) {
-      console.error("Error generating label report:", error);
+      logger.error("Error generating label report", error);
       toast({
         title: "Error",
         description: "Failed to generate label report",
@@ -230,7 +231,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
     setGenerationStatus('Preparing label data...');
     
     try {
-      console.log('Starting PDF generation for meals:', mealProduction.length);
+      logger.debug('Starting PDF generation', { mealsCount: mealProduction.length });
       
       // Step 1: Preparing label data (0-20%)
       setGenerationProgress(20);
@@ -239,11 +240,11 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       // Ensure the offscreen renderer is in the DOM and visible for rendering
       const container = pdfRef.current;
       if (!container) {
-        console.error('PDF renderer not available');
+        logger.error('PDF renderer not available');
         throw new Error('PDF renderer not available');
       }
 
-      console.log('Container found, checking content...');
+      logger.debug('Container found, checking content...');
       
       // Make the container positioned for rendering but invisible to users
       container.style.position = 'fixed';
@@ -263,22 +264,22 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       // Wait for images (logo) to load
       const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
-      console.log('Found images:', images.length);
+      logger.debug('Found images', { count: images.length });
       
       await Promise.all(
         images.map(
           (img) =>
             new Promise<void>((resolve) => {
               if (img.complete) {
-                console.log('Image already loaded:', img.src.substring(0, 50) + '...');
+                logger.debug('Image already loaded');
                 return resolve();
               }
               img.onload = () => {
-                console.log('Image loaded successfully');
+                logger.debug('Image loaded successfully');
                 resolve();
               };
               img.onerror = () => {
-                console.log('Image failed to load');
+                logger.debug('Image failed to load');
                 resolve();
               };
             })
@@ -290,11 +291,10 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
       setGenerationStatus('Converting pages to PDF...');
 
       const pages = Array.from(container.querySelectorAll('.print-page')) as HTMLElement[];
-      console.log('Found pages:', pages.length);
+      logger.debug('Found pages', { count: pages.length });
       
       if (pages.length === 0) {
-        console.error('No pages found in container');
-        console.log('Container HTML:', container.innerHTML.substring(0, 500));
+        logger.error('No pages found in container');
         throw new Error('No pages to export');
       }
 
@@ -302,7 +302,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
 
       for (let i = 0; i < pages.length; i++) {
         const el = pages[i];
-        console.log(`Capturing page ${i + 1}/${pages.length}`);
+        logger.debug(`Capturing page ${i + 1}/${pages.length}`);
         
         // Update progress per page (60-90%)
         const pageProgress = 60 + ((i / pages.length) * 30);
@@ -323,7 +323,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
           }
         });
         
-        console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
+        logger.debug(`Canvas created: ${canvas.width}x${canvas.height}`);
         
         const imgData = canvas.toDataURL('image/png');
         if (i > 0) pdf.addPage();
@@ -359,7 +359,7 @@ export const LabelReport: React.FC<LabelReportProps> = ({ isOpen, onClose }) => 
         description: `Downloaded ${totalLabels} labels across ${totalPages} A4 pages. Ready to print!`,
       });
     } catch (error) {
-      console.error('Error generating labels:', error);
+      logger.error('Error generating labels', error);
       toast({
         title: 'Error',
         description: 'Failed to generate labels. Please try again.',

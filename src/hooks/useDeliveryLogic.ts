@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 export const useDeliveryLogic = () => {
   const { user } = useAuth();
@@ -31,7 +32,7 @@ export const useDeliveryLogic = () => {
           setSelectedCollectionPoint(data[0].id);
         }
       } catch (error) {
-        console.error('Failed to fetch collection points:', error);
+        logger.error('Failed to fetch collection points', error);
       }
     };
 
@@ -64,18 +65,21 @@ export const useDeliveryLogic = () => {
 
         if (fullZoneError) throw fullZoneError;
 
-        console.log(`Postcode ${postcode} matched to zone: ${prioritizedZone.zone_name} (priority: ${prioritizedZone.priority}, match: ${prioritizedZone.match_type})`);
+        logger.debug(`Postcode ${postcode} matched to zone: ${prioritizedZone.zone_name}`, {
+          priority: prioritizedZone.priority,
+          matchType: prioritizedZone.match_type
+        });
         
         setDeliveryZone({ ...fullZone, match_type: prioritizedZone.match_type, priority: prioritizedZone.priority });
         setPostcodeChecked(true);
         if (prioritizedZone.delivery_fee) setDeliveryFee(prioritizedZone.delivery_fee);
       } else {
-        console.log(`No delivery zone found for postcode: ${postcode}`);
+        logger.debug(`No delivery zone found for postcode: ${postcode}`);
         setDeliveryZone(null);
         setPostcodeChecked(true);
       }
     } catch (error) {
-      console.error('Failed to fetch delivery zone:', error);
+      logger.error('Failed to fetch delivery zone', error);
       setPostcodeChecked(true);
     }
   }, []);
@@ -101,7 +105,7 @@ export const useDeliveryLogic = () => {
           await fetchDeliveryZoneByPostcode(postcode);
         }
       } catch (error) {
-        console.error('Failed to fetch user delivery zone:', error);
+        logger.error('Failed to fetch user delivery zone', error);
       }
     };
 

@@ -10,6 +10,7 @@ import { TrendingUp, TrendingDown, Package, DollarSign, Eye, ShoppingCart, Users
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { SimpleDateRangePicker } from "@/components/ui/simple-date-range-picker";
+import { logger } from "@/lib/logger";
 import * as React from "react";
 
 interface MealAnalyticsData {
@@ -109,7 +110,7 @@ const MealAnalytics = () => {
           endDate = endOfDay(dateRange.from);
         }
         
-        console.log('Using custom date range:', {
+        logger.debug('Using custom date range', {
           from: dateRange.from,
           to: dateRange.to,
           startDate: startDate.toISOString(),
@@ -120,7 +121,7 @@ const MealAnalytics = () => {
         startDate = startOfDay(subDays(new Date(), 29));
         endDate = endOfDay(new Date());
         
-        console.log('Using default date range (last 30 days):', {
+        logger.debug('Using default date range (last 30 days)', {
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString()
         });

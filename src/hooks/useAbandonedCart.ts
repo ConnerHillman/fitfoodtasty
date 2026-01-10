@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 import type { AbandonedCartProps } from '@/types/cart';
 
 export const useAbandonedCart = ({ 
@@ -38,7 +39,7 @@ export const useAbandonedCart = ({
 
   const trackCartAbandonment = async () => {
     try {
-      console.log('Tracking cart abandonment...');
+      logger.debug('Tracking cart abandonment...');
       
       await supabase.functions.invoke('cart-tracking', {
         body: {
@@ -54,13 +55,13 @@ export const useAbandonedCart = ({
         }
       });
     } catch (error) {
-      console.error('Error tracking cart abandonment:', error);
+      logger.error('Error tracking cart abandonment', error);
     }
   };
 
   const trackCartRecovery = async () => {
     try {
-      console.log('Tracking cart recovery...');
+      logger.debug('Tracking cart recovery...');
       
       await supabase.functions.invoke('cart-tracking', {
         body: {
@@ -72,7 +73,7 @@ export const useAbandonedCart = ({
         }
       });
     } catch (error) {
-      console.error('Error tracking cart recovery:', error);
+      logger.error('Error tracking cart recovery', error);
     }
   };
 
