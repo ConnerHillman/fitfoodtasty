@@ -52,36 +52,32 @@ const UserManager = () => {
     try {
       setLoading(true);
       
-      // Get all user data from auth.users (admin access required)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Get current session for auth header
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (authError) throw authError;
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
 
-      // Get all user roles
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
+      // Call secure edge function to list users (uses service role server-side)
+      const { data, error } = await supabase.functions.invoke('admin-list-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
-      if (rolesError) throw rolesError;
-
-      // Combine the data
-      const combinedUsers = authUsers?.users?.map(authUser => {
-        const roles = userRoles?.filter(role => role.user_id === authUser.id).map(role => role.role) || [];
-        return {
-          id: authUser.id,
-          email: authUser.email || '',
-          full_name: authUser.user_metadata?.full_name || authUser.email || '',
-          created_at: authUser.created_at,
-          roles
-        };
-      }) || [];
-
-      setUsers(combinedUsers);
+      setUsers(data?.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
         title: "Error",
-        description: "Failed to load users",
+        description: error instanceof Error ? error.message : "Failed to load users",
         variant: "destructive",
       });
     } finally {

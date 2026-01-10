@@ -17,6 +17,7 @@ import AllOrders from "./pages/AllOrders";
 import OrderDetails from "./pages/OrderDetails";
 
 import RequireAuth from "./components/RequireAuth";
+import RequireAdmin from "./components/RequireAdmin";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
@@ -60,10 +61,10 @@ const App = () => (
             <Route path="/orders/:orderId" element={<RequireAuth><OrderDetails /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><AppLayout><AccountSettings /></AppLayout></RequireAuth>} />
             <Route path="/payment-success" element={<AppLayout><PaymentSuccess /></AppLayout>} />
-            <Route path="/admin" element={<RequireAuth><AppLayout><AdminDashboard /></AppLayout></RequireAuth>} />
-            <Route path="/business/settings" element={<RequireAuth><AppLayout><BusinessSettings /></AppLayout></RequireAuth>} />
-            <Route path="/referral-reports" element={<RequireAuth><AppLayout><ReferralReports /></AppLayout></RequireAuth>} />
-            <Route path="/labels" element={<RequireAuth><LabelGenerator /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAdmin><AppLayout><AdminDashboard /></AppLayout></RequireAdmin>} />
+            <Route path="/business/settings" element={<RequireAdmin><AppLayout><BusinessSettings /></AppLayout></RequireAdmin>} />
+            <Route path="/referral-reports" element={<RequireAdmin><AppLayout><ReferralReports /></AppLayout></RequireAdmin>} />
+            <Route path="/labels" element={<RequireAdmin><LabelGenerator /></RequireAdmin>} />
             <Route path="/gift-cards" element={<AppLayout><GiftCards /></AppLayout>} />
             <Route path="/gift-card-balance" element={<AppLayout><GiftCardBalance /></AppLayout>} />
             <Route path="/gift-card-success" element={<AppLayout><GiftCardSuccess /></AppLayout>} />
