@@ -42,7 +42,7 @@ serve(async (req) => {
       .single();
     
     // Build full delivery address from profile
-    const deliveryAddress = profileData?.delivery_address 
+    const profileDeliveryAddress = profileData?.delivery_address 
       ? [
           profileData.delivery_address,
           profileData.city,
@@ -134,7 +134,7 @@ serve(async (req) => {
           customer_name: metadata.customer_name,
           requested_delivery_date: metadata.requested_delivery_date,
           production_date: metadata.production_date,
-          delivery_address: deliveryAddress,
+          delivery_address: profileDeliveryAddress,
           stripe_session_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
         })
@@ -221,7 +221,7 @@ serve(async (req) => {
           customer_name: metadata.customer_name,
           requested_delivery_date: metadata.requested_delivery_date,
           production_date: metadata.production_date,
-          delivery_address: deliveryAddress,
+          delivery_address: profileDeliveryAddress,
           referral_code_used: metadata.coupon_code || null,
           coupon_type: metadata.coupon_type || null,
           coupon_discount_percentage: parseFloat(metadata.coupon_discount_percentage || '0'),
