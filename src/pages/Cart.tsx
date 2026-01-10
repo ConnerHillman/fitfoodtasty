@@ -41,6 +41,11 @@ const Cart = () => {
   const [isSubscription, setIsSubscription] = useState(false);
   const [sendEmail, setSendEmail] = useState(adminOrderData?.sendEmail ?? true);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Memoized calculations
   const subtotal = useMemo(() => getTotalPrice(), [getTotalPrice]);
   const fees = useMemo(() => {
@@ -66,11 +71,16 @@ const Cart = () => {
   
   createPaymentIntentRef.current = useCallback(async () => {
     try {
-      // Allow early PaymentIntent creation so payment UI is visible
       if (items.length === 0) return;
 
       // Skip payment intent creation for 100% off coupons
       if (isCoupon100Off) {
+        setClientSecret("");
+        return;
+      }
+
+      // Require date selection before creating PaymentIntent to ensure metadata is correct
+      if (!dateValidation.requestedDeliveryDate) {
         setClientSecret("");
         return;
       }
