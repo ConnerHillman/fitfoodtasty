@@ -8,12 +8,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Mail, Shield, Eye } from "lucide-react";
+import { AuthEmailPreviewDialog } from "./AuthEmailPreviewDialog";
 
 export const AuthEmailsManager = () => {
   const { toast } = useToast();
   const [passwordResetEnabled, setPasswordResetEnabled] = useState(true);
   const [verificationEnabled, setVerificationEnabled] = useState(true);
   const [testEmail, setTestEmail] = useState("");
+  const [previewType, setPreviewType] = useState<'password_reset' | 'verification' | null>(null);
+  
+  // Template content state
+  const [resetSubject, setResetSubject] = useState("Reset your password");
+  const [resetContent, setResetContent] = useState(`<h2>Password Reset Request</h2>
+<p>Hi {{user_name}},</p>
+<p>We received a request to reset your password. Click the button below to create a new password:</p>
+<a href="{{reset_link}}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">Reset Password</a>
+<p>If you didn't request this, you can safely ignore this email.</p>
+<p>Best regards,<br>The Team</p>`);
+  
+  const [verifySubject, setVerifySubject] = useState("Verify your email address");
+  const [verifyContent, setVerifyContent] = useState(`<h2>Welcome! Verify Your Email</h2>
+<p>Hi {{user_name}},</p>
+<p>Thank you for signing up! Please verify your email address by clicking the button below:</p>
+<a href="{{verification_link}}" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px;">Verify Email</a>
+<p>If you didn't create an account, you can safely ignore this email.</p>
+<p>Welcome aboard!<br>The Team</p>`);
 
   const handleTestEmail = async (type: 'password_reset' | 'verification') => {
     if (!testEmail) {
@@ -85,7 +104,8 @@ export const AuthEmailsManager = () => {
                     <Input
                       id="reset-subject"
                       placeholder="Reset your password - {{company_name}}"
-                      defaultValue="Reset your password"
+                      value={resetSubject}
+                      onChange={(e) => setResetSubject(e.target.value)}
                     />
                   </div>
 
@@ -95,13 +115,20 @@ export const AuthEmailsManager = () => {
                       id="reset-content"
                       rows={8}
                       placeholder="Enter your password reset email HTML template..."
-                      defaultValue={`<h2>Password Reset Request</h2>
-<p>Hi {{user_name}},</p>
-<p>We received a request to reset your password. Click the button below to create a new password:</p>
-<a href="{{reset_link}}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">Reset Password</a>
-<p>If you didn't request this, you can safely ignore this email.</p>
-<p>Best regards,<br>The Team</p>`}
+                      value={resetContent}
+                      onChange={(e) => setResetContent(e.target.value)}
                     />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setPreviewType('password_reset')}
+                      className="gap-1.5"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Preview
+                    </Button>
                   </div>
 
                   <div className="border-t pt-4">
@@ -157,7 +184,8 @@ export const AuthEmailsManager = () => {
                     <Input
                       id="verify-subject"
                       placeholder="Verify your email address - {{company_name}}"
-                      defaultValue="Verify your email address"
+                      value={verifySubject}
+                      onChange={(e) => setVerifySubject(e.target.value)}
                     />
                   </div>
 
@@ -167,13 +195,20 @@ export const AuthEmailsManager = () => {
                       id="verify-content"
                       rows={8}
                       placeholder="Enter your verification email HTML template..."
-                      defaultValue={`<h2>Welcome! Verify Your Email</h2>
-<p>Hi {{user_name}},</p>
-<p>Thank you for signing up! Please verify your email address by clicking the button below:</p>
-<a href="{{verification_link}}" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px;">Verify Email</a>
-<p>If you didn't create an account, you can safely ignore this email.</p>
-<p>Welcome aboard!<br>The Team</p>`}
+                      value={verifyContent}
+                      onChange={(e) => setVerifyContent(e.target.value)}
                     />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setPreviewType('verification')}
+                      className="gap-1.5"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Preview
+                    </Button>
                   </div>
 
                   <div className="border-t pt-4">
@@ -196,6 +231,15 @@ export const AuthEmailsManager = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Preview Dialog */}
+      <AuthEmailPreviewDialog
+        emailType={previewType}
+        subject={previewType === 'password_reset' ? resetSubject : verifySubject}
+        htmlContent={previewType === 'password_reset' ? resetContent : verifyContent}
+        isOpen={!!previewType}
+        onClose={() => setPreviewType(null)}
+      />
     </div>
   );
 };
