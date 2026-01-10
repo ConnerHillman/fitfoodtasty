@@ -53,10 +53,29 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // UK phone validation
+  const isValidUKPhone = (phoneNumber: string): boolean => {
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    // UK mobile (07), landline (01/02), or international format (44)
+    return /^(07\d{9}|0[12]\d{9}|447\d{9})$/.test(cleaned);
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    // Validate phone number
+    if (!phone.trim()) {
+      setError("Phone number is required for delivery communication");
+      setLoading(false);
+      return;
+    }
+    if (!isValidUKPhone(phone)) {
+      setError("Please enter a valid UK phone number (e.g., 07123456789)");
+      setLoading(false);
+      return;
+    }
 
     const redirectUrl = `${window.location.origin}/`;
     
@@ -297,14 +316,16 @@ const Auth = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number *</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="Enter your phone number"
+                    placeholder="e.g., 07123456789"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    required
                   />
+                  <p className="text-xs text-muted-foreground">Required for delivery updates</p>
                 </div>
 
                 <div className="space-y-2">
