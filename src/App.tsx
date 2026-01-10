@@ -34,6 +34,7 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import Subscriptions from "./pages/Subscriptions";
 import FAQ from "./pages/FAQ";
+import Reorder from "./pages/Reorder";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/terms" element={<AppLayout><Terms /></AppLayout>} />
             <Route path="/contact" element={<AppLayout><Contact /></AppLayout>} />
             <Route path="/faq" element={<AppLayout><FAQ /></AppLayout>} />
+            <Route path="/reorder/:orderId" element={<RequireAuth><AppLayout><Reorder /></AppLayout></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
