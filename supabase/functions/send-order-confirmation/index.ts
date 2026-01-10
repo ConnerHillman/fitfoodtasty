@@ -219,7 +219,7 @@ serve(async (req) => {
 
     // Send email
     const emailData: any = {
-      from: 'Fit Food Tasty <orders@fitfoodtasty.co.uk>',
+      from: 'Fit Food Tasty <orders@orders.fitfoodtasty.co.uk>',
       to: [customerEmail],
       subject: subject,
       html: htmlContent,
