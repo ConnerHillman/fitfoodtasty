@@ -191,7 +191,7 @@ serve(async (req) => {
       `;
 
       await resend.emails.send({
-        from: "Gift Cards <noreply@yourdomain.com>",
+        from: "Fit Food Tasty <orders@fitfoodtasty.co.uk>",
         to: [recipientEmail],
         subject: emailSubject,
         html: emailHtml,
@@ -228,7 +228,7 @@ serve(async (req) => {
         `;
 
         await resend.emails.send({
-          from: "Gift Cards <noreply@yourdomain.com>",
+          from: "Fit Food Tasty <orders@fitfoodtasty.co.uk>",
           to: [metadata.purchaser_email],
           subject: `Gift card sent to ${metadata.recipient_name}`,
           html: purchaserHtml,

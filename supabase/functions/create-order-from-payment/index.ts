@@ -34,6 +34,22 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.id) throw new Error("User not authenticated");
 
+    // Fetch user profile for accurate delivery address
+    const { data: profileData } = await supabaseClient
+      .from('profiles')
+      .select('delivery_address, full_name, phone, city, postal_code, delivery_instructions')
+      .eq('user_id', user.id)
+      .single();
+    
+    // Build full delivery address from profile
+    const deliveryAddress = profileData?.delivery_address 
+      ? [
+          profileData.delivery_address,
+          profileData.city,
+          profileData.postal_code
+        ].filter(Boolean).join(', ')
+      : user.user_metadata?.delivery_address || null;
+
     // Get payment intent ID from request
     const { payment_intent_id } = await req.json();
     if (!payment_intent_id) throw new Error("Payment intent ID is required");
@@ -118,7 +134,7 @@ serve(async (req) => {
           customer_name: metadata.customer_name,
           requested_delivery_date: metadata.requested_delivery_date,
           production_date: metadata.production_date,
-          delivery_address: user.user_metadata?.delivery_address,
+          delivery_address: deliveryAddress,
           stripe_session_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
         })
@@ -205,7 +221,7 @@ serve(async (req) => {
           customer_name: metadata.customer_name,
           requested_delivery_date: metadata.requested_delivery_date,
           production_date: metadata.production_date,
-          delivery_address: user.user_metadata?.delivery_address,
+          delivery_address: deliveryAddress,
           referral_code_used: metadata.coupon_code || null,
           coupon_type: metadata.coupon_type || null,
           coupon_discount_percentage: parseFloat(metadata.coupon_discount_percentage || '0'),
