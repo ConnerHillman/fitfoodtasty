@@ -24,6 +24,8 @@ interface PaymentFormProps {
   orderNotes?: string;
   onOrderNotesChange?: (notes: string) => void;
   adminOrderData?: any;
+  customerName?: string;
+  customerEmail?: string;
 }
 
 export default function PaymentForm({ 
@@ -33,7 +35,9 @@ export default function PaymentForm({
   requestedDeliveryDate,
   orderNotes: externalOrderNotes,
   onOrderNotesChange: externalOnOrderNotesChange,
-  adminOrderData
+  adminOrderData,
+  customerName,
+  customerEmail
 }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -68,65 +72,73 @@ export default function PaymentForm({
 
     setIsLoading(true);
 
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/payment-success`,
-      },
-      redirect: "if_required"
-    });
-
-    if (error) {
-      logger.error("Payment failed", error);
-      toast({
-        title: "Payment failed",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } else {
-      // Payment succeeded - create order in database
-      try {
-        const paymentIntentId = clientSecret.split('_secret_')[0];
-        
-        const { data, error } = await supabase.functions.invoke('create-order-from-payment', {
-          body: { 
-            payment_intent_id: paymentIntentId,
-            order_notes: orderNotes.trim() || null
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/payment-success`,
+          payment_method_data: {
+            billing_details: {
+              name: customerName || undefined,
+              email: customerEmail || undefined,
+            }
           }
-        });
+        },
+        redirect: "if_required"
+      });
 
-        if (error) throw error;
-
-        clearCart();
+      if (error) {
+        logger.error("Payment failed", error);
         toast({
-          title: "Payment successful!",
-          description: `Your ${deliveryMethod === "pickup" ? "collection" : "delivery"} is confirmed for ${new Date(requestedDeliveryDate + 'T12:00:00').toLocaleDateString('en-GB', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-          })}`,
-        });
-        
-        // Navigate with order data in state
-        navigate("/payment-success", { 
-          state: { 
-            orderData: data,
-            deliveryMethod,
-            requestedDeliveryDate 
-          } 
-        });
-      } catch (orderError) {
-        logger.apiError('create-order-from-payment', orderError);
-        toast({
-          title: "Payment successful, but order creation failed",
-          description: "Please contact support for assistance.",
+          title: "Payment failed",
+          description: error.message || "An unexpected error occurred",
           variant: "destructive",
         });
+        setIsLoading(false);
+        return;
       }
-    }
+      
+      // Payment succeeded - create order in database
+      const paymentIntentId = clientSecret.split('_secret_')[0];
+      
+      const { data, error: orderError } = await supabase.functions.invoke('create-order-from-payment', {
+        body: { 
+          payment_intent_id: paymentIntentId,
+          order_notes: orderNotes.trim() || null
+        }
+      });
 
-    setIsLoading(false);
+      if (orderError) throw orderError;
+
+      clearCart();
+      toast({
+        title: "Payment successful!",
+        description: `Your ${deliveryMethod === "pickup" ? "collection" : "delivery"} is confirmed for ${new Date(requestedDeliveryDate + 'T12:00:00').toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        })}`,
+      });
+      
+      // Navigate with order data in state
+      navigate("/payment-success", { 
+        state: { 
+          orderData: data,
+          deliveryMethod,
+          requestedDeliveryDate 
+        } 
+      });
+    } catch (paymentError: any) {
+      logger.error("Payment or order creation failed", paymentError);
+      toast({
+        title: "Payment failed",
+        description: paymentError?.message || "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

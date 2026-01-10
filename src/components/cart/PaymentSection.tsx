@@ -22,6 +22,8 @@ interface PaymentSectionProps {
   onOrderNotesChange: (notes: string) => void;
   adminOrderData?: any;
   hasSelectedDate?: boolean;
+  customerName?: string;
+  customerEmail?: string;
 }
 
 const PaymentSection: React.FC<PaymentSectionProps> = ({
@@ -36,6 +38,8 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   onOrderNotesChange,
   adminOrderData,
   hasSelectedDate = true,
+  customerName,
+  customerEmail,
 }) => {
   const totalAmountInPence = Math.round(finalTotal * 100);
 
@@ -135,6 +139,8 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
         orderNotes={orderNotes}
         onOrderNotesChange={onOrderNotesChange}
         adminOrderData={adminOrderData}
+        customerName={customerName}
+        customerEmail={customerEmail}
       />
     </Elements>
   );
