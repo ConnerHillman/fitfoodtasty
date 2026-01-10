@@ -77,12 +77,6 @@ export default function PaymentForm({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/payment-success`,
-          payment_method_data: {
-            billing_details: {
-              name: customerName || undefined,
-              email: customerEmail || undefined,
-            }
-          }
         },
         redirect: "if_required"
       });
@@ -161,9 +155,6 @@ export default function PaymentForm({
                   defaultCollapsed: false,
                   radios: true,
                   spacedAccordionItems: false
-                },
-                fields: {
-                  billingDetails: 'never'
                 },
                 wallets: {
                   applePay: 'auto',
