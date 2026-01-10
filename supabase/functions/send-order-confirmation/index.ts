@@ -150,19 +150,36 @@ serve(async (req) => {
 
     // Fallback to default template
     if (!template) {
-      const { data: defaultTemplate, error: defaultError } = await supabase
+      // First try to get the default template if it's active
+      const { data: defaultTemplate } = await supabase
         .from('order_email_templates')
         .select('*')
         .eq('template_type', 'order_confirmation')
         .eq('is_default', true)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (defaultError || !defaultTemplate) {
-        throw new Error(`No email template found: ${defaultError?.message}`);
+      if (defaultTemplate) {
+        template = defaultTemplate;
+        console.log(`Using default template: ${template.template_name}`);
+      } else {
+        // Fall back to any active order_confirmation template
+        const { data: anyActiveTemplate, error: fallbackError } = await supabase
+          .from('order_email_templates')
+          .select('*')
+          .eq('template_type', 'order_confirmation')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (fallbackError || !anyActiveTemplate) {
+          throw new Error(`No active order confirmation template found: ${fallbackError?.message}`);
+        }
+
+        template = anyActiveTemplate;
+        console.log(`Using fallback template: ${template.template_name}`);
       }
-
-      template = defaultTemplate;
     }
 
     // Prepare template variables
