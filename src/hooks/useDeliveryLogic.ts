@@ -14,12 +14,12 @@ export const useDeliveryLogic = () => {
   const [manualPostcode, setManualPostcode] = useState<string>("");
   const [postcodeChecked, setPostcodeChecked] = useState<boolean>(false);
 
-  // Fetch collection points
+  // Fetch collection points using the public view (excludes sensitive phone/email data)
   useEffect(() => {
     const fetchCollectionPoints = async () => {
       try {
         const { data, error } = await supabase
-          .from('collection_points')
+          .from('collection_points_public')
           .select('*')
           .eq('is_active', true)
           .order('point_name', { ascending: true });
