@@ -13,6 +13,7 @@ interface OrderEmailTemplate {
   text_content?: string;
   is_active: boolean;
   is_default: boolean;
+  template_type?: string;
   variables?: string[];
   created_at: string;
   updated_at: string;
@@ -125,12 +126,46 @@ const getCollectionSampleData = () => ({
   reorder_url: "https://example.com/reorder/def67890",
 });
 
+const getWelcomeSampleData = () => ({
+  // Customer info
+  customer_name: "Sarah Johnson",
+  customer_email: "sarah.johnson@example.com",
+  
+  // Business info
+  business_name: "Fit Food Tasty",
+  business_phone: "07961 719602",
+  business_address: "Unit F, Cartwright Mill Business Centre, Brue Avenue, Bridgwater, Somerset, TA6 5LT",
+  
+  // URLs
+  website_url: "https://fitfoodtasty.co.uk",
+  menu_url: "https://fitfoodtasty.co.uk/menu",
+  account_url: "https://fitfoodtasty.co.uk/orders",
+  
+  // Misc
+  current_year: new Date().getFullYear(),
+});
+
 export const TemplatePreviewDialog = ({ template, isOpen, onClose }: TemplatePreviewDialogProps) => {
   const [previewMode, setPreviewMode] = useState<'delivery' | 'collection'>('delivery');
   
   if (!template) return null;
 
-  const sampleData = previewMode === 'delivery' ? getDeliverySampleData() : getCollectionSampleData();
+  // Determine if this is an order template (needs delivery/collection toggle)
+  const isOrderTemplate = template.template_type === 'order_confirmation' || 
+                          template.template_type === 'order' ||
+                          !template.template_type;
+  
+  const isWelcomeTemplate = template.template_type === 'welcome';
+
+  // Get appropriate sample data based on template type
+  const getSampleData = () => {
+    if (isWelcomeTemplate) {
+      return getWelcomeSampleData();
+    }
+    return previewMode === 'delivery' ? getDeliverySampleData() : getCollectionSampleData();
+  };
+
+  const sampleData = getSampleData();
 
   // Compile and render with Handlebars
   let previewHtml = "";
@@ -162,34 +197,41 @@ export const TemplatePreviewDialog = ({ template, isOpen, onClose }: TemplatePre
             <Badge variant={template.is_active ? "default" : "secondary"}>
               {template.is_active ? "Active" : "Inactive"}
             </Badge>
+            {template.template_type && (
+              <Badge variant="outline" className="capitalize">
+                {template.template_type.replace('_', ' ')}
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          {/* Preview Mode Toggle */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Preview as:</span>
-            <div className="flex gap-1">
-              <Button
-                variant={previewMode === 'delivery' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPreviewMode('delivery')}
-                className="gap-1.5"
-              >
-                <Truck className="h-3.5 w-3.5" />
-                Delivery
-              </Button>
-              <Button
-                variant={previewMode === 'collection' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPreviewMode('collection')}
-                className="gap-1.5"
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                Collection
-              </Button>
+          {/* Preview Mode Toggle - Only for order templates */}
+          {isOrderTemplate && !isWelcomeTemplate && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Preview as:</span>
+              <div className="flex gap-1">
+                <Button
+                  variant={previewMode === 'delivery' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPreviewMode('delivery')}
+                  className="gap-1.5"
+                >
+                  <Truck className="h-3.5 w-3.5" />
+                  Delivery
+                </Button>
+                <Button
+                  variant={previewMode === 'collection' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPreviewMode('collection')}
+                  className="gap-1.5"
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  Collection
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {compileError && (
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded text-destructive text-sm">
@@ -226,8 +268,17 @@ export const TemplatePreviewDialog = ({ template, isOpen, onClose }: TemplatePre
           )}
 
           <div className="text-xs text-muted-foreground space-y-1">
-            <p><strong>Note:</strong> This preview uses sample data. Toggle between Delivery and Collection modes to preview both scenarios.</p>
-            <p><strong>Sample Customer:</strong> {sampleData.customer_name} ({sampleData.customer_phone})</p>
+            {isWelcomeTemplate ? (
+              <>
+                <p><strong>Note:</strong> This preview uses sample welcome data.</p>
+                <p><strong>Sample Customer:</strong> {(sampleData as ReturnType<typeof getWelcomeSampleData>).customer_name}</p>
+              </>
+            ) : (
+              <>
+                <p><strong>Note:</strong> This preview uses sample data. Toggle between Delivery and Collection modes to preview both scenarios.</p>
+                <p><strong>Sample Customer:</strong> {(sampleData as ReturnType<typeof getDeliverySampleData>).customer_name} ({(sampleData as ReturnType<typeof getDeliverySampleData>).customer_phone})</p>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>
