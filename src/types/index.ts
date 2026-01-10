@@ -67,3 +67,15 @@ export type {
 export type {
   LabelData
 } from './label';
+
+export type {
+  UserMetadata,
+  TypedUser
+} from './user';
+
+export {
+  hasUserMetadata,
+  getUserMetadata,
+  getUserFullName,
+  getUserDeliveryAddress
+} from './user';

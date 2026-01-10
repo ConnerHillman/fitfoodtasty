@@ -12,6 +12,8 @@ import { useDiscounts } from "@/hooks/useDiscounts";
 import { useDateValidation } from "@/hooks/useDateValidation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAdminOrder } from "@/hooks/useAdminOrder";
+import { logger } from "@/lib/logger";
+import { getUserFullName, getUserDeliveryAddress } from "@/types/user";
 import OrderSummary from "@/components/cart/OrderSummary";
 import DeliveryOptions from "@/components/cart/DeliveryOptions";
 import DatePicker from "@/components/cart/DatePicker";
@@ -105,7 +107,7 @@ const Cart = () => {
           requested_delivery_date: dateValidation.requestedDeliveryDate,
           production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
           customer_email: user?.email,
-          customer_name: (user as any)?.user_metadata?.full_name,
+          customer_name: getUserFullName(user),
           coupon_code: discounts.couponApplied ? discounts.appliedCoupon?.code : null,
           coupon_data: discounts.couponApplied ? discounts.appliedCoupon : null,
           gift_card_code: discounts.appliedGiftCard?.code || null,
@@ -121,7 +123,7 @@ const Cart = () => {
         setClientSecret(data.clientSecret);
       }
     } catch (err) {
-      console.error('Auto-create payment intent failed:', err);
+      logger.error('Auto-create payment intent failed', err);
     }
   }, [
     dateValidation.requestedDeliveryDate, 
@@ -135,9 +137,9 @@ const Cart = () => {
     orderNotes,
     isCoupon100Off,
     user?.email,
-    (user as any)?.user_metadata?.full_name,
+    user,
     dateValidation.calculateProductionDate,
-    isSubscription // Add isSubscription to dependency array
+    isSubscription
   ]);
 
   const debouncedCreatePaymentIntent = useDebounce(useCallback(() => {
@@ -216,7 +218,7 @@ const Cart = () => {
               });
             }
           } catch (freeItemError) {
-            console.error('Error adding free item:', freeItemError);
+            logger.error('Error adding free item', freeItemError);
           }
         }
 
@@ -233,7 +235,7 @@ const Cart = () => {
         });
       }
     } catch (error) {
-      console.error('Error applying coupon:', error);
+      logger.error('Error applying coupon', error);
       discounts.setCouponMessage("Failed to apply coupon");
       toast({
         title: "Error",
@@ -285,10 +287,10 @@ const Cart = () => {
             currency: 'gbp',
             status: 'confirmed',
             customer_email: user?.email,
-            customer_name: (user as any)?.user_metadata?.full_name,
+            customer_name: getUserFullName(user),
             requested_delivery_date: dateValidation.requestedDeliveryDate,
             production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
-            delivery_address: (user as any)?.user_metadata?.delivery_address,
+            delivery_address: getUserDeliveryAddress(user),
             order_notes: orderNotes.trim() || null,
           })
           .select()
@@ -318,10 +320,10 @@ const Cart = () => {
             currency: 'gbp',
             status: 'confirmed',
             customer_email: user?.email,
-            customer_name: (user as any)?.user_metadata?.full_name,
+            customer_name: getUserFullName(user),
             requested_delivery_date: dateValidation.requestedDeliveryDate,
             production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
-            delivery_address: (user as any)?.user_metadata?.delivery_address,
+            delivery_address: getUserDeliveryAddress(user),
             coupon_type: discounts.appliedCoupon?.code,
             coupon_discount_percentage: discounts.appliedCoupon?.discount_percentage || 0,
             coupon_discount_amount: discounts.appliedCoupon?.discount_amount || 0,
@@ -360,7 +362,7 @@ const Cart = () => {
       // clearCart(); // Commented out to prevent clearing until navigation
       window.location.href = "/payment-success";
     } catch (error) {
-      console.error('Error creating free order:', error);
+      logger.error('Error creating free order', error);
       toast({
         title: "Error",
         description: "Failed to create order. Please try again.",
@@ -535,7 +537,7 @@ const Cart = () => {
             orderNotes={orderNotes}
             onOrderNotesChange={setOrderNotes}
             hasSelectedDate={!!dateValidation.requestedDeliveryDate}
-            customerName={(user as any)?.user_metadata?.full_name || ''}
+            customerName={getUserFullName(user) || ''}
             customerEmail={user?.email || ''}
           />
         </div>
