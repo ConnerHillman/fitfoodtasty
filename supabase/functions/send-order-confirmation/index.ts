@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { Resend } from "npm:resend@4.0.0";
+import { Resend } from "npm:resend@2.0.0";
 import Handlebars from "npm:handlebars@4.7.8";
 
 const corsHeaders = {
@@ -126,7 +126,21 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Customer email: ${customerEmail}, name: ${customerName}`);
+    // Get customer phone from profiles
+    let customerPhone = '';
+    if (orderData.user_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('user_id', orderData.user_id)
+        .single();
+      
+      if (profile?.phone) {
+        customerPhone = profile.phone;
+      }
+    }
+
+    console.log(`Customer email: ${customerEmail}, name: ${customerName}, phone: ${customerPhone}`);
 
     if (!customerEmail) {
       throw new Error('No customer email found for order');
@@ -222,6 +236,8 @@ serve(async (req) => {
       // Customer info
       customer_name: customerName || 'Valued Customer',
       customer_email: customerEmail,
+      customer_phone: customerPhone || '',
+      has_customer_phone: !!customerPhone,
       
       // Order info
       order_id: orderId.split('-')[0].toUpperCase(),
