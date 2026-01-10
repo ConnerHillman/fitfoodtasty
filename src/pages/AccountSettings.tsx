@@ -14,9 +14,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, User, Gift } from "lucide-react";
 import ReferralSystem from "@/components/ReferralSystem";
 
+// UK phone validation regex
+const ukPhoneRegex = /^(0|\+44|44)?[17]\d{9}$/;
+
 const profileSchema = z.object({
   full_name: z.string().min(2, "Full name must be at least 2 characters"),
-  phone: z.string().optional(),
+  phone: z.string()
+    .min(10, "Phone number is required for delivery communication")
+    .refine((val) => {
+      const cleaned = val.replace(/\D/g, '');
+      return ukPhoneRegex.test(cleaned) || /^07\d{9}$/.test(cleaned) || /^0[12]\d{9}$/.test(cleaned);
+    }, "Please enter a valid UK phone number"),
   delivery_address: z.string().optional(),
   city: z.string().optional(),
   county: z.string().optional(),
@@ -159,13 +167,14 @@ const AccountSettings = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone">Phone Number *</Label>
                     <Input
                       id="phone"
                       {...register("phone")}
-                      placeholder="Enter your phone number"
+                      placeholder="e.g., 07123456789"
                       type="tel"
                     />
+                    <p className="text-xs text-muted-foreground">Required for delivery updates</p>
                     {errors.phone && (
                       <p className="text-sm text-destructive">{errors.phone.message}</p>
                     )}

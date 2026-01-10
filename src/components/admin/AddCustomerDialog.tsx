@@ -57,7 +57,31 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
     });
   };
 
+  // UK phone validation
+  const isValidUKPhone = (phoneNumber: string): boolean => {
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    return /^(07\d{9}|0[12]\d{9}|447\d{9})$/.test(cleaned);
+  };
+
   const validateForm = (): boolean => {
+    // Check phone is provided and valid
+    if (!formData.phone.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Phone number is required for delivery communication",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!isValidUKPhone(formData.phone)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid UK phone number (e.g., 07123456789)",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     const validationResult = validateCustomerData({
       full_name: formData.full_name,
       email: formData.email,
@@ -230,14 +254,16 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">Phone Number *</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="e.g., +44 7123 456789 or 07123 456789"
+                  placeholder="e.g., 07123456789"
+                  required
                 />
+                <p className="text-xs text-muted-foreground">Required for delivery updates</p>
               </div>
             </CardContent>
           </Card>
