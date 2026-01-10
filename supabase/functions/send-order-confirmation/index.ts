@@ -15,6 +15,12 @@ interface OrderConfirmationRequest {
 }
 
 serve(async (req) => {
+  console.log('[send-order-confirmation] Function invoked', {
+    method: req.method,
+    url: req.url,
+    timestamp: new Date().toISOString()
+  });
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -40,10 +46,7 @@ serve(async (req) => {
       // Get individual order
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          profiles!orders_user_id_fkey(full_name, user_id)
-        `)
+        .select('*')
         .eq('id', orderId)
         .single();
 
@@ -69,8 +72,7 @@ serve(async (req) => {
         .from('package_orders')
         .select(`
           *,
-          packages(name, description),
-          profiles!package_orders_user_id_fkey(full_name, user_id)
+          packages(name, description)
         `)
         .eq('id', orderId)
         .single();
@@ -102,7 +104,7 @@ serve(async (req) => {
     }
 
     // Check if email notifications are enabled for this order
-    if (!orderData.email_notifications_enabled) {
+    if (orderData.email_notifications_enabled === false) {
       console.log(`Email notifications disabled for order ${orderId}`);
       return new Response(
         JSON.stringify({ success: false, message: 'Email notifications disabled for this order' }),
@@ -110,20 +112,20 @@ serve(async (req) => {
       );
     }
 
-    // Get customer email
+    // Get customer email and name directly from order (already stored there)
     let customerEmail = orderData.customer_email;
     let customerName = orderData.customer_name;
 
-    // If no customer email in order, try to get from user profile
+    // If no customer email in order, try to get from auth user
     if (!customerEmail && orderData.user_id) {
       const { data: userData } = await supabase.auth.admin.getUserById(orderData.user_id);
       customerEmail = userData?.user?.email;
+      if (!customerName) {
+        customerName = userData?.user?.user_metadata?.full_name;
+      }
     }
 
-    // Use profile name if available
-    if (orderData.profiles?.full_name) {
-      customerName = orderData.profiles.full_name;
-    }
+    console.log(`Customer email: ${customerEmail}, name: ${customerName}`);
 
     if (!customerEmail) {
       throw new Error('No customer email found for order');
