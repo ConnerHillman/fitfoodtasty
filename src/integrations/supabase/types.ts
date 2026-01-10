@@ -1781,6 +1781,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "subscription_deliveries_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "subscription_deliveries_delivery_zone_id_fkey"
             columns: ["delivery_zone_id"]
             isOneToOne: false
@@ -2061,6 +2068,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_subscriptions_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_subscriptions_delivery_zone_id_fkey"
             columns: ["delivery_zone_id"]
             isOneToOne: false
@@ -2078,7 +2092,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      collection_points_public: {
+        Row: {
+          address: string | null
+          city: string | null
+          collection_days: string[] | null
+          collection_fee: number | null
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          maximum_capacity: number | null
+          opening_hours: Json | null
+          order_cutoffs: Json | null
+          point_name: string | null
+          postcode: string | null
+          special_instructions: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          collection_days?: string[] | null
+          collection_fee?: number | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          maximum_capacity?: number | null
+          opening_hours?: Json | null
+          order_cutoffs?: Json | null
+          point_name?: string | null
+          postcode?: string | null
+          special_instructions?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          collection_days?: string[] | null
+          collection_fee?: number | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          maximum_capacity?: number | null
+          opening_hours?: Json | null
+          order_cutoffs?: Json | null
+          point_name?: string | null
+          postcode?: string | null
+          special_instructions?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_meal_nutrition: {
@@ -2128,6 +2192,30 @@ export type Database = {
       }
       generate_gift_card_code: { Args: never; Returns: string }
       generate_referral_code: { Args: { user_email: string }; Returns: string }
+      get_collection_point_full_details: {
+        Args: { p_collection_point_id: string }
+        Returns: {
+          address: string
+          city: string
+          collection_days: string[]
+          collection_fee: number
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          maximum_capacity: number
+          opening_hours: Json
+          order_cutoffs: Json
+          phone: string
+          point_name: string
+          postcode: string
+          production_lead_days: number
+          production_notes: string
+          production_same_day: boolean
+          special_instructions: string
+          updated_at: string
+        }[]
+      }
       get_delivery_zone_for_postcode: {
         Args: { customer_postcode: string }
         Returns: string
