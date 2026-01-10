@@ -186,18 +186,18 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               {/* Payment Methods */}
               <div className="flex items-center gap-4">
                 <span className="text-xs text-muted-foreground">We accept:</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   {/* Visa */}
-                  <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-7 w-10">
-                    <svg viewBox="0 0 38 24" className="h-4 w-auto" aria-label="Visa">
+                  <div className="bg-white rounded-md px-3 py-2 flex items-center justify-center h-10 w-14 shadow-sm">
+                    <svg viewBox="0 0 38 24" className="h-6 w-auto" aria-label="Visa">
                       <path fill="#1434CB" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z"/>
                       <path fill="#fff" d="M15.8 15.6l1.4-8.1h2.2l-1.4 8.1h-2.2zm9.8-7.9c-.4-.2-1.1-.4-1.9-.4-2.1 0-3.6 1.1-3.6 2.6 0 1.1 1.1 1.7 1.9 2.1.8.4 1.1.6 1.1 1 0 .5-.7.8-1.3.8-.9 0-1.3-.1-2.1-.5l-.3-.1-.3 1.8c.5.2 1.5.4 2.5.4 2.2 0 3.7-1.1 3.7-2.7 0-.9-.6-1.6-1.8-2.2-.8-.4-1.2-.6-1.2-1 0-.3.4-.7 1.2-.7.7 0 1.2.1 1.6.3l.2.1.3-1.5zm5.4-.2h-1.6c-.5 0-.9.1-1.1.6l-3.2 7.5h2.2l.4-1.2h2.7l.3 1.2h2l-1.7-8.1zm-2.6 5.2c.2-.5.8-2.2.8-2.2l.5 2.2h-1.3zM13.7 7.5L11.6 13l-.2-1.2c-.4-1.3-1.6-2.7-2.9-3.4l1.9 7.1h2.3l3.4-8h-2.4z"/>
                       <path fill="#F9A533" d="M9.6 7.5H6.2l-.1.2c2.7.7 4.5 2.3 5.2 4.3l-.7-3.9c-.1-.5-.5-.6-1-.6z"/>
                     </svg>
                   </div>
                   {/* Mastercard */}
-                  <div className="bg-white rounded px-2 py-1 flex items-center justify-center h-7 w-10">
-                    <svg viewBox="0 0 38 24" className="h-4 w-auto" aria-label="Mastercard">
+                  <div className="bg-white rounded-md px-3 py-2 flex items-center justify-center h-10 w-14 shadow-sm">
+                    <svg viewBox="0 0 38 24" className="h-6 w-auto" aria-label="Mastercard">
                       <path fill="#000" d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z"/>
                       <circle fill="#EB001B" cx="15" cy="12" r="7"/>
                       <circle fill="#F79E1B" cx="23" cy="12" r="7"/>
@@ -205,14 +205,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                     </svg>
                   </div>
                   {/* Amex */}
-                  <div className="bg-[#006FCF] rounded px-2 py-1 flex items-center justify-center h-7 w-10">
-                    <svg viewBox="0 0 38 24" className="h-4 w-auto" aria-label="American Express">
+                  <div className="bg-[#006FCF] rounded-md px-3 py-2 flex items-center justify-center h-10 w-14 shadow-sm">
+                    <svg viewBox="0 0 38 24" className="h-6 w-auto" aria-label="American Express">
                       <path fill="#fff" d="M8.5 11.2l-.8-2-.8 2h1.6zm18.1-1.4v-.6h-2.2v1.2h2.1v-.6zm0 2.4v-.6h-2.2v1.2h2.1v-.6zm-18.1 0l-.8-2-.8 2h1.6zM35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3zm-3 15.5h-1.7l-1.5-2.2-1.5 2.2h-4.2v-7h4.2l1.5 2.2 1.5-2.2h3.6l-2.7 3.5 2.8 3.5zm-13.9 0H15l-.5-1.2h-2.6l-.5 1.2H8.3l2.9-7h2.9l3 7zm-9.6 0H5.4v-7h3.1c1.5 0 2.5.9 2.5 2.2 0 1.1-.7 1.9-1.7 2.1l2.2 2.7z"/>
                     </svg>
                   </div>
                   {/* Apple Pay */}
-                  <div className="bg-black rounded px-2 py-1 flex items-center justify-center h-7 w-10">
-                    <svg viewBox="0 0 38 24" className="h-4 w-auto" aria-label="Apple Pay">
+                  <div className="bg-black rounded-md px-3 py-2 flex items-center justify-center h-10 w-14 shadow-sm">
+                    <svg viewBox="0 0 38 24" className="h-6 w-auto" aria-label="Apple Pay">
                       <path fill="#fff" d="M11.2 7.8c-.4.5-1 .8-1.6.8-.1-.6.2-1.3.5-1.7.4-.5 1-.8 1.5-.8.1.6-.1 1.2-.4 1.7zm.4 1c-.9 0-1.6.5-2 .5s-1.1-.5-1.8-.5c-.9 0-1.8.5-2.3 1.4-.9 1.6-.2 4 .7 5.3.5.7 1 1.4 1.8 1.4.7 0 1-.5 1.8-.5s1.1.5 1.8.5 1.2-.7 1.7-1.4c.5-.8.7-1.6.7-1.6-.1 0-1.4-.5-1.4-2.1 0-1.3 1.1-2 1.2-2-.7-1-1.7-1-2.2-1zm9.3.3v7h1.3v-2.4h1.8c1.6 0 2.8-1.1 2.8-2.8s-1.1-2.8-2.8-2.8h-3.1zm1.3 1.1h1.5c1.1 0 1.7.6 1.7 1.7s-.6 1.7-1.7 1.7h-1.5V10.2zm6.4 6c.8 0 1.5-.4 1.9-1.1h.1v1h1.2v-3.5c0-1.2-1-2-2.5-2s-2.4.8-2.4 2h1.2c.1-.6.6-.9 1.2-.9.7 0 1.1.4 1.1 1v.5l-1.5.1c-1.4.1-2.1.7-2.1 1.8 0 1.1.8 1.9 1.8 2.1zm.4-1c-.6 0-1-.3-1-1 0-.6.4-.9 1.2-1l1.3-.1v.5c0 1-.6 1.6-1.5 1.6zm5.1 2.7c1.2 0 1.8-.5 2.3-1.9l2.2-6.2h-1.3l-1.4 4.7h-.1l-1.4-4.7h-1.4l2.1 6 .1.3c-.2.6-.5.8-1 .8h-.3v1h.2z"/>
                     </svg>
                   </div>
