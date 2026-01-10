@@ -116,6 +116,23 @@ serve(async (req) => {
     // Get customer email and name directly from order (already stored there)
     let customerEmail = orderData.customer_email;
     let customerName = orderData.customer_name;
+    let customerPhone = '';
+
+    // Try to get phone and additional details from profile
+    if (orderData.user_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone, full_name')
+        .eq('user_id', orderData.user_id)
+        .maybeSingle();
+      
+      if (profile) {
+        customerPhone = profile.phone || '';
+        if (!customerName) {
+          customerName = profile.full_name;
+        }
+      }
+    }
 
     // If no customer email in order, try to get from auth user
     if (!customerEmail && orderData.user_id) {
@@ -126,7 +143,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Customer email: ${customerEmail}, name: ${customerName}`);
+    console.log(`Customer email: ${customerEmail}, name: ${customerName}, phone: ${customerPhone}`);
 
     if (!customerEmail) {
       throw new Error('No customer email found for order');
@@ -222,6 +239,8 @@ serve(async (req) => {
       // Customer info
       customer_name: customerName || 'Valued Customer',
       customer_email: customerEmail,
+      customer_phone: customerPhone || 'Not provided',
+      has_customer_phone: !!customerPhone,
       
       // Order info
       order_id: orderId.split('-')[0].toUpperCase(),
