@@ -228,7 +228,7 @@ serve(async (req) => {
           coupon_discount_amount: parseFloat(metadata.coupon_discount_amount || '0'),
           coupon_free_delivery: metadata.coupon_free_delivery === 'true',
           coupon_free_item_id: metadata.coupon_free_item_id || null,
-          expires_at: metadata.expires_at || null,
+          
           stripe_session_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
         })
