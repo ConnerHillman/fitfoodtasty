@@ -79,7 +79,7 @@ const Auth = () => {
 
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -102,6 +102,21 @@ const Auth = () => {
       }
     } else {
       setError("");
+      
+      // Send welcome email (fire and forget - don't block on this)
+      supabase.functions.invoke('send-welcome-email', {
+        body: { 
+          email: email,
+          name: fullName 
+        }
+      }).then(({ error: welcomeError }) => {
+        if (welcomeError) {
+          console.error('Failed to send welcome email:', welcomeError);
+        } else {
+          console.log('Welcome email sent successfully');
+        }
+      });
+      
       alert("Check your email for the confirmation link!");
     }
     
