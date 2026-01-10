@@ -4,11 +4,10 @@ import { stripePromise } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogIn, UserPlus, Shield, User, ShoppingBag } from "lucide-react";
+import { LogIn, UserPlus, Shield, User, ShoppingBag, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import PaymentForm from "@/components/PaymentForm";
-
 
 interface PaymentSectionProps {
   user: any;
@@ -98,6 +97,24 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   }
 
   if (!clientSecret) {
+    // Show date selection prompt if no date selected
+    if (!hasSelectedDate) {
+      return (
+        <Card className="bg-background border border-border">
+          <CardContent className="p-6 text-center space-y-4">
+            <div className="space-y-2">
+              <Calendar className="h-12 w-12 mx-auto text-amber-500" />
+              <h3 className="text-lg font-medium">Select a Date</h3>
+              <p className="text-muted-foreground">
+                Please select a {deliveryMethod === "pickup" ? "collection" : "delivery"} date above to continue with checkout
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Show loading state if date is selected but payment intent is being created
     return (
       <Card className="bg-background border border-border">
         <CardContent className="p-6 space-y-4">
