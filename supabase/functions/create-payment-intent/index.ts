@@ -113,7 +113,6 @@ serve(async (req) => {
       coupon_discount_percentage: discount_percentage?.toString() || '0',
       coupon_free_delivery: coupon_data?.free_delivery?.toString() || 'false',
       coupon_free_item_id: coupon_data?.free_item_id || '',
-      expires_at: coupon_data?.expires_at || '',
       items: JSON.stringify(items.map(item => ({
         meal_id: item.meal_id,
         name: item.name,
