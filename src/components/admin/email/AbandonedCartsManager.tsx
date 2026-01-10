@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
+import { ShoppingCart, DollarSign, TrendingUp, Eye } from "lucide-react";
+import { AbandonedCartPreviewDialog } from "./AbandonedCartPreviewDialog";
 
 export const AbandonedCartsManager = () => {
   const { toast } = useToast();
@@ -35,6 +36,7 @@ export const AbandonedCartsManager = () => {
   const [activeEmailTab, setActiveEmailTab] = useState("first");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [previewEmailType, setPreviewEmailType] = useState<string | null>(null);
 
   // Load settings, stats, and templates
   useEffect(() => {
@@ -404,12 +406,22 @@ export const AbandonedCartsManager = () => {
                         />
                       </div>
                       
-                      <Button 
-                        onClick={() => saveEmailTemplate(emailType)}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? "Saving..." : `Save ${emailType} Email`}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => saveEmailTemplate(emailType)}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? "Saving..." : `Save ${emailType} Email`}
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => setPreviewEmailType(emailType)}
+                          className="gap-1.5"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Preview
+                        </Button>
+                      </div>
                     </div>
                   </TabsContent>
                 ))}
@@ -418,6 +430,14 @@ export const AbandonedCartsManager = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Preview Dialog */}
+      <AbandonedCartPreviewDialog
+        template={previewEmailType ? emailTemplates[previewEmailType as keyof typeof emailTemplates] : null}
+        emailType={previewEmailType || ''}
+        isOpen={!!previewEmailType}
+        onClose={() => setPreviewEmailType(null)}
+      />
     </div>
   );
 };
