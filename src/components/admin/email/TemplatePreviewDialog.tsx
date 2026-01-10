@@ -26,9 +26,9 @@ interface TemplatePreviewDialogProps {
 
 // Sample order items for preview
 const sampleOrderItems = [
-  { meal_name: "Chicken Tikka Masala", quantity: 3, unit_price: "£8.99", total_price: "£26.97" },
-  { meal_name: "Beef Lasagna", quantity: 2, unit_price: "£9.49", total_price: "£18.98" },
-  { meal_name: "Vegetable Stir Fry", quantity: 1, unit_price: "£7.99", total_price: "£7.99" },
+  { meal_name: "Chicken Tikka Masala", quantity: 3, unit_price: "8.99", total_price: "26.97" },
+  { meal_name: "Beef Lasagna", quantity: 2, unit_price: "9.49", total_price: "18.98" },
+  { meal_name: "Vegetable Stir Fry", quantity: 1, unit_price: "7.99", total_price: "7.99" },
 ];
 
 const getDeliverySampleData = () => ({
@@ -66,12 +66,12 @@ const getDeliverySampleData = () => ({
   order_items: sampleOrderItems,
   
   // Pricing
-  subtotal: "£53.94",
-  discount_amount: "£5.00",
+  subtotal: "53.94",
+  discount_amount: "5.00",
   has_discount: true,
-  delivery_fee: "£3.99",
+  delivery_fee: "3.99",
   has_delivery_fee: true,
-  total_amount: "£52.93",
+  total_amount: "52.93",
   
   // Business
   business_name: "Fit Food Tasty",
@@ -113,12 +113,12 @@ const getCollectionSampleData = () => ({
   order_items: sampleOrderItems,
   
   // Pricing
-  subtotal: "£53.94",
+  subtotal: "53.94",
   discount_amount: "",
   has_discount: false,
   delivery_fee: "",
   has_delivery_fee: false,
-  total_amount: "£53.94",
+  total_amount: "53.94",
   
   // Business
   business_name: "Fit Food Tasty",
