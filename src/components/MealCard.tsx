@@ -127,6 +127,8 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
           <img 
             src={meal.image_url} 
             alt={meal.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
           {isNew && (
