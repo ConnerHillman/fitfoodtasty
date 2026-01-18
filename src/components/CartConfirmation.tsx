@@ -54,20 +54,20 @@ const CartConfirmation = ({ show, itemName, onComplete }: CartConfirmationProps)
       <div className="
         flex items-center gap-2.5
         px-4 py-2.5
-        bg-white/95 backdrop-blur-sm
+        bg-card/98 backdrop-blur-sm
         rounded-full
-        shadow-lg shadow-black/5
-        border border-emerald-100
+        shadow-dropdown
+        border border-border/50
       ">
         <div className="
           flex items-center justify-center
           w-5 h-5
-          bg-emerald-500
+          bg-primary
           rounded-full
         ">
-          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+          <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
         </div>
-        <span className="text-sm font-medium text-gray-800 whitespace-nowrap">
+        <span className="text-sm font-medium text-foreground whitespace-nowrap">
           Added to your order
         </span>
       </div>

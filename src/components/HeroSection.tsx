@@ -36,14 +36,14 @@ const HeroSection = () => {
           {/* Left Content */}
           <div className="text-foreground space-y-8">
             <div className="space-y-4">
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-sm px-4 py-2">
+              <Badge className="bg-primary/20 text-primary-foreground border-primary/30 text-sm px-4 py-2 font-medium">
                 Premium Meal Prep
               </Badge>
               
               <h1 className="text-display-lg">
                 <span className="text-primary-foreground">PREMIUM</span>
                 <br />
-                <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                <span className="text-primary-foreground opacity-90">
                   MEAL PREP
                 </span>
               </h1>
@@ -52,26 +52,26 @@ const HeroSection = () => {
             {/* Value Props */}
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <Flame className="text-green-400" size={20} />
-                <span className="text-body-lg font-medium">High Protein, Calorie Controlled</span>
+                <Flame className="text-primary-foreground/80" size={20} />
+                <span className="text-body-lg font-medium text-primary-foreground/90">High Protein, Calorie Controlled</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Clock className="text-green-400" size={20} />
-                <span className="text-body-lg font-medium">Ready to Eat in 3 mins</span>
+                <Clock className="text-primary-foreground/80" size={20} />
+                <span className="text-body-lg font-medium text-primary-foreground/90">Ready to Eat in 3 mins</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Users className="text-green-400" size={20} />
-                <span className="text-body-lg font-medium">Simple Weekly Subscription</span>
+                <Users className="text-primary-foreground/80" size={20} />
+                <span className="text-body-lg font-medium text-primary-foreground/90">Simple Weekly Subscription</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Award className="text-green-400" size={20} />
-                <span className="text-body-lg font-medium">Designed by Nutritionists, prepared by Elite Chefs</span>
+                <Award className="text-primary-foreground/80" size={20} />
+                <span className="text-body-lg font-medium text-primary-foreground/90">Designed by Nutritionists, prepared by Elite Chefs</span>
               </div>
             </div>
 
              {/* CTA */}
              <div className="space-y-4">
-               <Button size="lg" onClick={handleGetStarted} className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-200">
+               <Button size="lg" onClick={handleGetStarted} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
                  ✨ Create Your Perfect Plan
                </Button>
                
@@ -101,35 +101,35 @@ const HeroSection = () => {
               <div className="space-y-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => <Star key={i} size={16} className="fill-green-400 text-green-400" />)}
+                    {[...Array(5)].map((_, i) => <Star key={i} size={16} className="fill-primary-foreground/90 text-primary-foreground/90" />)}
                   </div>
                   <span className="text-primary-foreground font-semibold">4.8/5</span>
-                  <span className="text-primary-foreground/70 text-sm">Excellent on Trustpilot</span>
+                  <span className="text-primary-foreground/60 text-sm">Excellent on Trustpilot</span>
                 </div>
 
                 {/* Sample Reviews */}
                 <div className="space-y-4">
-                  <div className="border-l-4 border-green-400 pl-4">
-                    <p className="text-primary-foreground text-sm mb-2">
+                  <div className="border-l-2 border-primary-foreground/40 pl-4">
+                    <p className="text-primary-foreground/90 text-sm mb-2 leading-relaxed">
                       "The best meal prep service I have used. Quality is outstanding and the convenience is unmatched."
                     </p>
                     <div className="flex items-center space-x-2">
                       <div className="flex">
-                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-green-400 text-green-400" />)}
+                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-primary-foreground/80 text-primary-foreground/80" />)}
                       </div>
-                      <span className="text-primary-foreground/70 text-xs">- Sarah M.</span>
+                      <span className="text-primary-foreground/50 text-xs">- Sarah M.</span>
                     </div>
                   </div>
 
-                  <div className="border-l-4 border-green-400 pl-4">
-                    <p className="text-primary-foreground text-sm mb-2">
+                  <div className="border-l-2 border-primary-foreground/40 pl-4">
+                    <p className="text-primary-foreground/90 text-sm mb-2 leading-relaxed">
                       "Perfect portions, amazing flavours. Has completely changed my approach to healthy eating."
                     </p>
                     <div className="flex items-center space-x-2">
                       <div className="flex">
-                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-green-400 text-green-400" />)}
+                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-primary-foreground/80 text-primary-foreground/80" />)}
                       </div>
-                      <span className="text-primary-foreground/70 text-xs">- James R.</span>
+                      <span className="text-primary-foreground/50 text-xs">- James R.</span>
                     </div>
                   </div>
                 </div>
