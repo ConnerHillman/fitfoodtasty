@@ -23,11 +23,29 @@ const HeroSection = () => {
   if (showResults && userProfile) {
     return <PersonalizedResults profile={userProfile} onStartOver={handleStartOver} />;
   }
+  // Supabase public URL for Hero Chilli Chicken 1
+  const mobileHeroImage = "https://iqbaezrydxljogdpzvfk.supabase.co/storage/v1/object/public/assets/Hero%20Chilli%20Chicken%201.png";
+
   return <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - Mobile uses Supabase hero image, desktop uses kitchen team */}
       <div className="absolute inset-0">
-        <img src="/src/assets/about-kitchen-team.jpg" alt="Premium meal prep kitchen" className="w-full h-full object-cover opacity-40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-gray-900/50 to-transparent"></div>
+        {/* Mobile Hero Image */}
+        <img 
+          src={mobileHeroImage} 
+          alt="Premium chilli chicken meal" 
+          className="w-full h-full object-cover md:hidden" 
+          style={{ objectPosition: 'center' }}
+        />
+        {/* Desktop/Tablet Hero Image */}
+        <img 
+          src="/src/assets/about-kitchen-team.jpg" 
+          alt="Premium meal prep kitchen" 
+          className="hidden md:block w-full h-full object-cover opacity-40" 
+        />
+        {/* Mobile: Strong top-to-bottom dark gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80 md:hidden"></div>
+        {/* Desktop: Original horizontal gradient */}
+        <div className="absolute inset-0 hidden md:block bg-gradient-to-r from-black/70 via-gray-900/50 to-transparent"></div>
       </div>
 
       {/* Content */}
