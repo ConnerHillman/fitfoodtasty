@@ -54,7 +54,7 @@ const HeroSection = () => {
           {/* Left Content */}
           <div className="text-foreground space-y-8">
             {/* Mobile Content Scrim - soft translucent background for readability */}
-            <div className="md:hidden bg-black/25 backdrop-blur-sm rounded-2xl p-5 -mx-1 space-y-6">
+            <div className="md:hidden bg-black/25 backdrop-blur-sm rounded-2xl px-5 pt-5 pb-4 -mx-1 space-y-5">
               <div className="space-y-4">
                 <Badge className="bg-primary/20 text-primary-foreground border-primary/30 text-sm px-4 py-2 font-medium">
                   Premium Meal Prep
@@ -96,11 +96,11 @@ const HeroSection = () => {
                 </Button>
                 
                 <div className="flex items-center justify-center space-x-3">
-                  <Button asChild variant="outline" size="lg" className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-bold px-5 py-3 rounded-full backdrop-blur-sm">
+                  <Button asChild variant="outline" size="sm" className="border border-primary-foreground/50 text-primary-foreground/80 hover:bg-primary-foreground hover:text-primary font-medium px-4 py-2 rounded-full backdrop-blur-sm">
                     <Link to="/auth">Create Free Account</Link>
                   </Button>
                   
-                  <Button asChild variant="ghost" size="lg" className="text-primary-foreground hover:bg-primary-foreground/20 font-medium px-5 py-3 rounded-full">
+                  <Button asChild variant="ghost" size="sm" className="text-primary-foreground/70 hover:bg-primary-foreground/20 font-medium px-4 py-2 rounded-full">
                     <Link to="/menu">Browse Menu</Link>
                   </Button>
                 </div>
