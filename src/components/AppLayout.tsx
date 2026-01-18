@@ -17,6 +17,7 @@ import {
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import Header from './Header';
+import FloatingCartButton from './FloatingCartButton';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -73,6 +74,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       )}
       
       <main>{children}</main>
+
+      <FloatingCartButton />
       
       {/* Enhanced Footer */}
       <footer className="bg-card border-t border-border mt-auto">
