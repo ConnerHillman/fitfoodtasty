@@ -24,7 +24,7 @@ const HeroSection = () => {
     return <PersonalizedResults profile={userProfile} onStartOver={handleStartOver} />;
   }
   // Supabase public URL for Hero Chilli Chicken 1
-  const mobileHeroImage = "https://iqbaezrydxljogdpzvfk.supabase.co/storage/v1/object/public/assets/Hero%20Chilli%20Chicken%201.png";
+  const mobileHeroImage = "https://aicpnaomarzgborltdkt.supabase.co/storage/v1/object/public/assets/Hero%20Chilli%20Chicken%201.png";
 
   return <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Image - Mobile uses Supabase hero image, desktop uses kitchen team */}
