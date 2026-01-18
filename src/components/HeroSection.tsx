@@ -29,12 +29,12 @@ const HeroSection = () => {
   return <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Image - Mobile uses Supabase hero image, desktop uses kitchen team */}
       <div className="absolute inset-0">
-        {/* Mobile Hero Image */}
+        {/* Mobile Hero Image - positioned to show appetising meal center */}
         <img 
           src={mobileHeroImage} 
           alt="Premium chilli chicken meal" 
           className="w-full h-full object-cover md:hidden" 
-          style={{ objectPosition: 'center' }}
+          style={{ objectPosition: '50% 55%' }}
         />
         {/* Desktop/Tablet Hero Image */}
         <img 
@@ -53,58 +53,113 @@ const HeroSection = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <div className="text-foreground space-y-8">
-            <div className="space-y-4">
-              <Badge className="bg-primary/20 text-primary-foreground border-primary/30 text-sm px-4 py-2 font-medium">
-                Premium Meal Prep
-              </Badge>
-              
-              <h1 className="text-display-lg">
-                <span className="text-primary-foreground">PREMIUM</span>
-                <br />
-                <span className="text-primary-foreground opacity-90">
-                  MEAL PREP
-                </span>
-              </h1>
+            {/* Mobile Content Scrim - soft translucent background for readability */}
+            <div className="md:hidden bg-black/25 backdrop-blur-sm rounded-2xl p-5 -mx-1 space-y-6">
+              <div className="space-y-4">
+                <Badge className="bg-primary/20 text-primary-foreground border-primary/30 text-sm px-4 py-2 font-medium">
+                  Premium Meal Prep
+                </Badge>
+                
+                <h1 className="text-display-lg">
+                  <span className="text-primary-foreground">PREMIUM</span>
+                  <br />
+                  <span className="text-primary-foreground opacity-90">
+                    MEAL PREP
+                  </span>
+                </h1>
+              </div>
+
+              {/* Value Props - Mobile: increased spacing, softer icons */}
+              <div className="space-y-5">
+                <div className="flex items-center space-x-3">
+                  <Flame className="text-primary-foreground/60 flex-shrink-0" size={18} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">High Protein, Calorie Controlled</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Clock className="text-primary-foreground/60 flex-shrink-0" size={18} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">Ready to Eat in 3 mins</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Users className="text-primary-foreground/60 flex-shrink-0" size={18} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">Simple Weekly Subscription</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Award className="text-primary-foreground/60 flex-shrink-0" size={18} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">Designed by Nutritionists, prepared by Elite Chefs</span>
+                </div>
+              </div>
+
+              {/* CTA - Mobile */}
+              <div className="space-y-4 pt-2">
+                <Button size="lg" onClick={handleGetStarted} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
+                  ✨ Create Your Perfect Plan
+                </Button>
+                
+                <div className="flex items-center justify-center space-x-3">
+                  <Button asChild variant="outline" size="lg" className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-bold px-5 py-3 rounded-full backdrop-blur-sm">
+                    <Link to="/auth">Create Free Account</Link>
+                  </Button>
+                  
+                  <Button asChild variant="ghost" size="lg" className="text-primary-foreground hover:bg-primary-foreground/20 font-medium px-5 py-3 rounded-full">
+                    <Link to="/menu">Browse Menu</Link>
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            {/* Value Props */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Flame className="text-primary-foreground/80" size={20} />
-                <span className="text-body-lg font-medium text-primary-foreground/90">High Protein, Calorie Controlled</span>
+            {/* Desktop Content - No scrim wrapper */}
+            <div className="hidden md:block space-y-8">
+              <div className="space-y-4">
+                <Badge className="bg-primary/20 text-primary-foreground border-primary/30 text-sm px-4 py-2 font-medium">
+                  Premium Meal Prep
+                </Badge>
+                
+                <h1 className="text-display-lg">
+                  <span className="text-primary-foreground">PREMIUM</span>
+                  <br />
+                  <span className="text-primary-foreground opacity-90">
+                    MEAL PREP
+                  </span>
+                </h1>
               </div>
-              <div className="flex items-center space-x-3">
-                <Clock className="text-primary-foreground/80" size={20} />
-                <span className="text-body-lg font-medium text-primary-foreground/90">Ready to Eat in 3 mins</span>
+
+              {/* Value Props - Desktop */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <Flame className="text-primary-foreground/80" size={20} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">High Protein, Calorie Controlled</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Clock className="text-primary-foreground/80" size={20} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">Ready to Eat in 3 mins</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Users className="text-primary-foreground/80" size={20} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">Simple Weekly Subscription</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Award className="text-primary-foreground/80" size={20} />
+                  <span className="text-body-lg font-medium text-primary-foreground/90">Designed by Nutritionists, prepared by Elite Chefs</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Users className="text-primary-foreground/80" size={20} />
-                <span className="text-body-lg font-medium text-primary-foreground/90">Simple Weekly Subscription</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Award className="text-primary-foreground/80" size={20} />
-                <span className="text-body-lg font-medium text-primary-foreground/90">Designed by Nutritionists, prepared by Elite Chefs</span>
+
+              {/* CTA - Desktop */}
+              <div className="space-y-4">
+                <Button size="lg" onClick={handleGetStarted} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
+                  ✨ Create Your Perfect Plan
+                </Button>
+                
+                <div className="flex items-center space-x-4">
+                  <Button asChild variant="outline" size="lg" className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-bold px-6 py-3 rounded-full backdrop-blur-sm">
+                    <Link to="/auth">Create Free Account</Link>
+                  </Button>
+                  
+                  <Button asChild variant="ghost" size="lg" className="text-primary-foreground hover:bg-primary-foreground/20 font-medium px-6 py-3 rounded-full">
+                    <Link to="/menu">Browse Menu</Link>
+                  </Button>
+                </div>
               </div>
             </div>
-
-             {/* CTA */}
-             <div className="space-y-4">
-               <Button size="lg" onClick={handleGetStarted} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
-                 ✨ Create Your Perfect Plan
-               </Button>
-               
-               <div className="flex items-center space-x-4">
-              <Button asChild variant="outline" size="lg" className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-bold px-6 py-3 rounded-full backdrop-blur-sm">
-                <Link to="/auth">Create Free Account</Link>
-              </Button>
-              
-              <Button asChild variant="ghost" size="lg" className="text-primary-foreground hover:bg-primary-foreground/20 font-medium px-6 py-3 rounded-full">
-                <Link to="/menu">Browse Menu</Link>
-              </Button>
-               </div>
-               
-               
-             </div>
           </div>
 
           {/* Right Content - Social Proof */}
