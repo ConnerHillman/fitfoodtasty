@@ -52,49 +52,55 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 220 14% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 14% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 14% 10%;
 
-    --primary: 142 76% 36%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary brand green - confident, premium */
+    --primary: 152 69% 31%;
+    --primary-foreground: 0 0% 100%;
     
-    /* Meal prep theme colors */
-    --success: 142 71% 45%;
-    --warning: 25 95% 53%;
-    --info: 221 83% 53%;
+    /* Soft green accent - backgrounds, subtle highlights */
+    --primary-soft: 152 40% 96%;
+    --primary-muted: 152 30% 92%;
     
-    /* Order status colors */
-    --status-confirmed: 25 95% 53%;
-    --status-confirmed-foreground: 210 40% 98%;
-    --status-completed: 142 71% 45%;
-    --status-completed-foreground: 210 40% 98%;
-    --status-cancelled: 0 84% 60%;
-    --status-cancelled-foreground: 210 40% 98%;
-    --status-pending: 221 83% 53%;
-    --status-pending-foreground: 210 40% 98%;
-    --status-preparing: 39 85% 55%;
-    --status-preparing-foreground: 210 40% 98%;
+    /* Meal prep theme colors - refined */
+    --success: 152 60% 40%;
+    --success-soft: 152 35% 94%;
+    --warning: 32 95% 50%;
+    --info: 217 80% 52%;
+    
+    /* Order status colors - slightly muted for calmness */
+    --status-confirmed: 32 85% 48%;
+    --status-confirmed-foreground: 0 0% 100%;
+    --status-completed: 152 55% 38%;
+    --status-completed-foreground: 0 0% 100%;
+    --status-cancelled: 0 72% 55%;
+    --status-cancelled-foreground: 0 0% 100%;
+    --status-pending: 217 75% 52%;
+    --status-pending-foreground: 0 0% 100%;
+    --status-preparing: 42 85% 52%;
+    --status-preparing-foreground: 220 14% 10%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 14% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 152 25% 95%;
+    --accent-foreground: 220 14% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 152 69% 31%;
 
     /* Unified border radius system */
     --radius: 0.75rem;
@@ -105,31 +111,31 @@ All colors MUST be HSL.
     --radius-full: 9999px;
 
     /* Elevation system - subtle, premium shadows */
-    --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.03);
-    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.04), 0 1px 2px -1px hsl(0 0% 0% / 0.03);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.05), 0 2px 4px -2px hsl(0 0% 0% / 0.03);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.06), 0 4px 6px -4px hsl(0 0% 0% / 0.04);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.08), 0 8px 10px -6px hsl(0 0% 0% / 0.05);
-    --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.15);
+    --shadow-xs: 0 1px 2px 0 hsl(220 14% 10% / 0.03);
+    --shadow-sm: 0 1px 3px 0 hsl(220 14% 10% / 0.04), 0 1px 2px -1px hsl(220 14% 10% / 0.03);
+    --shadow-md: 0 4px 6px -1px hsl(220 14% 10% / 0.05), 0 2px 4px -2px hsl(220 14% 10% / 0.03);
+    --shadow-lg: 0 10px 15px -3px hsl(220 14% 10% / 0.06), 0 4px 6px -4px hsl(220 14% 10% / 0.04);
+    --shadow-xl: 0 20px 25px -5px hsl(220 14% 10% / 0.08), 0 8px 10px -6px hsl(220 14% 10% / 0.05);
+    --shadow-2xl: 0 25px 50px -12px hsl(220 14% 10% / 0.15);
     
     /* Specialized shadows */
-    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.05), 0 4px 12px -4px hsl(0 0% 0% / 0.04);
-    --shadow-card-hover: 0 8px 16px -4px hsl(0 0% 0% / 0.08), 0 4px 8px -4px hsl(0 0% 0% / 0.04);
-    --shadow-button: 0 1px 3px 0 hsl(0 0% 0% / 0.06), 0 1px 2px -1px hsl(0 0% 0% / 0.04);
-    --shadow-button-hover: 0 4px 8px -2px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
-    --shadow-modal: 0 24px 48px -12px hsl(0 0% 0% / 0.18), 0 12px 24px -8px hsl(0 0% 0% / 0.1);
-    --shadow-dropdown: 0 4px 16px -2px hsl(0 0% 0% / 0.1), 0 2px 6px -2px hsl(0 0% 0% / 0.06);
-    --shadow-cta: 0 4px 14px -2px hsl(142 76% 36% / 0.25), 0 2px 6px -2px hsl(142 76% 36% / 0.15);
-    --shadow-cta-hover: 0 8px 20px -4px hsl(142 76% 36% / 0.3), 0 4px 8px -2px hsl(142 76% 36% / 0.2);
+    --shadow-card: 0 2px 8px -2px hsl(220 14% 10% / 0.04), 0 4px 12px -4px hsl(220 14% 10% / 0.03);
+    --shadow-card-hover: 0 8px 20px -4px hsl(220 14% 10% / 0.08), 0 4px 10px -4px hsl(220 14% 10% / 0.04);
+    --shadow-button: 0 1px 3px 0 hsl(220 14% 10% / 0.05), 0 1px 2px -1px hsl(220 14% 10% / 0.03);
+    --shadow-button-hover: 0 4px 10px -2px hsl(220 14% 10% / 0.1), 0 2px 4px -2px hsl(220 14% 10% / 0.05);
+    --shadow-modal: 0 24px 50px -12px hsl(220 14% 10% / 0.2), 0 12px 25px -8px hsl(220 14% 10% / 0.12);
+    --shadow-dropdown: 0 4px 16px -2px hsl(220 14% 10% / 0.1), 0 2px 6px -2px hsl(220 14% 10% / 0.05);
+    --shadow-cta: 0 4px 14px -2px hsl(152 69% 31% / 0.25), 0 2px 6px -2px hsl(152 69% 31% / 0.15);
+    --shadow-cta-hover: 0 8px 22px -4px hsl(152 69% 31% / 0.3), 0 4px 10px -2px hsl(152 69% 31% / 0.18);
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-foreground: 220 14% 30%;
+    --sidebar-primary: 220 14% 12%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 220 14% 12%;
+    --sidebar-border: 220 14% 92%;
+    --sidebar-ring: 152 69% 31%;
   }
 
   .dark {

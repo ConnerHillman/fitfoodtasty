@@ -53,20 +53,19 @@ const FloatingCartButton = () => {
             flex items-center justify-center gap-3
             h-14 px-8
             rounded-full
-            bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500
-            text-white
-            shadow-lg shadow-emerald-500/25
-            hover:shadow-xl hover:shadow-emerald-500/30
-            hover:from-emerald-500 hover:via-emerald-400 hover:to-teal-400
+            bg-primary
+            text-primary-foreground
+            shadow-cta
+            hover:shadow-cta-hover
             active:scale-[0.98]
             transition-all duration-200 ease-out
-            ${isPulsing ? 'scale-105' : ''}
+            ${isPulsing ? 'animate-subtle-pulse' : ''}
           `}
         >
           <span className="font-semibold text-base tracking-wide">
             Checkout
           </span>
-          <span className="h-5 w-px bg-white/30" aria-hidden="true" />
+          <span className="h-5 w-px bg-primary-foreground/25" aria-hidden="true" />
           <span className="font-bold text-base tabular-nums">
             {formattedPrice}
           </span>
