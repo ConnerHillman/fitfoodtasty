@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
@@ -8,6 +8,12 @@ export const useAdminOrder = () => {
   const [loading, setLoading] = useState(false);
   const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>({});
   const [totalOverride, setTotalOverride] = useState<number | null>(null);
+  const [adminPaymentIntent, setAdminPaymentIntent] = useState<{
+    clientSecret: string;
+    paymentIntentId: string;
+    stripeCustomerId: string;
+  } | null>(null);
+  const [saveCardToFile, setSaveCardToFile] = useState(true);
   const { items, adminOrderData, clearCart, clearAdminOrderData } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -199,15 +205,104 @@ export const useAdminOrder = () => {
     }
   };
 
-  const createNewCardOrder = async (
-    orderNotes: string, 
-    deliveryMethod: string, 
-    requestedDeliveryDate?: Date, 
+  // Create payment intent for inline card entry (new card flow)
+  const createAdminPaymentIntent = useCallback(async (
+    amountInPence: number,
+    saveCard: boolean = true
+  ) => {
+    if (!adminOrderData?.customerEmail) {
+      throw new Error('Customer email is required');
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-admin-payment-intent', {
+        body: {
+          customer_email: adminOrderData.customerEmail,
+          customer_name: adminOrderData.customerName,
+          amount_in_pence: amountInPence,
+          save_card: saveCard,
+          order_metadata: {
+            admin_postcode: adminOrderData.postcode,
+            admin_delivery_address: adminOrderData.deliveryAddress || '',
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      setAdminPaymentIntent({
+        clientSecret: data.clientSecret,
+        paymentIntentId: data.paymentIntentId,
+        stripeCustomerId: data.stripeCustomerId,
+      });
+
+      return data;
+    } catch (error: any) {
+      console.error('Error creating admin payment intent:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to prepare payment form",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [adminOrderData, toast]);
+
+  // Complete order after successful inline card payment
+  const completeNewCardOrder = async (
+    paymentIntentId: string,
+    orderNotes: string,
+    deliveryMethod: string,
+    requestedDeliveryDate?: Date,
     sendEmail: boolean = true
   ) => {
-    // This uses the same flow as payment link, but opens immediately
-    return createPaymentLinkOrder(orderNotes, deliveryMethod, requestedDeliveryDate, sendEmail, true);
+    setLoading(true);
+    try {
+      const orderData = {
+        ...prepareOrderData(orderNotes, deliveryMethod, requestedDeliveryDate, sendEmail),
+        payment_method: 'card_new',
+        stripe_payment_intent_id: paymentIntentId,
+      };
+
+      const { data, error } = await supabase.functions.invoke('create-admin-order', {
+        body: orderData
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Order Created & Payment Processed",
+        description: `Order for ${adminOrderData?.customerName} confirmed with card payment.`,
+      });
+
+      // Clear state
+      clearCart();
+      clearAdminOrderData?.();
+      setAdminPaymentIntent(null);
+      
+      navigate('/admin?tab=orders');
+      
+      return { success: true, orderId: data.orderId };
+    } catch (error: any) {
+      console.error('Error completing new card order:', error);
+      toast({
+        title: "Error Completing Order",
+        description: error.message || "Payment succeeded but order creation failed. Please contact support.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Clear payment intent state (e.g., when changing payment method)
+  const clearAdminPaymentIntent = useCallback(() => {
+    setAdminPaymentIntent(null);
+  }, []);
 
   const chargeCardOrder = async (
     orderNotes: string, 
@@ -260,6 +355,7 @@ export const useAdminOrder = () => {
 
   const exitAdminMode = () => {
     clearAdminOrderData?.();
+    setAdminPaymentIntent(null);
     navigate('/admin?tab=orders');
     toast({
       title: "Admin Mode Exited",
@@ -278,10 +374,16 @@ export const useAdminOrder = () => {
     getFinalTotal,
     createManualOrder,
     createPaymentLinkOrder,
-    createNewCardOrder,
     chargeCardOrder,
     exitAdminMode,
     adminOrderData,
     resetAllPrices,
+    // New card inline payment
+    adminPaymentIntent,
+    saveCardToFile,
+    setSaveCardToFile,
+    createAdminPaymentIntent,
+    completeNewCardOrder,
+    clearAdminPaymentIntent,
   };
 };
