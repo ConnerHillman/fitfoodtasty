@@ -67,17 +67,23 @@ const isCollectionAddress = (address: string | null | undefined, collectionPoint
   if (!address) return false;
   const normalizedAddress = address.toLowerCase().trim();
   
-  // Check against known collection point addresses
-  if (collectionPointAddresses.some(cpAddr => 
-    normalizedAddress.includes(cpAddr.toLowerCase()) || 
-    cpAddr.toLowerCase().includes(normalizedAddress.split(',')[0].toLowerCase())
-  )) {
-    return true;
+  // Check against known collection point addresses/names
+  for (const cpIdentifier of collectionPointAddresses) {
+    if (!cpIdentifier) continue;
+    const normalizedCp = cpIdentifier.toLowerCase().trim();
+    // Check if the address contains the collection point identifier
+    if (normalizedAddress.includes(normalizedCp) || normalizedCp.includes(normalizedAddress)) {
+      return true;
+    }
   }
   
-  // Check for collection-related keywords
-  const collectionKeywords = ['fit food tasty', 'collection point', 'pickup', 'collect from', 'invictus gym'];
-  return collectionKeywords.some(keyword => normalizedAddress.includes(keyword));
+  // Fallback: Check for specific collection-related keywords only if no collection points loaded
+  if (collectionPointAddresses.length === 0) {
+    const collectionKeywords = ['fit food tasty', 'collection point', 'pickup', 'collect from', 'invictus gym'];
+    return collectionKeywords.some(keyword => normalizedAddress.includes(keyword));
+  }
+  
+  return false;
 };
 
 const AllOrders: React.FC = () => {
@@ -118,14 +124,30 @@ const AllOrders: React.FC = () => {
       setLoading(true);
 
       // Fetch collection points first to determine fulfillment method
-      const { data: collectionPoints } = await supabase
+      // Try full table first (admin access), fall back to public view
+      let collectionPoints: { address: string; point_name: string }[] = [];
+      const { data: cpData, error: cpError } = await supabase
         .from('collection_points')
         .select('address, point_name')
         .eq('is_active', true);
+      
+      if (cpError || !cpData || cpData.length === 0) {
+        // Fallback to public view if admin access fails
+        const { data: publicCpData } = await supabase
+          .from('collection_points_public')
+          .select('address, point_name')
+          .eq('is_active', true);
+        collectionPoints = (publicCpData || []) as { address: string; point_name: string }[];
+      } else {
+        collectionPoints = cpData;
+      }
 
-      const cpAddresses = (collectionPoints || []).map(cp => cp.address).filter(Boolean);
-      const cpNames = (collectionPoints || []).map(cp => cp.point_name).filter(Boolean);
+      console.log('Collection points loaded:', collectionPoints);
+
+      const cpAddresses = collectionPoints.map(cp => cp.address).filter(Boolean);
+      const cpNames = collectionPoints.map(cp => cp.point_name).filter(Boolean);
       const allCpIdentifiers = [...cpAddresses, ...cpNames];
+      console.log('Collection point identifiers:', allCpIdentifiers);
       setCollectionPointAddresses(allCpIdentifiers);
 
       // Fetch regular orders
