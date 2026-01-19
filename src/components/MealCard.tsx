@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
-import { ChevronRight } from "lucide-react";
+
 
 interface Allergen {
   id: string;
@@ -143,37 +143,42 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
               </div>
             )}
             
-            {/* Content section - tighter spacing */}
-            <div className="flex flex-col flex-1 w-full px-2.5 pt-2 pb-1 sm:px-3 sm:pt-2.5">
+            {/* Content section */}
+            <div className="flex flex-col flex-1 w-full px-3 pt-2.5 pb-2">
               {/* Meal name - max 2 lines */}
-              <h3 className="font-semibold text-[13px] sm:text-sm leading-snug text-foreground tracking-tight line-clamp-2 mb-0.5">
+              <h3 className="font-semibold text-sm leading-tight text-foreground tracking-tight line-clamp-2">
                 {meal.name}
               </h3>
 
               {/* Compact nutrition summary - Calories & Protein only */}
-              <div className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground mt-1">
                 {Math.round(meal.total_calories || 0)} kcal · {Math.round(meal.total_protein || 0)}g protein
+              </p>
+              
+              {/* View Details - tertiary, positioned between nutrition and price */}
+              <div className="mt-2">
+                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/80 hover:text-primary transition-colors">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4M12 8h.01" />
+                  </svg>
+                  View Details
+                </span>
               </div>
             </div>
           </button>
         </DialogTrigger>
 
-        {/* Price & Actions - grouped tightly */}
-        <div className="px-2.5 pb-2.5 sm:px-3 sm:pb-3 space-y-1.5">
-          {/* Price + Details link row */}
-          <div className="flex items-center justify-between">
-            <span className="text-base sm:text-lg font-bold text-foreground">
+        {/* Decision block: Price + CTA grouped as one unit */}
+        <div className="px-3 pb-3 pt-0">
+          {/* Price - prominent but secondary to CTA */}
+          <div className="mb-2">
+            <span className="text-lg font-bold text-foreground tracking-tight">
               £{meal.price.toFixed(2)}
             </span>
-            <DialogTrigger asChild>
-              <button className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-0.5 touch-manipulation">
-                Details
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </DialogTrigger>
           </div>
 
-          {/* Add to Cart button */}
+          {/* Add to Cart button - primary CTA */}
           {onAddToCart && (
             <Button 
               onClick={(e) => {
@@ -181,7 +186,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
                 onAddToCart(meal);
               }}
               size="sm"
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 ease-out active:scale-[0.98] touch-manipulation shadow-button hover:shadow-button-hover text-sm h-10"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 ease-out hover:scale-[1.01] active:scale-[0.99] touch-manipulation shadow-button hover:shadow-button-hover text-sm h-11"
             >
               Add to Cart
             </Button>
