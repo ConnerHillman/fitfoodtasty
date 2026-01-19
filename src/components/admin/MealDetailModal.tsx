@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Save, X, ShoppingCart, DollarSign, Calendar, Users, TrendingUp, Calculator, ChefHat, Plus, Trash2, Clock } from "lucide-react";
+import { Edit, Save, X, ShoppingCart, DollarSign, Calendar, Users, TrendingUp, Calculator, ChefHat, Plus, Trash2, Clock, Upload, ImageIcon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CategoryTag from "../CategoryTag";
@@ -88,7 +88,70 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
     quantity: '',
     unit: 'g'
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const { toast } = useToast();
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!meal || !imageFile) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('meal-images')
+        .upload(fileName, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('meal-images')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from("meals")
+        .update({ image_url: publicUrl })
+        .eq("id", meal.id);
+
+      if (updateError) throw updateError;
+
+      setMeal({ ...meal, image_url: publicUrl });
+      setImageFile(null);
+      setImagePreview(null);
+      onUpdate();
+
+      toast({ title: "Success", description: "Image updated successfully" });
+    } catch (error: any) {
+      console.error("Error uploading image:", error);
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to upload image", 
+        variant: "destructive" 
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const cancelImageUpload = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
 
   useEffect(() => {
     if (mealId && isOpen) {
@@ -485,6 +548,119 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            {/* Image Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Meal Image
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-6 items-start">
+                  {/* Current/Preview Image */}
+                  <div className="relative group">
+                    <div className="w-48 h-48 rounded-lg overflow-hidden bg-muted border">
+                      {imagePreview ? (
+                        <img 
+                          src={imagePreview} 
+                          alt="New image preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : meal.image_url ? (
+                        <img 
+                          src={meal.image_url} 
+                          alt={meal.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-16 w-16 text-muted-foreground/50" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Hover overlay for selecting new image */}
+                    {!imagePreview && (
+                      <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <Upload className="h-8 w-8 mx-auto mb-2" />
+                          <span className="text-sm font-medium">Change Image</span>
+                        </div>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handleImageSelect}
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Upload controls */}
+                  <div className="flex-1 space-y-4">
+                    {imagePreview ? (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          New image selected. Click Upload to save or Cancel to discard.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={handleImageUpload} 
+                            disabled={uploadingImage}
+                            size="sm"
+                          >
+                            {uploadingImage ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload
+                              </>
+                            )}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={cancelImageUpload}
+                            disabled={uploadingImage}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          {meal.image_url 
+                            ? "Hover over the image to change it, or use the button below."
+                            : "No image set. Upload one to display on the menu."}
+                        </p>
+                        <label>
+                          <Button variant="outline" size="sm" asChild>
+                            <span className="cursor-pointer">
+                              <Upload className="h-4 w-4 mr-2" />
+                              {meal.image_url ? "Change Image" : "Upload Image"}
+                            </span>
+                          </Button>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={handleImageSelect}
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Basic Info Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
