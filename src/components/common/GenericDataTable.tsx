@@ -181,61 +181,43 @@ export function GenericDataTable<T>({
       );
     }
 
-    // Multiple actions (3+) - show first action + dropdown
-    const primaryAction = visibleActions[0];
-    const dropdownActions = visibleActions.slice(1);
-    const PrimaryIcon = primaryAction.icon;
-
+    // Multiple actions (3+) - show all in dropdown
     return (
-      <div className="flex gap-1">
-        <Button
-          variant={primaryAction.variant || "ghost"}
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            primaryAction.onClick(item);
-          }}
-          className={primaryAction.className}
-        >
-          {PrimaryIcon && <PrimaryIcon className="h-4 w-4 mr-1" />}
-          {primaryAction.label}
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              className="h-8 px-3"
-            >
-              Actions
-              <ChevronDown className="h-4 w-4 ml-1" />
-              <span className="sr-only">More actions</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end"
-            className="w-48 bg-popover border border-border shadow-md z-50"
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={(e) => e.stopPropagation()}
+            className="h-8 px-3"
           >
-            {dropdownActions.map((action, index) => {
-              const Icon = action.icon;
-              return (
-                <DropdownMenuItem
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    action.onClick(item);
-                  }}
-                  className="cursor-pointer"
-                >
-                  {Icon && <Icon className="h-4 w-4 mr-2" />}
-                  {action.label}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+            Actions
+            <ChevronDown className="h-4 w-4 ml-1" />
+            <span className="sr-only">Actions</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent 
+          align="end"
+          className="w-48 bg-popover border border-border shadow-md z-50"
+        >
+          {visibleActions.map((action, index) => {
+            const Icon = action.icon;
+            return (
+              <DropdownMenuItem
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  action.onClick(item);
+                }}
+                className="cursor-pointer"
+              >
+                {Icon && <Icon className="h-4 w-4 mr-2" />}
+                {action.label}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
