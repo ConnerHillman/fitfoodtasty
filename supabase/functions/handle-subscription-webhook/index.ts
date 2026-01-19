@@ -7,6 +7,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function to get display name safely (handles OAuth users with missing names)
+function getDisplayName(
+  metadata: Record<string, any> | undefined,
+  fallback: string = ''
+): string {
+  if (!metadata) return fallback;
+  
+  const firstName = (metadata.first_name || metadata.given_name || '')?.trim();
+  const lastName = (metadata.last_name || metadata.family_name || '')?.trim();
+  
+  if (firstName || lastName) {
+    return [firstName, lastName].filter(Boolean).join(' ');
+  }
+  
+  if (metadata.full_name?.trim()) {
+    return metadata.full_name.trim();
+  }
+  
+  if (metadata.name?.trim()) {
+    return metadata.name.trim();
+  }
+  
+  return fallback;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -97,7 +122,7 @@ serve(async (req) => {
                 body: {
                   type: 'subscription_started',
                   subscriptionId: subscription.id,
-                  customerName: customer.name || user.user_metadata?.full_name || '',
+                  customerName: customer.name || getDisplayName(user.user_metadata),
                   customerEmail: customer.email || user.email || '',
                   planName: session.metadata?.plan_name || 'Weekly Subscription',
                   deliveryDate: session.metadata?.requested_delivery_date || null

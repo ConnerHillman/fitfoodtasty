@@ -1433,7 +1433,7 @@ export type Database = {
           delivery_address: string | null
           delivery_instructions: string | null
           first_name: string | null
-          full_name: string
+          full_name: string | null
           id: string
           last_name: string | null
           phone: string | null
@@ -1448,7 +1448,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_instructions?: string | null
           first_name?: string | null
-          full_name: string
+          full_name?: string | null
           id?: string
           last_name?: string | null
           phone?: string | null
@@ -1463,7 +1463,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_instructions?: string | null
           first_name?: string | null
-          full_name?: string
+          full_name?: string | null
           id?: string
           last_name?: string | null
           phone?: string | null

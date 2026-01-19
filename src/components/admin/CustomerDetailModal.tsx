@@ -52,8 +52,8 @@ const CustomerDetailModal = () => {
     // Sanitize the customer data to prevent XSS
     const sanitized = sanitizeCustomerForDisplay(customerData);
     
-    // Ensure required fields exist
-    if (!sanitized.user_id || !sanitized.full_name) return null;
+    // Ensure required fields exist (user_id is required, full_name is now optional for OAuth)
+    if (!sanitized.user_id) return null;
     
     return sanitized as CustomerModalData;
   };

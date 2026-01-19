@@ -75,15 +75,22 @@ const ReferralReports = () => {
       // Get user emails from auth.users via profiles table
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, full_name')
+        .select('user_id, first_name, last_name, full_name')
         .in('user_id', userIds);
 
+      // Import display name utility
+      const { getDisplayName } = await import('@/lib/displayName');
+      
       // Get emails from a different approach - we'll use user IDs as placeholders for now
-      const transformedData = referralData.map(item => ({
-        ...item,
-        referrer_email: profiles?.find(p => p.user_id === item.referrer_user_id)?.full_name || `User ${item.referrer_user_id.slice(0, 8)}`,
-        referee_email: profiles?.find(p => p.user_id === item.referee_user_id)?.full_name || `User ${item.referee_user_id.slice(0, 8)}`
-      }));
+      const transformedData = referralData.map(item => {
+        const referrerProfile = profiles?.find(p => p.user_id === item.referrer_user_id);
+        const refereeProfile = profiles?.find(p => p.user_id === item.referee_user_id);
+        return {
+          ...item,
+          referrer_email: referrerProfile ? getDisplayName(referrerProfile, `User ${item.referrer_user_id.slice(0, 8)}`) : `User ${item.referrer_user_id.slice(0, 8)}`,
+          referee_email: refereeProfile ? getDisplayName(refereeProfile, `User ${item.referee_user_id.slice(0, 8)}`) : `User ${item.referee_user_id.slice(0, 8)}`
+        };
+      });
 
       setReferrals(transformedData);
     } catch (error) {

@@ -1,22 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { formatLongDate, safeParseDate } from "@/lib/utils";
-
-interface CustomerProfile {
-  id: string;
-  user_id: string;
-  full_name: string;
-  phone: string;
-  delivery_address: string;
-  delivery_instructions: string;
-  city: string;
-  postal_code: string;
-  county: string;
-  created_at: string;
-}
+import { getDisplayName } from "@/lib/displayName";
+import type { CustomerProfile } from "@/types/customer";
 
 interface CustomerContactInfoProps {
-  customer: CustomerProfile;
+  customer: CustomerProfile | null;
   email?: string;
 }
 

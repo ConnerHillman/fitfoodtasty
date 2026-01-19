@@ -15,6 +15,32 @@ interface OrderConfirmationRequest {
   customData?: Record<string, any>;
 }
 
+// Helper function to get display name safely (handles OAuth users with missing names)
+function getDisplayName(
+  firstName?: string | null,
+  lastName?: string | null,
+  fullName?: string | null,
+  email?: string | null,
+  fallback: string = 'Customer'
+): string {
+  const first = firstName?.trim() || '';
+  const last = lastName?.trim() || '';
+  
+  if (first || last) {
+    return [first, last].filter(Boolean).join(' ');
+  }
+  
+  if (fullName?.trim()) {
+    return fullName.trim();
+  }
+  
+  if (email?.trim()) {
+    return email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  
+  return fallback;
+}
+
 serve(async (req) => {
   console.log('[send-order-confirmation] Function invoked', {
     method: req.method,
@@ -116,27 +142,44 @@ serve(async (req) => {
     // Get customer email and name directly from order (already stored there)
     let customerEmail = orderData.customer_email;
     let customerName = orderData.customer_name;
-
-    // If no customer email in order, try to get from auth user
-    if (!customerEmail && orderData.user_id) {
-      const { data: userData } = await supabase.auth.admin.getUserById(orderData.user_id);
-      customerEmail = userData?.user?.email;
-      if (!customerName) {
-        customerName = userData?.user?.user_metadata?.full_name;
-      }
-    }
-
-    // Get customer phone from profiles
     let customerPhone = '';
+
+    // If no customer email/name in order, try to get from auth user and profiles
     if (orderData.user_id) {
+      // Get profile data first (has first_name, last_name, phone)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('phone')
+        .select('first_name, last_name, full_name, phone')
         .eq('user_id', orderData.user_id)
         .single();
       
       if (profile?.phone) {
         customerPhone = profile.phone;
+      }
+      
+      // If no customer name in order, try profile or auth user metadata
+      if (!customerName) {
+        if (profile) {
+          customerName = getDisplayName(profile.first_name, profile.last_name, profile.full_name, customerEmail);
+        } else {
+          // Fall back to auth user metadata
+          const { data: userData } = await supabase.auth.admin.getUserById(orderData.user_id);
+          if (userData?.user) {
+            const meta = userData.user.user_metadata;
+            customerName = getDisplayName(
+              meta?.first_name || meta?.given_name,
+              meta?.last_name || meta?.family_name,
+              meta?.full_name || meta?.name,
+              userData.user.email
+            );
+          }
+        }
+      }
+      
+      // If still no email, try auth user
+      if (!customerEmail) {
+        const { data: userData } = await supabase.auth.admin.getUserById(orderData.user_id);
+        customerEmail = userData?.user?.email;
       }
     }
 

@@ -1,12 +1,13 @@
 // Shared types for customer management
 import type { BaseEntity, BaseFilters, ViewModeFilters, DateRange } from './common';
+import { getDisplayName as getDisplayNameUtil } from '@/lib/displayName';
 
 export interface Customer {
   id: string;
   user_id: string;
-  first_name?: string;
-  last_name?: string;
-  full_name: string; // Computed display name
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string | null; // Now nullable for OAuth users
   phone: string;
   delivery_address: string;
   city: string;
@@ -23,13 +24,16 @@ export interface Customer {
 }
 
 /**
- * Get display name from customer (first + last or full_name)
+ * Get display name from customer (first + last or full_name, with fallbacks)
+ * @deprecated Use getDisplayName from '@/lib/displayName' instead
  */
-export function getCustomerDisplayName(customer: { first_name?: string; last_name?: string; full_name?: string }): string {
-  if (customer.first_name || customer.last_name) {
-    return [customer.first_name, customer.last_name].filter(Boolean).join(' ').trim();
-  }
-  return customer.full_name || 'Unknown';
+export function getCustomerDisplayName(customer: { 
+  first_name?: string | null; 
+  last_name?: string | null; 
+  full_name?: string | null;
+  email?: string | null;
+}): string {
+  return getDisplayNameUtil(customer, 'Unknown');
 }
 
 export interface CustomerOrder {
@@ -60,9 +64,9 @@ export interface CustomerStats {
 export interface CustomerProfile {
   id: string;
   user_id: string;
-  first_name?: string;
-  last_name?: string;
-  full_name: string; // Computed display name
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string | null; // Now nullable for OAuth users
   phone: string;
   delivery_address: string;
   delivery_instructions: string;
@@ -98,9 +102,9 @@ export interface ActivityItem {
 // Type for customer modal context
 export interface CustomerModalData {
   user_id: string;
-  first_name?: string;
-  last_name?: string;
-  full_name: string; // Computed display name
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string | null; // Now nullable for OAuth users
   phone?: string;
   delivery_address?: string;
   delivery_instructions?: string;
