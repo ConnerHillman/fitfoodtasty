@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,15 +6,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCart } from '@/contexts/CartContext';
 import { calculateAdminTotals } from '@/lib/adminPriceCalculations';
-import { Shield, User, Edit3, DollarSign, Calendar, MapPin, RotateCcw, Pencil, Check, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Shield, User, Edit3, DollarSign, Calendar, MapPin, RotateCcw, CreditCard, Link2, Banknote, Loader2 } from 'lucide-react';
+
+interface PaymentMethod {
+  id: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+}
+
+type AdminPaymentMethod = 'cash' | 'payment_link' | 'charge_card';
 
 interface AdminOrderEnhancementsProps {
   onPriceOverride: (itemId: string, newPrice: number) => void;
   onOrderNotesChange: (notes: string) => void;
   orderNotes: string;
   onCashOrderConfirm: () => Promise<any>;
+  onPaymentLinkConfirm?: () => Promise<any>;
+  onChargeCardConfirm?: (paymentMethodId: string, stripeCustomerId: string) => Promise<any>;
   totalAmount: number;
   finalTotal: number;
   loading?: boolean;
@@ -32,6 +47,8 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   onOrderNotesChange,
   orderNotes,
   onCashOrderConfirm,
+  onPaymentLinkConfirm,
+  onChargeCardConfirm,
   totalAmount,
   finalTotal,
   loading = false,
@@ -48,6 +65,14 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   const [isEditingTotal, setIsEditingTotal] = useState(false);
   const [tempTotalValue, setTempTotalValue] = useState('');
   
+  // Payment method state
+  const [paymentMethod, setPaymentMethod] = useState<AdminPaymentMethod>('cash');
+  const [savedCards, setSavedCards] = useState<PaymentMethod[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<string>('');
+  const [stripeCustomerId, setStripeCustomerId] = useState<string>('');
+  const [loadingCards, setLoadingCards] = useState(false);
+  const [hasStripeCustomer, setHasStripeCustomer] = useState(false);
+  
   // Calculate totals using the unified system
   const adminCalculation = calculateAdminTotals(items, priceOverrides);
   
@@ -55,11 +80,76 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   const calculatedTotal = adminCalculation.subtotal + deliveryFees;
   const displayTotal = totalOverride !== null ? totalOverride : calculatedTotal;
 
+  // Fetch saved payment methods when payment method changes to charge_card
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      if (paymentMethod !== 'charge_card' || !adminOrderData?.customerEmail) return;
+      
+      setLoadingCards(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('get-customer-payment-methods', {
+          body: { customerEmail: adminOrderData.customerEmail }
+        });
+        
+        if (error) throw error;
+        
+        setSavedCards(data.paymentMethods || []);
+        setHasStripeCustomer(data.hasStripeCustomer || false);
+        setStripeCustomerId(data.stripeCustomerId || '');
+        
+        if (data.paymentMethods?.length > 0) {
+          setSelectedCardId(data.paymentMethods[0].id);
+        }
+      } catch (err) {
+        console.error('Error fetching payment methods:', err);
+        setSavedCards([]);
+      } finally {
+        setLoadingCards(false);
+      }
+    };
+    
+    fetchPaymentMethods();
+  }, [paymentMethod, adminOrderData?.customerEmail]);
+
   if (!adminOrderData) return null;
 
   const handlePriceEdit = (itemId: string, newPrice: number) => {
     setPriceEdits(prev => ({ ...prev, [itemId]: newPrice }));
     onPriceOverride(itemId, newPrice);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (paymentMethod === 'cash') {
+      return onCashOrderConfirm();
+    } else if (paymentMethod === 'payment_link' && onPaymentLinkConfirm) {
+      return onPaymentLinkConfirm();
+    } else if (paymentMethod === 'charge_card' && onChargeCardConfirm && selectedCardId && stripeCustomerId) {
+      return onChargeCardConfirm(selectedCardId, stripeCustomerId);
+    }
+  };
+
+  const getButtonText = () => {
+    if (loading) return 'Processing...';
+    switch (paymentMethod) {
+      case 'cash':
+        return 'Complete Cash/Paid Order';
+      case 'payment_link':
+        return 'Create Order & Send Payment Link';
+      case 'charge_card':
+        return 'Create Order & Charge Card';
+      default:
+        return 'Complete Order';
+    }
+  };
+
+  const isConfirmDisabled = () => {
+    if (loading || items.length === 0) return true;
+    if (paymentMethod === 'charge_card' && (!selectedCardId || savedCards.length === 0)) return true;
+    return false;
+  };
+
+  const formatCardBrand = (brand: string) => {
+    return brand.charAt(0).toUpperCase() + brand.slice(1);
   };
 
   return (
@@ -197,7 +287,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Quick Admin Actions */}
+      {/* Payment Method Selection */}
       <Card className="border-green-200">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -206,7 +296,94 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          {/* Payment Method Radio Group */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Payment Method</Label>
+            <RadioGroup 
+              value={paymentMethod} 
+              onValueChange={(value) => setPaymentMethod(value as AdminPaymentMethod)}
+              className="grid grid-cols-3 gap-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="cash" id="cash" />
+                <Label htmlFor="cash" className="flex items-center gap-1 cursor-pointer text-sm">
+                  <Banknote className="h-4 w-4" />
+                  Cash/Paid
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="payment_link" id="payment_link" />
+                <Label htmlFor="payment_link" className="flex items-center gap-1 cursor-pointer text-sm">
+                  <Link2 className="h-4 w-4" />
+                  Payment Link
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="charge_card" id="charge_card" />
+                <Label htmlFor="charge_card" className="flex items-center gap-1 cursor-pointer text-sm">
+                  <CreditCard className="h-4 w-4" />
+                  Saved Card
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Payment Method Description */}
+          <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+            {paymentMethod === 'cash' && (
+              <p>Use for cash payments, bank transfers, or orders already paid offline.</p>
+            )}
+            {paymentMethod === 'payment_link' && (
+              <p>Creates order and sends a payment link to the customer's email. Order status will be "pending_payment" until paid.</p>
+            )}
+            {paymentMethod === 'charge_card' && (
+              <p>Charge the customer's saved card immediately. Order will be confirmed instantly.</p>
+            )}
+          </div>
+
+          {/* Saved Cards Selection (only shown when charge_card is selected) */}
+          {paymentMethod === 'charge_card' && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Select Card</Label>
+              {loadingCards ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 border rounded-lg">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading saved cards...
+                </div>
+              ) : savedCards.length === 0 ? (
+                <Alert>
+                  <CreditCard className="h-4 w-4" />
+                  <AlertDescription>
+                    {hasStripeCustomer 
+                      ? "This customer has no saved cards. Use Payment Link instead."
+                      : "This customer has never made a payment with Stripe. Use Payment Link instead."}
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Select value={selectedCardId} onValueChange={setSelectedCardId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a card" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {savedCards.map((card) => (
+                      <SelectItem key={card.id} value={card.id}>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          <span>{formatCardBrand(card.brand)} •••• {card.last4}</span>
+                          <span className="text-muted-foreground">
+                            (expires {card.expMonth}/{card.expYear})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
+
+          {/* Order Totals */}
+          <div className="grid grid-cols-2 gap-4 text-sm pt-3 border-t">
             <div className="space-y-1">
               <div className="font-medium">Subtotal{adminCalculation.hasOverrides ? ' (with adjustments)' : ''}:</div>
               <div>£{adminCalculation.subtotal.toFixed(2)}</div>
@@ -214,6 +391,11 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
             <div className="space-y-1">
               <div className="font-medium">Delivery Fee:</div>
               <div>£{deliveryFees.toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div className="text-lg font-semibold pt-2 border-t">
+            Total: £{displayTotal.toFixed(2)}
           </div>
           
           {/* Email Notification Preference */}
@@ -230,21 +412,16 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
               </Label>
             </div>
           )}
-        </div>
-          
 
           <Button 
-            onClick={onCashOrderConfirm}
-            disabled={loading || items.length === 0}
+            onClick={handleConfirmOrder}
+            disabled={isConfirmDisabled()}
             className="w-full bg-green-600 hover:bg-green-700 text-white"
             size="lg"
           >
-            {loading ? 'Processing...' : 'Complete Cash/Paid Order'}
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {getButtonText()}
           </Button>
-          
-          <div className="text-xs text-center text-muted-foreground">
-            Use this for cash payments, bank transfers, or orders already paid
-          </div>
         </CardContent>
       </Card>
 
@@ -255,7 +432,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
           <div className="space-y-1">
             <div className="font-medium">Admin Privileges Active</div>
             <div className="text-sm text-muted-foreground">
-              • No delivery date restrictions • Price adjustments allowed • Payment bypass available
+              • No delivery date restrictions • Price adjustments allowed • Payment options available
             </div>
           </div>
         </AlertDescription>
