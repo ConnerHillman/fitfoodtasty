@@ -154,14 +154,14 @@ const AllOrders: React.FC = () => {
         ...order,
         type: 'individual' as const,
         isManual: manualOrderIds.has(order.id),
-        isAdjusted: adjustedOrderIds.has(order.id) || !!order.last_modified_by
+              isAdjusted: adjustedOrderIds.has(order.id)
       }));
 
       const formattedPackageOrders: Order[] = (packageOrders || []).map(order => ({
         ...order,
         type: 'package' as const,
         isManual: manualOrderIds.has(order.id),
-        isAdjusted: adjustedOrderIds.has(order.id) || !!order.last_modified_by
+        isAdjusted: adjustedOrderIds.has(order.id)
       }));
 
       const allOrders = [...formattedRegularOrders, ...formattedPackageOrders];
