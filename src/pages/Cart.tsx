@@ -435,10 +435,13 @@ const Cart = () => {
                 await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
               }}
               onPaymentLinkConfirm={async () => {
-                await adminOrder.createPaymentLinkOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
+                await adminOrder.createPaymentLinkOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail, false);
               }}
               onChargeCardConfirm={async (paymentMethodId: string, stripeCustomerId: string) => {
                 await adminOrder.chargeCardOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, paymentMethodId, stripeCustomerId, sendEmail);
+              }}
+              onNewCardConfirm={async () => {
+                await adminOrder.createNewCardOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
               }}
               totalAmount={adminOrder.calculateTotalWithOverrides()}
               finalTotal={adminOrder.calculateUnifiedTotal(fees)}

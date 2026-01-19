@@ -21,15 +21,16 @@ interface PaymentMethod {
   expYear: number;
 }
 
-type AdminPaymentMethod = 'cash' | 'payment_link' | 'charge_card';
+type AdminPaymentMethod = 'cash' | 'payment_link' | 'charge_card' | 'new_card';
 
 interface AdminOrderEnhancementsProps {
   onPriceOverride: (itemId: string, newPrice: number) => void;
   onOrderNotesChange: (notes: string) => void;
   orderNotes: string;
   onCashOrderConfirm: () => Promise<any>;
-  onPaymentLinkConfirm?: () => Promise<any>;
+  onPaymentLinkConfirm?: (openImmediately?: boolean) => Promise<any>;
   onChargeCardConfirm?: (paymentMethodId: string, stripeCustomerId: string) => Promise<any>;
+  onNewCardConfirm?: () => Promise<any>;
   totalAmount: number;
   finalTotal: number;
   loading?: boolean;
@@ -49,6 +50,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   onCashOrderConfirm,
   onPaymentLinkConfirm,
   onChargeCardConfirm,
+  onNewCardConfirm,
   totalAmount,
   finalTotal,
   loading = false,
@@ -123,9 +125,11 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
     if (paymentMethod === 'cash') {
       return onCashOrderConfirm();
     } else if (paymentMethod === 'payment_link' && onPaymentLinkConfirm) {
-      return onPaymentLinkConfirm();
+      return onPaymentLinkConfirm(false);
     } else if (paymentMethod === 'charge_card' && onChargeCardConfirm && selectedCardId && stripeCustomerId) {
       return onChargeCardConfirm(selectedCardId, stripeCustomerId);
+    } else if (paymentMethod === 'new_card' && onNewCardConfirm) {
+      return onNewCardConfirm();
     }
   };
 
@@ -138,6 +142,8 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
         return 'Create Order & Send Payment Link';
       case 'charge_card':
         return 'Create Order & Charge Card';
+      case 'new_card':
+        return 'Create Order & Enter Card Details';
       default:
         return 'Complete Order';
     }
@@ -303,7 +309,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
             <RadioGroup 
               value={paymentMethod} 
               onValueChange={(value) => setPaymentMethod(value as AdminPaymentMethod)}
-              className="grid grid-cols-3 gap-3"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="cash" id="cash" />
@@ -316,7 +322,14 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
                 <RadioGroupItem value="payment_link" id="payment_link" />
                 <Label htmlFor="payment_link" className="flex items-center gap-1 cursor-pointer text-sm">
                   <Link2 className="h-4 w-4" />
-                  Payment Link
+                  Email Link
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="new_card" id="new_card" />
+                <Label htmlFor="new_card" className="flex items-center gap-1 cursor-pointer text-sm">
+                  <CreditCard className="h-4 w-4" />
+                  New Card
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -336,6 +349,9 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
             )}
             {paymentMethod === 'payment_link' && (
               <p>Creates order and sends a payment link to the customer's email. Order status will be "pending_payment" until paid.</p>
+            )}
+            {paymentMethod === 'new_card' && (
+              <p>Opens Stripe Checkout to enter new card details. You can complete this with the customer present or share the link.</p>
             )}
             {paymentMethod === 'charge_card' && (
               <p>Charge the customer's saved card immediately. Order will be confirmed instantly.</p>
