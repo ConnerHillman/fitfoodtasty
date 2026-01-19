@@ -394,10 +394,15 @@ const Cart = () => {
     <div className="container mx-auto px-4 py-8 max-w-7xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/menu">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Continue Shopping
+        <Button 
+          variant="outline" 
+          size="sm" 
+          asChild
+          className="h-10 px-5 rounded-xl border-border/60 bg-card hover:bg-accent hover:border-primary/30 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <Link to="/menu" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="font-medium">Continue Shopping</span>
           </Link>
         </Button>
         <Button 
