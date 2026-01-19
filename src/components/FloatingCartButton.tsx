@@ -27,8 +27,9 @@ const FloatingCartButton = () => {
     setShowConfirmation(false);
   }, []);
 
-  // Hide on cart page or when cart is empty
-  if (pathname === '/cart' || itemCount === 0) return null;
+  // Hide on cart page, package selection pages, or when cart is empty
+  const isPackageSelectPage = pathname.includes('/packages/') && pathname.includes('/select');
+  if (pathname === '/cart' || isPackageSelectPage || itemCount === 0) return null;
 
   const formattedPrice = new Intl.NumberFormat('en-GB', {
     style: 'currency',

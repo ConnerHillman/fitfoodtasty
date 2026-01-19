@@ -342,25 +342,15 @@ const PackageSelect = () => {
                 )}
               </div>
 
-              {/* Desktop CTA buttons */}
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleAddToCart} 
-                  disabled={!isComplete}
-                  className="flex items-center gap-2 h-10 touch-manipulation rounded-xl"
-                >
-                  <ShoppingCart size={16} />
-                  Add to Cart
-                </Button>
-                <Button 
-                  onClick={handleAddToCart} 
-                  disabled={!isComplete}
-                  className="h-10 min-w-[120px] touch-manipulation rounded-xl"
-                >
-                  Continue
-                </Button>
-              </div>
+              {/* Desktop CTA button */}
+              <Button 
+                onClick={handleAddToCart} 
+                disabled={!isComplete}
+                className="flex items-center gap-2 h-10 min-w-[140px] touch-manipulation rounded-xl shadow-button"
+              >
+                <ShoppingCart size={16} />
+                Add to Cart
+              </Button>
             </div>
 
             {/* Search bar */}
@@ -599,9 +589,10 @@ const PackageSelect = () => {
                   <Button
                     onClick={handleAddToCart}
                     disabled={!isComplete}
-                    className="h-11 min-w-[120px] touch-manipulation text-sm font-medium rounded-xl shadow-md"
+                    className="flex items-center gap-2 h-11 min-w-[140px] touch-manipulation text-sm font-medium rounded-xl shadow-md"
                   >
-                    Continue
+                    <ShoppingCart size={16} />
+                    Add to Cart
                   </Button>
                 </div>
               </div>
