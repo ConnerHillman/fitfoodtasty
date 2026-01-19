@@ -8,6 +8,8 @@ import Onboarding from "./pages/Onboarding";
 import BusinessSettings from "./pages/BusinessSettings";
 import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import CompleteProfile from "./pages/CompleteProfile";
 import Menu from "./pages/Menu";
 import About from "./pages/About";
 import PackageSelect from "./pages/PackageSelect";
@@ -51,6 +53,8 @@ const App = () => (
             <Route path="/" element={<AppLayout><Index /></AppLayout>} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/menu" element={<AppLayout><Menu /></AppLayout>} />
             <Route path="/packages/:packageId/select" element={<PackageSelect />} />
             <Route path="/about" element={<AppLayout><About /></AppLayout>} />
