@@ -301,7 +301,6 @@ const UserManager = () => {
         totalCount={users.length}
         filteredCount={filteredUsers.length}
         searchPlaceholder="Search users by name or email..."
-        sortOptions={sortOptions}
         viewModes={['list']}
         entityName="user"
         entityNamePlural="users"

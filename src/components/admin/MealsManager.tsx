@@ -29,8 +29,8 @@ const MealsManager = () => {
     statusFilter: 'active',
     categoryFilter: 'all',
     viewMode: 'list',
-    sortBy: 'created_at',
-    sortOrder: 'desc'
+    sortBy: 'name',
+    sortOrder: 'asc'
   });
 
   // Use standardized hook with built-in filtering and pagination
@@ -163,6 +163,7 @@ const MealsManager = () => {
     {
       key: 'name',
       header: 'Name',
+      sortable: true,
       accessor: (meal) => (
         <div>
           <div className="font-medium">{meal.name}</div>
@@ -243,13 +244,19 @@ const MealsManager = () => {
     { value: 'inactive', label: 'Inactive' }
   ];
 
-  const sortOptions = [
-    { value: 'created_at', label: 'Date Created' },
-    { value: 'name', label: 'Name' },
-    { value: 'price', label: 'Price' },
-    { value: 'total_calories', label: 'Calories' },
-    { value: 'category', label: 'Category' }
-  ];
+  // Handle column sort
+  const handleSort = (key: string) => {
+    if (filters.sortBy === key) {
+      // Toggle order if same column
+      setFilters(prev => ({ 
+        ...prev, 
+        sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
+      }));
+    } else {
+      // New column, default to asc
+      setFilters(prev => ({ ...prev, sortBy: key, sortOrder: 'asc' }));
+    }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -306,7 +313,6 @@ const MealsManager = () => {
                 setFilters(prev => ({ ...prev, categoryFilter: value }));
               }
             }}
-            sortOptions={sortOptions}
             viewModes={['list', 'grid']}
             onExport={() => toast({ title: "Export", description: "Export functionality coming soon" })}
             entityName="meal"
@@ -322,6 +328,9 @@ const MealsManager = () => {
               loading={loading}
               getRowId={(meal) => meal.id}
               onRowClick={(meal) => handleViewMeal(meal.id)}
+              sortBy={filters.sortBy}
+              sortOrder={filters.sortOrder}
+              onSort={handleSort}
               emptyMessage="No meals found"
               emptyDescription="Get started by adding your first meal"
               emptyAction={{

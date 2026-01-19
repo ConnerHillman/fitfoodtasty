@@ -132,7 +132,6 @@ export const ModernCustomersManager = () => {
         customFilters={customerFilters}
         customFilterValue="all"
         onCustomFilterChange={(value) => console.log('Filter changed:', value)}
-        sortOptions={sortOptions}
         viewModes={['list', 'card']}
         onExport={() => console.log('Export customers')}
         entityName="customer"

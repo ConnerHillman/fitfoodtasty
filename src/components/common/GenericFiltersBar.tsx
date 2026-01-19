@@ -30,9 +30,6 @@ interface GenericFiltersBarProps<T extends BaseFilters & ViewModeFilters> {
   onCustomFilterChange?: (value: string) => void;
   customFilterLabel?: string;
   
-  // Sort options
-  sortOptions?: SortOption[];
-  
   // Date range support
   dateRange?: DateRange;
   onDateRangeChange?: (range: DateRange | null) => void;
@@ -60,7 +57,6 @@ export function GenericFiltersBar<T extends BaseFilters & ViewModeFilters>({
   customFilterValue,
   onCustomFilterChange,
   customFilterLabel = "Filter",
-  sortOptions,
   dateRange,
   onDateRangeChange,
   clearDateRange,
@@ -70,13 +66,6 @@ export function GenericFiltersBar<T extends BaseFilters & ViewModeFilters>({
   entityName,
   entityNamePlural
 }: GenericFiltersBarProps<T>) {
-  
-  const defaultSortOptions: SortOption[] = [
-    { value: 'created_at', label: 'Date Created' },
-    { value: 'updated_at', label: 'Date Updated' },
-  ];
-
-  const activeSortOptions = sortOptions || defaultSortOptions;
 
   return (
     <div className="space-y-4">
@@ -142,37 +131,6 @@ export function GenericFiltersBar<T extends BaseFilters & ViewModeFilters>({
               </SelectContent>
             </Select>
           )}
-
-          {/* Sort By */}
-          <Select
-            value={filters.sortBy}
-            onValueChange={(value) => onFiltersChange({ sortBy: value } as Partial<T>)}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              {activeSortOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Sort Order */}
-          <Select
-            value={filters.sortOrder}
-            onValueChange={(value: "asc" | "desc") => onFiltersChange({ sortOrder: value } as Partial<T>)}
-          >
-            <SelectTrigger className="w-[100px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="desc">Desc</SelectItem>
-              <SelectItem value="asc">Asc</SelectItem>
-            </SelectContent>
-          </Select>
 
           {/* View Mode Toggle */}
           {viewModes.length > 1 && (

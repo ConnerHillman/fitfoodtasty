@@ -403,7 +403,6 @@ const AllOrders: React.FC = () => {
         totalCount={orders.length}
         filteredCount={filteredOrders.length}
         searchPlaceholder="Search orders by ID, customer name, email, or notes..."
-        sortOptions={sortOptions}
         viewModes={['list']}
         entityName="order"
         entityNamePlural="orders"
