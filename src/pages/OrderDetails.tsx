@@ -66,7 +66,7 @@ interface OrderDetails {
   discount_amount?: number;
   status: string;
   currency: string;
-  stripe_session_id?: string;
+  stripe_payment_intent_id?: string;
   referral_code_used?: string;
   requested_delivery_date?: string;
   production_date?: string;
@@ -711,7 +711,7 @@ const OrderDetails: React.FC = () => {
             </Card>
 
             {/* Payment Information */}
-            {order.stripe_session_id && (
+            {order.stripe_payment_intent_id && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -725,7 +725,7 @@ const OrderDetails: React.FC = () => {
                       <span className="font-medium">Payment ID:</span>
                     </div>
                     <p className="text-xs text-muted-foreground font-mono">
-                      {order.stripe_session_id}
+                      {order.stripe_payment_intent_id}
                     </p>
                     <Badge variant="outline" className="w-fit">
                       Stripe Payment
