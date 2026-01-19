@@ -134,37 +134,45 @@ export function GenericFiltersBar<T extends BaseFilters & ViewModeFilters>({
 
           {/* View Mode Toggle */}
           {viewModes.length > 1 && (
-            <div className="flex border rounded-md">
+            <div className="inline-flex rounded-lg bg-muted p-1">
               {viewModes.includes('list') && (
                 <Button
-                  variant={filters.viewMode === 'list' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => onFiltersChange({ viewMode: 'list' } as Partial<T>)}
-                  className={viewModes.length > 1 ? "rounded-r-none" : ""}
+                  className={`px-3 h-8 rounded-md transition-all ${
+                    filters.viewMode === 'list' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                  }`}
                 >
                   <List className="h-4 w-4" />
                 </Button>
               )}
               {viewModes.includes('card') && (
                 <Button
-                  variant={filters.viewMode === 'card' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => onFiltersChange({ viewMode: 'card' } as Partial<T>)}
-                  className={
-                    viewModes.indexOf('card') === 0 ? "rounded-r-none" :
-                    viewModes.indexOf('card') === viewModes.length - 1 ? "rounded-l-none" :
-                    "rounded-none"
-                  }
+                  className={`px-3 h-8 rounded-md transition-all ${
+                    filters.viewMode === 'card' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                  }`}
                 >
                   <Grid3X3 className="h-4 w-4" />
                 </Button>
               )}
               {viewModes.includes('grid') && (
                 <Button
-                  variant={filters.viewMode === 'grid' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => onFiltersChange({ viewMode: 'grid' } as Partial<T>)}
-                  className={viewModes.length > 1 ? "rounded-l-none" : ""}
+                  className={`px-3 h-8 rounded-md transition-all ${
+                    filters.viewMode === 'grid' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                  }`}
                 >
                   <Grid3X3 className="h-4 w-4" />
                 </Button>
