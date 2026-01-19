@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { CustomerLoadingState } from "./CustomerLoadingState";
-import CustomerLink from "../CustomerLink";
+import { useCustomerDetail } from "@/contexts/ModalContext";
 import type { Customer } from "@/types/customer";
 
 interface ResponsiveCustomerTableProps {
@@ -10,6 +10,8 @@ interface ResponsiveCustomerTableProps {
 }
 
 export function ResponsiveCustomerTable({ customers, loading }: ResponsiveCustomerTableProps) {
+  const { open: openCustomerDetail } = useCustomerDetail();
+
   if (loading) {
     return <CustomerLoadingState type="table" />;
   }
@@ -39,15 +41,16 @@ export function ResponsiveCustomerTable({ customers, loading }: ResponsiveCustom
             </TableHeader>
             <TableBody>
               {customers.map((customer) => (
-                <TableRow key={customer.id}>
+                <TableRow 
+                  key={customer.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => openCustomerDetail(customer)}
+                >
                   <TableCell>
                     <div>
-                      <CustomerLink 
-                        customerId={customer.user_id} 
-                        customerName={customer.full_name}
-                        customerData={customer}
-                        className="font-medium"
-                      />
+                      <span className="font-medium text-primary hover:underline">
+                        {customer.full_name || 'Unknown'}
+                      </span>
                       <div className="text-sm text-muted-foreground">{customer.email || 'No email'}</div>
                     </div>
                   </TableCell>
@@ -70,16 +73,17 @@ export function ResponsiveCustomerTable({ customers, loading }: ResponsiveCustom
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
         {customers.map((customer) => (
-          <Card key={customer.id}>
+          <Card 
+            key={customer.id}
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => openCustomerDetail(customer)}
+          >
             <CardContent className="p-4">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 min-w-0">
-                  <CustomerLink 
-                    customerId={customer.user_id} 
-                    customerName={customer.full_name}
-                    customerData={customer}
-                    className="font-medium block truncate"
-                  />
+                  <span className="font-medium text-primary block truncate">
+                    {customer.full_name || 'Unknown'}
+                  </span>
                   {customer.email && (
                     <div className="text-sm text-muted-foreground truncate">{customer.email}</div>
                   )}
