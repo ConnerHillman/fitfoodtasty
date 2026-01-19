@@ -76,9 +76,10 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   // Calculate totals using the unified system
   const adminCalculation = calculateAdminTotals(items, priceOverrides);
   
-  // Calculate the true final total including delivery fees
-  const calculatedTotal = adminCalculation.subtotal + deliveryFees;
-  const displayTotal = totalOverride !== null ? totalOverride : calculatedTotal;
+  // Calculate the true final total including delivery fees with safe defaults
+  const subtotal = adminCalculation?.subtotal ?? 0;
+  const calculatedTotal = subtotal + (deliveryFees ?? 0);
+  const displayTotal = (totalOverride !== null && totalOverride !== undefined) ? totalOverride : calculatedTotal;
 
   // Fetch saved payment methods when payment method changes to charge_card
   useEffect(() => {
@@ -385,12 +386,12 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
           {/* Order Totals */}
           <div className="grid grid-cols-2 gap-4 text-sm pt-3 border-t">
             <div className="space-y-1">
-              <div className="font-medium">Subtotal{adminCalculation.hasOverrides ? ' (with adjustments)' : ''}:</div>
-              <div>£{adminCalculation.subtotal.toFixed(2)}</div>
+              <div className="font-medium">Subtotal{adminCalculation?.hasOverrides ? ' (with adjustments)' : ''}:</div>
+              <div>£{subtotal.toFixed(2)}</div>
             </div>
             <div className="space-y-1">
               <div className="font-medium">Delivery Fee:</div>
-              <div>£{deliveryFees.toFixed(2)}</div>
+              <div>£{(deliveryFees ?? 0).toFixed(2)}</div>
             </div>
           </div>
 
