@@ -32,6 +32,7 @@ interface Order {
   total_amount: number;
   status: string;
   created_at: string;
+  requested_delivery_date?: string | null;
   order_notes?: string;
   order_items?: any[];
   package_meal_selections?: any[];
@@ -333,14 +334,25 @@ const AllOrders: React.FC = () => {
     },
     {
       key: 'created_at',
-      header: 'Date',
+      header: 'Order Placed',
+      sortable: true,
       cell: (value: string) => formatDate(value, { 
         month: 'short', 
         day: 'numeric', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        year: 'numeric'
       })
+    },
+    {
+      key: 'requested_delivery_date',
+      header: 'Delivery Date',
+      sortable: true,
+      accessor: (order) => order.requested_delivery_date 
+        ? formatDate(order.requested_delivery_date, { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric'
+          })
+        : <span className="text-muted-foreground">—</span>
     }
   ];
 
