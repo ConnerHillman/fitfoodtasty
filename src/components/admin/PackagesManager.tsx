@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,13 +8,150 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Upload, Image, Settings, ChevronUp, ChevronDown, BarChart3, TrendingUp } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, Image, Settings, GripVertical, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PackageAnalytics from "./PackageAnalytics";
 import PackageMealsManager from "./packages/PackageMealsManager";
 import { useStandardizedPackagesData, type Package } from "@/hooks/useStandardizedPackagesData";
 import { logger } from "@/lib/logger";
+
+// Drag and drop imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+// Sortable row component
+interface SortableRowProps {
+  pkg: Package;
+  onEdit: (pkg: Package) => void;
+  onDelete: (id: string) => void;
+  onToggleActive: (pkg: Package) => void;
+  onManageMeals: (pkg: Package) => void;
+}
+
+const SortableRow = ({ pkg, onEdit, onDelete, onToggleActive, onManageMeals }: SortableRowProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: pkg.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      className={`${isDragging ? 'opacity-50 bg-muted' : ''}`}
+    >
+      <TableCell>
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded-md transition-colors touch-none"
+          title="Drag to reorder"
+        >
+          <GripVertical size={18} className="text-muted-foreground" />
+        </button>
+      </TableCell>
+      <TableCell>
+        {pkg.image_url ? (
+          <img
+            src={pkg.image_url}
+            alt={pkg.name}
+            className="w-12 h-12 object-cover rounded-md"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
+            <Image size={16} className="text-muted-foreground" />
+          </div>
+        )}
+      </TableCell>
+      <TableCell className="font-medium">{pkg.name}</TableCell>
+      <TableCell className="max-w-xs truncate">{pkg.description}</TableCell>
+      <TableCell>
+        <Badge variant="secondary">{pkg.meal_count} meals</Badge>
+      </TableCell>
+      <TableCell className="font-medium">£{pkg.price.toFixed(2)}</TableCell>
+      <TableCell>
+        <Button
+          variant={pkg.is_active ? "default" : "secondary"}
+          size="sm"
+          onClick={() => onToggleActive(pkg)}
+        >
+          {pkg.is_active ? "Active" : "Inactive"}
+        </Button>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onManageMeals(pkg)}
+            title="Manage Available Meals"
+          >
+            <Settings size={14} />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onEdit(pkg)}
+          >
+            <Edit size={14} />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDelete(pkg.id)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 size={14} />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+};
+
+// Drag overlay row (what you see while dragging)
+const DragOverlayRow = ({ pkg }: { pkg: Package }) => (
+  <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-4">
+    <GripVertical size={18} className="text-muted-foreground" />
+    {pkg.image_url ? (
+      <img src={pkg.image_url} alt={pkg.name} className="w-10 h-10 object-cover rounded-md" />
+    ) : (
+      <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center">
+        <Image size={14} className="text-muted-foreground" />
+      </div>
+    )}
+    <span className="font-medium">{pkg.name}</span>
+    <Badge variant="secondary">{pkg.meal_count} meals</Badge>
+    <span className="font-medium">£{pkg.price.toFixed(2)}</span>
+  </div>
+);
 
 const PackagesManager = () => {
   const { toast } = useToast();
@@ -41,6 +178,69 @@ const PackagesManager = () => {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Sort packages by sort_order
+  const sortedPackages = useMemo(() => {
+    return [...packages].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  }, [packages]);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = sortedPackages.findIndex((p) => p.id === active.id);
+    const newIndex = sortedPackages.findIndex((p) => p.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Calculate new order
+    const newOrder = arrayMove(sortedPackages, oldIndex, newIndex);
+
+    // Update all sort_order values in database
+    try {
+      const updates = newOrder.map((pkg, index) => ({
+        id: pkg.id,
+        sort_order: index + 1,
+      }));
+
+      // Batch update using Promise.all
+      await Promise.all(
+        updates.map((update) =>
+          supabase
+            .from("packages")
+            .update({ sort_order: update.sort_order })
+            .eq("id", update.id)
+        )
+      );
+
+      toast({ title: "Success", description: "Package order updated" });
+      refetch();
+    } catch (error) {
+      logger.error("Failed to update package order", error);
+      toast({ title: "Error", description: "Failed to update order", variant: "destructive" });
+    }
+  };
+
+  const activePackage = activeId ? sortedPackages.find((p) => p.id === activeId) : null;
 
   const handleImageUpload = async (file: File): Promise<string | null> => {
     try {
@@ -93,9 +293,11 @@ const PackagesManager = () => {
       if (editingPackage) {
         await updatePackage(editingPackage.id, packageData);
       } else {
+        // Get the max sort_order and add 1
+        const maxSortOrder = Math.max(...packages.map(p => p.sort_order ?? 0), 0);
         const { error } = await supabase
           .from("packages")
-          .insert([packageData]);
+          .insert([{ ...packageData, sort_order: maxSortOrder + 1 }]);
         if (error) throw error;
         toast({ title: "Success", description: "Package created successfully" });
       }
@@ -210,35 +412,6 @@ const PackagesManager = () => {
         description: "Failed to save meal selections", 
         variant: "destructive" 
       });
-    }
-  };
-
-  const movePackage = async (packageId: string, direction: 'up' | 'down') => {
-    const currentIndex = packages.findIndex(p => p.id === packageId);
-    if (currentIndex === -1) return;
-    
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= packages.length) return;
-
-    const currentPackage = packages[currentIndex];
-    const targetPackage = packages[newIndex];
-
-    // Swap sort_order values
-    const { error: error1 } = await supabase
-      .from("packages")
-      .update({ sort_order: targetPackage.sort_order })
-      .eq("id", currentPackage.id);
-
-    const { error: error2 } = await supabase
-      .from("packages")
-      .update({ sort_order: currentPackage.sort_order })
-      .eq("id", targetPackage.id);
-
-    if (error1 || error2) {
-      toast({ title: "Error", description: "Failed to reorder packages", variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: "Package order updated" });
-      refetch();
     }
   };
 
@@ -370,129 +543,76 @@ const PackagesManager = () => {
 
         <TabsContent value="management" className="space-y-6">
           <Card className="overflow-hidden border-0 shadow-sm">
-        <CardHeader className="bg-muted/30 border-b">
-          <CardTitle className="text-lg">Packages ({packages.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order</TableHead>
-                <TableHead>Image</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Meals</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {packages.map((pkg, index) => (
-                <TableRow key={pkg.id}>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => movePackage(pkg.id, 'up')}
-                        disabled={index === 0}
-                        className="h-8 w-8 p-0"
-                      >
-                        <ChevronUp size={14} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => movePackage(pkg.id, 'down')}
-                        disabled={index === packages.length - 1}
-                        className="h-8 w-8 p-0"
-                      >
-                        <ChevronDown size={14} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {pkg.image_url ? (
-                      <img
-                        src={pkg.image_url}
-                        alt={pkg.name}
-                        className="w-12 h-12 object-cover rounded-md"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
-                        <Image size={16} className="text-muted-foreground" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{pkg.name}</TableCell>
-                  <TableCell className="max-w-xs truncate">{pkg.description}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{pkg.meal_count} meals</Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">£{pkg.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant={pkg.is_active ? "default" : "secondary"}
-                      size="sm"
-                      onClick={() => toggleActive(pkg)}
+            <CardHeader className="bg-muted/30 border-b">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Packages ({packages.length})</CardTitle>
+                <p className="text-sm text-muted-foreground">Drag rows to reorder</p>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>Image</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Meals</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <SortableContext
+                      items={sortedPackages.map((p) => p.id)}
+                      strategy={verticalListSortingStrategy}
                     >
-                      {pkg.is_active ? "Active" : "Inactive"}
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleManageMeals(pkg)}
-                        title="Manage Available Meals"
-                      >
-                        <Settings size={14} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(pkg)}
-                      >
-                        <Edit size={14} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(pkg.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      {sortedPackages.map((pkg) => (
+                        <SortableRow
+                          key={pkg.id}
+                          pkg={pkg}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onToggleActive={toggleActive}
+                          onManageMeals={handleManageMeals}
+                        />
+                      ))}
+                    </SortableContext>
+                  </TableBody>
+                </Table>
+                <DragOverlay>
+                  {activePackage ? <DragOverlayRow pkg={activePackage} /> : null}
+                </DragOverlay>
+              </DndContext>
+            </CardContent>
+          </Card>
 
       {/* Meal Selection Dialog */}
       <Dialog open={isMealsDialogOpen} onOpenChange={setIsMealsDialogOpen}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl font-semibold">
               Manage Meals for {selectedPackageForMeals?.name}
             </DialogTitle>
           </DialogHeader>
           
           {selectedPackageForMeals && (
             <PackageMealsManager
-              package={selectedPackageForMeals}
+              package={{
+                id: selectedPackageForMeals.id,
+                name: selectedPackageForMeals.name,
+                meal_count: selectedPackageForMeals.meal_count
+              }}
               onSuccess={() => {
                 setIsMealsDialogOpen(false);
                 refetch();
-                toast({
-                  title: "Success",
-                  description: "Package meals updated successfully",
-                });
               }}
               onCancel={() => setIsMealsDialogOpen(false)}
             />
@@ -502,17 +622,7 @@ const PackagesManager = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Package Analytics & Performance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PackageAnalytics />
-            </CardContent>
-          </Card>
+          <PackageAnalytics />
         </TabsContent>
       </Tabs>
     </div>
