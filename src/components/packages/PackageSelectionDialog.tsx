@@ -289,6 +289,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
       <DialogContent
           className="w-[96vw] max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-6xl max-h-[95vh] overflow-y-auto pointer-events-auto md:pb-0"
           style={{ paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${MOBILE_BAR_HEIGHT}px)` }}
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
         <DialogHeader className="mb-6 sm:mb-8">
           <DialogTitle className="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-500 to-green-700 bg-clip-text text-transparent animate-fade-in tracking-tight leading-tight">
