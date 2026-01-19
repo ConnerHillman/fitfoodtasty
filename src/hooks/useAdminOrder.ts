@@ -131,7 +131,13 @@ export const useAdminOrder = () => {
     }
   };
 
-  const createPaymentLinkOrder = async (orderNotes: string, deliveryMethod: string, requestedDeliveryDate?: Date, sendEmail: boolean = true) => {
+  const createPaymentLinkOrder = async (
+    orderNotes: string, 
+    deliveryMethod: string, 
+    requestedDeliveryDate?: Date, 
+    sendEmail: boolean = true,
+    openImmediately: boolean = false
+  ) => {
     setLoading(true);
     try {
       const orderData = {
@@ -145,21 +151,30 @@ export const useAdminOrder = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Payment Link Created",
-        description: `Order created and payment link sent to ${adminOrderData?.customerEmail}`,
-      });
+      // If openImmediately is true, open the payment URL in a new tab
+      if (openImmediately && data.paymentUrl) {
+        window.open(data.paymentUrl, '_blank');
+        toast({
+          title: "Checkout Opened",
+          description: `Payment page opened in new tab. Order for ${adminOrderData?.customerName} created.`,
+        });
+      } else {
+        toast({
+          title: "Payment Link Created",
+          description: `Order created and payment link sent to ${adminOrderData?.customerEmail}`,
+        });
 
-      // Copy payment link to clipboard
-      if (data.paymentUrl) {
-        try {
-          await navigator.clipboard.writeText(data.paymentUrl);
-          toast({
-            title: "Payment Link Copied",
-            description: "The payment link has been copied to your clipboard.",
-          });
-        } catch (clipboardError) {
-          console.log('Could not copy to clipboard:', clipboardError);
+        // Copy payment link to clipboard
+        if (data.paymentUrl) {
+          try {
+            await navigator.clipboard.writeText(data.paymentUrl);
+            toast({
+              title: "Payment Link Copied",
+              description: "The payment link has been copied to your clipboard.",
+            });
+          } catch (clipboardError) {
+            console.log('Could not copy to clipboard:', clipboardError);
+          }
         }
       }
 
@@ -182,6 +197,16 @@ export const useAdminOrder = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const createNewCardOrder = async (
+    orderNotes: string, 
+    deliveryMethod: string, 
+    requestedDeliveryDate?: Date, 
+    sendEmail: boolean = true
+  ) => {
+    // This uses the same flow as payment link, but opens immediately
+    return createPaymentLinkOrder(orderNotes, deliveryMethod, requestedDeliveryDate, sendEmail, true);
   };
 
   const chargeCardOrder = async (
@@ -253,6 +278,7 @@ export const useAdminOrder = () => {
     getFinalTotal,
     createManualOrder,
     createPaymentLinkOrder,
+    createNewCardOrder,
     chargeCardOrder,
     exitAdminMode,
     adminOrderData,
