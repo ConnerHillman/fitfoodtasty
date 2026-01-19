@@ -1,14 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
-
+import { Info } from "lucide-react";
 
 interface Allergen {
   id: string;
@@ -56,7 +53,7 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
   const [allergens, setAllergens] = useState<Allergen[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
-  
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
     fetchMealAllergens();
@@ -113,27 +110,28 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
     }
   };
 
-  const handleIngredientsClick = () => {
-    if (ingredients.length === 0) {
+  const handleDetailsOpen = (open: boolean) => {
+    setDetailsOpen(open);
+    if (open && ingredients.length === 0) {
       fetchIngredients();
     }
   };
 
   return (
-    <Card className="h-full transition-all duration-300 ease-out relative overflow-hidden bg-card hover:shadow-card-hover hover:-translate-y-0.5 group">
-      {/* Image section */}
+    <div className="flex flex-col h-full bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 ease-out group">
+      {/* Full-width image with rounded top only */}
       {meal.image_url && (
-        <div className="aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden relative">
+        <div className="aspect-[4/3] w-full overflow-hidden relative">
           <img 
             src={meal.image_url} 
             alt={meal.name}
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
           {isNew && (
-            <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-              <Badge className="bg-primary text-primary-foreground shadow-sm text-xs font-semibold">
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-primary text-primary-foreground shadow-sm text-[10px] font-bold px-2 py-0.5">
                 NEW
               </Badge>
             </div>
@@ -141,165 +139,158 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
         </div>
       )}
       
-      <CardContent className="p-4 sm:p-6">
-        {/* Meal name and description */}
-        <div className="mb-4">
-          <h3 className="font-semibold text-lg sm:text-xl leading-tight mb-2 text-foreground tracking-tight">{meal.name}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{meal.description}</p>
+      {/* Content section */}
+      <div className="flex flex-col flex-1 p-3 sm:p-4">
+        {/* Meal name - max 2 lines */}
+        <h3 className="font-semibold text-sm sm:text-base leading-tight text-foreground tracking-tight line-clamp-2 mb-1.5">
+          {meal.name}
+        </h3>
+
+        {/* Compact nutrition summary - Calories & Protein only */}
+        <div className="text-xs text-muted-foreground mb-3">
+          {Math.round(meal.total_calories || 0)} kcal · {Math.round(meal.total_protein || 0)}g protein
         </div>
 
-        {/* Quick nutrition view - Stack vertically on mobile */}
-        {(meal.total_calories >= 0 || meal.total_protein >= 0 || meal.total_carbs >= 0 || meal.total_fat >= 0) && (
-          <div className="mb-4 p-3 bg-muted/40 rounded-lg">
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-x-4 sm:gap-y-1 text-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center">
-                <span className="text-muted-foreground text-xs">Calories</span>
-                <span className="font-semibold text-foreground text-sm sm:ml-1">{Math.round(meal.total_calories || 0)}</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center">
-                <span className="text-muted-foreground text-xs">Protein</span>
-                <span className="font-semibold text-foreground text-sm sm:ml-1">{(meal.total_protein || 0).toFixed(1)}g</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center">
-                <span className="text-muted-foreground text-xs">Carbs</span>
-                <span className="font-semibold text-foreground text-sm sm:ml-1">{(meal.total_carbs || 0).toFixed(1)}g</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center">
-                <span className="text-muted-foreground text-xs">Fat</span>
-                <span className="font-semibold text-foreground text-sm sm:ml-1">{(meal.total_fat || 0).toFixed(1)}g</span>
-              </div>
-            </div>
-          </div>
+        {/* Spacer to push price and button to bottom */}
+        <div className="flex-1" />
+
+        {/* Price */}
+        <div className="mb-2">
+          <span className="text-lg sm:text-xl font-bold text-foreground">
+            £{meal.price.toFixed(2)}
+          </span>
+        </div>
+
+        {/* Add to Cart button */}
+        {onAddToCart && (
+          <Button 
+            onClick={() => onAddToCart(meal)}
+            size="sm"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl transition-all duration-200 ease-out active:scale-[0.98] touch-manipulation shadow-button hover:shadow-button-hover text-sm py-2.5"
+          >
+            Add to Cart
+          </Button>
         )}
 
-        {/* Info buttons - Larger touch targets */}
-        <div className="mb-4">
-          <div className="flex flex-col gap-3">
-            {/* Ingredients dialog */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="default"
-                  onClick={handleIngredientsClick}
-                  className="w-full min-h-[44px] bg-muted/50 border-muted-foreground/20 text-foreground hover:bg-muted text-sm font-medium rounded-lg flex items-center justify-center touch-manipulation"
-                >
-                  <Info className="w-4 h-4 mr-2" />
-                  INGREDIENTS
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="w-[95vw] max-w-md max-h-[85vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold">Ingredients</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 text-sm">
-                  {loadingIngredients ? (
-                    <div className="text-gray-500">Loading ingredients...</div>
-                  ) : ingredients.length > 0 ? (
-                    <div className="text-gray-700 leading-relaxed">
-                      {ingredients.map((ingredient, index) => (
-                        <span key={ingredient.id}>
-                          <span className="font-medium">{ingredient.quantity}{ingredient.unit}</span> {ingredient.name}
-                          {index < ingredients.length - 1 ? ", " : "."}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-gray-500">No ingredients available</div>
-                  )}
+        {/* Details button - subtle, below add to cart */}
+        <Dialog open={detailsOpen} onOpenChange={handleDetailsOpen}>
+          <DialogTrigger asChild>
+            <button 
+              className="w-full mt-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1 touch-manipulation"
+            >
+              <Info className="w-3 h-3" />
+              View Details
+            </button>
+          </DialogTrigger>
+          <DialogContent className="w-[95vw] max-w-md max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold pr-6">{meal.name}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Description */}
+              {meal.description && (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {meal.description}
+                </p>
+              )}
 
-                  {allergens.length > 0 && (
-                    <div className="pt-3 border-t border-gray-200">
-                      <h5 className="font-semibold text-sm text-red-700 mb-1">Allergens</h5>
-                      <div className="flex flex-wrap gap-1">
-                        {allergens.map((allergen) => (
-                          <Badge key={allergen.id} variant="destructive" className="text-xs">
-                            {allergen.name}
-                          </Badge>
-                        ))}
-                      </div>
+              {/* Full Nutrition Table */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Nutrition</h4>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm bg-muted/40 rounded-lg p-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Calories</span>
+                    <span className="font-medium">{Math.round(meal.total_calories || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Protein</span>
+                    <span className="font-medium">{(meal.total_protein || 0).toFixed(1)}g</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Carbs</span>
+                    <span className="font-medium">{(meal.total_carbs || 0).toFixed(1)}g</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fat</span>
+                    <span className="font-medium">{(meal.total_fat || 0).toFixed(1)}g</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Sat. Fat</span>
+                    <span className="font-medium">{(meal.total_saturated_fat || 0).toFixed(1)}g</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Sugar</span>
+                    <span className="font-medium">{(meal.total_sugar || 0).toFixed(1)}g</span>
+                  </div>
+                  {meal.total_fiber > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fiber</span>
+                      <span className="font-medium">{(meal.total_fiber || 0).toFixed(1)}g</span>
                     </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Salt</span>
+                    <span className="font-medium">{(meal.total_salt || 0).toFixed(1)}g</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ingredients */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Ingredients</h4>
+                {loadingIngredients ? (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                ) : ingredients.length > 0 ? (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {ingredients.map((ingredient, index) => (
+                      <span key={ingredient.id}>
+                        {ingredient.name}
+                        {index < ingredients.length - 1 ? ", " : "."}
+                      </span>
+                    ))}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No ingredients listed</p>
+                )}
+              </div>
+
+              {/* Allergens */}
+              {allergens.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-destructive">Allergens</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allergens.map((allergen) => (
+                      <Badge key={allergen.id} variant="destructive" className="text-xs">
+                        {allergen.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Price in dialog */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold text-foreground">£{meal.price.toFixed(2)}</span>
+                  {onAddToCart && (
+                    <Button 
+                      onClick={() => {
+                        onAddToCart(meal);
+                        setDetailsOpen(false);
+                      }}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl"
+                    >
+                      Add to Cart
+                    </Button>
                   )}
                 </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Nutrition dialog */}
-            {showNutrition && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="default"
-                    className="w-full min-h-[44px] bg-muted/50 border-muted-foreground/20 text-foreground hover:bg-muted text-sm font-medium rounded-lg flex items-center justify-center touch-manipulation"
-                  >
-                    <Info className="w-4 h-4 mr-2" />
-                    NUTRITION
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-[95vw] max-w-md max-h-[85vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="text-lg font-semibold">Nutrition</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base sm:text-sm">
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                      <span className="text-gray-600">Calories</span>
-                      <span className="font-semibold">{Math.round(meal.total_calories)}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                      <span className="text-gray-600">Protein</span>
-                      <span className="font-semibold">{(meal.total_protein || 0).toFixed(1)}g</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                      <span className="text-gray-600">Fat</span>
-                      <span className="font-semibold">{(meal.total_fat || 0).toFixed(1)}g</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                      <span className="text-gray-600">Sat. Fat</span>
-                      <span className="font-semibold">{(meal.total_saturated_fat || 0).toFixed(1)}g</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                      <span className="text-gray-600">Carbs</span>
-                      <span className="font-semibold">{(meal.total_carbs || 0).toFixed(1)}g</span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                      <span className="text-gray-600">Sugar</span>
-                      <span className="font-semibold">{(meal.total_sugar || 0).toFixed(1)}g</span>
-                    </div>
-                    {meal.total_fiber > 0 && (
-                      <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                        <span className="text-gray-600">Fiber</span>
-                        <span className="font-semibold">{(meal.total_fiber || 0).toFixed(1)}g</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                      <span className="text-gray-600">Salt</span>
-                      <span className="font-semibold">{(meal.total_salt || 0).toFixed(1)}g</span>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-        </div>
-
-        {/* Price and Add to cart button */}
-        {onAddToCart && (
-          <div className="space-y-3 pt-2">
-            <div className="text-center">
-              <span className="text-2xl font-bold text-foreground tracking-tight">£{meal.price.toFixed(2)}</span>
+              </div>
             </div>
-            <Button 
-              onClick={() => onAddToCart(meal)}
-              size="lg"
-              className="w-full min-h-[48px] bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-all duration-200 ease-out active:scale-[0.98] touch-manipulation shadow-button hover:shadow-button-hover"
-            >
-              Add to Cart
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
   );
 };
 
