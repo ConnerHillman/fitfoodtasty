@@ -73,6 +73,97 @@ serve(async (req) => {
     // Extract metadata
     const metadata = paymentIntent.metadata;
     const items = JSON.parse(metadata.items || "[]");
+    
+    // Check if this is a package order
+    const hasPackageItems = items.some((item: any) => item.type === 'package');
+
+    // ============ IDEMPOTENCY CHECK ============
+    // Check if an order already exists for this payment intent
+    if (hasPackageItems) {
+      const { data: existingPackageOrder, error: checkError } = await supabaseClient
+        .from('package_orders')
+        .select('*')
+        .eq('stripe_payment_intent_id', payment_intent_id)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error('[create-order-from-payment] Error checking existing package order:', checkError);
+      }
+      
+      if (existingPackageOrder) {
+        console.log('[create-order-from-payment] Idempotent return - package order already exists:', existingPackageOrder.id);
+        
+        // Fetch meal selections for item count
+        const { data: selections } = await supabaseClient
+          .from('package_meal_selections')
+          .select('quantity')
+          .eq('package_order_id', existingPackageOrder.id);
+        
+        const itemCount = selections?.reduce((sum, s) => sum + (s.quantity || 1), 0) || 0;
+        
+        return new Response(JSON.stringify({ 
+          success: true,
+          idempotent: true,
+          orderId: existingPackageOrder.id,
+          orderNumber: existingPackageOrder.id.substring(0, 8).toUpperCase(),
+          totalAmount: existingPackageOrder.total_amount,
+          currency: existingPackageOrder.currency,
+          requestedDeliveryDate: existingPackageOrder.requested_delivery_date,
+          deliveryAddress: existingPackageOrder.delivery_address,
+          customerEmail: existingPackageOrder.customer_email || user.email || '',
+          customerName: existingPackageOrder.customer_name || '',
+          orderType: 'package',
+          itemCount,
+          message: 'Package order already exists for this payment'
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    } else {
+      const { data: existingOrder, error: checkError } = await supabaseClient
+        .from('orders')
+        .select('*')
+        .eq('stripe_payment_intent_id', payment_intent_id)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error('[create-order-from-payment] Error checking existing order:', checkError);
+      }
+      
+      if (existingOrder) {
+        console.log('[create-order-from-payment] Idempotent return - order already exists:', existingOrder.id);
+        
+        // Fetch order items for item count
+        const { data: orderItems } = await supabaseClient
+          .from('order_items')
+          .select('quantity')
+          .eq('order_id', existingOrder.id);
+        
+        const itemCount = orderItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+        
+        return new Response(JSON.stringify({ 
+          success: true,
+          idempotent: true,
+          orderId: existingOrder.id,
+          orderNumber: existingOrder.id.substring(0, 8).toUpperCase(),
+          totalAmount: existingOrder.total_amount,
+          currency: existingOrder.currency,
+          requestedDeliveryDate: existingOrder.requested_delivery_date,
+          deliveryAddress: existingOrder.delivery_address,
+          customerEmail: existingOrder.customer_email || user.email || '',
+          customerName: existingOrder.customer_name || '',
+          orderType: 'individual',
+          itemCount,
+          message: 'Order already exists for this payment'
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    }
+    // ============ END IDEMPOTENCY CHECK ============
+
     const discountPercentage = parseFloat(metadata.discount_percentage || "0");
     const couponData = metadata.coupon_type ? {
       code: metadata.coupon_code || '',
@@ -109,9 +200,6 @@ serve(async (req) => {
       }
     }
 
-    // Check if this is a package order
-    const hasPackageItems = items.some((item: any) => item.type === 'package');
-    
     // Variables to store order data for response
     let createdOrderId: string;
     let orderType: 'package' | 'individual';
@@ -128,6 +216,7 @@ serve(async (req) => {
         throw new Error('Package data not found');
       }
 
+      // Insert with conflict handling for race conditions
       const { data: packageOrderData, error: packageOrderError } = await supabaseClient
         .from('package_orders')
         .insert({
@@ -141,11 +230,49 @@ serve(async (req) => {
           requested_delivery_date: metadata.requested_delivery_date || null,
           production_date: metadata.production_date || null,
           delivery_address: profileDeliveryAddress,
-          stripe_session_id: payment_intent_id,
+          stripe_payment_intent_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
         })
         .select()
         .single();
+
+      // Handle unique constraint violation (race condition)
+      if (packageOrderError?.code === '23505') {
+        console.log('[create-order-from-payment] Race condition detected, fetching existing package order');
+        const { data: existingOrder } = await supabaseClient
+          .from('package_orders')
+          .select('*')
+          .eq('stripe_payment_intent_id', payment_intent_id)
+          .single();
+        
+        if (existingOrder) {
+          const { data: selections } = await supabaseClient
+            .from('package_meal_selections')
+            .select('quantity')
+            .eq('package_order_id', existingOrder.id);
+          
+          const itemCount = selections?.reduce((sum, s) => sum + (s.quantity || 1), 0) || 0;
+          
+          return new Response(JSON.stringify({ 
+            success: true,
+            idempotent: true,
+            orderId: existingOrder.id,
+            orderNumber: existingOrder.id.substring(0, 8).toUpperCase(),
+            totalAmount: existingOrder.total_amount,
+            currency: existingOrder.currency,
+            requestedDeliveryDate: existingOrder.requested_delivery_date,
+            deliveryAddress: existingOrder.delivery_address,
+            customerEmail: existingOrder.customer_email || user.email || '',
+            customerName: existingOrder.customer_name || '',
+            orderType: 'package',
+            itemCount,
+            message: 'Package order already exists for this payment'
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      }
 
       if (packageOrderError) throw packageOrderError;
 
@@ -259,6 +386,7 @@ serve(async (req) => {
         delivery_address: profileDeliveryAddress,
       });
 
+      // Insert with conflict handling for race conditions
       const { data: orderData, error: orderError } = await supabaseClient
         .from('orders')
         .insert({
@@ -278,11 +406,49 @@ serve(async (req) => {
           coupon_discount_amount: parseFloat(metadata.coupon_discount_amount || '0'),
           coupon_free_delivery: metadata.coupon_free_delivery === 'true',
           coupon_free_item_id: metadata.coupon_free_item_id || null,
-          stripe_session_id: payment_intent_id,
+          stripe_payment_intent_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
         })
         .select()
         .single();
+
+      // Handle unique constraint violation (race condition)
+      if (orderError?.code === '23505') {
+        console.log('[create-order-from-payment] Race condition detected, fetching existing order');
+        const { data: existingOrder } = await supabaseClient
+          .from('orders')
+          .select('*')
+          .eq('stripe_payment_intent_id', payment_intent_id)
+          .single();
+        
+        if (existingOrder) {
+          const { data: orderItems } = await supabaseClient
+            .from('order_items')
+            .select('quantity')
+            .eq('order_id', existingOrder.id);
+          
+          const itemCount = orderItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+          
+          return new Response(JSON.stringify({ 
+            success: true,
+            idempotent: true,
+            orderId: existingOrder.id,
+            orderNumber: existingOrder.id.substring(0, 8).toUpperCase(),
+            totalAmount: existingOrder.total_amount,
+            currency: existingOrder.currency,
+            requestedDeliveryDate: existingOrder.requested_delivery_date,
+            deliveryAddress: existingOrder.delivery_address,
+            customerEmail: existingOrder.customer_email || user.email || '',
+            customerName: existingOrder.customer_name || '',
+            orderType: 'individual',
+            itemCount,
+            message: 'Order already exists for this payment'
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      }
 
       if (orderError) {
         console.error('[create-order-from-payment] Order insert error:', orderError);

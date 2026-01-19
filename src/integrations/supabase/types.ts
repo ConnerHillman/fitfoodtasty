@@ -1128,7 +1128,7 @@ export type Database = {
           refund_reason: string | null
           requested_delivery_date: string | null
           status: string
-          stripe_session_id: string | null
+          stripe_payment_intent_id: string | null
           total_amount: number
           updated_at: string
           user_id: string
@@ -1160,7 +1160,7 @@ export type Database = {
           refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
-          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           total_amount: number
           updated_at?: string
           user_id: string
@@ -1192,7 +1192,7 @@ export type Database = {
           refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
-          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           total_amount?: number
           updated_at?: string
           user_id?: string
@@ -1281,7 +1281,7 @@ export type Database = {
           refund_reason: string | null
           requested_delivery_date: string | null
           status: string
-          stripe_session_id: string | null
+          stripe_payment_intent_id: string | null
           total_amount: number
           updated_at: string
           user_id: string | null
@@ -1307,7 +1307,7 @@ export type Database = {
           refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
-          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           total_amount: number
           updated_at?: string
           user_id?: string | null
@@ -1333,7 +1333,7 @@ export type Database = {
           refund_reason?: string | null
           requested_delivery_date?: string | null
           status?: string
-          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           total_amount?: number
           updated_at?: string
           user_id?: string | null

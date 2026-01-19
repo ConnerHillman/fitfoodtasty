@@ -20,7 +20,7 @@ interface Order {
   total_amount: number;
   status: string;
   created_at: string;
-  stripe_session_id?: string;
+  stripe_payment_intent_id?: string;
   type: 'individual' | 'package';
 }
 
@@ -125,7 +125,7 @@ export const RefundOrderDialog: React.FC<RefundOrderDialogProps> = ({
   if (!order) return null;
 
   const canProcessRefund = order.status === 'confirmed' || order.status === 'paid' || order.status === 'delivered';
-  const hasStripeSession = !!order.stripe_session_id;
+  const hasStripeSession = !!order.stripe_payment_intent_id;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
