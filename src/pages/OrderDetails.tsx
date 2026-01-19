@@ -240,13 +240,18 @@ const OrderDetails: React.FC = () => {
     return order.order_items?.reduce((sum, item) => sum + item.total_price, 0) || 0;
   };
 
-  // Check if this is a collection point order
-  const isCollectionPoint = (): boolean => {
+  // Check if this is a collection order using explicit field
+  const isCollectionOrder = (): boolean => {
+    // Use explicit fulfillment_method field if available
+    if ((order as any).fulfillment_method === 'collection') return true;
+    if ((order as any).fulfillment_method === 'delivery') return false;
+    
+    // Legacy fallback for old orders
     if (!order.delivery_address) return false;
     const address = order.delivery_address.toLowerCase();
-    return address.includes('fit food tasty') || 
-           address.includes('collection point') ||
-           address.includes('cartwright mill');
+    return address.includes('collection point') ||
+           address.includes('pickup') ||
+           address.includes('collect from');
   };
 
   // Action handlers
@@ -377,26 +382,26 @@ const OrderDetails: React.FC = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    {isCollectionPoint() ? (
+                    {isCollectionOrder() ? (
                       <MapPin className="h-5 w-5" />
                     ) : (
                       <Truck className="h-5 w-5" />
                     )}
-                    {isCollectionPoint() ? 'Collection Point' : 'Delivery Information'}
+                    {isCollectionOrder() ? 'Collection Point' : 'Delivery Information'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {order.delivery_address ? (
                       <div className="flex items-start gap-2">
-                        {isCollectionPoint() ? (
+                        {isCollectionOrder() ? (
                           <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
                         ) : (
                           <Truck className="h-4 w-4 text-muted-foreground mt-1" />
                         )}
                         <div>
                           <p className="font-medium">
-                            {isCollectionPoint() ? 'Collection Address:' : 'Delivery Address:'}
+                            {isCollectionOrder() ? 'Collection Address:' : 'Delivery Address:'}
                           </p>
                           <p className="text-sm text-muted-foreground whitespace-pre-line">{order.delivery_address}</p>
                         </div>
@@ -409,7 +414,7 @@ const OrderDetails: React.FC = () => {
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <p className="font-medium">
-                          {isCollectionPoint() ? 'Collection Date:' : 'Delivery Date:'}
+                          {isCollectionOrder() ? 'Collection Date:' : 'Delivery Date:'}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {order.requested_delivery_date 

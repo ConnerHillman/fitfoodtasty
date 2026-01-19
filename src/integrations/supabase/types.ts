@@ -1106,6 +1106,7 @@ export type Database = {
         Row: {
           actual_delivery_date: string | null
           actual_production_date: string | null
+          collection_point_id: string | null
           coupon_discount_amount: number | null
           coupon_discount_percentage: number | null
           coupon_free_delivery: boolean | null
@@ -1116,8 +1117,10 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           delivery_address: string | null
+          delivery_zone_id: string | null
           discount_amount: number | null
           email_notifications_enabled: boolean
+          fulfillment_method: string | null
           id: string
           last_modified_by: string | null
           order_notes: string | null
@@ -1138,6 +1141,7 @@ export type Database = {
         Insert: {
           actual_delivery_date?: string | null
           actual_production_date?: string | null
+          collection_point_id?: string | null
           coupon_discount_amount?: number | null
           coupon_discount_percentage?: number | null
           coupon_free_delivery?: boolean | null
@@ -1148,8 +1152,10 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          delivery_zone_id?: string | null
           discount_amount?: number | null
           email_notifications_enabled?: boolean
+          fulfillment_method?: string | null
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null
@@ -1170,6 +1176,7 @@ export type Database = {
         Update: {
           actual_delivery_date?: string | null
           actual_production_date?: string | null
+          collection_point_id?: string | null
           coupon_discount_amount?: number | null
           coupon_discount_percentage?: number | null
           coupon_free_delivery?: boolean | null
@@ -1180,8 +1187,10 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          delivery_zone_id?: string | null
           discount_amount?: number | null
           email_notifications_enabled?: boolean
+          fulfillment_method?: string | null
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null
@@ -1199,7 +1208,29 @@ export type Database = {
           voided_at?: string | null
           voided_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_delivery_zone_id_fkey"
+            columns: ["delivery_zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       package_meal_selections: {
         Row: {
@@ -1265,12 +1296,15 @@ export type Database = {
         Row: {
           actual_delivery_date: string | null
           actual_production_date: string | null
+          collection_point_id: string | null
           created_at: string
           currency: string
           customer_email: string | null
           customer_name: string | null
           delivery_address: string | null
+          delivery_zone_id: string | null
           email_notifications_enabled: boolean
+          fulfillment_method: string | null
           id: string
           last_modified_by: string | null
           order_notes: string | null
@@ -1291,12 +1325,15 @@ export type Database = {
         Insert: {
           actual_delivery_date?: string | null
           actual_production_date?: string | null
+          collection_point_id?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          delivery_zone_id?: string | null
           email_notifications_enabled?: boolean
+          fulfillment_method?: string | null
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null
@@ -1317,12 +1354,15 @@ export type Database = {
         Update: {
           actual_delivery_date?: string | null
           actual_production_date?: string | null
+          collection_point_id?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
           customer_name?: string | null
           delivery_address?: string | null
+          delivery_zone_id?: string | null
           email_notifications_enabled?: boolean
+          fulfillment_method?: string | null
           id?: string
           last_modified_by?: string | null
           order_notes?: string | null
@@ -1341,6 +1381,27 @@ export type Database = {
           voided_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "package_orders_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_orders_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_orders_delivery_zone_id_fkey"
+            columns: ["delivery_zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "package_orders_package_id_fkey"
             columns: ["package_id"]

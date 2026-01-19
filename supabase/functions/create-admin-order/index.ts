@@ -47,6 +47,13 @@ serve(async (req) => {
       throw new Error('Delivery date is required for all orders');
     }
 
+    // Determine fulfillment method from delivery_method field
+    const fulfillmentMethod = orderData.delivery_method === 'collection' ? 'collection' : 'delivery';
+    const collectionPointId = fulfillmentMethod === 'collection' ? (orderData.collection_point_id || null) : null;
+    const deliveryZoneId = fulfillmentMethod === 'delivery' ? (orderData.delivery_zone_id || null) : null;
+
+    console.log('Fulfillment data:', { fulfillmentMethod, collectionPointId, deliveryZoneId });
+
     // Find or create customer user
     let customerId = null;
     
@@ -77,7 +84,7 @@ serve(async (req) => {
       customerId = null;
     }
 
-    // Create the order
+    // Create the order with explicit fulfillment fields
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
       .insert({
@@ -91,6 +98,10 @@ serve(async (req) => {
         order_notes: orderData.order_notes,
         requested_delivery_date: orderData.requested_delivery_date,
         last_modified_by: user.id,
+        // Explicit fulfillment fields
+        fulfillment_method: fulfillmentMethod,
+        collection_point_id: collectionPointId,
+        delivery_zone_id: deliveryZoneId,
       })
       .select()
       .single();
@@ -125,7 +136,9 @@ serve(async (req) => {
         metadata: {
           admin_notes: orderData.admin_notes,
           price_overrides: orderData.meal_selections.filter((item: any) => item.unit_price !== item.original_price),
-          delivery_zone_id: orderData.delivery_zone_id,
+          fulfillment_method: fulfillmentMethod,
+          collection_point_id: collectionPointId,
+          delivery_zone_id: deliveryZoneId,
         }
       });
 
@@ -134,7 +147,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       orderId: order.id,
-      message: `Order created for ${orderData.customer_name}`
+      message: `Order created for ${orderData.customer_name}`,
+      fulfillmentMethod: fulfillmentMethod
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

@@ -74,6 +74,17 @@ serve(async (req) => {
     const metadata = paymentIntent.metadata;
     const items = JSON.parse(metadata.items || "[]");
     
+    // Extract fulfillment data from metadata (passed from checkout)
+    const fulfillmentMethod = metadata.fulfillment_method || 'delivery';
+    const collectionPointId = metadata.collection_point_id || null;
+    const deliveryZoneId = metadata.delivery_zone_id || null;
+    
+    console.log('[create-order-from-payment] Fulfillment data from metadata:', {
+      fulfillmentMethod,
+      collectionPointId,
+      deliveryZoneId
+    });
+    
     // Check if this is a package order
     const hasPackageItems = items.some((item: any) => item.type === 'package');
 
@@ -114,6 +125,7 @@ serve(async (req) => {
           customerName: existingPackageOrder.customer_name || '',
           orderType: 'package',
           itemCount,
+          fulfillmentMethod: existingPackageOrder.fulfillment_method,
           message: 'Package order already exists for this payment'
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -155,6 +167,7 @@ serve(async (req) => {
           customerName: existingOrder.customer_name || '',
           orderType: 'individual',
           itemCount,
+          fulfillmentMethod: existingOrder.fulfillment_method,
           message: 'Order already exists for this payment'
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -232,6 +245,10 @@ serve(async (req) => {
           delivery_address: profileDeliveryAddress,
           stripe_payment_intent_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
+          // New fulfillment fields
+          fulfillment_method: fulfillmentMethod,
+          collection_point_id: fulfillmentMethod === 'collection' ? collectionPointId : null,
+          delivery_zone_id: fulfillmentMethod === 'delivery' ? deliveryZoneId : null,
         })
         .select()
         .single();
@@ -266,6 +283,7 @@ serve(async (req) => {
             customerName: existingOrder.customer_name || '',
             orderType: 'package',
             itemCount,
+            fulfillmentMethod: existingOrder.fulfillment_method,
             message: 'Package order already exists for this payment'
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -354,7 +372,8 @@ serve(async (req) => {
             deliveryDate: packageOrderData.requested_delivery_date,
             deliveryAddress: packageOrderData.delivery_address,
             orderNotes: packageOrderData.order_notes,
-            orderType: 'package'
+            orderType: 'package',
+            fulfillmentMethod: fulfillmentMethod
           }
         });
         console.log('Admin notification sent for package order:', packageOrderData.id);
@@ -384,6 +403,9 @@ serve(async (req) => {
         requested_delivery_date: normalizedRequestedDeliveryDate,
         production_date: normalizedProductionDate,
         delivery_address: profileDeliveryAddress,
+        fulfillment_method: fulfillmentMethod,
+        collection_point_id: collectionPointId,
+        delivery_zone_id: deliveryZoneId,
       });
 
       // Insert with conflict handling for race conditions
@@ -408,6 +430,10 @@ serve(async (req) => {
           coupon_free_item_id: metadata.coupon_free_item_id || null,
           stripe_payment_intent_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
+          // New fulfillment fields
+          fulfillment_method: fulfillmentMethod,
+          collection_point_id: fulfillmentMethod === 'collection' ? collectionPointId : null,
+          delivery_zone_id: fulfillmentMethod === 'delivery' ? deliveryZoneId : null,
         })
         .select()
         .single();
@@ -442,6 +468,7 @@ serve(async (req) => {
             customerName: existingOrder.customer_name || '',
             orderType: 'individual',
             itemCount,
+            fulfillmentMethod: existingOrder.fulfillment_method,
             message: 'Order already exists for this payment'
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -502,7 +529,7 @@ serve(async (req) => {
       // Store order data for response
       createdOrderId = orderData.id;
       orderType = 'individual';
-      itemCount = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      itemCount = orderItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
       customerEmail = orderData.customer_email || user.email || '';
       customerName = orderData.customer_name || '';
       deliveryAddress = orderData.delivery_address;
@@ -549,11 +576,12 @@ serve(async (req) => {
             customerName: orderData.customer_name || metadata.customer_name || '',
             customerEmail: orderData.customer_email || user.email || '',
             totalAmount: finalAmount / 100,
-            itemCount: items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+            itemCount: orderItems.reduce((sum: number, item: any) => sum + item.quantity, 0),
             deliveryDate: orderData.requested_delivery_date,
             deliveryAddress: orderData.delivery_address,
             orderNotes: orderData.order_notes,
-            orderType: 'individual'
+            orderType: 'individual',
+            fulfillmentMethod: fulfillmentMethod
           }
         });
         console.log('Admin notification sent for order:', orderData.id);
@@ -563,9 +591,9 @@ serve(async (req) => {
       }
     }
 
-    // Return enhanced order data
+    // Return success response
     return new Response(JSON.stringify({ 
-      success: true, 
+      success: true,
       orderId: createdOrderId,
       orderNumber: createdOrderId.substring(0, 8).toUpperCase(),
       totalAmount: finalAmount / 100,
@@ -576,24 +604,18 @@ serve(async (req) => {
       customerName,
       orderType,
       itemCount,
-      message: orderType === 'package' ? 'Package order created successfully' : 'Order created successfully'
+      fulfillmentMethod,
+      message: 'Order created successfully'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
 
   } catch (error: any) {
-    // Better error handling to capture all error types
-    let message: string;
-    if (error instanceof Error) {
-      message = error.message;
-    } else if (typeof error === 'object' && error !== null) {
-      message = JSON.stringify(error);
-    } else {
-      message = String(error);
-    }
-    console.error("[create-order-from-payment] Error:", message);
-    return new Response(JSON.stringify({ error: message }), {
+    console.error('[create-order-from-payment] Error:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Failed to create order'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

@@ -48,8 +48,12 @@ interface Order {
   isAdjusted?: boolean;
   // Customer postcode
   postcode?: string | null;
-  // Delivery method
+  // Explicit fulfillment fields from database
+  fulfillment_method?: string | null;
+  collection_point_id?: string | null;
+  delivery_zone_id?: string | null;
   delivery_address?: string | null;
+  // Computed fulfillment method for display
   fulfillmentMethod: 'delivery' | 'collection';
 }
 
@@ -62,28 +66,39 @@ interface OrderFilters {
   fulfillmentFilter: 'all' | 'delivery' | 'collection';
 }
 
-// Helper function to determine if address is a collection point
-const isCollectionAddress = (address: string | null | undefined, collectionPointAddresses: string[]): boolean => {
-  if (!address) return false;
-  const normalizedAddress = address.toLowerCase().trim();
+// Helper function to determine fulfillment method
+// Uses explicit fulfillment_method field, with legacy fallback for old orders
+const getFulfillmentMethod = (
+  order: { fulfillment_method?: string | null; delivery_address?: string | null },
+  collectionPointAddresses: string[]
+): 'delivery' | 'collection' => {
+  // Use explicit field if available
+  if (order.fulfillment_method === 'collection') return 'collection';
+  if (order.fulfillment_method === 'delivery') return 'delivery';
+  
+  // Legacy fallback: Infer from address for orders without explicit field
+  if (!order.delivery_address) return 'delivery'; // Default to delivery if no address
+  
+  const normalizedAddress = order.delivery_address.toLowerCase().trim();
   
   // Check against known collection point addresses/names
   for (const cpIdentifier of collectionPointAddresses) {
     if (!cpIdentifier) continue;
     const normalizedCp = cpIdentifier.toLowerCase().trim();
-    // Check if the address contains the collection point identifier
     if (normalizedAddress.includes(normalizedCp) || normalizedCp.includes(normalizedAddress)) {
-      return true;
+      return 'collection';
     }
   }
   
-  // Fallback: Check for specific collection-related keywords only if no collection points loaded
+  // Fallback keywords only if no collection points loaded (shouldn't happen normally)
   if (collectionPointAddresses.length === 0) {
-    const collectionKeywords = ['fit food tasty', 'collection point', 'pickup', 'collect from', 'invictus gym'];
-    return collectionKeywords.some(keyword => normalizedAddress.includes(keyword));
+    const collectionKeywords = ['collection point', 'pickup', 'collect from'];
+    if (collectionKeywords.some(keyword => normalizedAddress.includes(keyword))) {
+      return 'collection';
+    }
   }
   
-  return false;
+  return 'delivery';
 };
 
 const AllOrders: React.FC = () => {
@@ -231,7 +246,8 @@ const AllOrders: React.FC = () => {
         isManual: manualOrderIds.has(order.id),
         isAdjusted: adjustedOrderIds.has(order.id),
         postcode: postcodeByUserId.get(order.user_id) || null,
-        fulfillmentMethod: isCollectionAddress(order.delivery_address, allCpIdentifiers) ? 'collection' as const : 'delivery' as const
+        // Use explicit fulfillment_method from DB, with legacy fallback
+        fulfillmentMethod: getFulfillmentMethod(order, allCpIdentifiers)
       }));
 
       const formattedPackageOrders: Order[] = (packageOrders || []).map(order => ({
@@ -240,7 +256,8 @@ const AllOrders: React.FC = () => {
         isManual: manualOrderIds.has(order.id),
         isAdjusted: adjustedOrderIds.has(order.id),
         postcode: postcodeByUserId.get(order.user_id) || null,
-        fulfillmentMethod: isCollectionAddress(order.delivery_address, allCpIdentifiers) ? 'collection' as const : 'delivery' as const
+        // Use explicit fulfillment_method from DB, with legacy fallback
+        fulfillmentMethod: getFulfillmentMethod(order, allCpIdentifiers)
       }));
 
       const allOrders = [...formattedRegularOrders, ...formattedPackageOrders];
