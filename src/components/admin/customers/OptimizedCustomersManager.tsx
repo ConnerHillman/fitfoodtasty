@@ -34,7 +34,7 @@ const OptimizedCustomersManager = () => {
     filterBy: "all",
     viewMode: "list",
     dateRange: {
-      from: subDays(new Date(), 30), // Default to last 30 days
+      from: subDays(new Date(), 365), // Default to last year (show all customers)
       to: new Date(),
     }
   });

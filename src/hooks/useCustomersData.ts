@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomerCache } from "./useCustomerCache";
 import { sanitizeCustomerForDisplay } from "@/lib/customerValidation";
-import { startOfDay, endOfDay, subDays } from "date-fns";
+import { subDays } from "date-fns";
 import type { Customer, CustomerFilters } from "@/types/customer";
 import type { DateRange } from "@/types/common";
 
@@ -37,15 +37,12 @@ export const useCustomersData = () => {
       }
       
       setLoading(true);
-      const from = startOfDay(dateRange.from);
-      const to = endOfDay(dateRange.to);
 
-      // Get all profiles with user data
+      // Get all profiles - no date filter on profile creation
+      // Date range can be used for filtering by last activity/order in the UI
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("*")
-        .gte("created_at", from.toISOString())
-        .lte("created_at", to.toISOString());
+        .select("*");
 
       if (profilesError) throw profilesError;
 
