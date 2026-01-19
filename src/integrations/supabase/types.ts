@@ -1432,8 +1432,10 @@ export type Database = {
           created_at: string
           delivery_address: string | null
           delivery_instructions: string | null
+          first_name: string | null
           full_name: string
           id: string
+          last_name: string | null
           phone: string | null
           postal_code: string | null
           updated_at: string
@@ -1445,8 +1447,10 @@ export type Database = {
           created_at?: string
           delivery_address?: string | null
           delivery_instructions?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
+          last_name?: string | null
           phone?: string | null
           postal_code?: string | null
           updated_at?: string
@@ -1458,8 +1462,10 @@ export type Database = {
           created_at?: string
           delivery_address?: string | null
           delivery_instructions?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
+          last_name?: string | null
           phone?: string | null
           postal_code?: string | null
           updated_at?: string

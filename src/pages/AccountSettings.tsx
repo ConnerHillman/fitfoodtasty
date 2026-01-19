@@ -18,7 +18,8 @@ import ReferralSystem from "@/components/ReferralSystem";
 const ukPhoneRegex = /^(0|\+44|44)?[17]\d{9}$/;
 
 const profileSchema = z.object({
-  full_name: z.string().min(2, "Full name must be at least 2 characters"),
+  first_name: z.string().min(1, "First name is required").max(50, "First name is too long"),
+  last_name: z.string().min(1, "Last name is required").max(50, "Last name is too long"),
   phone: z.string()
     .min(10, "Phone number is required for delivery communication")
     .refine((val) => {
@@ -65,7 +66,8 @@ const AccountSettings = () => {
         }
 
         if (data) {
-          setValue('full_name', data.full_name || '');
+          setValue('first_name', data.first_name || '');
+          setValue('last_name', data.last_name || '');
           setValue('phone', data.phone || '');
           setValue('delivery_address', data.delivery_address || '');
           setValue('city', data.city || '');
@@ -90,7 +92,8 @@ const AccountSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: data.full_name,
+          first_name: data.first_name,
+          last_name: data.last_name,
           phone: data.phone || null,
           delivery_address: data.delivery_address || null,
           city: data.city || null,
@@ -154,16 +157,30 @@ const AccountSettings = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name *</Label>
-                    <Input
-                      id="full_name"
-                      {...register("full_name")}
-                      placeholder="Enter your full name"
-                    />
-                    {errors.full_name && (
-                      <p className="text-sm text-destructive">{errors.full_name.message}</p>
-                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="first_name">First Name *</Label>
+                      <Input
+                        id="first_name"
+                        {...register("first_name")}
+                        placeholder="Enter your first name"
+                      />
+                      {errors.first_name && (
+                        <p className="text-sm text-destructive">{errors.first_name.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="last_name">Last Name *</Label>
+                      <Input
+                        id="last_name"
+                        {...register("last_name")}
+                        placeholder="Enter your last name"
+                      />
+                      {errors.last_name && (
+                        <p className="text-sm text-destructive">{errors.last_name.message}</p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2">

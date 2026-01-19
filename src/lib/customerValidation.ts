@@ -4,6 +4,16 @@
 
 // Validation constants
 export const VALIDATION_RULES = {
+  firstName: {
+    minLength: 1,
+    maxLength: 50,
+    pattern: /^[a-zA-Z\s\-'\.]+$/
+  },
+  lastName: {
+    minLength: 1,
+    maxLength: 50,
+    pattern: /^[a-zA-Z\s\-'\.]+$/
+  },
   fullName: {
     minLength: 2,
     maxLength: 100,
@@ -83,7 +93,57 @@ export function validateEmail(email: string): ValidationError | null {
 }
 
 /**
- * Validates a full name
+ * Validates a first name
+ */
+export function validateFirstName(name: string): ValidationError | null {
+  const sanitized = sanitizeString(name);
+  
+  if (!sanitized) {
+    return { field: 'first_name', message: 'First name is required', code: 'REQUIRED' };
+  }
+  
+  if (sanitized.length < VALIDATION_RULES.firstName.minLength) {
+    return { field: 'first_name', message: 'First name is too short', code: 'TOO_SHORT' };
+  }
+  
+  if (sanitized.length > VALIDATION_RULES.firstName.maxLength) {
+    return { field: 'first_name', message: 'First name is too long', code: 'TOO_LONG' };
+  }
+  
+  if (!VALIDATION_RULES.firstName.pattern.test(sanitized)) {
+    return { field: 'first_name', message: 'First name contains invalid characters', code: 'INVALID_FORMAT' };
+  }
+  
+  return null;
+}
+
+/**
+ * Validates a last name
+ */
+export function validateLastName(name: string): ValidationError | null {
+  const sanitized = sanitizeString(name);
+  
+  if (!sanitized) {
+    return { field: 'last_name', message: 'Last name is required', code: 'REQUIRED' };
+  }
+  
+  if (sanitized.length < VALIDATION_RULES.lastName.minLength) {
+    return { field: 'last_name', message: 'Last name is too short', code: 'TOO_SHORT' };
+  }
+  
+  if (sanitized.length > VALIDATION_RULES.lastName.maxLength) {
+    return { field: 'last_name', message: 'Last name is too long', code: 'TOO_LONG' };
+  }
+  
+  if (!VALIDATION_RULES.lastName.pattern.test(sanitized)) {
+    return { field: 'last_name', message: 'Last name contains invalid characters', code: 'INVALID_FORMAT' };
+  }
+  
+  return null;
+}
+
+/**
+ * Validates a full name (for backward compatibility)
  */
 export function validateFullName(name: string): ValidationError | null {
   const sanitized = sanitizeString(name);
@@ -158,10 +218,12 @@ export function validatePostalCode(postalCode: string): ValidationError | null {
 }
 
 /**
- * Validates customer form data
+ * Validates customer form data with first_name and last_name
  */
 export function validateCustomerData(data: {
-  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string; // For backward compatibility
   email: string;
   phone?: string;
   delivery_address?: string;
@@ -172,9 +234,21 @@ export function validateCustomerData(data: {
 }): ValidationResult {
   const errors: ValidationError[] = [];
   
-  // Validate required fields
-  const nameError = validateFullName(data.full_name);
-  if (nameError) errors.push(nameError);
+  // Validate name fields - prefer first_name/last_name, fall back to full_name
+  if (data.first_name !== undefined || data.last_name !== undefined) {
+    const firstNameError = validateFirstName(data.first_name || '');
+    if (firstNameError) errors.push(firstNameError);
+    
+    const lastNameError = validateLastName(data.last_name || '');
+    if (lastNameError) errors.push(lastNameError);
+  } else if (data.full_name !== undefined) {
+    // Backward compatibility: validate full_name if first/last not provided
+    const nameError = validateFullName(data.full_name);
+    if (nameError) errors.push(nameError);
+  } else {
+    errors.push({ field: 'first_name', message: 'First name is required', code: 'REQUIRED' });
+    errors.push({ field: 'last_name', message: 'Last name is required', code: 'REQUIRED' });
+  }
   
   const emailError = validateEmail(data.email);
   if (emailError) errors.push(emailError);
@@ -207,10 +281,17 @@ export function validateCustomerData(data: {
   if (data.county && !VALIDATION_RULES.county.pattern.test(data.county)) {
     errors.push({ field: 'county', message: 'County contains invalid characters', code: 'INVALID_FORMAT' });
   }
+
+  // Compute full_name from first_name and last_name
+  const computedFullName = data.first_name || data.last_name 
+    ? [data.first_name, data.last_name].filter(Boolean).join(' ').trim()
+    : data.full_name;
   
   // Sanitize all data
   const sanitizedData = {
-    full_name: sanitizeString(data.full_name),
+    first_name: data.first_name ? sanitizeString(data.first_name) : '',
+    last_name: data.last_name ? sanitizeString(data.last_name) : '',
+    full_name: computedFullName ? sanitizeString(computedFullName) : '',
     email: sanitizeString(data.email).toLowerCase(),
     phone: data.phone ? normalizePhoneNumber(data.phone) : '',
     delivery_address: data.delivery_address ? sanitizeString(data.delivery_address) : '',
@@ -233,6 +314,8 @@ export function validateCustomerData(data: {
 export function sanitizeCustomerForDisplay(customer: any): any {
   return {
     ...customer,
+    first_name: sanitizeString(customer.first_name || ''),
+    last_name: sanitizeString(customer.last_name || ''),
     full_name: sanitizeString(customer.full_name || ''),
     email: sanitizeString(customer.email || ''),
     phone: sanitizeString(customer.phone || ''),
@@ -242,4 +325,14 @@ export function sanitizeCustomerForDisplay(customer: any): any {
     county: sanitizeString(customer.county || ''),
     delivery_instructions: sanitizeString(customer.delivery_instructions || ''),
   };
+}
+
+/**
+ * Helper to get display name from customer data
+ */
+export function getDisplayName(firstName?: string, lastName?: string, fullName?: string): string {
+  if (firstName || lastName) {
+    return [firstName, lastName].filter(Boolean).join(' ').trim();
+  }
+  return fullName || 'Unknown';
 }
