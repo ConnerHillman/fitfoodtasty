@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, Eye, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock, Edit3, X, RotateCcw, Printer, RotateCw } from 'lucide-react';
+import { Package, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock, Edit3, X, RotateCcw, Printer, RotateCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -351,12 +351,6 @@ const AllOrders: React.FC = () => {
 
   // Table actions
   const actions: ActionItem<Order>[] = [
-    {
-      label: 'View',
-      icon: Eye,
-      onClick: handleViewOrder,
-      variant: 'outline'
-    },
     {
       label: 'Adjust',
       icon: Edit3,
