@@ -67,17 +67,23 @@ interface OrderFilters {
 }
 
 // Helper function to determine fulfillment method
-// Uses explicit fulfillment_method field, with legacy fallback for old orders
+// Primary source: explicit fulfillment_method field from database
+// Legacy fallback only for orders without explicit field set
 const getFulfillmentMethod = (
-  order: { fulfillment_method?: string | null; delivery_address?: string | null },
+  order: { fulfillment_method?: string | null; delivery_address?: string | null; collection_point_id?: string | null },
   collectionPointAddresses: string[]
 ): 'delivery' | 'collection' => {
-  // Use explicit field if available
-  if (order.fulfillment_method === 'collection') return 'collection';
-  if (order.fulfillment_method === 'delivery') return 'delivery';
+  // PRIMARY: Use explicit field from database if set
+  const explicitMethod = order.fulfillment_method?.toLowerCase().trim();
+  if (explicitMethod === 'collection') return 'collection';
+  if (explicitMethod === 'delivery') return 'delivery';
   
-  // Legacy fallback: Infer from address for orders without explicit field
-  if (!order.delivery_address) return 'delivery'; // Default to delivery if no address
+  // SECONDARY: Check collection_point_id (if set, it's definitely collection)
+  if (order.collection_point_id) return 'collection';
+  
+  // LEGACY FALLBACK: Only for old orders without explicit fulfillment_method
+  // These should be rare after backfill migration
+  if (!order.delivery_address) return 'delivery';
   
   const normalizedAddress = order.delivery_address.toLowerCase().trim();
   
@@ -85,15 +91,9 @@ const getFulfillmentMethod = (
   for (const cpIdentifier of collectionPointAddresses) {
     if (!cpIdentifier) continue;
     const normalizedCp = cpIdentifier.toLowerCase().trim();
-    if (normalizedAddress.includes(normalizedCp) || normalizedCp.includes(normalizedAddress)) {
-      return 'collection';
-    }
-  }
-  
-  // Fallback keywords only if no collection points loaded (shouldn't happen normally)
-  if (collectionPointAddresses.length === 0) {
-    const collectionKeywords = ['collection point', 'pickup', 'collect from'];
-    if (collectionKeywords.some(keyword => normalizedAddress.includes(keyword))) {
+    // Only match if the address STARTS with the collection point name
+    // This prevents false positives
+    if (normalizedAddress.startsWith(normalizedCp) || normalizedAddress === normalizedCp) {
       return 'collection';
     }
   }
