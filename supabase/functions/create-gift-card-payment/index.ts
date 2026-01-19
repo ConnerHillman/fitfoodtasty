@@ -115,11 +115,12 @@ serve(async (req) => {
     console.log("Using price ID:", priceId);
 
     // Create Stripe checkout session
+    const origin = req.headers.get("origin") || "https://fitfoodtasty.lovable.app";
     const sessionData: any = {
       customer: customerId,
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/gift-card-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/gift-cards`,
+      success_url: `${origin}/gift-card-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/gift-cards`,
       metadata: {
         type: 'gift_card',
         purchaser_user_id: user?.id || '',
