@@ -93,6 +93,21 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
   const [uploadingImage, setUploadingImage] = useState(false);
   const { toast } = useToast();
 
+  // Reset all edit state - called when switching meals or closing modal
+  const resetEditState = () => {
+    setEditMode('none');
+    setEditData({});
+    setImageFile(null);
+    setImagePreview(null);
+    setNewIngredient({ ingredient_id: '', quantity: '', unit: 'g' });
+  };
+
+  // Handle modal close with state reset
+  const handleClose = () => {
+    resetEditState();
+    onClose();
+  };
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -153,13 +168,22 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
     setImagePreview(null);
   };
 
+  // Reset edit state when meal changes or modal opens/closes
   useEffect(() => {
+    resetEditState();
     if (mealId && isOpen) {
       fetchMealDetails();
       fetchAvailableIngredients();
       fetchCategories();
     }
   }, [mealId, isOpen]);
+
+  // Also reset when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      resetEditState();
+    }
+  }, [isOpen]);
 
   const fetchCategories = async () => {
     try {
@@ -519,7 +543,7 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
 
   if (!meal) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-center p-8">
             {loading ? "Loading..." : "Meal not found"}
@@ -530,7 +554,7 @@ const MealDetailModal = ({ mealId, isOpen, onClose, onUpdate }: MealDetailModalP
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
