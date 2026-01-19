@@ -62,9 +62,28 @@ interface OrderFilters {
   fulfillmentFilter: 'all' | 'delivery' | 'collection';
 }
 
+// Helper function to determine if address is a collection point
+const isCollectionAddress = (address: string | null | undefined, collectionPointAddresses: string[]): boolean => {
+  if (!address) return false;
+  const normalizedAddress = address.toLowerCase().trim();
+  
+  // Check against known collection point addresses
+  if (collectionPointAddresses.some(cpAddr => 
+    normalizedAddress.includes(cpAddr.toLowerCase()) || 
+    cpAddr.toLowerCase().includes(normalizedAddress.split(',')[0].toLowerCase())
+  )) {
+    return true;
+  }
+  
+  // Check for collection-related keywords
+  const collectionKeywords = ['fit food tasty', 'collection point', 'pickup', 'collect from', 'invictus gym'];
+  return collectionKeywords.some(keyword => normalizedAddress.includes(keyword));
+};
+
 const AllOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [collectionPointAddresses, setCollectionPointAddresses] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -97,6 +116,17 @@ const AllOrders: React.FC = () => {
   const fetchAllOrders = async () => {
     try {
       setLoading(true);
+
+      // Fetch collection points first to determine fulfillment method
+      const { data: collectionPoints } = await supabase
+        .from('collection_points')
+        .select('address, point_name')
+        .eq('is_active', true);
+
+      const cpAddresses = (collectionPoints || []).map(cp => cp.address).filter(Boolean);
+      const cpNames = (collectionPoints || []).map(cp => cp.point_name).filter(Boolean);
+      const allCpIdentifiers = [...cpAddresses, ...cpNames];
+      setCollectionPointAddresses(allCpIdentifiers);
 
       // Fetch regular orders
       const { data: regularOrders, error: regularError } = await supabase
@@ -179,7 +209,7 @@ const AllOrders: React.FC = () => {
         isManual: manualOrderIds.has(order.id),
         isAdjusted: adjustedOrderIds.has(order.id),
         postcode: postcodeByUserId.get(order.user_id) || null,
-        fulfillmentMethod: order.delivery_address ? 'delivery' as const : 'collection' as const
+        fulfillmentMethod: isCollectionAddress(order.delivery_address, allCpIdentifiers) ? 'collection' as const : 'delivery' as const
       }));
 
       const formattedPackageOrders: Order[] = (packageOrders || []).map(order => ({
@@ -188,7 +218,7 @@ const AllOrders: React.FC = () => {
         isManual: manualOrderIds.has(order.id),
         isAdjusted: adjustedOrderIds.has(order.id),
         postcode: postcodeByUserId.get(order.user_id) || null,
-        fulfillmentMethod: order.delivery_address ? 'delivery' as const : 'collection' as const
+        fulfillmentMethod: isCollectionAddress(order.delivery_address, allCpIdentifiers) ? 'collection' as const : 'delivery' as const
       }));
 
       const allOrders = [...formattedRegularOrders, ...formattedPackageOrders];
