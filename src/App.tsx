@@ -10,7 +10,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import Menu from "./pages/Menu";
 import About from "./pages/About";
-import Packages from "./pages/Packages";
 import PackageSelect from "./pages/PackageSelect";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
@@ -53,7 +52,6 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/menu" element={<AppLayout><Menu /></AppLayout>} />
-            <Route path="/packages" element={<AppLayout><Packages /></AppLayout>} />
             <Route path="/packages/:packageId/select" element={<PackageSelect />} />
             <Route path="/about" element={<AppLayout><About /></AppLayout>} />
             <Route path="/cart" element={<AppLayout><Cart /></AppLayout>} />

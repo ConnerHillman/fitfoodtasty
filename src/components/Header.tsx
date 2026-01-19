@@ -33,18 +33,18 @@ const Header = () => {
             <NavigationMenuList className="space-x-6">
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-gray-700 hover:text-green-600 font-medium">
-                  OUR MENU
+                  MENU
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="grid gap-3 p-6 w-[400px]">
                     <NavigationMenuLink asChild>
-                      <Link to="/menu" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
+                      <Link to="/menu#meals" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
                         <div className="font-semibold text-green-700">All Meals</div>
                         <p className="text-body-sm text-gray-600">Browse our complete menu</p>
                       </Link>
                     </NavigationMenuLink>
                     <NavigationMenuLink asChild>
-                      <Link to="/packages" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
+                      <Link to="/menu#packages" className="block p-3 rounded-lg hover:bg-green-50 transition-colors">
                         <div className="font-semibold text-green-700">Meal Packages</div>
                         <p className="text-body-sm text-gray-600">Curated meal combinations</p>
                       </Link>
@@ -187,14 +187,14 @@ const Header = () => {
                   
                   <div className="border-t pt-4 space-y-4">
                     <Link 
-                      to="/menu" 
+                      to="/menu#meals" 
                       className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Our Menu
+                      All Meals
                     </Link>
                     <Link 
-                      to="/packages" 
+                      to="/menu#packages" 
                       className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -205,7 +205,7 @@ const Header = () => {
                       className="block text-heading-sm font-medium text-gray-700 hover:text-green-600 py-3 px-2 min-h-[44px] flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      About Us
+                      About
                     </Link>
                     <Link 
                       to="/subscriptions" 
