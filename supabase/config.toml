@@ -92,3 +92,12 @@ verify_jwt = false
 
 [functions.send-admin-notification]
 verify_jwt = false
+
+[functions.get-customer-payment-methods]
+verify_jwt = false
+
+[functions.create-admin-payment-link]
+verify_jwt = false
+
+[functions.charge-customer-card]
+verify_jwt = false
