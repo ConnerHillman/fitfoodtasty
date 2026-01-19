@@ -48,6 +48,7 @@ export interface GenericDataTableProps<T> {
   // Row configuration
   getRowId?: (item: T) => string;
   onRowClick?: (item: T) => void;
+  getRowClassName?: (item: T) => string;
   
   // Styling
   className?: string;
@@ -80,6 +81,7 @@ export function GenericDataTable<T>({
   emptyAction,
   getRowId,
   onRowClick,
+  getRowClassName,
   className,
   bordered = true,
   sortBy,
@@ -327,10 +329,11 @@ export function GenericDataTable<T>({
             ) : (
               data.map((item, index) => {
                 const rowId = getRowId ? getRowId(item) : index.toString();
+                const customRowClassName = getRowClassName?.(item) || "";
                 return (
                   <TableRow 
                     key={rowId}
-                    className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
+                    className={`${onRowClick ? "cursor-pointer hover:bg-muted/50" : ""} ${customRowClassName}`}
                     onClick={() => onRowClick?.(item)}
                   >
                     {columns.map((column) => (

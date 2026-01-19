@@ -15,12 +15,14 @@ import type { StatCardData, ColumnDef, ActionItem } from '@/components/common';
 
 import CustomerLink from "@/components/admin/CustomerLink";
 import OrderLink from "@/components/admin/OrderLink";
+import { OrderTypeIndicators } from "@/components/admin/orders/OrderTypeIndicators";
 import { AdjustOrderModal } from "@/components/admin/orders/AdjustOrderModal";
 import { VoidOrderDialog } from "@/components/admin/orders/VoidOrderDialog";
 import { RefundOrderDialog } from "@/components/admin/orders/RefundOrderDialog";
 import { PrintMealLabelsDialog } from "@/components/admin/orders/PrintMealLabelsDialog";
 import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
 import { useAdminReorder } from "@/hooks/useAdminReorder";
+import { cn } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -37,6 +39,12 @@ interface Order {
   packages?: {
     name: string;
   };
+  // Special order indicators
+  stripe_payment_intent_id?: string | null;
+  voided_at?: string | null;
+  last_modified_by?: string | null;
+  isManual?: boolean;
+  isAdjusted?: boolean;
 }
 
 interface OrderFilters {
@@ -114,15 +122,46 @@ const AllOrders: React.FC = () => {
 
       if (packageError) throw packageError;
 
-      // Combine and format orders
+      // Fetch audit log to identify manual and adjusted orders
+      const allOrderIds = [
+        ...(regularOrders || []).map(o => o.id),
+        ...(packageOrders || []).map(o => o.id)
+      ];
+
+      const { data: auditLogs, error: auditError } = await supabase
+        .from('order_audit_log')
+        .select('order_id, action_type')
+        .in('order_id', allOrderIds);
+
+      if (auditError) {
+        console.warn('Could not fetch audit logs:', auditError);
+      }
+
+      // Create lookup maps for audit info
+      const manualOrderIds = new Set(
+        (auditLogs || [])
+          .filter(log => log.action_type === 'admin_create')
+          .map(log => log.order_id)
+      );
+      const adjustedOrderIds = new Set(
+        (auditLogs || [])
+          .filter(log => log.action_type === 'adjust')
+          .map(log => log.order_id)
+      );
+
+      // Combine and format orders with special indicators
       const formattedRegularOrders: Order[] = (regularOrders || []).map(order => ({
         ...order,
-        type: 'individual' as const
+        type: 'individual' as const,
+        isManual: manualOrderIds.has(order.id),
+        isAdjusted: adjustedOrderIds.has(order.id) || !!order.last_modified_by
       }));
 
       const formattedPackageOrders: Order[] = (packageOrders || []).map(order => ({
         ...order,
-        type: 'package' as const
+        type: 'package' as const,
+        isManual: manualOrderIds.has(order.id),
+        isAdjusted: adjustedOrderIds.has(order.id) || !!order.last_modified_by
       }));
 
       const allOrders = [...formattedRegularOrders, ...formattedPackageOrders];
@@ -234,13 +273,21 @@ const AllOrders: React.FC = () => {
       key: 'status',
       header: 'Status',
       accessor: (order) => (
-        <Badge variant={
-          order.status === 'delivered' ? 'default' :
-          order.status === 'pending' ? 'secondary' :
-          order.status === 'cancelled' ? 'destructive' : 'outline'
-        }>
-          {order.status}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={
+            order.status === 'delivered' ? 'default' :
+            order.status === 'pending' ? 'secondary' :
+            order.status === 'cancelled' ? 'destructive' : 'outline'
+          }>
+            {order.status}
+          </Badge>
+          <OrderTypeIndicators
+            isManual={order.isManual}
+            isCash={!order.stripe_payment_intent_id && !order.isManual}
+            isAdjusted={order.isAdjusted}
+            isVoided={!!order.voided_at}
+          />
+        </div>
       )
     },
     {
@@ -425,6 +472,7 @@ const AllOrders: React.FC = () => {
         loading={loading}
         getRowId={(order) => order.id}
         onRowClick={(order) => navigate(`/orders/${order.id}`)}
+        getRowClassName={(order) => order.voided_at ? "opacity-50" : ""}
         emptyMessage="No orders found"
         emptyDescription="Orders will appear here once customers start placing them"
       />
