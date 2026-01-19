@@ -304,6 +304,7 @@ const PackageSelectionDialog = ({ open, onOpenChange, pkg }: Props) => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 h-12 text-base"
+            autoFocus={false}
           />
         </div>
 
