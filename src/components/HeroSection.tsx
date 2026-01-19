@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Flame, Clock, Users, Award } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalizedResults from "./PersonalizedResults";
+import aboutKitchenTeam from "@/assets/about-kitchen-team.jpg";
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const [showResults, setShowResults] = useState(false);
@@ -38,7 +40,7 @@ const HeroSection = () => {
         />
         {/* Desktop/Tablet Hero Image */}
         <img 
-          src="/src/assets/about-kitchen-team.jpg" 
+          src={aboutKitchenTeam} 
           alt="Premium meal prep kitchen" 
           className="hidden md:block w-full h-full object-cover opacity-40" 
         />
