@@ -64,7 +64,7 @@ const Header = () => {
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link to="/orders" className="text-gray-700 hover:text-green-600 font-medium px-3 py-2">
-                    MY ORDERS
+                    ORDERS
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -72,7 +72,7 @@ const Header = () => {
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link to="/subscriptions" className="text-gray-700 hover:text-green-600 font-medium px-3 py-2">
-                    MY SUBSCRIPTIONS
+                    SUBSCRIPTIONS
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -111,7 +111,7 @@ const Header = () => {
                     <DropdownMenuItem asChild>
                       <Link to="/orders" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
-                        My Orders
+                        Orders
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -213,7 +213,7 @@ const Header = () => {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <Calendar className="h-4 w-4" />
-                      <span>My Subscriptions</span>
+                      <span>Subscriptions</span>
                     </Link>
                   </div>
 
@@ -235,7 +235,7 @@ const Header = () => {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <User className="h-4 w-4" />
-                        <span>My Orders</span>
+                        <span>Orders</span>
                       </Link>
                       <Link 
                         to="/account" 
