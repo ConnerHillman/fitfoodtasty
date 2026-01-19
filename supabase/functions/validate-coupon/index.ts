@@ -6,6 +6,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Input validation helpers
+function sanitizeString(input: unknown, maxLength: number = 100): string | null {
+  if (typeof input !== 'string') return null;
+  // Trim and truncate to max length
+  const sanitized = input.trim().slice(0, maxLength);
+  // Remove potentially dangerous characters for display
+  return sanitized.replace(/[<>]/g, '');
+}
+
+function validatePositiveNumber(input: unknown): number | null {
+  if (typeof input === 'number' && !isNaN(input) && isFinite(input) && input >= 0) {
+    return input;
+  }
+  if (typeof input === 'string') {
+    const parsed = parseFloat(input);
+    if (!isNaN(parsed) && isFinite(parsed) && parsed >= 0) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -15,17 +37,36 @@ serve(async (req) => {
   try {
     console.log("validate-coupon function called");
 
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // Parse request body with error handling
+    let requestBody: unknown;
+    try {
+      requestBody = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Invalid request body" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
 
-    // Get the coupon code and cart total from request body
-    const { code, cart_total } = await req.json();
+    if (typeof requestBody !== 'object' || requestBody === null) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Invalid request format" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    const body = requestBody as Record<string, unknown>;
     
-    if (!code) {
-      console.log("No coupon code provided");
+    // Validate and sanitize coupon code
+    const code = sanitizeString(body.code, 50);
+    if (!code || code.length === 0) {
+      console.log("No valid coupon code provided");
       return new Response(
         JSON.stringify({ valid: false, error: "Coupon code is required" }),
         {
@@ -35,13 +76,22 @@ serve(async (req) => {
       );
     }
 
+    // Validate cart_total if provided
+    const cart_total = validatePositiveNumber(body.cart_total) ?? 0;
+
     console.log(`Validating coupon code: ${code}`);
+
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
     // Query the coupons table for an active coupon with the provided code
     const { data: coupon, error } = await supabaseClient
       .from("coupons")
       .select("*")
-      .eq("code", code)
+      .eq("code", code.toUpperCase())
       .eq("active", true)
       .maybeSingle();
 

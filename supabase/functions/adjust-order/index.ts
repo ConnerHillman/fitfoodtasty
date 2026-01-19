@@ -7,12 +7,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Input validation helpers
+function sanitizeString(input: unknown, maxLength: number = 255): string {
+  if (typeof input !== 'string') return '';
+  return input.trim().slice(0, maxLength).replace(/[<>]/g, '');
+}
+
+function validateUUID(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(input) ? input : null;
+}
+
+function validatePositiveNumber(input: unknown): number {
+  if (typeof input === 'number' && !isNaN(input) && isFinite(input) && input >= 0) {
+    return input;
+  }
+  return 0;
+}
+
+function validateInteger(input: unknown, min: number = 1, max: number = 1000): number {
+  if (typeof input === 'number' && Number.isInteger(input) && input >= min && input <= max) {
+    return input;
+  }
+  return min;
+}
+
 interface MealModification {
   action: 'add' | 'remove' | 'update_quantity' | 'replace';
   mealId: string;
   quantity?: number;
   replacementMealId?: string;
-  itemId?: string; // For existing items
+  itemId?: string;
 }
 
 interface AdjustOrderRequest {
@@ -22,7 +48,27 @@ interface AdjustOrderRequest {
   amount?: number;
   reason: string;
   mealModifications?: MealModification[];
-  newDeliveryDate?: string; // ISO date string
+  newDeliveryDate?: string;
+}
+
+function validateMealModifications(modifications: unknown): MealModification[] {
+  if (!Array.isArray(modifications)) return [];
+  
+  // Limit to 50 modifications max
+  return modifications.slice(0, 50)
+    .filter((mod): mod is Record<string, unknown> => 
+      typeof mod === 'object' && mod !== null
+    )
+    .map(mod => ({
+      action: ['add', 'remove', 'update_quantity', 'replace'].includes(mod.action as string) 
+        ? mod.action as MealModification['action'] 
+        : 'add',
+      mealId: validateUUID(mod.mealId) || '',
+      quantity: validateInteger(mod.quantity, 1, 100),
+      replacementMealId: validateUUID(mod.replacementMealId) || undefined,
+      itemId: validateUUID(mod.itemId) || undefined,
+    }))
+    .filter(mod => mod.mealId || mod.itemId);
 }
 
 serve(async (req) => {
@@ -38,7 +84,10 @@ serve(async (req) => {
     );
 
     // Authenticate user
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header");
+    }
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
@@ -57,7 +106,28 @@ serve(async (req) => {
       throw new Error("Admin access required");
     }
 
-    const { orderId, orderType, adjustmentType, amount, reason, mealModifications, newDeliveryDate }: AdjustOrderRequest = await req.json();
+    // Parse and validate request body
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      throw new Error("Invalid request body");
+    }
+
+    // Validate and sanitize all inputs
+    const orderId = validateUUID(body.orderId);
+    if (!orderId) {
+      throw new Error("Invalid order ID");
+    }
+
+    const orderType = body.orderType === 'package' ? 'package' : 'individual';
+    const adjustmentType = ['discount', 'refund', 'fee'].includes(body.adjustmentType as string)
+      ? body.adjustmentType as 'discount' | 'refund' | 'fee'
+      : undefined;
+    const amount = validatePositiveNumber(body.amount);
+    const reason = sanitizeString(body.reason, 500);
+    const mealModifications = validateMealModifications(body.mealModifications);
+    const newDeliveryDate = sanitizeString(body.newDeliveryDate, 20);
 
     // Get the order with items
     const tableName = orderType === 'package' ? 'package_orders' : 'orders';
