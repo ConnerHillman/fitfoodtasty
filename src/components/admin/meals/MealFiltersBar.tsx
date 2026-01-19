@@ -66,20 +66,28 @@ export function MealFiltersBar({
             </SelectContent>
           </Select>
 
-          <div className="flex border rounded-md">
+          <div className="inline-flex rounded-lg bg-muted p-1">
             <Button
-              variant={filters.viewMode === 'list' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onFiltersChange({ viewMode: 'list' })}
-              className="rounded-r-none"
+              className={`px-3 h-8 rounded-md transition-all ${
+                filters.viewMode === 'list' 
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+              }`}
             >
               <List className="h-4 w-4" />
             </Button>
             <Button
-              variant={filters.viewMode === 'grid' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onFiltersChange({ viewMode: 'grid' })}
-              className="rounded-l-none"
+              className={`px-3 h-8 rounded-md transition-all ${
+                filters.viewMode === 'grid' 
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+              }`}
             >
               <Grid className="h-4 w-4" />
             </Button>
