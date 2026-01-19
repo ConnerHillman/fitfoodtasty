@@ -21,6 +21,7 @@ import CouponSection from "@/components/cart/CouponSection";
 import PaymentSection from "@/components/cart/PaymentSection";
 import CartItemCard from "@/components/cart/CartItemCard";
 import SubscriptionToggle from "@/components/cart/SubscriptionToggle";
+import CustomerNotes from "@/components/cart/CustomerNotes";
 import { AdminOrderEnhancements } from "@/components/cart/AdminOrderEnhancements";
 
 const Cart = () => {
@@ -482,6 +483,12 @@ const Cart = () => {
           <SubscriptionToggle
             isSubscription={isSubscription}
             onToggle={setIsSubscription}
+          />
+
+          {/* Customer Order Notes */}
+          <CustomerNotes
+            value={orderNotes}
+            onChange={setOrderNotes}
           />
 
           {/* Coupons & Gift Cards */}
