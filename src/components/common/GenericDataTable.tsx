@@ -1,10 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ReactNode } from "react";
-import { LucideIcon, MoreHorizontal, ChevronDown } from "lucide-react";
+import { LucideIcon, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 export interface ColumnDef<T> {
   key: string;
@@ -54,6 +53,11 @@ export interface GenericDataTableProps<T> {
   className?: string;
   bordered?: boolean;
   
+  // Sorting
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  onSort?: (key: string) => void;
+  
   // Pagination (to be implemented with the table)
   pagination?: {
     current: number;
@@ -77,8 +81,35 @@ export function GenericDataTable<T>({
   getRowId,
   onRowClick,
   className,
-  bordered = true
+  bordered = true,
+  sortBy,
+  sortOrder,
+  onSort
 }: GenericDataTableProps<T>) {
+  
+  const renderSortIcon = (columnKey: string) => {
+    if (sortBy !== columnKey) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+    }
+    return sortOrder === 'asc' 
+      ? <ArrowUp className="h-4 w-4 ml-1" />
+      : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
+  const renderColumnHeader = (column: ColumnDef<T>) => {
+    if (column.sortable && onSort) {
+      return (
+        <button
+          className="flex items-center hover:text-foreground transition-colors font-medium"
+          onClick={() => onSort(column.key)}
+        >
+          {column.header}
+          {renderSortIcon(column.key)}
+        </button>
+      );
+    }
+    return column.header;
+  };
   
   const TableWrapper = title || description ? Card : 'div';
   const TableContainer = title || description ? CardContent : 'div';
@@ -219,10 +250,10 @@ export function GenericDataTable<T>({
           <Table>
             <TableHeader>
               <TableRow>
-                {columns.map((column) => (
-                  <TableHead key={column.key} className={column.className} style={{ width: column.width }}>
-                    {column.header}
-                  </TableHead>
+              {columns.map((column) => (
+                <TableHead key={column.key} className={column.className} style={{ width: column.width }}>
+                  {renderColumnHeader(column)}
+                </TableHead>
                 ))}
                 {actions && actions.length > 0 && (
                   <TableHead className="w-[100px]">Actions</TableHead>
@@ -265,7 +296,7 @@ export function GenericDataTable<T>({
             <TableRow>
               {columns.map((column) => (
                 <TableHead key={column.key} className={column.className} style={{ width: column.width }}>
-                  {column.header}
+                  {renderColumnHeader(column)}
                 </TableHead>
               ))}
               {actions && actions.length > 0 && (
