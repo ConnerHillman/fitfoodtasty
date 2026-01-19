@@ -59,7 +59,24 @@ serve(async (req) => {
         break;
       
       case "payment_intent.payment_failed":
-        console.log("Payment failed:", event.data.object.id);
+        const failedPayment = event.data.object as Stripe.PaymentIntent;
+        console.log("Payment failed:", failedPayment.id);
+        
+        // Send admin notification for failed payment
+        try {
+          await supabaseClient.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'payment_failed',
+              paymentIntentId: failedPayment.id,
+              customerEmail: failedPayment.metadata?.customer_email || failedPayment.receipt_email || 'Unknown',
+              amount: failedPayment.amount,
+              failureReason: failedPayment.last_payment_error?.message || 'Unknown error'
+            }
+          });
+          console.log("Admin notification sent for failed payment:", failedPayment.id);
+        } catch (notifyError) {
+          console.error("Failed to send admin notification for payment failure:", notifyError);
+        }
         break;
       
       default:

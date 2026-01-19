@@ -90,6 +90,23 @@ serve(async (req) => {
 
           if (subscriptionError) {
             console.error("Error creating user subscription:", subscriptionError);
+          } else {
+            // Send admin notification for new subscription
+            try {
+              await supabaseClient.functions.invoke('send-admin-notification', {
+                body: {
+                  type: 'subscription_started',
+                  subscriptionId: subscription.id,
+                  customerName: customer.name || user.user_metadata?.full_name || '',
+                  customerEmail: customer.email || user.email || '',
+                  planName: session.metadata?.plan_name || 'Weekly Subscription',
+                  deliveryDate: session.metadata?.requested_delivery_date || null
+                }
+              });
+              console.log("Admin notification sent for new subscription:", subscription.id);
+            } catch (notifyError) {
+              console.error("Failed to send admin notification for new subscription:", notifyError);
+            }
           }
 
           console.log("Subscription created successfully for user:", user.id);
@@ -148,6 +165,19 @@ serve(async (req) => {
         
         console.log("Processing subscription cancellation");
         
+        // Get customer info for notification
+        let customerEmail = '';
+        let customerName = '';
+        try {
+          const customer = await stripe.customers.retrieve(subscription.customer as string);
+          if (typeof customer !== "string" && !customer.deleted) {
+            customerEmail = customer.email || '';
+            customerName = customer.name || '';
+          }
+        } catch (err) {
+          console.error("Error fetching customer for cancellation notification:", err);
+        }
+        
         const { error: cancelError } = await supabaseClient
           .from("user_subscriptions")
           .update({
@@ -159,6 +189,22 @@ serve(async (req) => {
 
         if (cancelError) {
           console.error("Error cancelling subscription:", cancelError);
+        }
+        
+        // Send admin notification for cancelled subscription
+        try {
+          await supabaseClient.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'subscription_cancelled',
+              subscriptionId: subscription.id,
+              customerName: customerName,
+              customerEmail: customerEmail,
+              cancellationReason: subscription.cancellation_details?.reason || null
+            }
+          });
+          console.log("Admin notification sent for cancelled subscription:", subscription.id);
+        } catch (notifyError) {
+          console.error("Failed to send admin notification for subscription cancellation:", notifyError);
         }
         break;
       }

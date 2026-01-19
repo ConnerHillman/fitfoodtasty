@@ -213,6 +213,29 @@ serve(async (req) => {
         // Don't fail the order if email fails
       }
 
+      // Send admin notification for new order
+      try {
+        await supabaseClient.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'new_order',
+            orderId: packageOrderData.id,
+            orderNumber: packageOrderData.id.substring(0, 8).toUpperCase(),
+            customerName: packageOrderData.customer_name || metadata.customer_name || '',
+            customerEmail: packageOrderData.customer_email || user.email || '',
+            totalAmount: finalAmount / 100,
+            itemCount: Object.values(packageItem.packageData.selectedMeals).reduce((sum: number, qty: any) => sum + qty, 0),
+            deliveryDate: packageOrderData.requested_delivery_date,
+            deliveryAddress: packageOrderData.delivery_address,
+            orderNotes: packageOrderData.order_notes,
+            orderType: 'package'
+          }
+        });
+        console.log('Admin notification sent for package order:', packageOrderData.id);
+      } catch (notifyError) {
+        console.error('Failed to send admin notification:', notifyError);
+        // Don't fail the order if notification fails
+      }
+
     } else {
       // Handle regular order creation
       // Normalize empty strings to null for date fields
@@ -348,6 +371,29 @@ serve(async (req) => {
       } catch (emailError) {
         console.error('Failed to trigger order confirmation email:', emailError);
         // Don't fail the order if email fails
+      }
+
+      // Send admin notification for new order
+      try {
+        await supabaseClient.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'new_order',
+            orderId: orderData.id,
+            orderNumber: orderData.id.substring(0, 8).toUpperCase(),
+            customerName: orderData.customer_name || metadata.customer_name || '',
+            customerEmail: orderData.customer_email || user.email || '',
+            totalAmount: finalAmount / 100,
+            itemCount: items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+            deliveryDate: orderData.requested_delivery_date,
+            deliveryAddress: orderData.delivery_address,
+            orderNotes: orderData.order_notes,
+            orderType: 'individual'
+          }
+        });
+        console.log('Admin notification sent for order:', orderData.id);
+      } catch (notifyError) {
+        console.error('Failed to send admin notification:', notifyError);
+        // Don't fail the order if notification fails
       }
     }
 
