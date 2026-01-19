@@ -440,8 +440,8 @@ const Cart = () => {
               onChargeCardConfirm={async (paymentMethodId: string, stripeCustomerId: string) => {
                 await adminOrder.chargeCardOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, paymentMethodId, stripeCustomerId, sendEmail);
               }}
-              onNewCardConfirm={async () => {
-                await adminOrder.createNewCardOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
+              onNewCardPaymentSuccess={async (paymentIntentId: string) => {
+                await adminOrder.completeNewCardOrder(paymentIntentId, orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
               }}
               totalAmount={adminOrder.calculateTotalWithOverrides()}
               finalTotal={adminOrder.calculateUnifiedTotal(fees)}
@@ -451,6 +451,11 @@ const Cart = () => {
               deliveryFees={fees}
               sendEmail={sendEmail}
               onSendEmailChange={setSendEmail}
+              adminPaymentIntent={adminOrder.adminPaymentIntent}
+              saveCardToFile={adminOrder.saveCardToFile}
+              onSaveCardChange={adminOrder.setSaveCardToFile}
+              onPrepareNewCardPayment={adminOrder.createAdminPaymentIntent}
+              onClearPaymentIntent={adminOrder.clearAdminPaymentIntent}
             />
           )}
 

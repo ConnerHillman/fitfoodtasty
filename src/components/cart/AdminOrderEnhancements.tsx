@@ -12,6 +12,7 @@ import { useCart } from '@/contexts/CartContext';
 import { calculateAdminTotals } from '@/lib/adminPriceCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import { Shield, User, Edit3, DollarSign, Calendar, MapPin, RotateCcw, CreditCard, Link2, Banknote, Loader2 } from 'lucide-react';
+import { AdminInlinePaymentForm } from './AdminInlinePaymentForm';
 
 interface PaymentMethod {
   id: string;
@@ -30,7 +31,7 @@ interface AdminOrderEnhancementsProps {
   onCashOrderConfirm: () => Promise<any>;
   onPaymentLinkConfirm?: (openImmediately?: boolean) => Promise<any>;
   onChargeCardConfirm?: (paymentMethodId: string, stripeCustomerId: string) => Promise<any>;
-  onNewCardConfirm?: () => Promise<any>;
+  onNewCardPaymentSuccess?: (paymentIntentId: string) => Promise<any>;
   totalAmount: number;
   finalTotal: number;
   loading?: boolean;
@@ -41,6 +42,16 @@ interface AdminOrderEnhancementsProps {
   onTotalOverride?: (total: number | null) => void;
   sendEmail?: boolean;
   onSendEmailChange?: (sendEmail: boolean) => void;
+  // New card inline payment props
+  adminPaymentIntent?: {
+    clientSecret: string;
+    paymentIntentId: string;
+    stripeCustomerId: string;
+  } | null;
+  saveCardToFile?: boolean;
+  onSaveCardChange?: (save: boolean) => void;
+  onPrepareNewCardPayment?: (amountInPence: number, saveCard: boolean) => Promise<any>;
+  onClearPaymentIntent?: () => void;
 }
 
 export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
@@ -50,7 +61,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   onCashOrderConfirm,
   onPaymentLinkConfirm,
   onChargeCardConfirm,
-  onNewCardConfirm,
+  onNewCardPaymentSuccess,
   totalAmount,
   finalTotal,
   loading = false,
@@ -61,6 +72,12 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   onTotalOverride,
   sendEmail = true,
   onSendEmailChange,
+  // New card inline payment props
+  adminPaymentIntent,
+  saveCardToFile = true,
+  onSaveCardChange,
+  onPrepareNewCardPayment,
+  onClearPaymentIntent,
 }) => {
   const { adminOrderData, items } = useCart();
   const [priceEdits, setPriceEdits] = useState<Record<string, number>>({});
@@ -74,6 +91,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   const [stripeCustomerId, setStripeCustomerId] = useState<string>('');
   const [loadingCards, setLoadingCards] = useState(false);
   const [hasStripeCustomer, setHasStripeCustomer] = useState(false);
+  const [preparingPayment, setPreparingPayment] = useState(false);
   
   // Calculate totals using the unified system
   const adminCalculation = calculateAdminTotals(items, priceOverrides);
@@ -82,6 +100,21 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   const subtotal = adminCalculation?.subtotal ?? 0;
   const calculatedTotal = subtotal + (deliveryFees ?? 0);
   const displayTotal = (totalOverride !== null && totalOverride !== undefined) ? totalOverride : calculatedTotal;
+  const totalInPence = Math.round(displayTotal * 100);
+
+  // Prepare payment intent when switching to new_card
+  useEffect(() => {
+    if (paymentMethod === 'new_card' && !adminPaymentIntent && onPrepareNewCardPayment && items.length > 0) {
+      setPreparingPayment(true);
+      onPrepareNewCardPayment(totalInPence, saveCardToFile)
+        .finally(() => setPreparingPayment(false));
+    }
+    
+    // Clear payment intent when switching away from new_card
+    if (paymentMethod !== 'new_card' && adminPaymentIntent && onClearPaymentIntent) {
+      onClearPaymentIntent();
+    }
+  }, [paymentMethod, adminPaymentIntent, onPrepareNewCardPayment, onClearPaymentIntent, totalInPence, saveCardToFile, items.length]);
 
   // Fetch saved payment methods when payment method changes to charge_card
   useEffect(() => {
@@ -128,9 +161,8 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
       return onPaymentLinkConfirm(false);
     } else if (paymentMethod === 'charge_card' && onChargeCardConfirm && selectedCardId && stripeCustomerId) {
       return onChargeCardConfirm(selectedCardId, stripeCustomerId);
-    } else if (paymentMethod === 'new_card' && onNewCardConfirm) {
-      return onNewCardConfirm();
     }
+    // new_card is handled by the inline form, not this button
   };
 
   const getButtonText = () => {
@@ -142,8 +174,6 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
         return 'Create Order & Send Payment Link';
       case 'charge_card':
         return 'Create Order & Charge Card';
-      case 'new_card':
-        return 'Create Order & Enter Card Details';
       default:
         return 'Complete Order';
     }
@@ -350,13 +380,42 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
             {paymentMethod === 'payment_link' && (
               <p>Creates order and sends a payment link to the customer's email. Order status will be "pending_payment" until paid.</p>
             )}
-            {paymentMethod === 'new_card' && (
-              <p>Opens Stripe Checkout to enter new card details. You can complete this with the customer present or share the link.</p>
+            {paymentMethod === 'new_card' && !adminPaymentIntent && (
+              <p>Enter new card details to charge immediately. Optionally save the card for future orders.</p>
             )}
             {paymentMethod === 'charge_card' && (
               <p>Charge the customer's saved card immediately. Order will be confirmed instantly.</p>
             )}
           </div>
+
+          {/* Inline Card Entry Form (shown when new_card is selected and payment intent is ready) */}
+          {paymentMethod === 'new_card' && (
+            <div className="space-y-2">
+              {preparingPayment ? (
+                <div className="flex items-center justify-center p-6 border border-border rounded-lg bg-muted/50">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Preparing payment form...</span>
+                </div>
+              ) : adminPaymentIntent?.clientSecret && onNewCardPaymentSuccess ? (
+                <AdminInlinePaymentForm
+                  clientSecret={adminPaymentIntent.clientSecret}
+                  totalAmount={totalInPence}
+                  onPaymentSuccess={onNewCardPaymentSuccess}
+                  saveCard={saveCardToFile}
+                  onSaveCardChange={onSaveCardChange || (() => {})}
+                  customerName={adminOrderData?.customerName}
+                  isLoading={loading}
+                />
+              ) : (
+                <Alert>
+                  <CreditCard className="h-4 w-4" />
+                  <AlertDescription>
+                    Unable to prepare payment form. Please try again or use a different payment method.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
 
           {/* Saved Cards Selection (only shown when charge_card is selected) */}
           {paymentMethod === 'charge_card' && (
@@ -430,15 +489,18 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
             </div>
           )}
 
-          <Button 
-            onClick={handleConfirmOrder}
-            disabled={isConfirmDisabled()}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-            size="lg"
-          >
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {getButtonText()}
-          </Button>
+          {/* Hide main button when new_card is selected - inline form has its own button */}
+          {paymentMethod !== 'new_card' && (
+            <Button 
+              onClick={handleConfirmOrder}
+              disabled={isConfirmDisabled()}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              size="lg"
+            >
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {getButtonText()}
+            </Button>
+          )}
         </CardContent>
       </Card>
 
