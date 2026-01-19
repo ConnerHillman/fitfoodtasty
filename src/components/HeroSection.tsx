@@ -85,7 +85,7 @@ const HeroSection = () => {
               {/* CTA - Mobile */}
               <div className="space-y-4 pt-2">
                 <Button size="lg" onClick={handleGetStarted} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
-                  ✨ Create Your Perfect Plan
+                  ✨ Start My Plan  
                 </Button>
                 
                 <div className="flex items-center justify-center space-x-3">
