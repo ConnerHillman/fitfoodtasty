@@ -291,7 +291,7 @@ const PackageSelect = () => {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-background pb-32 md:pb-8">
+      <div className="min-h-screen bg-background pb-32 md:pb-28">
         {/* Header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/40">
           <div className="container mx-auto px-4 py-4">
@@ -315,11 +315,14 @@ const PackageSelect = () => {
               </div>
             </div>
 
-            {/* Progress indicator - Desktop */}
+            {/* Progress indicator - Desktop (header version) */}
             <div className="hidden md:flex items-center justify-between gap-4">
               {/* Progress bar */}
               <div className="flex-1 max-w-md">
-                <div className="w-full bg-muted/60 rounded-full h-2.5 overflow-hidden">
+                <div className={`
+                  w-full bg-muted/60 rounded-full h-2.5 overflow-hidden transition-shadow duration-500
+                  ${isComplete ? 'shadow-[0_0_12px_2px_hsl(var(--primary)/0.4)]' : ''}
+                `}>
                   <div
                     className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${pkg ? Math.min((totalSelected / pkg.meal_count) * 100, 100) : 0}%` }}
@@ -334,23 +337,13 @@ const PackageSelect = () => {
                   <span className="text-muted-foreground"> / {pkg?.meal_count ?? 0} meals selected</span>
                 </div>
                 {isComplete ? (
-                  <div className="text-primary flex items-center gap-1.5 text-sm font-medium">
-                    <CheckCircle2 size={16} /> Ready to continue
+                  <div className="text-primary flex items-center gap-1.5 text-sm font-medium animate-fade-in">
+                    <CheckCircle2 size={16} className="animate-scale-in" /> Ready to continue
                   </div>
                 ) : (
                   <div className="text-muted-foreground text-sm">Pick {remaining} more</div>
                 )}
               </div>
-
-              {/* Desktop CTA button */}
-              <Button 
-                onClick={handleAddToCart} 
-                disabled={!isComplete}
-                className="flex items-center gap-2 h-10 min-w-[140px] touch-manipulation rounded-xl shadow-button"
-              >
-                <ShoppingCart size={16} />
-                Add to Cart
-              </Button>
             </div>
 
             {/* Search bar */}
@@ -550,13 +543,77 @@ const PackageSelect = () => {
           </div>
         </div>
 
+        {/* Desktop Sticky Bottom Bar - slides up when complete */}
+        <div className="hidden md:block fixed inset-x-0 bottom-0 z-50 pointer-events-none">
+          <div 
+            className={`
+              transform transition-all duration-500 ease-out
+              ${isComplete 
+                ? 'translate-y-0 opacity-100' 
+                : 'translate-y-full opacity-0'
+              }
+            `}
+          >
+            <div className="bg-gradient-to-t from-background via-background to-transparent pt-6 pb-6 pointer-events-auto">
+              <div className="container mx-auto px-4">
+                <div className="bg-card/98 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl p-5 max-w-2xl mx-auto">
+                  {/* Progress bar with glow */}
+                  <div className="w-full bg-muted/60 rounded-full h-2.5 mb-4 overflow-hidden shadow-[0_0_15px_3px_hsl(var(--primary)/0.3)]">
+                    <div
+                      className="bg-primary h-2.5 rounded-full w-full"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 animate-scale-in">
+                        <CheckCircle2 size={24} className="text-primary" />
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-foreground">
+                          All {pkg?.meal_count} meals selected!
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          You're ready to continue to checkout
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleAddToCart}
+                      size="lg"
+                      className="flex items-center gap-2.5 h-12 px-8 touch-manipulation text-base font-semibold rounded-xl shadow-button animate-subtle-pulse"
+                    >
+                      <ShoppingCart size={18} />
+                      Add to Cart
+                      {pkg && (
+                        <>
+                          <span className="h-4 w-px bg-primary-foreground/30" />
+                          <span className="tabular-nums">
+                            £{pkg.price.toFixed(2)}
+                          </span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Mobile Sticky Bottom Bar */}
         <div className="md:hidden fixed inset-x-0 bottom-0 z-50">
           <div className="pointer-events-none bg-gradient-to-t from-background via-background/95 to-transparent pt-4 pb-safe">
             <div className="mx-4 mb-4 pointer-events-auto">
-              <div className="bg-card/95 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl p-4">
+              <div className={`
+                bg-card/95 backdrop-blur-md border rounded-2xl shadow-xl p-4 transition-all duration-500
+                ${isComplete ? 'border-primary/30 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.4)]' : 'border-border/60'}
+              `}>
                 {/* Progress bar */}
-                <div className="w-full bg-muted/60 rounded-full h-2 mb-3 overflow-hidden">
+                <div className={`
+                  w-full bg-muted/60 rounded-full h-2 mb-3 overflow-hidden transition-shadow duration-500
+                  ${isComplete ? 'shadow-[0_0_10px_2px_hsl(var(--primary)/0.3)]' : ''}
+                `}>
                   <div
                     className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${pkg ? Math.min((totalSelected / pkg.meal_count) * 100, 100) : 0}%` }}
@@ -589,7 +646,11 @@ const PackageSelect = () => {
                   <Button
                     onClick={handleAddToCart}
                     disabled={!isComplete}
-                    className="flex items-center gap-2 h-11 min-w-[140px] touch-manipulation text-sm font-medium rounded-xl shadow-md"
+                    className={`
+                      flex items-center gap-2 h-11 min-w-[140px] touch-manipulation text-sm font-medium rounded-xl shadow-md
+                      transition-all duration-300
+                      ${isComplete ? 'animate-subtle-pulse' : ''}
+                    `}
                   >
                     <ShoppingCart size={16} />
                     Add to Cart
