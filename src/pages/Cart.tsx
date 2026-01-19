@@ -456,6 +456,7 @@ const Cart = () => {
               onSaveCardChange={adminOrder.setSaveCardToFile}
               onPrepareNewCardPayment={adminOrder.createAdminPaymentIntent}
               onClearPaymentIntent={adminOrder.clearAdminPaymentIntent}
+              hasSelectedDate={!!dateValidation.requestedDeliveryDate}
             />
           )}
 
