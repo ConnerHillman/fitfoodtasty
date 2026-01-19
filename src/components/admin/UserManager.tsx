@@ -16,7 +16,7 @@ import type { StatCardData, ColumnDef, ActionItem } from "@/components/common";
 interface User {
   id: string;
   email: string;
-  full_name: string;
+  full_name: string; // Display name (may be derived from first+last, email, etc.)
   created_at: string;
   roles: string[];
 }

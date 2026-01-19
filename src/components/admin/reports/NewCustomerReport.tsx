@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { Download, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getDisplayName } from '@/lib/displayName';
 
 interface NewCustomerReportProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface NewCustomerReportProps {
 
 interface NewCustomer {
   user_id: string;
-  full_name: string;
+  display_name: string;
   created_at: string;
   first_order_date: string | null;
   first_order_amount: number | null;
@@ -39,7 +40,7 @@ export function NewCustomerReport({ isOpen, onClose, dateRange }: NewCustomerRep
       // Fetch new profiles created in date range
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, created_at, postal_code')
+        .select('user_id, first_name, last_name, full_name, created_at, postal_code')
         .gte('created_at', format(dateRange.from, 'yyyy-MM-dd'))
         .lte('created_at', format(dateRange.to, 'yyyy-MM-dd'))
         .order('created_at', { ascending: false });
@@ -79,7 +80,7 @@ export function NewCustomerReport({ isOpen, onClose, dateRange }: NewCustomerRep
         const firstOrder = firstOrderMap.get(profile.user_id);
         return {
           user_id: profile.user_id,
-          full_name: profile.full_name || 'Unknown',
+          display_name: getDisplayName(profile, 'Unknown'),
           created_at: profile.created_at,
           first_order_date: firstOrder?.date || null,
           first_order_amount: firstOrder?.amount || null,
@@ -103,7 +104,7 @@ export function NewCustomerReport({ isOpen, onClose, dateRange }: NewCustomerRep
   const downloadCSV = () => {
     const headers = ['Customer Name', 'Signup Date', 'Postal Code', 'First Order Date', 'First Order Amount'];
     const rows = newCustomers.map(customer => [
-      customer.full_name,
+      customer.display_name,
       format(new Date(customer.created_at), 'PPP'),
       customer.postal_code,
       customer.first_order_date ? format(new Date(customer.first_order_date), 'PPP') : 'No order yet',
@@ -181,7 +182,7 @@ export function NewCustomerReport({ isOpen, onClose, dateRange }: NewCustomerRep
                 ) : (
                   newCustomers.map((customer) => (
                     <TableRow key={customer.user_id}>
-                      <TableCell className="font-medium">{customer.full_name}</TableCell>
+                      <TableCell className="font-medium">{customer.display_name}</TableCell>
                       <TableCell>{format(new Date(customer.created_at), 'PPP')}</TableCell>
                       <TableCell>{customer.postal_code}</TableCell>
                       <TableCell>

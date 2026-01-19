@@ -52,12 +52,16 @@ const GiftCards = () => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('first_name, last_name, full_name')
         .eq('user_id', user.id)
         .single();
       
-      if (profile?.full_name) {
-        setPurchaserName(profile.full_name);
+      if (profile) {
+        const { getDisplayName } = await import('@/lib/displayName');
+        const displayName = getDisplayName(profile);
+        if (displayName && displayName !== 'Customer') {
+          setPurchaserName(displayName);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);

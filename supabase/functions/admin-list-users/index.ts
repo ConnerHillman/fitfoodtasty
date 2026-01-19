@@ -97,6 +97,27 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Helper function to get display name safely
+    const getDisplayName = (metadata: any, email: string): string => {
+      const firstName = metadata?.first_name?.trim() || metadata?.given_name?.trim() || '';
+      const lastName = metadata?.last_name?.trim() || metadata?.family_name?.trim() || '';
+      
+      if (firstName || lastName) {
+        return [firstName, lastName].filter(Boolean).join(' ');
+      }
+      
+      if (metadata?.full_name?.trim()) {
+        return metadata.full_name.trim();
+      }
+      
+      if (metadata?.name?.trim()) {
+        return metadata.name.trim();
+      }
+      
+      // Fallback to email prefix
+      return email?.split('@')[0] || 'Unknown';
+    };
+
     // Combine users with their roles
     const usersWithRoles = authData.users.map((user) => {
       const userRoles = allRoles
@@ -106,7 +127,7 @@ Deno.serve(async (req) => {
       return {
         id: user.id,
         email: user.email || "",
-        full_name: user.user_metadata?.full_name || user.email || "",
+        full_name: getDisplayName(user.user_metadata, user.email || ""),
         created_at: user.created_at,
         roles: userRoles,
       };

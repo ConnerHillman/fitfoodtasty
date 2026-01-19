@@ -71,7 +71,6 @@ export function getUserLastName(user: User | null): string | undefined {
 export function getUserFullName(user: User | null): string {
   const metadata = getUserMetadata(user);
   return getDisplayName(metadata.first_name, metadata.last_name, metadata.full_name);
-  return getUserMetadata(user).full_name;
 }
 
 /**
