@@ -45,6 +45,8 @@ interface Order {
   last_modified_by?: string | null;
   isManual?: boolean;
   isAdjusted?: boolean;
+  // Customer postcode
+  postcode?: string | null;
 }
 
 interface OrderFilters {
@@ -128,23 +130,38 @@ const AllOrders: React.FC = () => {
         ...(packageOrders || []).map(o => o.id)
       ];
 
-      const { data: auditLogs, error: auditError } = await supabase
-        .from('order_audit_log')
-        .select('order_id, action_type')
-        .in('order_id', allOrderIds);
+      // Fetch profiles for postcodes
+      const allUserIds = [
+        ...(regularOrders || []).map(o => o.user_id),
+        ...(packageOrders || []).map(o => o.user_id)
+      ].filter(Boolean);
 
-      if (auditError) {
-        console.warn('Could not fetch audit logs:', auditError);
+      const [auditResult, profilesResult] = await Promise.all([
+        supabase
+          .from('order_audit_log')
+          .select('order_id, action_type')
+          .in('order_id', allOrderIds),
+        supabase
+          .from('profiles')
+          .select('user_id, postal_code')
+          .in('user_id', allUserIds)
+      ]);
+
+      if (auditResult.error) {
+        console.warn('Could not fetch audit logs:', auditResult.error);
       }
 
-      // Create lookup maps for audit info
+      // Create lookup maps
+      const postcodeByUserId = new Map(
+        (profilesResult.data || []).map(p => [p.user_id, p.postal_code])
+      );
       const manualOrderIds = new Set(
-        (auditLogs || [])
+        (auditResult.data || [])
           .filter(log => log.action_type === 'admin_create')
           .map(log => log.order_id)
       );
       const adjustedOrderIds = new Set(
-        (auditLogs || [])
+        (auditResult.data || [])
           .filter(log => log.action_type === 'adjust')
           .map(log => log.order_id)
       );
@@ -154,14 +171,16 @@ const AllOrders: React.FC = () => {
         ...order,
         type: 'individual' as const,
         isManual: manualOrderIds.has(order.id),
-              isAdjusted: adjustedOrderIds.has(order.id)
+        isAdjusted: adjustedOrderIds.has(order.id),
+        postcode: postcodeByUserId.get(order.user_id) || null
       }));
 
       const formattedPackageOrders: Order[] = (packageOrders || []).map(order => ({
         ...order,
         type: 'package' as const,
         isManual: manualOrderIds.has(order.id),
-        isAdjusted: adjustedOrderIds.has(order.id)
+        isAdjusted: adjustedOrderIds.has(order.id),
+        postcode: postcodeByUserId.get(order.user_id) || null
       }));
 
       const allOrders = [...formattedRegularOrders, ...formattedPackageOrders];
@@ -261,6 +280,13 @@ const AllOrders: React.FC = () => {
           />
           <div className="text-xs text-muted-foreground">{order.customer_email}</div>
         </div>
+      )
+    },
+    {
+      key: 'postcode',
+      header: 'Postcode',
+      accessor: (order) => (
+        <span className="text-sm">{order.postcode || '—'}</span>
       )
     },
     {
