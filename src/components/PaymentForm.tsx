@@ -213,23 +213,6 @@ export default function PaymentForm({
         </CardContent>
       </Card>
 
-      {/* Order Notes Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-800">
-            Order Notes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="Type Order Notes here."
-            value={orderNotes}
-            onChange={(e) => handleOrderNotesChange(e.target.value)}
-            className="min-h-[100px] resize-none"
-          />
-        </CardContent>
-      </Card>
-
       {/* Total and Checkout */}
       <Card>
         <CardContent className="p-6">
