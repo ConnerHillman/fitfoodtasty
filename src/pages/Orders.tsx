@@ -74,11 +74,17 @@ interface PackageOrder {
   package_meal_selections: PackageOrderItem[];
 }
 
-// Helper function to determine if address is a collection point
-const isCollectionPoint = (address?: string): boolean => {
-  if (!address) return false;
-  const collectionKeywords = ['fit food tasty', 'collection point', 'pickup', 'collect from'];
-  return collectionKeywords.some(keyword => address.toLowerCase().includes(keyword));
+// Helper function to determine if order is collection
+// Uses explicit fulfillment_method field, with legacy fallback
+const isCollectionOrder = (order: { fulfillment_method?: string; delivery_address?: string }): boolean => {
+  // Use explicit field if available
+  if (order.fulfillment_method === 'collection') return true;
+  if (order.fulfillment_method === 'delivery') return false;
+  
+  // Legacy fallback for old orders without the field
+  if (!order.delivery_address) return false;
+  const collectionKeywords = ['collection point', 'pickup', 'collect from'];
+  return collectionKeywords.some(keyword => order.delivery_address!.toLowerCase().includes(keyword));
 };
 
 // Helper function to calculate original subtotal from items
@@ -486,7 +492,7 @@ const Orders = () => {
         {/* Package Orders */}
         {packageOrders.map((order) => {
           const mealCount = order.packages?.meal_count || order.package_meal_selections?.reduce((sum, sel) => sum + sel.quantity, 0) || 0;
-          const isCollection = isCollectionPoint(order.delivery_address);
+          const isCollection = isCollectionOrder(order);
           
           return (
             <Collapsible key={`package-${order.id}`}>
@@ -645,7 +651,7 @@ const Orders = () => {
           const originalSubtotal = calculateOriginalSubtotal(order);
           const discountAmount = originalSubtotal - order.total_amount;
           const hasDiscount = discountAmount > 0 && order.coupon_type;
-          const isCollection = isCollectionPoint(order.delivery_address);
+          const isCollection = isCollectionOrder(order);
           
           return (
             <Collapsible key={order.id}>

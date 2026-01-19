@@ -268,56 +268,68 @@ serve(async (req) => {
       `${item.meal_name} x ${item.quantity} - £${(item.total_price || 0).toFixed(2)}`
     ).join('\n');
 
-    // Fetch all active collection points to match against delivery address
-    const { data: collectionPoints } = await supabase
-      .from('collection_points')
-      .select('id, point_name, address, city, postcode')
-      .eq('is_active', true);
-
-    console.log(`Fetched ${collectionPoints?.length || 0} collection points for matching`);
-
-    // Determine if this is a collection order by matching against collection points
+    // Use the explicit fulfillment_method field from the order
+    // Fall back to address-based detection only for legacy orders without the field
     let isCollection = false;
     let matchedCollectionPoint: { point_name: string; address: string } | null = null;
 
-    if (orderData.delivery_address && collectionPoints?.length) {
-      const deliveryAddressLower = orderData.delivery_address.toLowerCase();
+    // Check if order has explicit fulfillment_method field
+    if (orderData.fulfillment_method) {
+      isCollection = orderData.fulfillment_method === 'collection';
+      console.log(`Using explicit fulfillment_method: ${orderData.fulfillment_method}`);
       
-      // Try to match against collection point addresses
-      for (const cp of collectionPoints) {
-        const cpAddressLower = cp.address?.toLowerCase() || '';
-        const cpNameLower = cp.point_name?.toLowerCase() || '';
-        const cpCityLower = cp.city?.toLowerCase() || '';
+      // If collection and has collection_point_id, fetch the collection point details
+      if (isCollection && orderData.collection_point_id) {
+        const { data: collectionPoint } = await supabase
+          .from('collection_points')
+          .select('point_name, address, city, postcode')
+          .eq('id', orderData.collection_point_id)
+          .single();
         
-        // Check if delivery address contains collection point details
-        if (
-          deliveryAddressLower.includes(cpAddressLower) ||
-          deliveryAddressLower.includes(cpNameLower) ||
-          cpAddressLower.includes(deliveryAddressLower.split(',')[0]) ||
-          (cpNameLower && deliveryAddressLower.includes(cpNameLower))
-        ) {
-          isCollection = true;
+        if (collectionPoint) {
           matchedCollectionPoint = {
-            point_name: cp.point_name,
-            address: [cp.address, cp.city, cp.postcode].filter(Boolean).join(', ')
+            point_name: collectionPoint.point_name,
+            address: [collectionPoint.address, collectionPoint.city, collectionPoint.postcode].filter(Boolean).join(', ')
           };
-          console.log(`Matched collection point: ${cp.point_name}`);
-          break;
+          console.log(`Matched collection point from ID: ${collectionPoint.point_name}`);
         }
       }
-    }
+    } else {
+      // Legacy fallback: Infer from address for orders created before the migration
+      console.log('No explicit fulfillment_method, using legacy address detection');
+      
+      const { data: collectionPoints } = await supabase
+        .from('collection_points')
+        .select('id, point_name, address, city, postcode')
+        .eq('is_active', true);
 
-    // Fallback detection if no collection point matched
-    if (!isCollection && orderData.delivery_address) {
-      const addressLower = orderData.delivery_address.toLowerCase();
-      isCollection = addressLower.includes('collection') || 
-                     addressLower.includes('pickup') ||
-                     addressLower.includes('collect');
-    }
+      if (orderData.delivery_address && collectionPoints?.length) {
+        const deliveryAddressLower = orderData.delivery_address.toLowerCase();
+        
+        for (const cp of collectionPoints) {
+          const cpAddressLower = cp.address?.toLowerCase() || '';
+          const cpNameLower = cp.point_name?.toLowerCase() || '';
+          
+          if (
+            deliveryAddressLower.includes(cpAddressLower) ||
+            deliveryAddressLower.includes(cpNameLower) ||
+            cpAddressLower.includes(deliveryAddressLower.split(',')[0]) ||
+            (cpNameLower && deliveryAddressLower.includes(cpNameLower))
+          ) {
+            isCollection = true;
+            matchedCollectionPoint = {
+              point_name: cp.point_name,
+              address: [cp.address, cp.city, cp.postcode].filter(Boolean).join(', ')
+            };
+            break;
+          }
+        }
+      }
 
-    // If no delivery address at all, assume collection
-    if (!orderData.delivery_address) {
-      isCollection = true;
+      // If no delivery address at all, assume collection
+      if (!orderData.delivery_address) {
+        isCollection = true;
+      }
     }
 
     const deliveryMethod = isCollection ? 'Collection' : 'Delivery';

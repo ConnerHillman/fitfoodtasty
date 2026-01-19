@@ -58,6 +58,9 @@ export const useAdminOrder = () => {
       throw new Error('No admin order data available');
     }
 
+    // Map deliveryMethod to fulfillment_method for consistency
+    const fulfillmentMethod = deliveryMethod === 'collection' ? 'collection' : 'delivery';
+
     return {
       // Customer details
       customer_email: adminOrderData.customerEmail,
@@ -69,6 +72,7 @@ export const useAdminOrder = () => {
       // Order details
       order_type: 'manual_admin',
       delivery_method: deliveryMethod,
+      fulfillment_method: fulfillmentMethod, // Explicit fulfillment field
       requested_delivery_date: requestedDeliveryDate?.toISOString().split('T')[0],
       order_notes: orderNotes,
       
@@ -92,6 +96,7 @@ export const useAdminOrder = () => {
       created_by_admin: true,
       admin_notes: orderNotes,
       delivery_zone_id: adminOrderData.deliveryZoneId,
+      collection_point_id: fulfillmentMethod === 'collection' ? (adminOrderData as any).collectionPointId : null,
       is_new_customer: adminOrderData.isNewAccount,
       email_notifications_enabled: sendEmail,
     };
