@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import MealsGrid from "@/components/MealsGrid";
 import PackagesBar, { MealPackage } from "@/components/packages/PackagesBar";
 import PackageSelectionDialog from "@/components/packages/PackageSelectionDialog";
 import { useViewTracking } from "@/hooks/useViewTracking";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Package } from "lucide-react";
+
 const Menu = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
+  const location = useLocation();
   const [selectedPackage, setSelectedPackage] = useState<MealPackage | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [onboardingPackage, setOnboardingPackage] = useState<MealPackage | null>(null);
@@ -20,6 +20,18 @@ const Menu = () => {
 
   // Track menu page view
   useViewTracking('menu');
+
+  // Scroll to hash section on mount or when hash changes
+  useEffect(() => {
+    if (location.hash) {
+      const element = document.querySelector(location.hash);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location.hash]);
 
   // Check for onboarding data on mount
   useEffect(() => {
@@ -42,13 +54,17 @@ const Menu = () => {
       }
     }
   }, []);
+
   const handleSelectPackage = (pkg: MealPackage) => {
     setSelectedPackage(pkg);
     setDialogOpen(true);
   };
-  return <div className="container mx-auto px-4 py-8">
+
+  return (
+    <div className="container mx-auto px-4 py-8">
       {/* Special onboarding header */}
-      {onboardingPackage && onboardingProfile && <Card className="mb-8 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-emerald-200">
+      {onboardingPackage && onboardingProfile && (
+        <Card className="mb-8 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-emerald-200">
           <CardHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl">
@@ -70,15 +86,15 @@ const Menu = () => {
               Choose your {onboardingPackage.meal_count} meals below and add them to your cart to complete your plan.
             </p>
           </CardHeader>
-        </Card>}
+        </Card>
+      )}
 
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="text-center md:text-left">
-          
-        </div>
+        <div className="text-center md:text-left"></div>
         
         {/* Create Account CTA - Only show for non-authenticated users */}
-        {!user && <div className="flex items-center space-x-3">
+        {!user && (
+          <div className="flex items-center space-x-3">
             <div className="text-right hidden md:block">
               <p className="text-sm text-gray-600 mb-1">Save 20% on your first order</p>
               <p className="text-xs text-gray-500">Create a free account today</p>
@@ -86,17 +102,24 @@ const Menu = () => {
             <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
               <Link to="/auth">Create Account</Link>
             </Button>
-          </div>}
+          </div>
+        )}
       </div>
 
-      {/* Packages at the top */}
-      <PackagesBar onSelect={handleSelectPackage} />
+      {/* Packages section with anchor */}
+      <section id="packages">
+        <PackagesBar onSelect={handleSelectPackage} />
+      </section>
 
-      {/* Standard menu below */}
-      <MealsGrid />
+      {/* Meals section with anchor */}
+      <section id="meals">
+        <MealsGrid />
+      </section>
 
       {/* Package selection modal */}
       <PackageSelectionDialog open={dialogOpen} onOpenChange={setDialogOpen} pkg={selectedPackage} />
-    </div>;
+    </div>
+  );
 };
+
 export default Menu;
