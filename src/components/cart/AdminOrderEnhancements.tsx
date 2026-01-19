@@ -52,6 +52,8 @@ interface AdminOrderEnhancementsProps {
   onSaveCardChange?: (save: boolean) => void;
   onPrepareNewCardPayment?: (amountInPence: number, saveCard: boolean) => Promise<any>;
   onClearPaymentIntent?: () => void;
+  // Delivery date validation
+  hasSelectedDate?: boolean;
 }
 
 export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
@@ -78,6 +80,8 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   onSaveCardChange,
   onPrepareNewCardPayment,
   onClearPaymentIntent,
+  // Delivery date validation
+  hasSelectedDate = false,
 }) => {
   const { adminOrderData, items } = useCart();
   const [priceEdits, setPriceEdits] = useState<Record<string, number>>({});
@@ -182,6 +186,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
   const isConfirmDisabled = () => {
     if (loading || items.length === 0) return true;
     if (paymentMethod === 'charge_card' && (!selectedCardId || savedCards.length === 0)) return true;
+    if (!hasSelectedDate) return true; // Require delivery date
     return false;
   };
 
@@ -489,6 +494,16 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
             </div>
           )}
 
+          {/* Warning when delivery date not selected */}
+          {!hasSelectedDate && (
+            <Alert className="border-amber-200 bg-amber-50">
+              <Calendar className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                Please select a delivery date before completing the order.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Hide main button when new_card is selected - inline form has its own button */}
           {paymentMethod !== 'new_card' && (
             <Button 
@@ -511,7 +526,7 @@ export const AdminOrderEnhancements: React.FC<AdminOrderEnhancementsProps> = ({
           <div className="space-y-1">
             <div className="font-medium">Admin Privileges Active</div>
             <div className="text-sm text-muted-foreground">
-              • No delivery date restrictions • Price adjustments allowed • Payment options available
+              • Flexible delivery scheduling • Price adjustments allowed • Payment options available
             </div>
           </div>
         </AlertDescription>

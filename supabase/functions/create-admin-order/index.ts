@@ -42,6 +42,11 @@ serve(async (req) => {
     const orderData = await req.json();
     console.log('Creating admin order:', orderData);
 
+    // Validate required fields
+    if (!orderData.requested_delivery_date) {
+      throw new Error('Delivery date is required for all orders');
+    }
+
     // Find or create customer user
     let customerId = null;
     
