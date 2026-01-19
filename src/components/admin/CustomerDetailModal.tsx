@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,8 @@ const CustomerDetailModal = () => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [email, setEmail] = useState<string>("");
 
-  // Type guard and sanitization for customer data
-  const getTypedCustomerData = (): CustomerModalData | null => {
+  // Memoize the typed customer data to prevent unnecessary re-renders
+  const typedCustomerData = useMemo((): CustomerModalData | null => {
     if (!customerData || typeof customerData !== 'object') return null;
     
     // Sanitize the customer data to prevent XSS
@@ -56,15 +56,16 @@ const CustomerDetailModal = () => {
     if (!sanitized.user_id) return null;
     
     return sanitized as CustomerModalData;
-  };
+  }, [customerData]);
 
-  const typedCustomerData = getTypedCustomerData();
+  // Use user_id as stable dependency
+  const customerId = typedCustomerData?.user_id;
 
   useEffect(() => {
-    if (typedCustomerData && isOpen) {
+    if (customerId && isOpen) {
       fetchAllCustomerData();
     }
-  }, [typedCustomerData, isOpen]);
+  }, [customerId, isOpen]);
 
   // Fetch stats and other data when orders change
   useEffect(() => {
@@ -75,7 +76,7 @@ const CustomerDetailModal = () => {
     }
   }, [orders]);
 
-  const fetchAllCustomerData = async () => {
+  const fetchAllCustomerData = useCallback(async () => {
     if (!typedCustomerData) return;
 
     setLoading(true);
@@ -96,71 +97,56 @@ const CustomerDetailModal = () => {
       
       setEmail(typedCustomerData.email || '');
       
-      await fetchOrders();
-    } catch (error) {
-      console.error("Error fetching customer data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load customer data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Fetch orders directly here with the user_id
+      const userId = typedCustomerData.user_id;
+      
+      // Fetch regular orders and package orders in parallel
+      const [regularOrdersResult, packageOrdersResult] = await Promise.all([
+        supabase
+          .from('orders')
+          .select(`
+            id,
+            created_at,
+            total_amount,
+            status,
+            order_items(id)
+          `)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('package_orders')
+          .select(`
+            id,
+            created_at,
+            total_amount,
+            status
+          `)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+      ]);
 
-  const fetchOrders = async () => {
-    if (!typedCustomerData?.user_id) return;
-
-    try {
-      // Fetch regular orders
-      const { data: regularOrders, error: regularError } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          created_at,
-          total_amount,
-          status,
-          order_items(id)
-        `)
-        .eq('user_id', typedCustomerData.user_id)
-        .order('created_at', { ascending: false });
-
-      if (regularError) throw regularError;
-
-      // Fetch package orders
-      const { data: packageOrders, error: packageError } = await supabase
-        .from('package_orders')
-        .select(`
-          id,
-          created_at,
-          total_amount,
-          status
-        `)
-        .eq('user_id', typedCustomerData.user_id)
-        .order('created_at', { ascending: false });
-
-      if (packageError) throw packageError;
+      if (regularOrdersResult.error) throw regularOrdersResult.error;
+      if (packageOrdersResult.error) throw packageOrdersResult.error;
 
       // Format and combine orders
       const formattedOrders: CustomerOrder[] = [
-        ...(regularOrders || []).map(order => ({
+        ...(regularOrdersResult.data || []).map(order => ({
           id: order.id,
           created_at: order.created_at,
           total_amount: order.total_amount,
           status: order.status,
           type: 'order' as const,
           items_count: order.order_items?.length || 0,
-          currency: 'gbp' // Default currency
+          currency: 'gbp'
         })),
-        ...(packageOrders || []).map(order => ({
+        ...(packageOrdersResult.data || []).map(order => ({
           id: order.id,
           created_at: order.created_at,
           total_amount: order.total_amount,
           status: order.status,
           type: 'package_order' as const,
           items_count: 1,
-          currency: 'gbp' // Default currency
+          currency: 'gbp'
         }))
       ];
 
@@ -171,11 +157,18 @@ const CustomerDetailModal = () => {
 
       setOrders(formattedOrders);
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      console.error("Error fetching customer data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load customer data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [typedCustomerData, toast]);
 
-  const fetchStats = async () => {
+  const fetchStats = () => {
     if (orders.length === 0) return;
 
     const totalOrders = orders.length;
