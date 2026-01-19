@@ -5,7 +5,6 @@ import { Star, Flame, Clock, Users, Award } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalizedResults from "./PersonalizedResults";
 import aboutKitchenTeam from "@/assets/about-kitchen-team.jpg";
-
 const HeroSection = () => {
   const navigate = useNavigate();
   const [showResults, setShowResults] = useState(false);
@@ -27,23 +26,15 @@ const HeroSection = () => {
   }
   // Supabase public URL for Hero Chilli Chicken 1
   const mobileHeroImage = "https://aicpnaomarzgborltdkt.supabase.co/storage/v1/object/public/assets/Hero%20Chilli%20Chicken%201.png";
-
   return <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
       {/* Background Image - Mobile uses Supabase hero image, desktop uses kitchen team */}
       <div className="absolute inset-0">
         {/* Mobile Hero Image - positioned to show appetising meal center */}
-        <img 
-          src={mobileHeroImage} 
-          alt="Premium chilli chicken meal" 
-          className="w-full h-full object-cover md:hidden" 
-          style={{ objectPosition: '50% 55%' }}
-        />
+        <img src={mobileHeroImage} alt="Premium chilli chicken meal" className="w-full h-full object-cover md:hidden" style={{
+        objectPosition: '50% 55%'
+      }} />
         {/* Desktop/Tablet Hero Image */}
-        <img 
-          src={aboutKitchenTeam} 
-          alt="Premium meal prep kitchen" 
-          className="hidden md:block w-full h-full object-cover opacity-40" 
-        />
+        <img src={aboutKitchenTeam} alt="Premium meal prep kitchen" className="hidden md:block w-full h-full object-cover opacity-40" />
         {/* Mobile: Strong top-to-bottom dark gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80 md:hidden"></div>
         {/* Desktop: Original horizontal gradient */}
@@ -148,7 +139,7 @@ const HeroSection = () => {
               {/* CTA - Desktop */}
               <div className="space-y-4">
                 <Button size="lg" onClick={handleGetStarted} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
-                  ✨ Create Your Perfect Plan
+                  ✨ Start My Plan  
                 </Button>
                 
                 <div className="flex items-center space-x-4">
