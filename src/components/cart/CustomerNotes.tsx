@@ -35,9 +35,12 @@ const CustomerNotes: React.FC<CustomerNotesProps> = ({
           className="min-h-[100px] resize-none bg-background/50"
           maxLength={maxLength}
         />
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
           <span className="text-xs text-muted-foreground">
-            {value.length}/{maxLength} characters
+            Optional: Add pickup/delivery instructions or dietary notes.
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {value.length}/{maxLength}
           </span>
         </div>
       </CardContent>
