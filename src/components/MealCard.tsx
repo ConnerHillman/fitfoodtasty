@@ -155,8 +155,8 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
                 {Math.round(meal.total_calories || 0)} kcal · {Math.round(meal.total_protein || 0)}g protein
               </p>
               
-              {/* View Details - tertiary, positioned between nutrition and price */}
-              <div className="mt-2">
+              {/* View Details - tertiary, centered */}
+              <div className="mt-2 text-center">
                 <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/80 hover:text-primary transition-colors">
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <circle cx="12" cy="12" r="10" />
@@ -171,8 +171,8 @@ const MealCard = ({ meal, onAddToCart, showNutrition = true, isNew = false }: Me
 
         {/* Decision block: Price + CTA grouped as one unit */}
         <div className="px-3 pb-3 pt-0">
-          {/* Price - prominent but secondary to CTA */}
-          <div className="mb-2">
+          {/* Price - prominent but secondary to CTA, centered */}
+          <div className="mb-2 text-center">
             <span className="text-lg font-bold text-foreground tracking-tight">
               £{meal.price.toFixed(2)}
             </span>
