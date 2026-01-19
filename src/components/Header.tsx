@@ -55,8 +55,8 @@ const Header = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link to="/about" className="text-gray-700 hover:text-green-600 font-medium px-3 py-2">
-                    ABOUT US
+                  <Link to="/about" className="text-gray-700 hover:text-green-600 font-medium px-4 py-2 inline-flex items-center h-10">
+                    ABOUT
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
