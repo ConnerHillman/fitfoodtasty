@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus, BarChart3, FlaskConical, FileText, Calculator, Edit, ImageIcon, Eye, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStandardizedMealsData } from "@/hooks/useStandardizedMealsData";
+import { useMealImpactCheck } from "@/hooks/useMealImpactCheck";
 import { formatCurrency } from "@/lib/utils";
 
 // Import new generic components
@@ -11,6 +12,7 @@ import { GenericFiltersBar, StatsCardsGrid, GenericDataTable, GenericModal, Clic
 
 // Import existing components
 import { MealGridView } from "./meals/MealGridView";
+import { MealReplacementAdminDialog } from "./meals/MealReplacementAdminDialog";
 import MealFormWithIngredients from "./MealFormWithIngredients";
 import MealBuilder from "./MealBuilder";
 import MealAnalytics from "./MealAnalytics";
@@ -55,6 +57,12 @@ const MealsManager = () => {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
+  
+  // Replacement dialog state
+  const [isReplacementDialogOpen, setIsReplacementDialogOpen] = useState(false);
+  const [mealToDeactivate, setMealToDeactivate] = useState<Meal | null>(null);
+  
+  const { checkMealImpact } = useMealImpactCheck();
 
   // Use allMeals for display (already filtered by the standardized hook)
   const filteredMeals = allMeals;
@@ -102,6 +110,35 @@ const MealsManager = () => {
       description: "Meal editing feature is being developed",
     });
   };
+
+  // Handle before toggle - check for impact when deactivating
+  const handleBeforeToggle = useCallback(async (meal: Meal, isCurrentlyActive: boolean): Promise<boolean | { showCustomDialog: true }> => {
+    if (!isCurrentlyActive) {
+      // Activating - no need for replacement dialog
+      return true;
+    }
+    
+    // Deactivating - check for impact
+    const impact = await checkMealImpact(meal.id);
+    
+    if (impact.hasImpact) {
+      // Show replacement dialog
+      setMealToDeactivate(meal);
+      setIsReplacementDialogOpen(true);
+      return { showCustomDialog: true as const };
+    }
+    
+    // No impact, proceed with normal confirmation
+    return true;
+  }, [checkMealImpact]);
+
+  // Handle confirmed deactivation from replacement dialog
+  const handleConfirmDeactivation = useCallback(() => {
+    if (mealToDeactivate) {
+      toggleMealActive(mealToDeactivate);
+    }
+    setMealToDeactivate(null);
+  }, [mealToDeactivate, toggleMealActive]);
 
   // Stats data for the new StatsCardsGrid
   const statsData: StatCardData[] = useMemo(() => {
@@ -205,6 +242,7 @@ const MealsManager = () => {
           isActive={meal.is_active ?? false}
           itemName={meal.name}
           onToggle={toggleMealActive}
+          onBeforeToggle={handleBeforeToggle}
         />
       )
     }
@@ -429,6 +467,21 @@ const MealsManager = () => {
         }}
         onUpdate={refetch}
       />
+
+      {/* Meal Replacement Dialog for deactivation */}
+      {mealToDeactivate && (
+        <MealReplacementAdminDialog
+          isOpen={isReplacementDialogOpen}
+          onClose={() => {
+            setIsReplacementDialogOpen(false);
+            setMealToDeactivate(null);
+          }}
+          mealId={mealToDeactivate.id}
+          mealName={mealToDeactivate.name}
+          actionType="deactivate"
+          onConfirm={handleConfirmDeactivation}
+        />
+      )}
     </div>
   );
 };

@@ -20,6 +20,8 @@ interface ClickableStatusBadgeProps<T> {
   inactiveLabel?: string;
   activateMessage?: string;
   deactivateMessage?: string;
+  /** Optional callback before showing toggle dialog. If returns { showCustomDialog: true }, the default dialog won't show */
+  onBeforeToggle?: (item: T, isActive: boolean) => Promise<boolean | { showCustomDialog: true }>;
 }
 
 export function ClickableStatusBadge<T>({
@@ -31,14 +33,29 @@ export function ClickableStatusBadge<T>({
   inactiveLabel = "Inactive",
   activateMessage,
   deactivateMessage,
+  onBeforeToggle,
 }: ClickableStatusBadgeProps<T>) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const defaultActivateMessage = `Are you sure you want to activate "${itemName}"? It will be visible on the menu.`;
   const defaultDeactivateMessage = `Are you sure you want to deactivate "${itemName}"? It will be hidden from the menu.`;
 
-  const handleBadgeClick = (e: React.MouseEvent) => {
+  const handleBadgeClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // If onBeforeToggle is provided and we're deactivating, call it first
+    if (onBeforeToggle && isActive) {
+      const result = await onBeforeToggle(item, isActive);
+      if (result === false) {
+        // Cancelled
+        return;
+      }
+      if (typeof result === 'object' && result.showCustomDialog) {
+        // Custom dialog will be shown by parent
+        return;
+      }
+    }
+    
     setIsDialogOpen(true);
   };
 
