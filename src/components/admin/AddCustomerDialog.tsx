@@ -15,7 +15,8 @@ interface AddCustomerDialogProps {
 }
 
 interface CustomerFormData {
-  full_name: string;
+  first_name: string;
+  last_name: string;
   phone: string;
   email: string;
   delivery_address: string;
@@ -29,7 +30,8 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CustomerFormData>({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     phone: '',
     email: '',
     delivery_address: '',
@@ -46,7 +48,8 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
 
   const resetForm = () => {
     setFormData({
-      full_name: '',
+      first_name: '',
+      last_name: '',
       phone: '',
       email: '',
       delivery_address: '',
@@ -83,7 +86,8 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
     }
 
     const validationResult = validateCustomerData({
-      full_name: formData.full_name,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
       email: formData.email,
       phone: formData.phone,
       delivery_address: formData.delivery_address,
@@ -116,7 +120,8 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
     try {
       // Validate and sanitize data
       const validationResult = validateCustomerData({
-        full_name: formData.full_name,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
         email: formData.email,
         phone: formData.phone,
         delivery_address: formData.delivery_address,
@@ -164,7 +169,9 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
         .from('profiles')
         .upsert({
           user_id: authData.user.id,
-          full_name: sanitizedData.full_name,
+          full_name: `${sanitizedData.first_name} ${sanitizedData.last_name}`.trim(),
+          first_name: sanitizedData.first_name,
+          last_name: sanitizedData.last_name,
           phone: sanitizedData.phone || null,
           delivery_address: sanitizedData.delivery_address || null,
           delivery_instructions: sanitizedData.delivery_instructions || null,
@@ -180,7 +187,7 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
 
       toast({
         title: "Success",
-        description: `Customer ${sanitizedData.full_name} has been added successfully`,
+        description: `Customer ${sanitizedData.first_name} ${sanitizedData.last_name} has been added successfully`,
       });
 
       resetForm();
@@ -230,27 +237,38 @@ const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({ onCustomerAdded }
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="full_name">Full Name *</Label>
+                  <Label htmlFor="first_name">First Name *</Label>
                   <Input
-                    id="full_name"
-                    value={formData.full_name}
-                    onChange={(e) => handleInputChange('full_name', e.target.value)}
-                    placeholder="Enter customer's full name"
+                    id="first_name"
+                    value={formData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                    placeholder="First name"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="last_name">Last Name *</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="customer@example.com"
+                    id="last_name"
+                    value={formData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                    placeholder="Last name"
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="customer@example.com"
+                  required
+                />
               </div>
 
               <div className="space-y-2">

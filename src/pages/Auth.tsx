@@ -15,7 +15,9 @@ const Auth = () => {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  
   const [phone, setPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [city, setCity] = useState("");
@@ -65,6 +67,20 @@ const Auth = () => {
     setLoading(true);
     setError("");
 
+    // Validate first name
+    if (!firstName.trim()) {
+      setError("First name is required");
+      setLoading(false);
+      return;
+    }
+
+    // Validate last name
+    if (!lastName.trim()) {
+      setError("Last name is required");
+      setLoading(false);
+      return;
+    }
+
     // Validate phone number
     if (!phone.trim()) {
       setError("Phone number is required for delivery communication");
@@ -79,12 +95,16 @@ const Auth = () => {
 
     const redirectUrl = `${window.location.origin}/`;
     
+    const fullName = `${firstName} ${lastName}`.trim();
+    
     const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
+          first_name: firstName,
+          last_name: lastName,
           full_name: fullName,
           phone: phone,
           delivery_address: deliveryAddress,
@@ -107,7 +127,7 @@ const Auth = () => {
       supabase.functions.invoke('send-welcome-email', {
         body: { 
           email: email,
-          name: fullName 
+          name: firstName 
         }
       }).then(({ error: welcomeError }) => {
         if (welcomeError) {
@@ -318,16 +338,30 @@ const Auth = () => {
 
             {isSignUp && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="First name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Last name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
