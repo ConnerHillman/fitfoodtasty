@@ -34,6 +34,7 @@ import { VoidOrderDialog } from '@/components/admin/orders/VoidOrderDialog';
 import { RefundOrderDialog } from '@/components/admin/orders/RefundOrderDialog';
 import { PrintMealLabelsDialog } from '@/components/admin/orders/PrintMealLabelsDialog';
 import ReorderConfirmationModal from '@/components/orders/ReorderConfirmationModal';
+import OrderNotesSection from '@/components/admin/orders/OrderNotesSection';
 import { useAdminReorder } from '@/hooks/useAdminReorder';
 
 interface OrderItem {
@@ -72,6 +73,7 @@ interface OrderDetails {
   created_at: string;
   updated_at: string;
   order_notes?: string;
+  private_note?: string;
   order_items?: OrderItem[];
   package_id?: string;
   package_meal_selections?: PackageMealSelection[];
@@ -665,22 +667,14 @@ const OrderDetails: React.FC = () => {
               </Card>
             )}
 
-            {/* Order Notes */}
-            {order.order_notes && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Edit3 className="h-5 w-5" />
-                    Order Notes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm whitespace-pre-wrap">{order.order_notes}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* Order Notes Section - Admin Editable */}
+            <OrderNotesSection
+              orderId={order.id}
+              orderType={isPackageOrder ? 'package_orders' : 'orders'}
+              customerNote={order.order_notes}
+              privateNote={order.private_note}
+              onNotesUpdated={fetchOrderDetails}
+            />
 
             {/* Order Timeline */}
             <Card>

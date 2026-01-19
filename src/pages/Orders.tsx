@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Package, Truck, RotateCcw, ChevronRight, MapPin, Tag } from "lucide-react";
+import { Calendar, Package, Truck, RotateCcw, ChevronRight, MapPin, Tag, MessageSquare } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import MealReplacementDialog from "@/components/packages/MealReplacementDialog";
 import ReorderConfirmationModal from "@/components/orders/ReorderConfirmationModal";
@@ -36,6 +36,7 @@ interface Order {
   delivery_address?: string;
   created_at: string;
   requested_delivery_date?: string;
+  order_notes?: string;
   coupon_type?: string;
   coupon_discount_percentage?: number;
   coupon_discount_amount?: number;
@@ -63,6 +64,7 @@ interface PackageOrder {
   delivery_address?: string;
   created_at: string;
   requested_delivery_date?: string;
+  order_notes?: string;
   packages?: {
     id: string;
     name: string;
@@ -121,6 +123,7 @@ const Orders = () => {
           delivery_address,
           created_at,
           requested_delivery_date,
+          order_notes,
           coupon_type,
           coupon_discount_percentage,
           coupon_discount_amount,
@@ -167,6 +170,7 @@ const Orders = () => {
           delivery_address,
           created_at,
           requested_delivery_date,
+          order_notes,
           packages (
             id,
             name,
@@ -614,6 +618,19 @@ const Orders = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* Order Notes */}
+                      {order.order_notes && (
+                        <div className="pt-4 border-t">
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            Your Notes
+                          </h4>
+                          <p className="text-muted-foreground text-sm whitespace-pre-wrap bg-muted/30 p-3 rounded-lg">
+                            {order.order_notes}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </CollapsibleContent>
@@ -788,6 +805,19 @@ const Orders = () => {
                             {order.customer_name && <p>{order.customer_name}</p>}
                             {order.customer_email && <p>{order.customer_email}</p>}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Order Notes */}
+                      {order.order_notes && (
+                        <div className="pt-4 border-t">
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            Your Notes
+                          </h4>
+                          <p className="text-muted-foreground text-sm whitespace-pre-wrap bg-muted/30 p-3 rounded-lg">
+                            {order.order_notes}
+                          </p>
                         </div>
                       )}
                     </div>
