@@ -3,6 +3,7 @@ export { GenericFiltersBar } from './GenericFiltersBar';
 export { StatsCardsGrid, StatCard } from './StatsCards';
 export { GenericDataTable } from './GenericDataTable';
 export { GenericModal, ConfirmationModal } from './GenericModal';
+export { ClickableStatusBadge } from './ClickableStatusBadge';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { CustomerErrorBoundary } from './CustomerErrorBoundary';
 export { SafeHtml } from './SafeHtml';

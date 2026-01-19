@@ -1,14 +1,13 @@
 import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, BarChart3, FlaskConical, FileText, Calculator, Edit, ImageIcon, Eye, Power } from "lucide-react";
+import { Plus, BarChart3, FlaskConical, FileText, Calculator, Edit, ImageIcon, Eye, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStandardizedMealsData } from "@/hooks/useStandardizedMealsData";
 import { formatCurrency } from "@/lib/utils";
 
 // Import new generic components
-import { GenericFiltersBar, StatsCardsGrid, GenericDataTable, GenericModal } from "@/components/common";
+import { GenericFiltersBar, StatsCardsGrid, GenericDataTable, GenericModal, ClickableStatusBadge } from "@/components/common";
 
 // Import existing components
 import { MealGridView } from "./meals/MealGridView";
@@ -123,7 +122,7 @@ const MealsManager = () => {
         id: 'active',
         title: 'Active Meals',
         value: activeMeals.length,
-        icon: Power,
+        icon: CheckCircle,
         iconColor: 'text-green-500',
         subtitle: `${inactiveMeals.length} inactive`
       },
@@ -200,9 +199,12 @@ const MealsManager = () => {
       key: 'is_active',
       header: 'Status',
       accessor: (meal) => (
-        <Badge variant={meal.is_active ? "default" : "secondary"}>
-          {meal.is_active ? "Active" : "Inactive"}
-        </Badge>
+        <ClickableStatusBadge
+          item={meal}
+          isActive={meal.is_active ?? false}
+          itemName={meal.name}
+          onToggle={toggleMealActive}
+        />
       )
     }
   ];
@@ -227,20 +229,6 @@ const MealsManager = () => {
       onClick: (meal) => handleEditMeal(meal.id),
       variant: 'outline'
     },
-    {
-      label: 'Toggle Status',
-      icon: Power,
-      onClick: (meal) => {
-        // Show confirmation for deactivation, direct action for activation
-        if (meal.is_active) {
-          // Could add confirmation dialog here if needed
-          toggleMealActive(meal);
-        } else {
-          toggleMealActive(meal);
-        }
-      },
-      variant: 'outline'
-    }
   ];
 
   // Filter options for GenericFiltersBar

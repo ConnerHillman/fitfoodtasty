@@ -1,11 +1,8 @@
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calculator, Edit, ImageIcon } from "lucide-react";
+import { ClickableStatusBadge } from "@/components/common";
 import CategoryTag from "@/components/CategoryTag";
 import type { Meal } from "@/types/meal";
 
@@ -24,13 +21,6 @@ export function MealGridView({
   onBuildMeal, 
   onEditMeal 
 }: MealGridViewProps) {
-  const [toggleStates, setToggleStates] = useState<Record<string, boolean>>({});
-
-  const handleToggleActive = (meal: Meal) => {
-    setToggleStates(prev => ({ ...prev, [meal.id]: !meal.is_active }));
-    onToggleActive(meal);
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {meals.map((meal) => (
@@ -51,12 +41,14 @@ export function MealGridView({
                 <ImageIcon className="h-12 w-12 text-muted-foreground" />
               </div>
             )}
-            <Badge
-              variant={meal.is_active ? "default" : "secondary"}
-              className="absolute top-2 right-2"
-            >
-              {meal.is_active ? "Active" : "Inactive"}
-            </Badge>
+            <div className="absolute top-2 right-2">
+              <ClickableStatusBadge
+                item={meal}
+                isActive={meal.is_active ?? false}
+                itemName={meal.name}
+                onToggle={onToggleActive}
+              />
+            </div>
           </div>
           
           <CardContent className="p-4">
@@ -73,45 +65,10 @@ export function MealGridView({
               <CategoryTag category={meal.category} />
               
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <span>Cal: {Math.round(meal.total_calories)}</span>
-                <span>Protein: {meal.total_protein?.toFixed(1)}g</span>
-                <span>Carbs: {meal.total_carbs?.toFixed(1)}g</span>
-                <span>Fat: {meal.total_fat?.toFixed(1)}g</span>
-              </div>
-              
-              {/* Active Status Checkbox */}
-              <div className="flex items-center gap-2 pt-2">
-                <label className="text-sm font-medium">Active:</label>
-                {(toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : meal.is_active) ? (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Checkbox checked={true} className="h-5 w-5" />
-                      </div>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Deactivate Meal</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to make "{meal.name}" inactive? It will be hidden from the menu.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={(e) => { e.stopPropagation(); handleToggleActive(meal); }}>
-                          Deactivate
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                ) : (
-                  <Checkbox 
-                    checked={toggleStates[meal.id] !== undefined ? toggleStates[meal.id] : false} 
-                    onCheckedChange={() => handleToggleActive(meal)} 
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-5 w-5"
-                  />
-                )}
+                <span>Cal: {Math.round(meal.total_calories ?? 0)}</span>
+                <span>Protein: {(meal.total_protein ?? 0).toFixed(1)}g</span>
+                <span>Carbs: {(meal.total_carbs ?? 0).toFixed(1)}g</span>
+                <span>Fat: {(meal.total_fat ?? 0).toFixed(1)}g</span>
               </div>
 
               {/* Action Buttons */}
