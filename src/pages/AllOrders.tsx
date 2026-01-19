@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Package, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock, Edit3, X, RotateCcw, Printer, RotateCw } from 'lucide-react';
+import { Package, ArrowLeft, RefreshCw, ShoppingBag, CreditCard, Clock, Edit3, X, RotateCcw, Printer, RotateCw, Truck, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -48,6 +48,9 @@ interface Order {
   isAdjusted?: boolean;
   // Customer postcode
   postcode?: string | null;
+  // Delivery method
+  delivery_address?: string | null;
+  fulfillmentMethod: 'delivery' | 'collection';
 }
 
 interface OrderFilters {
@@ -56,6 +59,7 @@ interface OrderFilters {
   sortOrder: "asc" | "desc";
   viewMode: "list" | "card";
   dateRange: DateRange;
+  fulfillmentFilter: 'all' | 'delivery' | 'collection';
 }
 
 const AllOrders: React.FC = () => {
@@ -73,7 +77,8 @@ const AllOrders: React.FC = () => {
     dateRange: {
       from: subDays(new Date(), 30), // Default to last 30 days
       to: new Date(),
-    }
+    },
+    fulfillmentFilter: 'all'
   });
 
   // Modal states
@@ -173,7 +178,8 @@ const AllOrders: React.FC = () => {
         type: 'individual' as const,
         isManual: manualOrderIds.has(order.id),
         isAdjusted: adjustedOrderIds.has(order.id),
-        postcode: postcodeByUserId.get(order.user_id) || null
+        postcode: postcodeByUserId.get(order.user_id) || null,
+        fulfillmentMethod: order.delivery_address ? 'delivery' as const : 'collection' as const
       }));
 
       const formattedPackageOrders: Order[] = (packageOrders || []).map(order => ({
@@ -181,7 +187,8 @@ const AllOrders: React.FC = () => {
         type: 'package' as const,
         isManual: manualOrderIds.has(order.id),
         isAdjusted: adjustedOrderIds.has(order.id),
-        postcode: postcodeByUserId.get(order.user_id) || null
+        postcode: postcodeByUserId.get(order.user_id) || null,
+        fulfillmentMethod: order.delivery_address ? 'delivery' as const : 'collection' as const
       }));
 
       const allOrders = [...formattedRegularOrders, ...formattedPackageOrders];
@@ -200,7 +207,7 @@ const AllOrders: React.FC = () => {
     }
   };
 
-  // Filter orders based on search and date range
+  // Filter orders based on search, date range, and fulfillment method
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       // Search filter
@@ -213,9 +220,13 @@ const AllOrders: React.FC = () => {
       const orderDate = new Date(order.created_at);
       const matchesDateRange = orderDate >= filters.dateRange.from && orderDate <= filters.dateRange.to;
       
-      return matchesSearch && matchesDateRange;
+      // Fulfillment method filter
+      const matchesFulfillment = filters.fulfillmentFilter === 'all' || 
+        order.fulfillmentMethod === filters.fulfillmentFilter;
+      
+      return matchesSearch && matchesDateRange && matchesFulfillment;
     });
-  }, [orders, filters.searchTerm, filters.dateRange]);
+  }, [orders, filters.searchTerm, filters.dateRange, filters.fulfillmentFilter]);
 
   // Stats data
   const statsData: StatCardData[] = useMemo(() => {
@@ -288,6 +299,25 @@ const AllOrders: React.FC = () => {
       header: 'Postcode',
       accessor: (order) => (
         <span className="text-sm">{order.postcode || '—'}</span>
+      )
+    },
+    {
+      key: 'fulfillmentMethod',
+      header: 'Method',
+      accessor: (order) => (
+        <div className="flex items-center gap-1.5">
+          {order.fulfillmentMethod === 'delivery' ? (
+            <>
+              <Truck className="h-4 w-4 text-blue-500" />
+              <span className="text-sm">Delivery</span>
+            </>
+          ) : (
+            <>
+              <MapPin className="h-4 w-4 text-green-500" />
+              <span className="text-sm">Collection</span>
+            </>
+          )}
+        </div>
       )
     },
     {
@@ -495,6 +525,36 @@ const AllOrders: React.FC = () => {
         }}
         clearDateRange={clearDateRange}
       />
+
+      {/* Fulfillment Filter */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Filter:</span>
+        <div className="flex gap-1">
+          <Button
+            variant={filters.fulfillmentFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilters(prev => ({ ...prev, fulfillmentFilter: 'all' }))}
+          >
+            All
+          </Button>
+          <Button
+            variant={filters.fulfillmentFilter === 'delivery' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilters(prev => ({ ...prev, fulfillmentFilter: 'delivery' }))}
+          >
+            <Truck className="h-4 w-4 mr-1" />
+            Delivery
+          </Button>
+          <Button
+            variant={filters.fulfillmentFilter === 'collection' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilters(prev => ({ ...prev, fulfillmentFilter: 'collection' }))}
+          >
+            <MapPin className="h-4 w-4 mr-1" />
+            Collection
+          </Button>
+        </div>
+      </div>
 
       {/* Orders Table */}
       <GenericDataTable
