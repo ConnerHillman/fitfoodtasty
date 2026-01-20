@@ -93,8 +93,8 @@ export const addBusinessDays = (from: Date, days: number): Date => {
 /**
  * Use by date calculations for labels
  */
-export const calculateUseByDate = (productionDate: Date, shelfLifeDays = 5): string => {
-  const useByDate = addDays(productionDate, shelfLifeDays);
+export const calculateUseByDate = (collectionDate: Date, shelfLifeDays = 5): string => {
+  const useByDate = addDays(collectionDate, shelfLifeDays);
   return format(useByDate, 'yyyy-MM-dd');
 };
 
@@ -148,13 +148,13 @@ export const isRecentDate = (date: Date | string, daysThreshold = 30): boolean =
 };
 
 /**
- * Kitchen production date utilities with timezone awareness
+ * Kitchen date utilities with timezone awareness
  */
 
 /**
- * Validates if a date string or Date object is valid
+ * Validates if a date string or Date object is valid (handles null/undefined)
  */
-export function isValidProductionDate(date: string | Date | null | undefined): boolean {
+export function isValidDateInput(date: string | Date | null | undefined): boolean {
   if (!date) return false;
   
   try {
@@ -271,7 +271,3 @@ export function filterOrdersByCollectionDate<T extends {
   console.log(`[DateUtils] Filtered ${validOrders.length}/${orders.length} orders for date ${targetDate.toISOString().split('T')[0]}`);
   return validOrders;
 }
-
-// Legacy aliases for backward compatibility
-export const matchesProductionDate = matchesCollectionDate;
-export const filterOrdersByProductionDate = filterOrdersByCollectionDate;
