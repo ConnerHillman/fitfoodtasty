@@ -139,7 +139,7 @@ const PackageSelect = () => {
 
   useEffect(() => {
     if (!packageId) {
-      navigate('/packages');
+      navigate('/menu#packages');
       return;
     }
 
@@ -156,7 +156,7 @@ const PackageSelect = () => {
         
       if (pkgError || !pkgData) {
         toast({ title: "Package not found", variant: "destructive" });
-        navigate('/packages');
+        navigate('/menu#packages');
         return;
       }
       
@@ -283,7 +283,7 @@ const PackageSelect = () => {
   };
 
   const handleBack = () => {
-    navigate('/packages');
+    navigate('/menu#packages');
   };
 
   const isComplete = pkg ? totalSelected === pkg.meal_count : false;
