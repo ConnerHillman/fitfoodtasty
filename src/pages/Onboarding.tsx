@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, ArrowLeft, Target, Activity, UtensilsCrossed, Heart, Flame, Users, ChevronLeft, ChevronRight, Package, Calendar, Clock, Dumbbell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import logo from "@/assets/fit-food-tasty-logo.png";
 
 // Data interfaces
 interface OnboardingStep {
@@ -560,6 +561,17 @@ const Onboarding = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-white">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Link to="/" className="transition-opacity hover:opacity-80">
+              <img 
+                src={logo} 
+                alt="Fit Food Tasty" 
+                className="h-10 sm:h-12 w-auto object-contain"
+              />
+            </Link>
+          </div>
+
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-between mb-6">
