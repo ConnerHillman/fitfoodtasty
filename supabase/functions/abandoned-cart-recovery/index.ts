@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { Resend } from "npm:resend@2.0.0";
+import Handlebars from "npm:handlebars@4.7.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,13 +26,22 @@ interface AbandonedCart {
   session_id?: string;
 }
 
+interface CartItem {
+  name?: string;
+  meal_name?: string;
+  quantity?: number;
+  price?: number;
+  unit_price?: number;
+  variant?: string;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("Starting abandoned cart recovery process...");
+    console.log("[abandoned-cart-recovery] Starting recovery process...");
 
     // Get settings
     const { data: settings } = await supabase
@@ -49,13 +59,13 @@ const handler = async (req: Request): Promise<Response> => {
     const thirdEmailDelay = parseInt(settingsMap.third_email_delay_hours || "72");
 
     if (!emailEnabled) {
-      console.log("Abandoned cart emails are disabled");
+      console.log("[abandoned-cart-recovery] Emails are disabled");
       return new Response(JSON.stringify({ message: "Emails disabled" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Email settings:", { firstEmailDelay, secondEmailDelay, thirdEmailDelay });
+    console.log("[abandoned-cart-recovery] Email settings:", { firstEmailDelay, secondEmailDelay, thirdEmailDelay });
 
     // Find abandoned carts that need emails
     const now = new Date();
@@ -71,11 +81,13 @@ const handler = async (req: Request): Promise<Response> => {
       .not("customer_email", "is", null);
 
     if (cartsError) {
-      console.error("Error fetching abandoned carts:", cartsError);
+      console.error("[abandoned-cart-recovery] Error fetching abandoned carts:", cartsError);
       throw cartsError;
     }
 
-    console.log(`Found ${abandonedCarts?.length || 0} abandoned carts`);
+    console.log(`[abandoned-cart-recovery] Found ${abandonedCarts?.length || 0} abandoned carts`);
+
+    let emailsSent = 0;
 
     for (const cart of abandonedCarts || []) {
       const abandonedAt = new Date(cart.abandoned_at);
@@ -104,12 +116,12 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       if (shouldSendEmail && cart.customer_email) {
-        console.log(`Sending ${emailType} email to ${cart.customer_email} for cart ${cart.id}`);
+        console.log(`[abandoned-cart-recovery] Sending ${emailType} email to ${cart.customer_email} for cart ${cart.id}`);
         
         const emailContent = await generateEmailContent(cart, emailType);
         
         if (!emailContent) {
-          console.error(`No email template found for type: ${emailType}`);
+          console.error(`[abandoned-cart-recovery] No email template found for type: ${emailType}`);
           continue;
         }
         
@@ -121,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
             html: emailContent.html,
           });
 
-          console.log("Email sent successfully:", emailResponse);
+          console.log("[abandoned-cart-recovery] Email sent successfully:", emailResponse);
 
           // Log the email
           await supabase.from("abandoned_cart_emails").insert({
@@ -131,8 +143,10 @@ const handler = async (req: Request): Promise<Response> => {
             email_content: emailContent.html,
           });
 
+          emailsSent++;
+
         } catch (emailError) {
-          console.error(`Failed to send ${emailType} email:`, emailError);
+          console.error(`[abandoned-cart-recovery] Failed to send ${emailType} email:`, emailError);
         }
       }
     }
@@ -140,7 +154,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         message: "Abandoned cart recovery process completed",
-        processed: abandonedCarts?.length || 0
+        processed: abandonedCarts?.length || 0,
+        emailsSent
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -148,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("Error in abandoned cart recovery:", error);
+    console.error("[abandoned-cart-recovery] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -169,31 +184,83 @@ async function generateEmailContent(cart: AbandonedCart, emailType: string) {
       .single();
 
     if (error || !template) {
-      console.error("Error fetching email template:", error);
+      console.error("[abandoned-cart-recovery] Error fetching email template:", error);
       return null;
     }
 
-    // Generate cart items HTML
-    const cartItemsHtml = cart.cart_items.map((item: any) => `
-      <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-        <strong>${item.name || item.meal_name}</strong><br>
-        Quantity: ${item.quantity}<br>
-        Price: £${(item.price || item.unit_price || 0).toFixed(2)}
-      </div>
-    `).join("");
+    // Build cart items array with proper structure for Handlebars
+    const cartItems = (cart.cart_items || []).map((item: CartItem) => {
+      const itemName = item.name || item.meal_name || 'Item';
+      const quantity = item.quantity || 1;
+      const unitPrice = item.price || item.unit_price || 0;
+      const lineTotal = (quantity * unitPrice).toFixed(2);
+      
+      return {
+        item_name: itemName,
+        quantity: quantity,
+        line_total: lineTotal,
+        variant: item.variant || null
+      };
+    });
 
-    // Replace template variables
-    let htmlContent = template.html_content
-      .replace(/\{\{customer_name\}\}/g, cart.customer_name || "there")
-      .replace(/\{\{cart_items\}\}/g, cartItemsHtml)
-      .replace(/\{\{total_amount\}\}/g, cart.total_amount.toFixed(2));
+    // Calculate totals
+    const hasCartItems = cartItems.length > 0;
+    const cartTotal = cart.total_amount > 0 ? cart.total_amount.toFixed(2) : null;
+    
+    // Build recovery URL - use cart session if available
+    const baseUrl = "https://fitfoodtasty.co.uk";
+    const checkoutUrl = cart.session_id 
+      ? `${baseUrl}/cart?recover=${cart.session_id}`
+      : `${baseUrl}/cart`;
+
+    // Build template context with safe fallbacks
+    const templateContext = {
+      // Customer info with fallback
+      customer_name: cart.customer_name?.trim() || null,
+      has_customer_name: Boolean(cart.customer_name?.trim()),
+      
+      // Cart items
+      cart_items: hasCartItems ? cartItems : null,
+      has_cart_items: hasCartItems,
+      
+      // Totals - only include if we have a value
+      cart_total: cartTotal,
+      has_cart_total: Boolean(cartTotal),
+      
+      // URLs
+      checkout_url: checkoutUrl,
+      menu_url: `${baseUrl}/menu`,
+      website_url: baseUrl,
+      
+      // Business info
+      business_name: "Fit Food Tasty",
+      support_email: "info@fitfoodtasty.co.uk",
+      
+      // Year for copyright
+      current_year: new Date().getFullYear(),
+    };
+
+    console.log("[abandoned-cart-recovery] Template context:", {
+      hasCustomerName: templateContext.has_customer_name,
+      hasCartItems: templateContext.has_cart_items,
+      hasCartTotal: templateContext.has_cart_total,
+      itemCount: cartItems.length,
+      checkoutUrl: templateContext.checkout_url
+    });
+
+    // Compile and render with Handlebars
+    const compiledSubject = Handlebars.compile(template.subject);
+    const compiledHtml = Handlebars.compile(template.html_content);
+
+    const renderedSubject = compiledSubject(templateContext);
+    const renderedHtml = compiledHtml(templateContext);
 
     return {
-      subject: template.subject,
-      html: htmlContent
+      subject: renderedSubject,
+      html: renderedHtml
     };
   } catch (error) {
-    console.error("Error generating email content:", error);
+    console.error("[abandoned-cart-recovery] Error generating email content:", error);
     return null;
   }
 }
