@@ -29,7 +29,7 @@ interface Order {
   id: string;
   order_type?: 'individual' | 'package';
   customer_name?: string;
-  production_date?: string;
+  requested_delivery_date?: string;
   order_items?: OrderItem[];
   package_meal_selections?: PackageMealSelection[];
   package?: {
@@ -83,14 +83,14 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [useByDate, setUseByDate] = useState('');
 
-  // Calculate use by date from production date or fallback to 5 days from now
+  // Calculate use by date from collection/delivery date (requested_delivery_date + 5 days shelf life)
   useEffect(() => {
     try {
-      if (order?.production_date) {
-        const productionDate = new Date(order.production_date);
+      if (order?.requested_delivery_date) {
+        const deliveryDate = new Date(order.requested_delivery_date);
         // Check if the date is valid
-        if (!isNaN(productionDate.getTime())) {
-          const calculatedUseByDate = addDays(productionDate, 5);
+        if (!isNaN(deliveryDate.getTime())) {
+          const calculatedUseByDate = addDays(deliveryDate, 5);
           setUseByDate(formatDate(calculatedUseByDate, 'yyyy-MM-dd'));
           return;
         }
@@ -104,7 +104,7 @@ export const PrintMealLabelsDialog: React.FC<PrintMealLabelsDialogProps> = ({
       const fallbackDate = addDays(new Date(), 5);
       setUseByDate(formatDate(fallbackDate, 'yyyy-MM-dd'));
     }
-  }, [order?.production_date]);
+  }, [order?.requested_delivery_date]);
 
   // Initialize meal labels based on order data with full meal information
   useEffect(() => {

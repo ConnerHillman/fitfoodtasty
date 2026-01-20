@@ -12,20 +12,6 @@ export const useDateValidation = (deliveryZone: any) => {
     return format(tomorrow, 'yyyy-MM-dd');
   }, []);
 
-  // Memoized calculate production date (corrected logic)
-  const calculateProductionDate = useCallback((deliveryDate: string) => {
-    if (!deliveryDate) return "";
-    
-    const delivery = new Date(deliveryDate + 'T12:00:00');
-    const leadDays = deliveryZone?.production_lead_days || 2;
-    
-    // Production date should be BEFORE delivery date
-    const production = new Date(delivery);
-    production.setDate(production.getDate() - leadDays);
-    
-    return format(production, 'yyyy-MM-dd');
-  }, [deliveryZone?.production_lead_days]);
-
   // Memoized available collection dates (next 14 days)
   const getAvailableCollectionDates = useMemo(() => {
     const dates = [];
@@ -72,7 +58,6 @@ export const useDateValidation = (deliveryZone: any) => {
     calendarOpen,
     setCalendarOpen,
     getMinDeliveryDate,
-    calculateProductionDate,
     getAvailableCollectionDates,
     isDateAvailable,
     isDateDisabled,

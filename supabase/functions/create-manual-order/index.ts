@@ -110,13 +110,10 @@ serve(async (req) => {
     );
     const totalAmount = subtotal + (orderData.delivery_fee || 0) - (orderData.discount_amount || 0);
 
-    // Calculate production and delivery dates
+    // Calculate delivery date
     const deliveryDate = orderData.requested_delivery_date ? 
       new Date(orderData.requested_delivery_date) : 
       new Date(Date.now() + 2 * 24 * 60 * 60 * 1000); // Default: 2 days from now
-    
-    const productionDate = new Date(deliveryDate);
-    productionDate.setDate(productionDate.getDate() - 1); // Day before delivery
 
     // Create the order
     const { data: order, error: orderError } = await supabaseAdmin
@@ -131,7 +128,6 @@ serve(async (req) => {
         currency: 'gbp',
         order_notes: `Manual Order (${orderData.order_type}) - Payment: ${orderData.payment_method}${orderData.order_notes ? '\n' + orderData.order_notes : ''}`,
         requested_delivery_date: deliveryDate.toISOString().split('T')[0],
-        production_date: productionDate.toISOString().split('T')[0],
         discount_amount: orderData.discount_amount || 0,
         last_modified_by: userData.user.id
       })

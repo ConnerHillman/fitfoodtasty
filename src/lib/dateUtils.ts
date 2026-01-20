@@ -200,10 +200,11 @@ export function isSameDay(date1: Date, date2: Date): boolean {
 }
 
 /**
- * Checks if an order matches a specific production date with fallback logic
+ * Checks if an order matches a specific collection/delivery date
+ * Uses requested_delivery_date as the primary field
  */
-export function matchesProductionDate(
-  order: { production_date?: string | null; created_at: string; id: string },
+export function matchesCollectionDate(
+  order: { requested_delivery_date?: string | null; created_at: string; id: string },
   targetDate: Date
 ): boolean {
   // Validate target date
@@ -212,21 +213,21 @@ export function matchesProductionDate(
     return false;
   }
 
-  // Primary: Use production_date if available and valid
-  if (order.production_date) {
-    const productionDate = safeParseDate(order.production_date);
-    if (productionDate) {
-      const matches = isSameDay(productionDate, targetDate);
+  // Primary: Use requested_delivery_date if available and valid
+  if (order.requested_delivery_date) {
+    const deliveryDate = safeParseDate(order.requested_delivery_date);
+    if (deliveryDate) {
+      const matches = isSameDay(deliveryDate, targetDate);
       if (matches) {
-        console.log(`[DateUtils] Order ${order.id} matched by production_date`);
+        console.log(`[DateUtils] Order ${order.id} matched by requested_delivery_date`);
       }
       return matches;
     } else {
-      console.warn(`[DateUtils] Order ${order.id} has invalid production_date: ${order.production_date}`);
+      console.warn(`[DateUtils] Order ${order.id} has invalid requested_delivery_date: ${order.requested_delivery_date}`);
     }
   }
 
-  // Fallback: Use created_at if production_date is missing or invalid
+  // Fallback: Use created_at if requested_delivery_date is missing or invalid
   const createdDate = safeParseDate(order.created_at);
   if (createdDate) {
     const matches = isSameDay(createdDate, targetDate);
@@ -241,10 +242,10 @@ export function matchesProductionDate(
 }
 
 /**
- * Filters orders by production date with comprehensive validation
+ * Filters orders by collection/delivery date with comprehensive validation
  */
-export function filterOrdersByProductionDate<T extends { 
-  production_date?: string | null; 
+export function filterOrdersByCollectionDate<T extends { 
+  requested_delivery_date?: string | null; 
   created_at: string; 
   id: string 
 }>(orders: T[], targetDate: Date): T[] {
@@ -264,9 +265,13 @@ export function filterOrdersByProductionDate<T extends {
       return false;
     }
 
-    return matchesProductionDate(order, targetDate);
+    return matchesCollectionDate(order, targetDate);
   });
 
   console.log(`[DateUtils] Filtered ${validOrders.length}/${orders.length} orders for date ${targetDate.toISOString().split('T')[0]}`);
   return validOrders;
 }
+
+// Legacy aliases for backward compatibility
+export const matchesProductionDate = matchesCollectionDate;
+export const filterOrdersByProductionDate = filterOrdersByCollectionDate;

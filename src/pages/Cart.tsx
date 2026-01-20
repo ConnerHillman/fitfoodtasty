@@ -106,7 +106,6 @@ const Cart = () => {
           delivery_method: deliveryLogic.deliveryMethod,
           collection_point_id: deliveryLogic.deliveryMethod === 'pickup' ? deliveryLogic.selectedCollectionPoint : null,
           requested_delivery_date: dateValidation.requestedDeliveryDate,
-          production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
           customer_email: user?.email,
           customer_name: getUserFullName(user),
           coupon_code: discounts.couponApplied ? discounts.appliedCoupon?.code : null,
@@ -139,7 +138,6 @@ const Cart = () => {
     isCoupon100Off,
     user?.email,
     user,
-    dateValidation.calculateProductionDate,
     isSubscription
   ]);
 
@@ -290,7 +288,6 @@ const Cart = () => {
             customer_email: user?.email,
             customer_name: getUserFullName(user),
             requested_delivery_date: dateValidation.requestedDeliveryDate,
-            production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
             delivery_address: getUserDeliveryAddress(user),
             order_notes: orderNotes.trim() || null,
           })
@@ -323,9 +320,7 @@ const Cart = () => {
             customer_email: user?.email,
             customer_name: getUserFullName(user),
             requested_delivery_date: dateValidation.requestedDeliveryDate,
-            production_date: dateValidation.calculateProductionDate(dateValidation.requestedDeliveryDate),
             delivery_address: getUserDeliveryAddress(user),
-            coupon_type: discounts.appliedCoupon?.code,
             coupon_discount_percentage: discounts.appliedCoupon?.discount_percentage || 0,
             coupon_discount_amount: discounts.appliedCoupon?.discount_amount || 0,
             coupon_free_delivery: discounts.appliedCoupon?.free_delivery || false,

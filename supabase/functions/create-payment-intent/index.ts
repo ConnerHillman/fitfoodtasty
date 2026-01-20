@@ -129,7 +129,6 @@ serve(async (req) => {
     const delivery_method = sanitizeString(body.delivery_method, 20);
     const collection_point_id = sanitizeString(body.collection_point_id, 50);
     const requested_delivery_date = sanitizeString(body.requested_delivery_date, 20);
-    const production_date = sanitizeString(body.production_date, 20);
     const customer_email = sanitizeEmail(body.customer_email);
     const customer_name = sanitizeString(body.customer_name, 100);
     const coupon_code = sanitizeString(body.coupon_code, 50);
@@ -200,7 +199,6 @@ serve(async (req) => {
       delivery_method: delivery_method || '',
       collection_point_id: collection_point_id || '',
       requested_delivery_date: requested_delivery_date || '',
-      production_date: production_date || '',
       customer_email: customer_email || '',
       customer_name: customer_name || '',
       coupon_code: coupon_code || '',

@@ -45,7 +45,6 @@ interface Order {
   status: string;
   created_at: string;
   requested_delivery_date?: string;
-  production_date?: string;
   order_items?: OrderItem[];
   package_meal_selections?: PackageMealSelection[];
   type: 'individual' | 'package';
@@ -455,15 +454,6 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                 </div>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Production Date:</span>
-                <span className="font-medium">
-                  {order.production_date 
-                    ? format(new Date(order.production_date), 'PPP')
-                    : 'Not set'
-                  }
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
                 <span>Original Total:</span>
                 <span className="font-medium">{formatCurrency(order.total_amount)}</span>
               </div>
@@ -618,15 +608,6 @@ export const AdjustOrderModal: React.FC<AdjustOrderModalProps> = ({
                     <span className="font-medium">
                       {order.requested_delivery_date 
                         ? format(new Date(order.requested_delivery_date), 'PPP')
-                        : 'Not set'
-                      }
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Production Date:</span>
-                    <span className="font-medium">
-                      {order.production_date 
-                        ? format(new Date(order.production_date), 'PPP')
                         : 'Not set'
                       }
                     </span>
