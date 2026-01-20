@@ -34,7 +34,6 @@ serve(async (req) => {
       cancelPath = "/cart",
       email,
       requested_delivery_date,
-      production_date,
     } = await req.json().catch(() => ({ items: [] }));
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -111,7 +110,6 @@ serve(async (req) => {
         delivery_method: delivery_method || '',
         collection_point_id: collection_point_id || '',
         requested_delivery_date: requested_delivery_date || '',
-        production_date: production_date || '',
         items: JSON.stringify(items.map(item => ({
           meal_id: item.meal_id,
           name: item.name,

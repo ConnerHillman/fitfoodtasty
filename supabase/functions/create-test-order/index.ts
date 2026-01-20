@@ -49,8 +49,7 @@ serve(async (req) => {
         total_amount: packageData.price,
         currency: 'gbp',
         status: 'confirmed',
-        requested_delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
-        production_date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 1 day from now
+        requested_delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 3 days from now (collection date)
       })
       .select()
       .single();

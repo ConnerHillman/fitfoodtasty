@@ -81,7 +81,7 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
     if (!productionData || !sortedIngredientLineItems.length) return null;
 
     return {
-      productionDate: productionData.productionDate,
+      collectionDate: productionData.collectionDate,
       totalIngredients: productionData.totalIngredients || 0,
       uniqueIngredientTypes: productionData.uniqueIngredientTypes || 0,
       ingredientLineItems: filteredIngredientLineItems,
@@ -135,7 +135,7 @@ export const IngredientsProductionView: React.FC<IngredientsProductionViewProps>
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <Package className="h-5 w-5" />
-            {formatDate(ingredientsData.productionDate, 'EEEE do MMMM')} Ingredient Requirements
+            {formatDate(ingredientsData.collectionDate, 'EEEE do MMMM')} Ingredient Requirements
           </CardTitle>
           
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">

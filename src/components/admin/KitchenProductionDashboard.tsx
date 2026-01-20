@@ -106,7 +106,7 @@ export const KitchenProductionDashboard: React.FC = () => {
     try {
       // Create workbook
       const wb = XLSX.utils.book_new();
-      const dateStr = formatDate(productionData.productionDate, 'EEEE, MMMM d, yyyy');
+      const dateStr = formatDate(productionData.collectionDate, 'EEEE, MMMM d, yyyy');
       
       // === MEALS SHEET ===
       const mealsExportData: (string | number)[][] = [
@@ -226,7 +226,7 @@ export const KitchenProductionDashboard: React.FC = () => {
       XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
 
       // Generate filename with date
-      const filenameDateStr = formatDate(productionData.productionDate, 'yyyy-MM-dd');
+      const filenameDateStr = formatDate(productionData.collectionDate, 'yyyy-MM-dd');
       const filename = `Kitchen_Production_Complete_${filenameDateStr}.xlsx`;
 
       // Save file
@@ -329,7 +329,7 @@ export const KitchenProductionDashboard: React.FC = () => {
             {/* Print-only Production Date Header */}
             <div className="hidden print:block text-center mb-8">
               <h1 className="text-4xl font-bold text-center text-black">
-                {formatDate(productionData.productionDate, 'EEEE do MMMM yyyy')} {activeTab === 'meals' ? 'Production List' : 'Ingredient Requirements'}
+                {formatDate(productionData.collectionDate, 'EEEE do MMMM yyyy')} {activeTab === 'meals' ? 'Production List' : 'Ingredient Requirements'}
               </h1>
             </div>
 
@@ -371,7 +371,7 @@ export const KitchenProductionDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-xl font-bold flex items-center gap-2">
                         <ChefHat className="h-5 w-5" />
-                        {formatDate(productionData.productionDate, 'EEEE do MMMM')} Production List
+                        {formatDate(productionData.collectionDate, 'EEEE do MMMM')} Production List
                       </CardTitle>
                       
                       {/* Sorting Controls */}
