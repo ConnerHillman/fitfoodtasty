@@ -39,11 +39,11 @@ export function ReportsGrid() {
   const [showNewCustomerReport, setShowNewCustomerReport] = useState(false);
   
   // Date states for each report
-  const [itemProductionDate, setItemProductionDate] = useState<{ from: Date; to: Date }>({
+  const [mealCollectionDate, setMealCollectionDate] = useState<{ from: Date; to: Date }>({
     from: startOfDay(new Date()),
     to: endOfDay(new Date())
   });
-  const [ingredientsProductionDate, setIngredientsProductionDate] = useState<{ from: Date; to: Date }>({
+  const [ingredientsCollectionDate, setIngredientsCollectionDate] = useState<{ from: Date; to: Date }>({
     from: startOfDay(new Date()),
     to: endOfDay(new Date())
   });
@@ -184,12 +184,12 @@ export function ReportsGrid() {
       <MealProductionReport 
         isOpen={showMealProduction} 
         onClose={() => setShowMealProduction(false)} 
-        dateRange={itemProductionDate}
+        dateRange={mealCollectionDate}
       />
       <IngredientsProductionReport 
         isOpen={showIngredientsProduction} 
         onClose={() => setShowIngredientsProduction(false)} 
-        dateRange={ingredientsProductionDate}
+        dateRange={ingredientsCollectionDate}
       />
       <OrderItemSummaryReport 
         isOpen={showOrderItemSummary} 
@@ -226,13 +226,13 @@ export function ReportsGrid() {
             onClick={() => setShowMealProduction(true)}
             datePickerSlot={
               <SimpleDateRangePicker
-                date={itemProductionDate}
+                date={mealCollectionDate}
                 onDateChange={(range) => {
                   if (range?.from && range?.to) {
-                    setItemProductionDate({ from: startOfDay(range.from), to: endOfDay(range.to) });
+                    setMealCollectionDate({ from: startOfDay(range.from), to: endOfDay(range.to) });
                   }
                 }}
-                placeholder="Select production date range"
+                placeholder="Select collection date range"
               />
             }
           />
@@ -244,13 +244,13 @@ export function ReportsGrid() {
             onClick={() => setShowIngredientsProduction(true)}
             datePickerSlot={
               <SimpleDateRangePicker
-                date={ingredientsProductionDate}
+                date={ingredientsCollectionDate}
                 onDateChange={(range) => {
                   if (range?.from && range?.to) {
-                    setIngredientsProductionDate({ from: startOfDay(range.from), to: endOfDay(range.to) });
+                    setIngredientsCollectionDate({ from: startOfDay(range.from), to: endOfDay(range.to) });
                   }
                 }}
-                placeholder="Select production date range"
+                placeholder="Select collection date range"
               />
             }
           />

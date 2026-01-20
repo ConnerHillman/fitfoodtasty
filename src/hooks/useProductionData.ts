@@ -437,7 +437,7 @@ export const useProductionData = () => {
 
       // Initialize production data with meals first
       const initialData: ProductionSummary = {
-        productionDate: selectedDate,
+        collectionDate: selectedDate,
         totalMeals,
         uniqueMealTypes: mealLineItems.length,
         mealLineItems,

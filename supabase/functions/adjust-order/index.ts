@@ -146,8 +146,7 @@ serve(async (req) => {
     let newTotal = order.total_amount;
     const oldValues: any = { 
       total_amount: order.total_amount,
-      requested_delivery_date: order.requested_delivery_date,
-      production_date: order.production_date
+      requested_delivery_date: order.requested_delivery_date
     };
     const newValues: any = {};
 
@@ -244,12 +243,6 @@ serve(async (req) => {
     if (newDeliveryDate) {
       const deliveryDate = new Date(newDeliveryDate);
       newValues.requested_delivery_date = deliveryDate.toISOString().split('T')[0];
-      
-      // Calculate new production date based on delivery date
-      // Get delivery zone if possible to calculate proper production date
-      let newProductionDate = deliveryDate;
-      newProductionDate.setDate(newProductionDate.getDate() - 2); // Default 2 days before
-      newValues.production_date = newProductionDate.toISOString().split('T')[0];
     }
 
     // Apply financial adjustments if provided
@@ -289,7 +282,6 @@ serve(async (req) => {
 
     if (newDeliveryDate) {
       updateData.requested_delivery_date = newValues.requested_delivery_date;
-      updateData.production_date = newValues.production_date;
     }
 
     const { data: updatedOrder, error: updateError } = await supabaseClient
