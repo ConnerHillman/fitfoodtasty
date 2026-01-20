@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
 import type { MealLineItem, IngredientLineItem, ProductionSummary } from '@/types/kitchen';
 import { aggregateQuantities, canAggregateUnits, formatQuantity, convertToBaseUnit } from '@/lib/unitConversion';
-import { filterOrdersByProductionDate, isValidProductionDate } from '@/lib/dateUtils';
+import { filterOrdersByCollectionDate, isValidProductionDate } from '@/lib/dateUtils';
 
 export const useProductionData = () => {
   const [productionData, setProductionData] = useState<ProductionSummary | null>(null);
@@ -321,13 +321,12 @@ export const useProductionData = () => {
       const startDate = startOfDay(selectedDate);
       const endDate = endOfDay(selectedDate);
 
-      // Fetch orders for the selected production date
+      // Fetch orders for the selected collection/delivery date
       const [ordersRes, packageOrdersRes] = await Promise.all([
         supabase.from("orders").select(`
           id,
           status,
           customer_name,
-          production_date,
           requested_delivery_date,
           created_at,
           order_items (
@@ -341,7 +340,6 @@ export const useProductionData = () => {
           id,
           status,
           customer_name,
-          production_date,
           requested_delivery_date,
           created_at,
           package_meal_selections (
@@ -360,11 +358,11 @@ export const useProductionData = () => {
       const orders = ordersRes.data || [];
       const packageOrders = packageOrdersRes.data || [];
 
-      // Use enhanced date filtering with proper validation
-      console.log(`[Production Data] Filtering ${orders.length} orders and ${packageOrders.length} package orders for date ${selectedDate.toISOString().split('T')[0]}`);
+      // Use enhanced date filtering with proper validation - filter by collection/delivery date
+      console.log(`[Production Data] Filtering ${orders.length} orders and ${packageOrders.length} package orders for collection date ${selectedDate.toISOString().split('T')[0]}`);
       
-      const filteredOrders = filterOrdersByProductionDate(orders, selectedDate);
-      const filteredPackageOrders = filterOrdersByProductionDate(packageOrders, selectedDate);
+      const filteredOrders = filterOrdersByCollectionDate(orders, selectedDate);
+      const filteredPackageOrders = filterOrdersByCollectionDate(packageOrders, selectedDate);
 
       // Fetch actual meal names for package orders with validation
       const packageMealIds = filteredPackageOrders.flatMap(pkg => 

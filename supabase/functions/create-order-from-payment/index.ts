@@ -241,7 +241,6 @@ serve(async (req) => {
           customer_email: metadata.customer_email || user.email,
           customer_name: metadata.customer_name || null,
           requested_delivery_date: metadata.requested_delivery_date || null,
-          production_date: metadata.production_date || null,
           delivery_address: profileDeliveryAddress,
           stripe_payment_intent_id: payment_intent_id,
           order_notes: metadata.order_notes || null,
@@ -388,9 +387,6 @@ serve(async (req) => {
       const normalizedRequestedDeliveryDate = metadata.requested_delivery_date && metadata.requested_delivery_date !== '' 
         ? metadata.requested_delivery_date 
         : null;
-      const normalizedProductionDate = metadata.production_date && metadata.production_date !== '' 
-        ? metadata.production_date 
-        : null;
 
       console.log('[create-order-from-payment] Creating order with data:', {
         user_id: user.id,
@@ -401,7 +397,6 @@ serve(async (req) => {
         customer_email: metadata.customer_email || user.email,
         customer_name: metadata.customer_name || null,
         requested_delivery_date: normalizedRequestedDeliveryDate,
-        production_date: normalizedProductionDate,
         delivery_address: profileDeliveryAddress,
         fulfillment_method: fulfillmentMethod,
         collection_point_id: collectionPointId,
@@ -420,7 +415,6 @@ serve(async (req) => {
           customer_email: metadata.customer_email || user.email,
           customer_name: metadata.customer_name || null,
           requested_delivery_date: normalizedRequestedDeliveryDate,
-          production_date: normalizedProductionDate,
           delivery_address: profileDeliveryAddress,
           referral_code_used: metadata.coupon_code || null,
           coupon_type: metadata.coupon_type || null,

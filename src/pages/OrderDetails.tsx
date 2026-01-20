@@ -69,7 +69,6 @@ interface OrderDetails {
   stripe_payment_intent_id?: string;
   referral_code_used?: string;
   requested_delivery_date?: string;
-  production_date?: string;
   created_at: string;
   updated_at: string;
   order_notes?: string;
@@ -419,19 +418,6 @@ const OrderDetails: React.FC = () => {
                         <p className="text-sm text-muted-foreground">
                           {order.requested_delivery_date 
                             ? format(new Date(order.requested_delivery_date), 'PPP')
-                            : 'Not scheduled'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Production Date:</p>
-                        <p className="text-sm text-muted-foreground">
-                          {order.production_date 
-                            ? format(new Date(order.production_date), 'PPP')
                             : 'Not scheduled'
                           }
                         </p>

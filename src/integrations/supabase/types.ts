@@ -1105,7 +1105,6 @@ export type Database = {
       orders: {
         Row: {
           actual_delivery_date: string | null
-          actual_production_date: string | null
           collection_point_id: string | null
           coupon_discount_amount: number | null
           coupon_discount_percentage: number | null
@@ -1125,7 +1124,6 @@ export type Database = {
           last_modified_by: string | null
           order_notes: string | null
           private_note: string | null
-          production_date: string | null
           referral_code_used: string | null
           refund_amount: number | null
           refund_reason: string | null
@@ -1140,7 +1138,6 @@ export type Database = {
         }
         Insert: {
           actual_delivery_date?: string | null
-          actual_production_date?: string | null
           collection_point_id?: string | null
           coupon_discount_amount?: number | null
           coupon_discount_percentage?: number | null
@@ -1160,7 +1157,6 @@ export type Database = {
           last_modified_by?: string | null
           order_notes?: string | null
           private_note?: string | null
-          production_date?: string | null
           referral_code_used?: string | null
           refund_amount?: number | null
           refund_reason?: string | null
@@ -1175,7 +1171,6 @@ export type Database = {
         }
         Update: {
           actual_delivery_date?: string | null
-          actual_production_date?: string | null
           collection_point_id?: string | null
           coupon_discount_amount?: number | null
           coupon_discount_percentage?: number | null
@@ -1195,7 +1190,6 @@ export type Database = {
           last_modified_by?: string | null
           order_notes?: string | null
           private_note?: string | null
-          production_date?: string | null
           referral_code_used?: string | null
           refund_amount?: number | null
           refund_reason?: string | null
@@ -1295,7 +1289,6 @@ export type Database = {
       package_orders: {
         Row: {
           actual_delivery_date: string | null
-          actual_production_date: string | null
           collection_point_id: string | null
           created_at: string
           currency: string
@@ -1310,7 +1303,6 @@ export type Database = {
           order_notes: string | null
           package_id: string | null
           private_note: string | null
-          production_date: string | null
           refund_amount: number | null
           refund_reason: string | null
           requested_delivery_date: string | null
@@ -1324,7 +1316,6 @@ export type Database = {
         }
         Insert: {
           actual_delivery_date?: string | null
-          actual_production_date?: string | null
           collection_point_id?: string | null
           created_at?: string
           currency?: string
@@ -1339,7 +1330,6 @@ export type Database = {
           order_notes?: string | null
           package_id?: string | null
           private_note?: string | null
-          production_date?: string | null
           refund_amount?: number | null
           refund_reason?: string | null
           requested_delivery_date?: string | null
@@ -1353,7 +1343,6 @@ export type Database = {
         }
         Update: {
           actual_delivery_date?: string | null
-          actual_production_date?: string | null
           collection_point_id?: string | null
           created_at?: string
           currency?: string
@@ -1368,7 +1357,6 @@ export type Database = {
           order_notes?: string | null
           package_id?: string | null
           private_note?: string | null
-          production_date?: string | null
           refund_amount?: number | null
           refund_reason?: string | null
           requested_delivery_date?: string | null
@@ -1779,7 +1767,6 @@ export type Database = {
           meal_selections: Json | null
           payment_status: string | null
           planned_delivery_date: string
-          production_date: string | null
           skipped_reason: string | null
           status: string
           stripe_invoice_id: string | null
@@ -1808,7 +1795,6 @@ export type Database = {
           meal_selections?: Json | null
           payment_status?: string | null
           planned_delivery_date: string
-          production_date?: string | null
           skipped_reason?: string | null
           status?: string
           stripe_invoice_id?: string | null
@@ -1837,7 +1823,6 @@ export type Database = {
           meal_selections?: Json | null
           payment_status?: string | null
           planned_delivery_date?: string
-          production_date?: string | null
           skipped_reason?: string | null
           status?: string
           stripe_invoice_id?: string | null
@@ -2228,10 +2213,6 @@ export type Database = {
           p_delivery_frequency: string
           p_delivery_zone_id?: string
         }
-        Returns: string
-      }
-      calculate_production_date: {
-        Args: { delivery_date: string; zone_id?: string }
         Returns: string
       }
       can_access_abandoned_cart: {
