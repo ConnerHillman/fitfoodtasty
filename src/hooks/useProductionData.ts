@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { startOfDay, endOfDay } from 'date-fns';
 import type { MealLineItem, IngredientLineItem, ProductionSummary } from '@/types/kitchen';
 import { aggregateQuantities, canAggregateUnits, formatQuantity, convertToBaseUnit } from '@/lib/unitConversion';
-import { filterOrdersByCollectionDate, isValidProductionDate } from '@/lib/dateUtils';
+import { filterOrdersByCollectionDate, isValidDateInput } from '@/lib/dateUtils';
 
 export const useProductionData = () => {
   const [productionData, setProductionData] = useState<ProductionSummary | null>(null);
@@ -296,7 +296,7 @@ export const useProductionData = () => {
 
   const loadProductionData = useCallback(async (selectedDate: Date) => {
     // Validate input date first
-    if (!selectedDate || !isValidProductionDate(selectedDate)) {
+    if (!selectedDate || !isValidDateInput(selectedDate)) {
       console.error('[Production Data] Invalid date provided:', selectedDate);
       toast({
         title: "Invalid Date",

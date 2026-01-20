@@ -26,8 +26,6 @@ export interface IngredientLineItem {
 
 export interface ProductionSummary {
   collectionDate: Date;
-  /** @deprecated Use collectionDate instead */
-  productionDate?: Date;
   totalMeals: number;
   uniqueMealTypes: number;
   mealLineItems: MealLineItem[];
