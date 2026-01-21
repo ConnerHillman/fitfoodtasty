@@ -36,10 +36,13 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           "first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg",
         ),
         day: cn(
+          buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-medium rounded-lg transition-all duration-150",
-          "hover:bg-accent hover:text-accent-foreground hover:scale-105",
-          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1",
           "aria-selected:opacity-100",
+          // Available days get enhanced styling
+          "text-foreground",
+          "hover:bg-primary/20 hover:text-primary hover:scale-105 hover:font-semibold",
+          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1",
         ),
         day_range_end: "day-range-end",
         day_selected: cn(
@@ -49,17 +52,18 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           "shadow-md ring-2 ring-primary/30 ring-offset-1",
         ),
         day_today: cn(
-          "bg-accent/80 text-accent-foreground font-semibold",
+          "bg-accent text-accent-foreground font-semibold",
           "ring-1 ring-primary/40",
         ),
         day_outside: cn(
-          "day-outside text-muted-foreground/40",
-          "aria-selected:bg-accent/30 aria-selected:text-muted-foreground/60",
+          "day-outside text-muted-foreground/30",
+          "hover:bg-transparent hover:scale-100",
+          "aria-selected:bg-accent/30 aria-selected:text-muted-foreground/50",
         ),
         day_disabled: cn(
-          "text-muted-foreground/30 cursor-not-allowed",
-          "hover:bg-transparent hover:scale-100",
-          "line-through decoration-muted-foreground/20",
+          "text-muted-foreground/25 cursor-not-allowed",
+          "hover:bg-transparent hover:text-muted-foreground/25 hover:scale-100 hover:font-medium",
+          "line-through decoration-muted-foreground/30",
         ),
         day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
