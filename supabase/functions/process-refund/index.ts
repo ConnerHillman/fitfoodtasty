@@ -196,9 +196,31 @@ serve(async (req) => {
       throw new Error(`Failed to update order: ${updateError.message}`);
     }
 
-    // TODO: Send notification email to customer if notifyCustomer is true
-    if (notifyCustomer) {
-      console.log(`Should notify customer about refund for order ${orderId}`);
+    // Send notification email to customer if requested
+    if (notifyCustomer && order.customer_email) {
+      try {
+        const customerName = order.customer_name || 'Valued Customer';
+        const orderNumber = orderId.slice(0, 8).toUpperCase();
+        
+        await supabaseClient.functions.invoke('send-customer-notification', {
+          body: {
+            notification_type: 'refund',
+            recipient_email: order.customer_email,
+            data: {
+              customer_name: customerName,
+              order_number: orderNumber,
+              order_id: orderId,
+              order_type: orderType,
+              refund_amount: amount.toFixed(2),
+              refund_reason: reason,
+            }
+          }
+        });
+        console.log(`Refund notification sent to ${order.customer_email}`);
+      } catch (emailError) {
+        console.error('Failed to send refund notification email:', emailError);
+        // Don't fail the refund if email fails
+      }
     }
 
     return new Response(JSON.stringify({

@@ -138,9 +138,31 @@ serve(async (req) => {
       throw new Error(`Failed to void order: ${updateError.message}`);
     }
 
-    // TODO: Send notification email to customer if notifyCustomer is true
-    if (notifyCustomer) {
-      console.log(`Should notify customer about voided order ${orderId}`);
+    // Send notification email to customer if requested
+    if (notifyCustomer && order.customer_email) {
+      try {
+        const customerName = order.customer_name || 'Valued Customer';
+        const orderNumber = orderId.slice(0, 8).toUpperCase();
+        
+        await supabaseClient.functions.invoke('send-customer-notification', {
+          body: {
+            notification_type: 'void',
+            recipient_email: order.customer_email,
+            data: {
+              customer_name: customerName,
+              order_number: orderNumber,
+              order_id: orderId,
+              order_type: orderType,
+              refund_amount: refundAmount > 0 ? refundAmount.toFixed(2) : null,
+              void_reason: reason,
+            }
+          }
+        });
+        console.log(`Void notification sent to ${order.customer_email}`);
+      } catch (emailError) {
+        console.error('Failed to send void notification email:', emailError);
+        // Don't fail the void if email fails
+      }
     }
 
     return new Response(JSON.stringify({
