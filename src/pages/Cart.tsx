@@ -34,7 +34,12 @@ const Cart = () => {
   // Custom hooks for cart logic
   const deliveryLogic = useDeliveryLogic();
   const discounts = useDiscounts();
-  const dateValidation = useDateValidation(deliveryLogic.deliveryZone);
+  const dateValidation = useDateValidation({
+    deliveryZone: deliveryLogic.deliveryZone,
+    deliveryMethod: deliveryLogic.deliveryMethod,
+    collectionPoints: deliveryLogic.collectionPoints,
+    selectedCollectionPoint: deliveryLogic.selectedCollectionPoint,
+  });
   const adminOrder = useAdminOrder();
   
   // State variables
@@ -48,6 +53,11 @@ const Cart = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Reset date when delivery method or collection point changes
+  useEffect(() => {
+    dateValidation.resetDate();
+  }, [deliveryLogic.deliveryMethod, deliveryLogic.selectedCollectionPoint, deliveryLogic.deliveryZone?.id]);
 
   // Memoized calculations
   const subtotal = useMemo(() => getTotalPrice(), [getTotalPrice]);
