@@ -184,6 +184,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_email_templates: {
+        Row: {
+          created_at: string | null
+          email_type: string
+          html_content: string
+          id: string
+          is_active: boolean | null
+          subject_template: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_type: string
+          html_content: string
+          id?: string
+          is_active?: boolean | null
+          subject_template: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_type?: string
+          html_content?: string
+          id?: string
+          is_active?: boolean | null
+          subject_template?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
