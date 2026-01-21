@@ -3,12 +3,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, MapPin } from "lucide-react";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 interface CollectionPoint {
@@ -41,8 +41,8 @@ const CollectionPointPicker: React.FC<CollectionPointPickerProps> = ({
   return (
     <div>
       <Label htmlFor="collection-point">Collection Point</Label>
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
           <Button
             id="collection-point"
             variant="outline"
@@ -60,12 +60,12 @@ const CollectionPointPicker: React.FC<CollectionPointPickerProps> = ({
             </div>
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
-        </DrawerTrigger>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader className="border-b">
-            <DrawerTitle>Select Collection Point</DrawerTitle>
-          </DrawerHeader>
-          <div className="overflow-y-auto p-4 space-y-2">
+        </DialogTrigger>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Select Collection Point</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto space-y-2 py-2">
             {collectionPoints.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
                 No collection points available
@@ -104,8 +104,8 @@ const CollectionPointPicker: React.FC<CollectionPointPickerProps> = ({
               ))
             )}
           </div>
-        </DrawerContent>
-      </Drawer>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
