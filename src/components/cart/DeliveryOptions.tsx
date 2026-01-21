@@ -110,15 +110,8 @@ const DeliveryOptions: React.FC<DeliveryOptionsProps> = ({
               <SelectContent>
                 {collectionPoints.map((point) => (
                   <SelectItem key={point.id} value={point.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{point.point_name}</span>
-                      <span className="text-sm text-muted-foreground">{point.address}</span>
-                      {point.collection_fee > 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          Fee: £{point.collection_fee.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
+                    {point.point_name} - {point.address}
+                    {point.collection_fee > 0 && ` (£${point.collection_fee.toFixed(2)})`}
                   </SelectItem>
                 ))}
               </SelectContent>

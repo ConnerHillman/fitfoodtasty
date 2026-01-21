@@ -386,7 +386,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl overflow-hidden">
+    <div className="container mx-auto px-4 py-8 max-w-7xl overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <Button 
