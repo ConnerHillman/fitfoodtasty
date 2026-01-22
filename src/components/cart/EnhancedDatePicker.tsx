@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarDays, Check, AlertCircle } from "lucide-react";
+import { CalendarDays, Check, AlertCircle, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EnhancedDatePickerProps {
@@ -14,6 +14,9 @@ interface EnhancedDatePickerProps {
   isDateAvailable: (date: Date) => boolean;
   isDateDisabled: (date: Date) => boolean;
   availableDays: string[];
+  // New props for contextual messaging
+  isDeliveryZoneSet?: boolean;
+  isCollectionPointSet?: boolean;
 }
 
 const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
@@ -25,6 +28,8 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
   isDateAvailable,
   isDateDisabled,
   availableDays,
+  isDeliveryZoneSet = true,
+  isCollectionPointSet = true,
 }) => {
   const selectedDate = requestedDeliveryDate ? new Date(requestedDeliveryDate + 'T12:00:00') : undefined;
   
@@ -48,14 +53,48 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
     .map(d => d.charAt(0).toUpperCase() + d.slice(1))
     .join(", ");
 
+  // Determine if there's a blocking reason preventing date selection
+  const blockingMessage = useMemo(() => {
+    if (deliveryMethod === "delivery" && !isDeliveryZoneSet) {
+      return {
+        icon: MapPin,
+        title: "Enter your postcode first",
+        description: "We need your postcode to show available delivery dates for your area."
+      };
+    }
+    
+    if (deliveryMethod === "pickup" && !isCollectionPointSet) {
+      return {
+        icon: MapPin,
+        title: "Select a collection point first",
+        description: "Choose where you'd like to collect your order to see available dates."
+      };
+    }
+    
+    if (availableDays.length === 0 && (isDeliveryZoneSet || isCollectionPointSet)) {
+      return {
+        icon: AlertCircle,
+        title: "No dates available",
+        description: "Please check your delivery area or contact support."
+      };
+    }
+    
+    return null;
+  }, [deliveryMethod, isDeliveryZoneSet, isCollectionPointSet, availableDays.length]);
+
+  const isBlocked = !!blockingMessage;
+  const BlockingIcon = blockingMessage?.icon || AlertCircle;
+
   return (
     <div className="space-y-3">
       <Popover open={calendarOpen} onOpenChange={onCalendarOpenChange}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
+            disabled={isBlocked}
             className={cn(
               "w-full h-12 justify-start text-left font-normal rounded-xl border-2 transition-all",
+              isBlocked && "opacity-60 cursor-not-allowed",
               selectedDate 
                 ? "border-primary bg-primary/5" 
                 : "border-border/60 hover:border-border"
@@ -74,7 +113,9 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
                 })}
               </span>
             ) : (
-              <span className="text-muted-foreground">Select a {dateLabel} date</span>
+              <span className="text-muted-foreground">
+                {isBlocked ? `Select a ${dateLabel} date` : `Select a ${dateLabel} date`}
+              </span>
             )}
             {selectedDate && (
               <Check className="ml-auto h-4 w-4 text-primary" />
@@ -96,19 +137,36 @@ const EnhancedDatePicker: React.FC<EnhancedDatePickerProps> = ({
       </Popover>
 
       {/* Available days legend */}
-      {availableDays.length > 0 && (
+      {availableDays.length > 0 && !isBlocked && (
         <p className="text-xs text-muted-foreground px-1">
           {deliveryMethod === "pickup" ? "Collection" : "Delivery"} available: {formattedAvailableDays}
         </p>
       )}
 
+      {/* Contextual messaging based on state */}
       {!selectedDate && (
-        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30 dark:border-amber-800">
-          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-amber-800 dark:text-amber-200">
-            Almost there — choose a {dateLabel} date to continue.
-          </p>
-        </div>
+        <>
+          {blockingMessage ? (
+            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950/30 dark:border-blue-800">
+              <BlockingIcon className="h-4 w-4 text-blue-600 dark:text-blue-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  {blockingMessage.title}
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+                  {blockingMessage.description}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30 dark:border-amber-800">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                Almost there — choose a {dateLabel} date to continue.
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {selectedDate && (

@@ -447,6 +447,8 @@ const Cart = () => {
                 isDateAvailable={dateValidation.isDateAvailable}
                 isDateDisabled={dateValidation.isDateDisabled}
                 availableDays={dateValidation.availableDays}
+                isDeliveryZoneSet={!!deliveryLogic.deliveryZone}
+                isCollectionPointSet={!!deliveryLogic.selectedCollectionPoint}
               />
             </CheckoutStepCard>
 
