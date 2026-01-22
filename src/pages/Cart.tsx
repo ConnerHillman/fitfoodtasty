@@ -527,7 +527,7 @@ const Cart = () => {
         </div>
 
         {/* Mobile Payment Section */}
-        <div className="lg:hidden mt-6">
+        <div className="lg:hidden mt-6" data-payment-section="mobile">
           <PaymentSection
             user={user}
             clientSecret={clientSecret}
@@ -550,6 +550,7 @@ const Cart = () => {
         finalTotal={finalTotal}
         isEnabled={!!ctaEnabled}
         helperMessage={ctaHelperMessage}
+        itemCount={items.reduce((sum, item) => sum + item.quantity, 0)}
       />
     </>
   );
