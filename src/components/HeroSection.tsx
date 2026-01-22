@@ -65,21 +65,15 @@ const HeroSection = () => {
       {/* Content Container */}
       <div className="relative z-10 min-h-[100svh] flex flex-col justify-end">
         <div className="container mx-auto px-5 pb-12 pt-20 md:pb-20 md:pt-32 lg:pb-24">
-          <div className="max-w-xl lg:max-w-2xl space-y-6 md:space-y-8">
+          <div className="max-w-xl lg:max-w-2xl space-y-5 md:space-y-6">
             
-            {/* Eyebrow Tag */}
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-              <span className="text-sm font-medium text-white/90 tracking-wide">
-                Chef-cooked. Nutrition-led.
-              </span>
-            </div>
-
-            {/* Main Headline with subtle text shadow for readability */}
+            {/* Main Headline */}
             <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight"
               style={{ textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}
             >
-              Restaurant-quality meal prep—ready in 3&nbsp;minutes.
+              Chef-Prepared Meals.<br />
+              Nutrition-Led Results.
             </h1>
 
             {/* Supporting Subheadline - streamlined, no duplication */}
