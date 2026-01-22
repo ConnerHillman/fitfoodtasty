@@ -1,6 +1,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, Package } from "lucide-react";
+
+interface PackageData {
+  packageId: string;
+  packageName: string;
+  selectedMeals: Record<string, number>;
+  mealNames?: Record<string, string>;
+}
 
 interface CartItem {
   id: string;
@@ -9,6 +16,8 @@ interface CartItem {
   price: number;
   quantity: number;
   image_url?: string;
+  type?: 'meal' | 'package';
+  packageData?: PackageData;
 }
 
 interface EnhancedCartItemProps {
@@ -22,20 +31,60 @@ const EnhancedCartItem: React.FC<EnhancedCartItemProps> = ({
   onUpdateQuantity,
   onRemove,
 }) => {
+  const isPackage = item.type === 'package';
+  
+  // Build the meal list for packages
+  const packageMealsList = React.useMemo(() => {
+    if (!isPackage || !item.packageData?.selectedMeals) return null;
+    
+    const { selectedMeals, mealNames } = item.packageData;
+    return Object.entries(selectedMeals)
+      .filter(([_, qty]) => qty > 0)
+      .map(([mealId, qty]) => {
+        const name = mealNames?.[mealId] || 'Meal';
+        return { name, quantity: qty };
+      });
+  }, [isPackage, item.packageData]);
+
   return (
     <div className="flex gap-3 sm:gap-4 py-4 border-b border-border/40 last:border-0">
-      {item.image_url && (
+      {item.image_url ? (
         <img
           src={item.image_url}
           alt={item.name}
           className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg flex-shrink-0"
         />
-      )}
-      <div className="flex-1 min-w-0 flex flex-col justify-between">
+      ) : isPackage ? (
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex-shrink-0 bg-primary/10 flex items-center justify-center">
+          <Package className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+        </div>
+      ) : null}
+      
+      <div className="flex-1 min-w-0 flex flex-col">
         <div>
           <h4 className="font-medium text-sm sm:text-base line-clamp-1">{item.name}</h4>
-          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mt-0.5">{item.description}</p>
+          
+          {/* For packages: show full meal list */}
+          {isPackage && packageMealsList && packageMealsList.length > 0 ? (
+            <div className="mt-1.5 space-y-0.5">
+              <p className="text-xs text-muted-foreground font-medium">Your selections:</p>
+              <ul className="text-xs text-muted-foreground space-y-0.5">
+                {packageMealsList.map((meal, idx) => (
+                  <li key={idx} className="flex items-center gap-1">
+                    <span className="text-primary">•</span>
+                    <span>{meal.quantity}× {meal.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            /* For regular meals: show description truncated */
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mt-0.5">
+              {item.description}
+            </p>
+          )}
         </div>
+        
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-2">
             <Button
