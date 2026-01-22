@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +12,15 @@ import { useAuth } from "@/contexts/AuthContext";
 /**
  * Profile completion page for OAuth users who need to add required fields.
  * Phone is required; address fields are optional but helpful.
+ * Preserves returnTo parameter to redirect back to checkout after completion.
  */
 const CompleteProfile = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  
+  // Get returnTo from query params, default to /menu
+  const returnTo = searchParams.get("returnTo") || "/menu";
   
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -56,9 +61,9 @@ const CompleteProfile = () => {
           .single();
 
         if (profile) {
-          // If profile already has phone, redirect to menu
+          // If profile already has phone, redirect to returnTo
           if (profile.phone && profile.phone.trim().length > 0) {
-            navigate("/menu");
+            navigate(returnTo);
             return;
           }
           
@@ -126,7 +131,7 @@ const CompleteProfile = () => {
         }
       }).catch(err => console.error('Welcome email failed:', err));
 
-      navigate("/menu");
+      navigate(returnTo);
     } catch (err: any) {
       console.error("Profile update error:", err);
       setError(err.message || "Failed to update profile. Please try again.");
