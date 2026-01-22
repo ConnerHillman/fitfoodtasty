@@ -33,8 +33,8 @@ const HeroSection = () => {
 
   const benefits = [
     "Bold, chef-crafted flavours you'll actually crave",
-    "Macro-balanced for your goals",
-    "Swap meals anytime, skip weeks easily",
+    "High protein, quality nutrition",
+    "Ready to eat in 3 minutes",
   ];
 
   return (
