@@ -117,7 +117,7 @@ const HeroSection = () => {
 
             {/* Subtle trust signal */}
             <p className="text-sm text-white/50 pt-2">
-              Chef-prepared fresh each week · Trusted by thousands
+              Available for collection or delivery · Always cooked fresh to order
             </p>
           </div>
         </div>
