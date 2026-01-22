@@ -446,7 +446,7 @@ const Cart = () => {
                 deliveryMethod={deliveryLogic.deliveryMethod}
                 isDateAvailable={dateValidation.isDateAvailable}
                 isDateDisabled={dateValidation.isDateDisabled}
-                getMinDeliveryDate={dateValidation.getMinDeliveryDate}
+                availableDays={dateValidation.availableDays}
               />
             </CheckoutStepCard>
 
