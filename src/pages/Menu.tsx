@@ -89,22 +89,6 @@ const Menu = () => {
         </Card>
       )}
 
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="text-center md:text-left"></div>
-        
-        {/* Create Account CTA - Only show for non-authenticated users */}
-        {!user && (
-          <div className="flex items-center space-x-3">
-            <div className="text-right hidden md:block">
-              <p className="text-sm text-gray-600 mb-1">Save 20% on your first order</p>
-              <p className="text-xs text-gray-500">Create a free account today</p>
-            </div>
-            <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              <Link to="/auth">Create Account</Link>
-            </Button>
-          </div>
-        )}
-      </div>
 
       {/* Packages section with anchor */}
       <section id="packages">
