@@ -14,14 +14,18 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useAdminOrder } from "@/hooks/useAdminOrder";
 import { logger } from "@/lib/logger";
 import { getUserFullName, getUserDeliveryAddress } from "@/types/user";
-import OrderSummary from "@/components/cart/OrderSummary";
-import DeliveryOptions from "@/components/cart/DeliveryOptions";
-import DatePicker from "@/components/cart/DatePicker";
-import CouponSection from "@/components/cart/CouponSection";
+
+// New checkout components
+import CheckoutStepCard from "@/components/cart/CheckoutStepCard";
+import EnhancedCartItem from "@/components/cart/EnhancedCartItem";
+import EnhancedDeliveryOptions from "@/components/cart/EnhancedDeliveryOptions";
+import EnhancedDatePicker from "@/components/cart/EnhancedDatePicker";
+import EnhancedOrderSummary from "@/components/cart/EnhancedOrderSummary";
+import CompactSubscriptionToggle from "@/components/cart/CompactSubscriptionToggle";
+import CompactOrderNotes from "@/components/cart/CompactOrderNotes";
+import CollapsibleDiscounts from "@/components/cart/CollapsibleDiscounts";
+import StickyCheckoutFooter from "@/components/cart/StickyCheckoutFooter";
 import PaymentSection from "@/components/cart/PaymentSection";
-import CartItemCard from "@/components/cart/CartItemCard";
-import SubscriptionToggle from "@/components/cart/SubscriptionToggle";
-import CustomerNotes from "@/components/cart/CustomerNotes";
 import { AdminOrderEnhancements } from "@/components/cart/AdminOrderEnhancements";
 
 const Cart = () => {
@@ -44,7 +48,6 @@ const Cart = () => {
   
   // State variables
   const [clientSecret, setClientSecret] = useState<string>("");
-  const [orderSummaryExpanded, setOrderSummaryExpanded] = useState<boolean>(false);
   const [orderNotes, setOrderNotes] = useState("");
   const [isSubscription, setIsSubscription] = useState(false);
   const [sendEmail, setSendEmail] = useState(adminOrderData?.sendEmail ?? true);
@@ -78,6 +81,15 @@ const Cart = () => {
   const isCoupon100Off = useMemo(() => {
     return discounts.isCoupon100PercentOff(subtotal, fees);
   }, [subtotal, fees, discounts.isCoupon100PercentOff]);
+
+  // CTA state
+  const hasSelectedDate = !!dateValidation.requestedDeliveryDate;
+  const ctaEnabled = hasSelectedDate && user;
+  const ctaHelperMessage = !user 
+    ? "Sign in to continue" 
+    : !hasSelectedDate 
+      ? "Select a delivery date to continue" 
+      : "You'll review everything before paying";
 
   // Debounced PaymentIntent creation function
   const createPaymentIntentRef = useRef<() => Promise<void>>();
@@ -169,90 +181,9 @@ const Cart = () => {
     discounts.appliedCoupon,
     orderNotes,
     isCoupon100Off,
-    isSubscription, // Add isSubscription to trigger payment intent updates
+    isSubscription,
     debouncedCreatePaymentIntent
   ]);
-
-  // Memoized apply coupon function
-  const applyCoupon = useCallback(async () => {
-    if (!discounts.couponCode.trim()) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('validate-coupon', {
-        body: { 
-          code: discounts.couponCode.trim(),
-          cart_total: subtotal
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.valid) {
-        discounts.setAppliedCoupon(data.coupon);
-        discounts.setCouponApplied(true);
-        discounts.setCouponMessage(`Coupon "${discounts.couponCode}" applied successfully!`);
-        
-        // Check for expiry warning
-        discounts.checkExpiryWarning(data.coupon);
-
-        // Add free item if applicable
-        if (data.coupon.free_item_id && !discounts.freeItemAdded) {
-          try {
-            const { data: mealData, error: mealError } = await supabase
-              .from('meals')
-              .select('*')
-              .eq('id', data.coupon.free_item_id)
-              .eq('is_active', true)
-              .single();
-
-            if (!mealError && mealData) {
-              addToCart({
-                id: mealData.id,
-                name: `${mealData.name} (FREE)`,
-                description: mealData.description || '',
-                category: mealData.category || '',
-                price: 0,
-                total_calories: mealData.total_calories || 0,
-                total_protein: mealData.total_protein || 0,
-                total_carbs: mealData.total_carbs || 0,
-                total_fat: mealData.total_fat || 0,
-                total_fiber: mealData.total_fiber || 0,
-                shelf_life_days: mealData.shelf_life_days || 5,
-                image_url: mealData.image_url || '',
-              });
-              discounts.setFreeItemAdded(true);
-              toast({
-                title: "Free item added!",
-                description: `${mealData.name} has been added to your cart for free.`,
-              });
-            }
-          } catch (freeItemError) {
-            logger.error('Error adding free item', freeItemError);
-          }
-        }
-
-        toast({
-          title: "Coupon applied!",
-          description: data.message || "Discount applied to your order.",
-        });
-      } else {
-        discounts.setCouponMessage(data.message || "Invalid coupon code");
-        toast({
-          title: "Invalid coupon",
-          description: data.message || "This coupon code is not valid.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      logger.error('Error applying coupon', error);
-      discounts.setCouponMessage("Failed to apply coupon");
-      toast({
-        title: "Error",
-        description: "Failed to apply coupon. Please try again.",
-        variant: "destructive",
-      });
-    }
-  }, [discounts, toast, addToCart]);
 
   // Memoized create free order for 100% off coupons
   const createFreeOrder = useCallback(async () => {
@@ -364,8 +295,6 @@ const Cart = () => {
         description: `Your free ${deliveryLogic.deliveryMethod === "pickup" ? "collection" : "delivery"} is confirmed.`,
       });
 
-      // Clear cart and navigate
-      // clearCart(); // Commented out to prevent clearing until navigation
       window.location.href = "/payment-success";
     } catch (error) {
       logger.error('Error creating free order', error);
@@ -381,13 +310,15 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center py-12">
-          <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+        <div className="text-center py-16">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+            <ShoppingBag className="h-10 w-10 text-muted-foreground" />
+          </div>
           <h2 className="text-2xl font-bold mb-2">Your cart is empty</h2>
-          <p className="text-muted-foreground mb-6">
-            Add some delicious meals to get started!
+          <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+            Add some delicious meals to get started with your order!
           </p>
-          <Button asChild>
+          <Button asChild size="lg" className="rounded-xl h-12 px-8">
             <Link to="/menu">Browse Menu</Link>
           </Button>
         </div>
@@ -396,168 +327,207 @@ const Cart = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl overflow-x-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          asChild
-          className="h-10 px-5 rounded-xl border-border/60 bg-card hover:bg-accent hover:border-primary/30 shadow-sm hover:shadow-md transition-all duration-200"
-        >
-          <Link to="/menu" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="font-medium">Continue Shopping</span>
-          </Link>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => {
-            items.forEach(item => removeFromCart(item.id));
-            toast({
-              title: "Cart cleared",
-              description: "All items have been removed from your cart.",
-            });
-          }}
-          className="text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Empty Cart
-        </Button>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Admin Order Enhancements */}
-          {isAdminMode && (
-            <AdminOrderEnhancements
-              onPriceOverride={adminOrder.handlePriceOverride}
-              onOrderNotesChange={setOrderNotes}
-              orderNotes={orderNotes}
-              onCashOrderConfirm={async () => {
-                await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
-              }}
-              onPaymentLinkConfirm={async () => {
-                await adminOrder.createPaymentLinkOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail, false);
-              }}
-              onChargeCardConfirm={async (paymentMethodId: string, stripeCustomerId: string) => {
-                await adminOrder.chargeCardOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, paymentMethodId, stripeCustomerId, sendEmail);
-              }}
-              onNewCardPaymentSuccess={async (paymentIntentId: string) => {
-                await adminOrder.completeNewCardOrder(paymentIntentId, orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
-              }}
-              totalAmount={adminOrder.calculateTotalWithOverrides()}
-              finalTotal={adminOrder.calculateUnifiedTotal(fees)}
-              loading={adminOrder.loading}
-              priceOverrides={adminOrder.priceOverrides}
-              onResetAllPrices={adminOrder.resetAllPrices}
-              deliveryFees={fees}
-              sendEmail={sendEmail}
-              onSendEmailChange={setSendEmail}
-              adminPaymentIntent={adminOrder.adminPaymentIntent}
-              saveCardToFile={adminOrder.saveCardToFile}
-              onSaveCardChange={adminOrder.setSaveCardToFile}
-              onPrepareNewCardPayment={adminOrder.createAdminPaymentIntent}
-              onClearPaymentIntent={adminOrder.clearAdminPaymentIntent}
-              hasSelectedDate={!!dateValidation.requestedDeliveryDate}
-            />
-          )}
-
-          {/* Cart Items */}
-          <div className="space-y-4">
-            {items.map((item) => (
-              <CartItemCard
-                key={item.id}
-                item={item}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeFromCart}
-              />
-            ))}
-          </div>
-
-          {/* Delivery Options */}
-          <DeliveryOptions
-            deliveryMethod={deliveryLogic.deliveryMethod}
-            onDeliveryMethodChange={deliveryLogic.setDeliveryMethod}
-            selectedCollectionPoint={deliveryLogic.selectedCollectionPoint}
-            onCollectionPointChange={deliveryLogic.setSelectedCollectionPoint}
-            collectionPoints={deliveryLogic.collectionPoints}
-            manualPostcode={deliveryLogic.manualPostcode}
-            onPostcodeChange={deliveryLogic.handlePostcodeChange}
-            deliveryZone={deliveryLogic.deliveryZone}
-            postcodeChecked={deliveryLogic.postcodeChecked}
-            deliveryFee={deliveryLogic.deliveryFee}
-            getCollectionFee={deliveryLogic.getCollectionFee}
-          />
-
-          {/* Date Picker */}
-          <DatePicker
-            requestedDeliveryDate={dateValidation.requestedDeliveryDate}
-            onDateChange={dateValidation.setRequestedDeliveryDate}
-            calendarOpen={dateValidation.calendarOpen}
-            onCalendarOpenChange={dateValidation.setCalendarOpen}
-            deliveryMethod={deliveryLogic.deliveryMethod}
-            isDateAvailable={dateValidation.isDateAvailable}
-            isDateDisabled={dateValidation.isDateDisabled}
-            getMinDeliveryDate={dateValidation.getMinDeliveryDate}
-          />
-
-          {/* Subscription Toggle */}
-          <SubscriptionToggle
-            isSubscription={isSubscription}
-            onToggle={setIsSubscription}
-          />
-
-          {/* Customer Order Notes */}
-          <CustomerNotes
-            value={orderNotes}
-            onChange={setOrderNotes}
-          />
-
-          {/* Coupons & Gift Cards */}
-          <CouponSection
-            couponCode={discounts.couponCode}
-            onCouponCodeChange={discounts.setCouponCode}
-            couponMessage={discounts.couponMessage}
-            onCouponMessageChange={discounts.setCouponMessage}
-            couponApplied={discounts.couponApplied}
-            onCouponAppliedChange={discounts.setCouponApplied}
-            appliedCoupon={discounts.appliedCoupon}
-            onAppliedCouponChange={discounts.setAppliedCoupon}
-            freeItemAdded={discounts.freeItemAdded}
-            onFreeItemAddedChange={discounts.setFreeItemAdded}
-            appliedGiftCard={discounts.appliedGiftCard}
-            onAppliedGiftCardChange={discounts.setAppliedGiftCard}
-            checkExpiryWarning={discounts.checkExpiryWarning}
-            cartTotal={subtotal}
-          />
+    <>
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-6xl overflow-x-hidden pb-32 lg:pb-8">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild
+            className="h-10 px-4 rounded-xl hover:bg-muted"
+          >
+            <Link to="/menu" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              <span className="font-medium hidden sm:inline">Continue Shopping</span>
+              <span className="font-medium sm:hidden">Back</span>
+            </Link>
+          </Button>
+          <h1 className="text-xl sm:text-2xl font-bold">Checkout</h1>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => {
+              items.forEach(item => removeFromCart(item.id));
+              toast({
+                title: "Cart cleared",
+                description: "All items have been removed from your cart.",
+              });
+            }}
+            className="text-muted-foreground hover:text-destructive h-10 px-3"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="ml-2 hidden sm:inline">Clear</span>
+          </Button>
         </div>
 
-        {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Order Summary */}
-          <OrderSummary
-            items={items}
-            subtotal={subtotal}
-            fees={fees}
-            discountAmount={discountAmount}
-            discountDisplay={discounts.getDiscountDisplay}
-            giftCardAmount={discounts.appliedGiftCard?.amount_used || 0}
-            finalTotal={finalTotal}
-            expanded={true}
-            onToggleExpanded={undefined}
-            isMobile={false}
-            expiryWarning={discounts.getExpiryWarning}
-            isSubscription={isSubscription}
-            isAdminMode={!!isAdminMode}
-            adminPriceOverrides={adminOrder.priceOverrides}
-            adminTotalOverride={adminOrder.totalOverride}
-            onAdminTotalChange={adminOrder.handleTotalOverride}
-          />
+        <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+          {/* Main Content - Left Column */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Admin Order Enhancements */}
+            {isAdminMode && (
+              <AdminOrderEnhancements
+                onPriceOverride={adminOrder.handlePriceOverride}
+                onOrderNotesChange={setOrderNotes}
+                orderNotes={orderNotes}
+                onCashOrderConfirm={async () => {
+                  await adminOrder.createManualOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
+                }}
+                onPaymentLinkConfirm={async () => {
+                  await adminOrder.createPaymentLinkOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail, false);
+                }}
+                onChargeCardConfirm={async (paymentMethodId: string, stripeCustomerId: string) => {
+                  await adminOrder.chargeCardOrder(orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, paymentMethodId, stripeCustomerId, sendEmail);
+                }}
+                onNewCardPaymentSuccess={async (paymentIntentId: string) => {
+                  await adminOrder.completeNewCardOrder(paymentIntentId, orderNotes, deliveryLogic.deliveryMethod, dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : undefined, sendEmail);
+                }}
+                totalAmount={adminOrder.calculateTotalWithOverrides()}
+                finalTotal={adminOrder.calculateUnifiedTotal(fees)}
+                loading={adminOrder.loading}
+                priceOverrides={adminOrder.priceOverrides}
+                onResetAllPrices={adminOrder.resetAllPrices}
+                deliveryFees={fees}
+                sendEmail={sendEmail}
+                onSendEmailChange={setSendEmail}
+                adminPaymentIntent={adminOrder.adminPaymentIntent}
+                saveCardToFile={adminOrder.saveCardToFile}
+                onSaveCardChange={adminOrder.setSaveCardToFile}
+                onPrepareNewCardPayment={adminOrder.createAdminPaymentIntent}
+                onClearPaymentIntent={adminOrder.clearAdminPaymentIntent}
+                hasSelectedDate={!!dateValidation.requestedDeliveryDate}
+              />
+            )}
 
-          {/* Payment Section */}
+            {/* Step 1: Your Order */}
+            <CheckoutStepCard stepNumber={1} title="Your order">
+              <div className="divide-y divide-border/40">
+                {items.map((item) => (
+                  <EnhancedCartItem
+                    key={item.id}
+                    item={item}
+                    onUpdateQuantity={updateQuantity}
+                    onRemove={removeFromCart}
+                  />
+                ))}
+              </div>
+            </CheckoutStepCard>
+
+            {/* Step 2: Delivery Method */}
+            <CheckoutStepCard 
+              stepNumber={2} 
+              title="How would you like to receive your order?"
+            >
+              <EnhancedDeliveryOptions
+                deliveryMethod={deliveryLogic.deliveryMethod}
+                onDeliveryMethodChange={deliveryLogic.setDeliveryMethod}
+                selectedCollectionPoint={deliveryLogic.selectedCollectionPoint}
+                onCollectionPointChange={deliveryLogic.setSelectedCollectionPoint}
+                collectionPoints={deliveryLogic.collectionPoints}
+                manualPostcode={deliveryLogic.manualPostcode}
+                onPostcodeChange={deliveryLogic.handlePostcodeChange}
+                deliveryZone={deliveryLogic.deliveryZone}
+                postcodeChecked={deliveryLogic.postcodeChecked}
+                deliveryFee={deliveryLogic.deliveryFee}
+                getCollectionFee={deliveryLogic.getCollectionFee}
+              />
+            </CheckoutStepCard>
+
+            {/* Step 3: Delivery Date */}
+            <CheckoutStepCard 
+              stepNumber={3} 
+              title="When would you like it?"
+            >
+              <EnhancedDatePicker
+                requestedDeliveryDate={dateValidation.requestedDeliveryDate}
+                onDateChange={dateValidation.setRequestedDeliveryDate}
+                calendarOpen={dateValidation.calendarOpen}
+                onCalendarOpenChange={dateValidation.setCalendarOpen}
+                deliveryMethod={deliveryLogic.deliveryMethod}
+                isDateAvailable={dateValidation.isDateAvailable}
+                isDateDisabled={dateValidation.isDateDisabled}
+                getMinDeliveryDate={dateValidation.getMinDeliveryDate}
+              />
+            </CheckoutStepCard>
+
+            {/* Optional Sections */}
+            <div className="space-y-4">
+              {/* Subscription Toggle */}
+              <CompactSubscriptionToggle
+                isSubscription={isSubscription}
+                onToggle={setIsSubscription}
+              />
+
+              {/* Order Notes */}
+              <CompactOrderNotes
+                value={orderNotes}
+                onChange={setOrderNotes}
+              />
+
+              {/* Discounts & Gift Cards */}
+              <CollapsibleDiscounts
+                couponCode={discounts.couponCode}
+                onCouponCodeChange={discounts.setCouponCode}
+                couponMessage={discounts.couponMessage}
+                onCouponMessageChange={discounts.setCouponMessage}
+                couponApplied={discounts.couponApplied}
+                onCouponAppliedChange={discounts.setCouponApplied}
+                appliedCoupon={discounts.appliedCoupon}
+                onAppliedCouponChange={discounts.setAppliedCoupon}
+                freeItemAdded={discounts.freeItemAdded}
+                onFreeItemAddedChange={discounts.setFreeItemAdded}
+                appliedGiftCard={discounts.appliedGiftCard}
+                onAppliedGiftCardChange={discounts.setAppliedGiftCard}
+                checkExpiryWarning={discounts.checkExpiryWarning}
+                cartTotal={subtotal}
+              />
+            </div>
+          </div>
+
+          {/* Sidebar - Right Column (Desktop) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Order Summary */}
+            <EnhancedOrderSummary
+              items={items}
+              subtotal={subtotal}
+              fees={fees}
+              discountAmount={discountAmount}
+              discountDisplay={discounts.getDiscountDisplay}
+              giftCardAmount={discounts.appliedGiftCard?.amount_used || 0}
+              finalTotal={finalTotal}
+              expiryWarning={discounts.getExpiryWarning}
+              isSubscription={isSubscription}
+              isAdminMode={!!isAdminMode}
+              adminPriceOverrides={adminOrder.priceOverrides}
+              adminTotalOverride={adminOrder.totalOverride}
+              onAdminTotalChange={adminOrder.handleTotalOverride}
+              deliveryMethod={deliveryLogic.deliveryMethod}
+              ctaEnabled={!!ctaEnabled}
+              ctaHelperMessage={ctaHelperMessage}
+            />
+
+            {/* Payment Section (Desktop only) */}
+            <div className="hidden lg:block">
+              <PaymentSection
+                user={user}
+                clientSecret={clientSecret}
+                finalTotal={finalTotal}
+                deliveryMethod={deliveryLogic.deliveryMethod}
+                requestedDeliveryDate={dateValidation.requestedDeliveryDate ? new Date(dateValidation.requestedDeliveryDate) : null}
+                isCoupon100PercentOff={isCoupon100Off}
+                onCreateFreeOrder={createFreeOrder}
+                orderNotes={orderNotes}
+                onOrderNotesChange={setOrderNotes}
+                hasSelectedDate={!!dateValidation.requestedDeliveryDate}
+                customerName={getUserFullName(user) || ''}
+                customerEmail={user?.email || ''}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Payment Section */}
+        <div className="lg:hidden mt-6">
           <PaymentSection
             user={user}
             clientSecret={clientSecret}
@@ -574,7 +544,14 @@ const Cart = () => {
           />
         </div>
       </div>
-    </div>
+
+      {/* Sticky Mobile Footer */}
+      <StickyCheckoutFooter
+        finalTotal={finalTotal}
+        isEnabled={!!ctaEnabled}
+        helperMessage={ctaHelperMessage}
+      />
+    </>
   );
 };
 
