@@ -79,6 +79,30 @@ const FulfillmentManager = () => {
     }
   };
 
+  const handleCollectionPointDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("collection_points")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Collection point deleted successfully",
+      });
+
+      fetchCollectionPoints();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete collection point",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -154,6 +178,7 @@ const FulfillmentManager = () => {
             collectionPoints={collectionPoints}
             globalSchedule={globalSchedule}
             onCollectionPointSubmit={handleCollectionPointSubmit}
+            onCollectionPointDelete={handleCollectionPointDelete}
           />
         </TabsContent>
       </Tabs>

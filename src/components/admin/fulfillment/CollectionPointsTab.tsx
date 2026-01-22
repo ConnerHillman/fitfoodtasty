@@ -4,7 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { CollectionPointForm } from "./CollectionPointForm";
 import type { CollectionPoint, GlobalSchedule } from "@/types/fulfillment";
 
@@ -12,20 +22,30 @@ interface CollectionPointsTabProps {
   collectionPoints: CollectionPoint[];
   globalSchedule: GlobalSchedule[];
   onCollectionPointSubmit: (data: any) => void;
+  onCollectionPointDelete?: (id: string) => void;
 }
 
 export function CollectionPointsTab({ 
   collectionPoints, 
   globalSchedule, 
-  onCollectionPointSubmit 
+  onCollectionPointSubmit,
+  onCollectionPointDelete 
 }: CollectionPointsTabProps) {
   const [showCollectionPointDialog, setShowCollectionPointDialog] = useState(false);
   const [editingCollectionPoint, setEditingCollectionPoint] = useState<CollectionPoint | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CollectionPoint | null>(null);
 
   const handleCollectionPointSubmit = (data: any) => {
     onCollectionPointSubmit(data);
     setShowCollectionPointDialog(false);
     setEditingCollectionPoint(null);
+  };
+
+  const handleDelete = () => {
+    if (deleteTarget && onCollectionPointDelete) {
+      onCollectionPointDelete(deleteTarget.id);
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -96,6 +116,14 @@ export function CollectionPointsTab({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => setDeleteTarget(point)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -121,6 +149,26 @@ export function CollectionPointsTab({
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection Point</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteTarget?.point_name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
