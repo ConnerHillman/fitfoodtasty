@@ -45,7 +45,7 @@ const EnhancedOrderSummary: React.FC<EnhancedOrderSummaryProps> = ({
   adminTotalOverride,
   onAdminTotalChange,
   deliveryMethod,
-  ctaEnabled,
+  ctaEnabled: _ctaEnabled,
   ctaHelperMessage,
   showCta = true,
 }) => {
@@ -64,7 +64,7 @@ const EnhancedOrderSummary: React.FC<EnhancedOrderSummaryProps> = ({
   let effectiveFinalTotal: number;
   if (isAdminMode) {
     const calculatedTotal = effectiveSubtotal + fees - discountAmount - giftCardAmount;
-    effectiveFinalTotal = adminTotalOverride !== null ? adminTotalOverride : calculatedTotal;
+    effectiveFinalTotal = (adminTotalOverride !== null && adminTotalOverride !== undefined) ? adminTotalOverride : calculatedTotal;
   } else {
     effectiveFinalTotal = finalTotal;
   }
@@ -188,41 +188,71 @@ const EnhancedOrderSummary: React.FC<EnhancedOrderSummaryProps> = ({
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="pt-3 space-y-2 text-sm border-t border-border/40 mt-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  Subtotal{isAdminMode && adminCalculation?.hasOverrides ? ' (adjusted)' : ''}
-                </span>
-                <span>£{effectiveSubtotal.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{feeLabel}</span>
-                <span>{fees > 0 ? `£${fees.toFixed(2)}` : 'Free'}</span>
+            <div className="pt-3 space-y-3 border-t border-border/40 mt-2">
+              {/* Items list */}
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {items.map((item) => {
+                  const calculation = adminCalculation?.itemCalculations.find(calc => calc.id === item.id);
+                  const effectivePrice = calculation?.currentPrice ?? item.price;
+                  const lineTotal = calculation?.lineTotal ?? (item.price * item.quantity);
+                  const isOverridden = calculation?.isOverridden ?? false;
+                  
+                  return (
+                    <div key={item.id} className="flex justify-between items-start text-sm">
+                      <span className="flex-1 pr-2 text-muted-foreground">
+                        <span className="truncate">{item.name}</span>
+                        {item.quantity > 1 && (
+                          <span className="ml-1">× {item.quantity}</span>
+                        )}
+                        {isAdminMode && isOverridden && (
+                          <span className="ml-1 text-xs">
+                            (<span className="line-through">£{item.price.toFixed(2)}</span> → £{effectivePrice.toFixed(2)})
+                          </span>
+                        )}
+                      </span>
+                      <span className="flex-shrink-0 font-medium">£{lineTotal.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
               </div>
 
-              {!loading && isSubscription && discountEnabled && discountPercentage > 0 && (
-                <div className="flex justify-between text-primary">
-                  <span>Subscription ({discountPercentage}% off)</span>
-                  <span>-£{subscriptionDiscount.toFixed(2)}</span>
-                </div>
-              )}
-              
-              {discountAmount > 0 && (
-                <div className="flex justify-between text-primary">
-                  <span>{discountDisplay}</span>
-                  <span>-£{discountAmount.toFixed(2)}</span>
-                </div>
-              )}
-              
-              {giftCardAmount > 0 && (
-                <div className="flex justify-between text-primary">
-                  <span>Gift card</span>
-                  <span>-£{giftCardAmount.toFixed(2)}</span>
-                </div>
-              )}
+              <hr className="border-border/40" />
 
-              {/* Admin item overrides display */}
+              {/* Subtotals */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Subtotal{isAdminMode && adminCalculation?.hasOverrides ? ' (adjusted)' : ''}
+                  </span>
+                  <span>£{effectiveSubtotal.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{feeLabel}</span>
+                  <span>{fees > 0 ? `£${fees.toFixed(2)}` : 'Free'}</span>
+                </div>
+
+                {!loading && isSubscription && discountEnabled && discountPercentage > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>Subscription ({discountPercentage}% off)</span>
+                    <span>-£{subscriptionDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>{discountDisplay}</span>
+                    <span>-£{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {giftCardAmount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>Gift card</span>
+                    <span>-£{giftCardAmount.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
               {isAdminMode && adminCalculation?.hasOverrides && (
                 <div className="pt-2 border-t border-border/40 space-y-1">
                   <div className="text-xs text-muted-foreground font-medium">Price adjustments:</div>
