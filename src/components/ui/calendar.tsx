@@ -33,12 +33,12 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           "focus-within:relative focus-within:z-20",
           "[&:has([aria-selected])]:bg-primary/15 [&:has([aria-selected])]:rounded-lg",
         ),
-        // Available days: bold, solid color, interactive
+        // Available days: clean, interactive
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-semibold rounded-lg transition-all",
-          "text-foreground bg-accent/30",
-          "hover:bg-primary hover:text-primary-foreground hover:scale-105",
+          "h-9 w-9 p-0 font-medium rounded-lg transition-all",
+          "text-foreground",
+          "hover:bg-primary hover:text-primary-foreground",
           "focus:ring-2 focus:ring-primary focus:ring-offset-1",
           "aria-selected:opacity-100",
         ),
@@ -50,8 +50,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           "shadow-lg ring-2 ring-primary/40 ring-offset-2",
         ),
         day_today: cn(
-          "bg-primary/20 text-primary font-bold",
-          "ring-2 ring-primary/50",
+          "bg-primary/15 text-primary font-semibold",
+          "ring-1 ring-primary/40",
         ),
         // Outside month days
         day_outside: cn(
@@ -59,10 +59,12 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           "hover:bg-transparent hover:text-muted-foreground/30",
           "aria-selected:bg-accent/30 aria-selected:text-muted-foreground/50",
         ),
-        // Disabled/unavailable days: very faded, no interaction
+        // Disabled/unavailable days: faded, strikethrough, no interaction
         day_disabled: cn(
-          "text-muted-foreground/25 bg-transparent font-normal cursor-not-allowed",
-          "hover:bg-transparent hover:text-muted-foreground/25 hover:scale-100",
+          "text-muted-foreground/35 bg-transparent font-normal cursor-not-allowed",
+          "line-through decoration-muted-foreground/40",
+          "hover:bg-transparent hover:text-muted-foreground/35 hover:scale-100",
+          "pointer-events-none",
         ),
         day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
