@@ -8,10 +8,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomerDetail } from "@/contexts/ModalContext";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency, formatCustomerSegment } from "@/lib/utils";
 import { sanitizeCustomerForDisplay } from "@/lib/customerValidation";
+import { getDisplayName } from "@/lib/displayName";
 
 // Import decomposed components
 import { CustomerStatsCards } from "./customer-detail/CustomerStatsCards";
@@ -85,6 +86,8 @@ const CustomerDetailModal = () => {
       setCustomer({
         id: typedCustomerData.user_id,
         user_id: typedCustomerData.user_id,
+        first_name: typedCustomerData.first_name,
+        last_name: typedCustomerData.last_name,
         full_name: typedCustomerData.full_name,
         phone: typedCustomerData.phone || '',
         delivery_address: typedCustomerData.delivery_address || '',
@@ -95,13 +98,11 @@ const CustomerDetailModal = () => {
         created_at: typedCustomerData.created_at
       });
       
-      setEmail(typedCustomerData.email || '');
-      
       // Fetch orders directly here with the user_id
       const userId = typedCustomerData.user_id;
       
-      // Fetch regular orders and package orders in parallel
-      const [regularOrdersResult, packageOrdersResult] = await Promise.all([
+      // Fetch orders and email from RPC in parallel
+      const [regularOrdersResult, packageOrdersResult, emailResult] = await Promise.all([
         supabase
           .from('orders')
           .select(`
@@ -122,11 +123,24 @@ const CustomerDetailModal = () => {
             status
           `)
           .eq('user_id', userId)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+        // Fetch email from auth.users via secure RPC
+        typedCustomerData.email 
+          ? Promise.resolve({ data: null }) 
+          : supabase.rpc('get_customer_emails', { user_ids: [userId] })
       ]);
 
       if (regularOrdersResult.error) throw regularOrdersResult.error;
       if (packageOrdersResult.error) throw packageOrdersResult.error;
+
+      // Set email from RPC result or use passed-in email
+      if (typedCustomerData.email) {
+        setEmail(typedCustomerData.email);
+      } else if (emailResult.data && emailResult.data.length > 0) {
+        setEmail(emailResult.data[0].email || '');
+      } else {
+        setEmail('');
+      }
 
       // Format and combine orders
       const formattedOrders: CustomerOrder[] = [
@@ -269,6 +283,11 @@ const CustomerDetailModal = () => {
     return formatCustomerSegment(stats.totalSpent, stats.totalOrders);
   };
 
+  // Get display name using the shared utility
+  const displayName = customer 
+    ? getDisplayName({ first_name: customer.first_name, last_name: customer.last_name, full_name: customer.full_name, email }, 'Customer')
+    : 'Customer';
+
   if (!customer) return null;
 
   return (
@@ -277,8 +296,15 @@ const CustomerDetailModal = () => {
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle className="text-2xl">{customer.full_name}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-2xl">{displayName}</DialogTitle>
+              <DialogDescription className="flex items-center gap-2">
+                {email && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Mail className="h-3 w-3" />
+                    {email}
+                  </span>
+                )}
+                {email && customer.created_at && <span>·</span>}
                 {customer.created_at && !isNaN(new Date(customer.created_at).getTime())
                   ? `Customer since ${format(new Date(customer.created_at), "MMMM dd, yyyy")}`
                   : "Customer since —"}

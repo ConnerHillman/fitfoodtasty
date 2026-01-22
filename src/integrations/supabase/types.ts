@@ -2300,6 +2300,13 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_customer_emails: {
+        Args: { user_ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       get_delivery_zone_for_postcode: {
         Args: { customer_postcode: string }
         Returns: string
