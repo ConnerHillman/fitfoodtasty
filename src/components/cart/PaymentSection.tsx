@@ -1,14 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Elements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogIn, UserPlus, Shield, User, ShoppingBag, Calendar } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext";
+import { User, ShoppingBag, Calendar, LogIn, UserPlus } from "lucide-react";
 import PaymentForm from "@/components/PaymentForm";
-
+import CheckoutAuthModal from "./CheckoutAuthModal";
 interface PaymentSectionProps {
   user: any;
   clientSecret: string;
@@ -43,31 +41,54 @@ const PaymentSection: React.FC<PaymentSectionProps> = ({
   const totalAmountInPence = Math.round(finalTotal * 100);
 
 
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+
+  const openAuthModal = (mode: "signin" | "signup") => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
   if (!user) {
     return (
-      <Card className="bg-background border border-border">
-        <CardContent className="p-6 text-center space-y-4">
-          <div className="space-y-2">
-            <User className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h3 className="text-lg font-medium">Sign in to complete your order</h3>
-            <p className="text-muted-foreground">
-              Create an account or sign in to proceed with checkout
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild className="flex-1 sm:flex-none">
-              <Link to="/auth?mode=signup">
+      <>
+        <Card className="bg-background border border-border">
+          <CardContent className="p-6 text-center space-y-4">
+            <div className="space-y-2">
+              <User className="h-12 w-12 mx-auto text-muted-foreground" />
+              <h3 className="text-lg font-medium">Sign in to complete your order</h3>
+              <p className="text-muted-foreground">
+                Create an account or sign in to proceed with checkout
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                className="flex-1 sm:flex-none"
+                onClick={() => openAuthModal("signup")}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
                 Create Account
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="flex-1 sm:flex-none">
-              <Link to="/auth?mode=signin">
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1 sm:flex-none"
+                onClick={() => openAuthModal("signin")}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
                 Sign In
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Your cart will be saved
+            </p>
+          </CardContent>
+        </Card>
+        <CheckoutAuthModal 
+          open={authModalOpen} 
+          onOpenChange={setAuthModalOpen}
+          initialMode={authMode}
+        />
+      </>
     );
   }
 

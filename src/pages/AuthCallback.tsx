@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 /**
  * OAuth callback page - handles redirect after Google/Apple sign in.
  * Checks if profile is complete (has phone), redirects accordingly.
+ * Preserves returnTo parameter to redirect back to checkout.
  */
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("Completing sign in...");
+  
+  // Get returnTo from query params, default to /menu
+  const returnTo = searchParams.get("returnTo") || "/menu";
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -58,9 +63,9 @@ const AuthCallback = () => {
         const hasPhone = profile?.phone && profile.phone.trim().length > 0;
         
         if (!hasPhone) {
-          navigate("/complete-profile");
+          navigate(`/complete-profile?returnTo=${encodeURIComponent(returnTo)}`);
         } else {
-          navigate("/menu");
+          navigate(returnTo);
         }
       } catch (error) {
         console.error("Auth callback exception:", error);
