@@ -50,7 +50,7 @@ const HeroSection = () => {
         />
         {/* Desktop/Tablet Hero Image */}
         <img 
-          src="https://aicpnaomarzgborltdkt.supabase.co/storage/v1/object/public/assets/Sticky%20Steak%20Noodles%20plate5.jpg" 
+          src="https://aicpnaomarzgborltdkt.supabase.co/storage/v1/object/public/assets/Crispy%20Chilli%20Chicken%20plate5.jpg" 
           alt="Premium chef-prepared steak noodles" 
           className="hidden md:block w-full h-full object-cover"
           style={{ objectPosition: '50% 35%' }}
