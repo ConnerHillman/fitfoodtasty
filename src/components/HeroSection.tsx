@@ -50,9 +50,10 @@ const HeroSection = () => {
         />
         {/* Desktop/Tablet Hero Image */}
         <img 
-          src={aboutKitchenTeam} 
-          alt="Professional kitchen team" 
-          className="hidden md:block w-full h-full object-cover" 
+          src="https://aicpnaomarzgborltdkt.supabase.co/storage/v1/object/public/assets/Sticky%20Steak%20Noodles%20plate5.jpg" 
+          alt="Premium chef-prepared steak noodles" 
+          className="hidden md:block w-full h-full object-cover"
+          style={{ objectPosition: '50% 35%' }}
         />
         
         {/* Strengthened bottom-weighted gradient overlay - Mobile */}
