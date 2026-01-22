@@ -38,10 +38,24 @@ const EnhancedCartItem: React.FC<EnhancedCartItemProps> = ({
     if (!isPackage || !item.packageData?.selectedMeals) return null;
     
     const { selectedMeals, mealNames } = item.packageData;
+    
+    // If no mealNames, try to parse from description as fallback
+    if (!mealNames || Object.keys(mealNames).length === 0) {
+      // Description format: "2 x Chicken Teriyaki | 1 x Beef Bowl"
+      const parts = item.description?.split(' | ') || [];
+      return parts.map(part => {
+        const match = part.match(/^(\d+)\s*x\s*(.+)$/i);
+        if (match) {
+          return { name: match[2].trim(), quantity: parseInt(match[1], 10) };
+        }
+        return { name: part, quantity: 1 };
+      }).filter(m => m.name);
+    }
+    
     return Object.entries(selectedMeals)
       .filter(([_, qty]) => qty > 0)
       .map(([mealId, qty]) => {
-        const name = mealNames?.[mealId] || 'Meal';
+        const name = mealNames[mealId] || 'Meal';
         return { name, quantity: qty };
       });
   }, [isPackage, item.packageData]);

@@ -252,6 +252,15 @@ const PackageSelect = () => {
       })
       .join(" | ");
 
+    // Build mealNames lookup for cart display
+    const mealNames: Record<string, string> = {};
+    Object.keys(selected).forEach(mealId => {
+      const meal = meals.find(m => m.id === mealId);
+      if (meal) {
+        mealNames[mealId] = meal.name;
+      }
+    });
+
     const packageCartItem = {
       id: `package-${pkg.id}-${Date.now()}`,
       name: `${pkg.name}`,
@@ -270,6 +279,7 @@ const PackageSelect = () => {
         packageName: pkg.name,
         mealCount: pkg.meal_count,
         selectedMeals: selected,
+        mealNames,
       },
     };
 
