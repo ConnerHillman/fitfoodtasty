@@ -118,6 +118,14 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
+    // Create compact items for metadata (Stripe has 500 char limit per value)
+    const compactItems = items.map((item: CartItem) => ({
+      id: item.meal_id || "",
+      q: item.quantity,
+      t: item.type || "meal",
+      ...(item.packageData ? { p: item.packageData.packageId, m: item.packageData.selectedMeals } : {})
+    }));
+    
     // Create Stripe checkout session for subscription
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -138,15 +146,13 @@ serve(async (req) => {
         gift_card_amount_used: gift_card_amount_used?.toString() || "0",
         gift_card_id: gift_card_id || "",
         is_subscription: "true",
-        subscription_items: JSON.stringify(items), // Store items for webhook processing
-        delivery_address: customer_email === user.email ? "" : "" // TODO: Get from user profile
+        items_data: JSON.stringify(compactItems)
       },
       subscription_data: {
         metadata: {
           delivery_method: delivery_method || "",
           customer_name: customer_name || "",
-          delivery_notes: order_notes || "",
-          subscription_items: JSON.stringify(items) // Also store in subscription metadata
+          items_data: JSON.stringify(compactItems)
         }
       }
     });
