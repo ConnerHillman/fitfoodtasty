@@ -49,8 +49,8 @@ export const useCustomersData = () => {
       // Get all profile user IDs for batch order fetching
       const profileUserIds = profiles?.map(p => p.user_id) || [];
       
-      // Batch fetch orders and package orders for all profiles
-      const [ordersResult, packageOrdersResult] = await Promise.all([
+      // Batch fetch orders, package orders, and emails in parallel
+      const [ordersResult, packageOrdersResult, emailsResult] = await Promise.all([
         supabase
           .from("orders")
           .select("*")
@@ -58,8 +58,18 @@ export const useCustomersData = () => {
         supabase
           .from("package_orders")
           .select("*")
-          .in("user_id", profileUserIds)
+          .in("user_id", profileUserIds),
+        // Fetch emails from auth.users via secure RPC (admin only)
+        supabase.rpc('get_customer_emails', { user_ids: profileUserIds })
       ]);
+
+      // Build email lookup map from RPC result (primary source)
+      const emailsByUserId: Record<string, string> = {};
+      if (emailsResult.data && !emailsResult.error) {
+        for (const row of emailsResult.data) {
+          emailsByUserId[row.user_id] = row.email;
+        }
+      }
 
       if (ordersResult.error || packageOrdersResult.error) {
         throw ordersResult.error || packageOrdersResult.error;
@@ -96,32 +106,38 @@ export const useCustomersData = () => {
         // Get email using priority-based selection
         let customerEmail: string | undefined;
         
-        // 1. First priority: Find orders where customer_name matches profile full_name
-        const matchingNameOrder = allOrders.find(order => 
-          order.customer_email && order.customer_name === profile.full_name
-        );
-        
-        if (matchingNameOrder) {
-          customerEmail = matchingNameOrder.customer_email;
+        // 1. First priority: Auth email from RPC (always accurate for OAuth users)
+        if (emailsByUserId[profile.user_id]) {
+          customerEmail = emailsByUserId[profile.user_id];
         } else {
-          // 2. Second priority: Most frequently used email in this user's orders
-          const emailCounts: Record<string, number> = {};
-          allOrders.forEach(order => {
-            if (order.customer_email) {
-              emailCounts[order.customer_email] = (emailCounts[order.customer_email] || 0) + 1;
-            }
-          });
+          // 2. Fallback: Find orders where customer_name matches profile full_name
+          const matchingNameOrder = allOrders.find(order => 
+            order.customer_email && order.customer_name === profile.full_name
+          );
           
-          if (Object.keys(emailCounts).length > 0) {
-            // Get the email with the highest count
-            customerEmail = Object.entries(emailCounts)
-              .sort(([,a], [,b]) => b - a)[0][0];
+          if (matchingNameOrder) {
+            customerEmail = matchingNameOrder.customer_email;
+          } else {
+            // 3. Third priority: Most frequently used email in this user's orders
+            const emailCounts: Record<string, number> = {};
+            allOrders.forEach(order => {
+              if (order.customer_email) {
+                emailCounts[order.customer_email] = (emailCounts[order.customer_email] || 0) + 1;
+              }
+            });
+            
+            if (Object.keys(emailCounts).length > 0) {
+              customerEmail = Object.entries(emailCounts)
+                .sort(([,a], [,b]) => b - a)[0][0];
+            }
           }
         }
 
         customerData.push({
           id: profile.id,
           user_id: profile.user_id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
           full_name: profile.full_name || 'Unknown',
           phone: profile.phone || '',
           delivery_address: profile.delivery_address || '',

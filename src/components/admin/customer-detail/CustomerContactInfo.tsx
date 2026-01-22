@@ -21,7 +21,14 @@ export const CustomerContactInfo = ({ customer, email }: CustomerContactInfoProp
             <div className="flex items-center gap-3">
               <Users className="h-5 w-5 text-muted-foreground" />
               <div>
-                <div className="font-medium">{customer.full_name}</div>
+                <div className="font-medium">
+                  {getDisplayName({ 
+                    first_name: customer?.first_name, 
+                    last_name: customer?.last_name, 
+                    full_name: customer?.full_name,
+                    email 
+                  }, 'Unknown')}
+                </div>
                 <div className="text-sm text-muted-foreground">Full Name</div>
               </div>
             </div>
