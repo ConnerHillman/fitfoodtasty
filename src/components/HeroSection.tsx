@@ -1,21 +1,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Flame, Clock, Users, Award } from "lucide-react";
+import { Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalizedResults from "./PersonalizedResults";
 import aboutKitchenTeam from "@/assets/about-kitchen-team.jpg";
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const [showResults, setShowResults] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+
   const handleOnboardingComplete = (profile: any) => {
     setUserProfile(profile);
     setShowResults(true);
   };
+
   const handleStartOver = () => {
     setShowResults(false);
   };
+
   const handleGetStarted = () => {
     navigate('/onboarding');
   };
@@ -24,146 +27,110 @@ const HeroSection = () => {
   if (showResults && userProfile) {
     return <PersonalizedResults profile={userProfile} onStartOver={handleStartOver} />;
   }
+
   // Supabase public URL for Hero Chilli Chicken 1
   const mobileHeroImage = "https://aicpnaomarzgborltdkt.supabase.co/storage/v1/object/public/assets/Hero%20Chilli%20Chicken%201.png";
-  return <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
-      {/* Background Image - Mobile uses Supabase hero image, desktop uses kitchen team */}
+
+  const benefits = [
+    "Designed by nutritionists, cooked by chefs",
+    "Fresh ingredients, never frozen meals",
+    "High protein, calorie-controlled portions",
+    "Ready to eat in under 3 minutes",
+  ];
+
+  return (
+    <section className="relative min-h-[100svh] overflow-hidden">
+      {/* Background Image Layer */}
       <div className="absolute inset-0">
-        {/* Mobile Hero Image - positioned to show appetising meal center */}
-        <img src={mobileHeroImage} alt="Premium chilli chicken meal" className="w-full h-full object-cover md:hidden" style={{
-        objectPosition: '50% 55%'
-      }} />
+        {/* Mobile Hero Image */}
+        <img 
+          src={mobileHeroImage} 
+          alt="Premium chef-prepared meal" 
+          className="w-full h-full object-cover md:hidden" 
+          style={{ objectPosition: '50% 40%' }} 
+        />
         {/* Desktop/Tablet Hero Image */}
-        <img src={aboutKitchenTeam} alt="Premium meal prep kitchen" className="hidden md:block w-full h-full object-cover opacity-40" />
-        {/* Mobile: Strong top-to-bottom dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80 md:hidden"></div>
-        {/* Desktop: Original horizontal gradient */}
-        <div className="absolute inset-0 hidden md:block bg-gradient-to-r from-black/70 via-gray-900/50 to-transparent"></div>
+        <img 
+          src={aboutKitchenTeam} 
+          alt="Professional kitchen team" 
+          className="hidden md:block w-full h-full object-cover" 
+        />
+        
+        {/* Bottom-weighted gradient overlay - Mobile */}
+        <div className="absolute inset-0 md:hidden bg-gradient-to-t from-black/90 via-black/50 via-40% to-black/20" />
+        
+        {/* Bottom-weighted gradient overlay - Desktop */}
+        <div className="absolute inset-0 hidden md:block bg-gradient-to-t from-black/85 via-black/40 via-50% to-black/10" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 py-20 lg:py-32">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <div className="text-foreground space-y-8">
-            {/* Mobile Content Scrim - soft translucent background for readability */}
-            <div className="md:hidden bg-black/25 backdrop-blur-sm rounded-2xl px-5 pt-5 pb-4 -mx-1 space-y-5">
-              <div className="space-y-4">
-                <Badge className="bg-primary/20 text-primary-foreground border-primary/30 text-sm px-4 py-2 font-medium">
-                  Premium Meal Prep
-                </Badge>
-                
-                <h1 className="text-display-lg">
-                  <span className="text-primary-foreground">PREMIUM</span>
-                  <br />
-                  <span className="text-primary-foreground opacity-90">
-                    MEAL PREP
-                  </span>
-                </h1>
-              </div>
-
-              {/* Value Props - Mobile: increased spacing, softer icons */}
-              <div className="space-y-5">
-                <div className="flex items-center space-x-3">
-                  <Flame className="text-primary-foreground/60 flex-shrink-0" size={18} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">High Protein, Calorie Controlled</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Clock className="text-primary-foreground/60 flex-shrink-0" size={18} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">Ready to Eat in 3 mins</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Users className="text-primary-foreground/60 flex-shrink-0" size={18} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">Simple Weekly Subscription</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Award className="text-primary-foreground/60 flex-shrink-0" size={18} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">Designed by Nutritionists, prepared by Elite Chefs</span>
-                </div>
-              </div>
-
-              {/* CTA - Mobile */}
-              <div className="space-y-4 pt-2">
-                <Button size="lg" onClick={handleGetStarted} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
-                  ✨ Start My Plan  
-                </Button>
-                
-                <div className="flex items-center justify-center space-x-3">
-                  <Button asChild variant="outline" size="sm" className="border border-primary-foreground/50 text-primary-foreground/80 hover:bg-primary-foreground hover:text-primary font-medium px-4 py-2 rounded-full backdrop-blur-sm">
-                    <Link to="/auth">Create Free Account</Link>
-                  </Button>
-                  
-                  <Button asChild variant="ghost" size="sm" className="text-primary-foreground/70 hover:bg-primary-foreground/20 font-medium px-4 py-2 rounded-full">
-                    <Link to="/menu">Browse Menu</Link>
-                  </Button>
-                </div>
-              </div>
+      {/* Content Container */}
+      <div className="relative z-10 min-h-[100svh] flex flex-col justify-end">
+        <div className="container mx-auto px-5 pb-10 pt-20 md:pb-16 md:pt-32 lg:pb-20">
+          <div className="max-w-xl lg:max-w-2xl space-y-6 md:space-y-8">
+            
+            {/* Eyebrow Tag */}
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+              <span className="text-sm font-medium text-white/90 tracking-wide">
+                Chef-cooked. Nutrition-led.
+              </span>
             </div>
 
-            {/* Desktop Content - No scrim wrapper */}
-            <div className="hidden md:block space-y-8">
-              <div className="space-y-4">
-                <Badge className="bg-primary/20 text-primary-foreground border-primary/30 text-sm px-4 py-2 font-medium">
-                  Premium Meal Prep
-                </Badge>
-                
-                <h1 className="text-display-lg">
-                  <span className="text-primary-foreground">PREMIUM</span>
-                  <br />
-                  <span className="text-primary-foreground opacity-90">
-                    MEAL PREP
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight">
+              Restaurant-quality meal prep—ready in 3&nbsp;minutes.
+            </h1>
+
+            {/* Supporting Subheadline */}
+            <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-lg">
+              Premium meals designed by nutritionists and prepared by professional chefs. 
+              Delivered fresh to your door, ready when you are.
+            </p>
+
+            {/* Benefit Bullets */}
+            <ul className="space-y-3 pt-2">
+              {benefits.map((benefit, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <Check className="w-5 h-5 text-primary" strokeWidth={2.5} />
+                  </div>
+                  <span className="text-base text-white/85 leading-snug">
+                    {benefit}
                   </span>
-                </h1>
-              </div>
+                </li>
+              ))}
+            </ul>
 
-              {/* Value Props - Desktop */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Flame className="text-primary-foreground/80" size={20} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">High Protein, Calorie Controlled</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Clock className="text-primary-foreground/80" size={20} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">Ready to Eat in 3 mins</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Users className="text-primary-foreground/80" size={20} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">Simple Weekly Subscription</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Award className="text-primary-foreground/80" size={20} />
-                  <span className="text-body-lg font-medium text-primary-foreground/90">Designed by Nutritionists, prepared by Elite Chefs</span>
-                </div>
-              </div>
-
-              {/* CTA - Desktop */}
-              <div className="space-y-4">
-                <Button size="lg" onClick={handleGetStarted} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-4 btn-text-mobile-lg rounded-full shadow-cta hover:shadow-cta-hover transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out">
-                  ✨ Start My Plan  
-                </Button>
-                
-                <div className="flex items-center space-x-4">
-                  <Button asChild variant="outline" size="lg" className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-bold px-6 py-3 rounded-full backdrop-blur-sm">
-                    <Link to="/auth">Create Free Account</Link>
-                  </Button>
-                  
-                  <Button asChild variant="ghost" size="lg" className="text-primary-foreground hover:bg-primary-foreground/20 font-medium px-6 py-3 rounded-full">
-                    <Link to="/menu">Browse Menu</Link>
-                  </Button>
-                </div>
-              </div>
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4">
+              <Button 
+                size="lg" 
+                onClick={handleGetStarted} 
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-6 text-base rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                Start My Plan
+              </Button>
+              
+              <Button 
+                asChild 
+                variant="ghost" 
+                size="lg" 
+                className="w-full sm:w-auto text-white hover:text-white hover:bg-white/10 font-medium px-6 py-6 rounded-full"
+              >
+                <Link to="/menu">Browse Menu</Link>
+              </Button>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
-        <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
+      {/* Subtle scroll indicator - Mobile only */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:hidden">
+        <div className="w-6 h-10 rounded-full border-2 border-white/30 flex justify-center pt-2">
+          <div className="w-1 h-2 bg-white/50 rounded-full animate-pulse" />
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default HeroSection;
