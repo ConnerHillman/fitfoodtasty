@@ -1,6 +1,5 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Lock, Loader2 } from "lucide-react";
+import { Shield } from "lucide-react";
 
 interface StickyCheckoutFooterProps {
   finalTotal: number;
@@ -8,45 +7,48 @@ interface StickyCheckoutFooterProps {
   helperMessage: string;
   isLoading?: boolean;
   onClick?: () => void;
+  itemCount?: number;
 }
 
 const StickyCheckoutFooter: React.FC<StickyCheckoutFooterProps> = ({
   finalTotal,
   isEnabled,
   helperMessage,
-  isLoading = false,
-  onClick,
+  itemCount = 0,
 }) => {
+  // This footer is now purely informational - scrolls user to payment section
+  const scrollToPayment = () => {
+    const paymentSection = document.querySelector('[data-payment-section="mobile"]');
+    if (paymentSection) {
+      paymentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card border-t border-border/60 shadow-[0_-4px_20px_-4px_hsl(220_14%_10%_/_0.1)] safe-area-inset-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-sm border-t border-border/60 shadow-[0_-4px_20px_-4px_hsl(var(--foreground)_/_0.08)] safe-area-inset-bottom">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Total */}
           <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Total</span>
-            <span className="text-xl font-bold">£{finalTotal.toFixed(2)}</span>
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</span>
+            <span className="text-2xl font-bold tracking-tight">£{finalTotal.toFixed(2)}</span>
           </div>
-          <div className="flex flex-col items-end flex-1">
-            <Button
-              size="lg"
-              className="w-full max-w-[220px] h-12 font-semibold text-base"
-              disabled={!isEnabled || isLoading}
-              onClick={onClick}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Continue to payment
-                </>
-              )}
-            </Button>
-            <span className="text-xs text-muted-foreground mt-1 text-right">
-              {helperMessage}
-            </span>
+          
+          {/* Right: Status or scroll CTA */}
+          <div className="flex flex-col items-end">
+            {!isEnabled ? (
+              <span className="text-xs text-muted-foreground text-right max-w-[180px]">
+                {helperMessage}
+              </span>
+            ) : (
+              <button
+                onClick={scrollToPayment}
+                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                Continue to payment ↓
+              </button>
+            )}
           </div>
         </div>
       </div>
