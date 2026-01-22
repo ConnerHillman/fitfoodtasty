@@ -32,10 +32,9 @@ const HeroSection = () => {
   const mobileHeroImage = "https://aicpnaomarzgborltdkt.supabase.co/storage/v1/object/public/assets/Hero%20Chilli%20Chicken%201.png";
 
   const benefits = [
-    "Designed by nutritionists, cooked by chefs",
-    "Fresh ingredients, never frozen meals",
-    "High protein, calorie-controlled portions",
-    "Ready to eat in under 3 minutes",
+    "Bold, chef-crafted flavours you'll actually crave",
+    "Macro-balanced for your goals",
+    "Swap meals anytime, skip weeks easily",
   ];
 
   return (
@@ -56,16 +55,16 @@ const HeroSection = () => {
           className="hidden md:block w-full h-full object-cover" 
         />
         
-        {/* Bottom-weighted gradient overlay - Mobile */}
-        <div className="absolute inset-0 md:hidden bg-gradient-to-t from-black/90 via-black/50 via-40% to-black/20" />
+        {/* Strengthened bottom-weighted gradient overlay - Mobile */}
+        <div className="absolute inset-0 md:hidden bg-gradient-to-t from-black/95 via-black/60 via-45% to-black/25" />
         
         {/* Bottom-weighted gradient overlay - Desktop */}
-        <div className="absolute inset-0 hidden md:block bg-gradient-to-t from-black/85 via-black/40 via-50% to-black/10" />
+        <div className="absolute inset-0 hidden md:block bg-gradient-to-t from-black/90 via-black/45 via-50% to-black/15" />
       </div>
 
       {/* Content Container */}
       <div className="relative z-10 min-h-[100svh] flex flex-col justify-end">
-        <div className="container mx-auto px-5 pb-10 pt-20 md:pb-16 md:pt-32 lg:pb-20">
+        <div className="container mx-auto px-5 pb-12 pt-20 md:pb-20 md:pt-32 lg:pb-24">
           <div className="max-w-xl lg:max-w-2xl space-y-6 md:space-y-8">
             
             {/* Eyebrow Tag */}
@@ -75,19 +74,21 @@ const HeroSection = () => {
               </span>
             </div>
 
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight">
+            {/* Main Headline with subtle text shadow for readability */}
+            <h1 
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight"
+              style={{ textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}
+            >
               Restaurant-quality meal prep—ready in 3&nbsp;minutes.
             </h1>
 
-            {/* Supporting Subheadline */}
+            {/* Supporting Subheadline - streamlined, no duplication */}
             <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-lg">
-              Premium meals designed by nutritionists and prepared by professional chefs. 
-              Delivered fresh to your door, ready when you are.
+              Premium meals crafted by professional chefs and delivered fresh to your door.
             </p>
 
-            {/* Benefit Bullets */}
-            <ul className="space-y-3 pt-2">
+            {/* Benefit Bullets - distinct, scannable values */}
+            <ul className="space-y-3 pt-1">
               {benefits.map((benefit, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
@@ -114,19 +115,17 @@ const HeroSection = () => {
                 asChild 
                 variant="ghost" 
                 size="lg" 
-                className="w-full sm:w-auto text-white hover:text-white hover:bg-white/10 font-medium px-6 py-6 rounded-full"
+                className="w-full sm:w-auto text-white/80 hover:text-white hover:bg-white/10 font-medium px-6 py-6 rounded-full"
               >
                 <Link to="/menu">Browse Menu</Link>
               </Button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Subtle scroll indicator - Mobile only */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:hidden">
-        <div className="w-6 h-10 rounded-full border-2 border-white/30 flex justify-center pt-2">
-          <div className="w-1 h-2 bg-white/50 rounded-full animate-pulse" />
+            {/* Subtle trust signal */}
+            <p className="text-sm text-white/50 pt-2">
+              Chef-prepared fresh each week · Trusted by thousands
+            </p>
+          </div>
         </div>
       </div>
     </section>
