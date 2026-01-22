@@ -79,7 +79,7 @@ const HeroSection = () => {
 
             {/* Supporting Subheadline - streamlined, no duplication */}
             <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-lg">
-              Premium meals crafted by professional chefs and delivered fresh to your door.
+              Restaurant-quality food. Fast, effortless convenience. Athlete-level nutrition.
             </p>
 
             {/* Benefit Bullets - distinct, scannable values */}
