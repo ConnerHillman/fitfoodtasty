@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Flame, Clock, Users, Award } from "lucide-react";
+import { Flame, Clock, Users, Award } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalizedResults from "./PersonalizedResults";
 import aboutKitchenTeam from "@/assets/about-kitchen-team.jpg";
@@ -155,53 +155,6 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right Content - Social Proof */}
-          <div className="space-y-8">
-            {/* Stats */}
-            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20">
-              <h3 className="text-heading-lg text-primary-foreground mb-6">
-                Over 500,000 Meals Delivered
-              </h3>
-              
-              {/* Trustpilot Style Reviews */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => <Star key={i} size={16} className="fill-primary-foreground/90 text-primary-foreground/90" />)}
-                  </div>
-                  <span className="text-primary-foreground font-semibold">4.8/5</span>
-                  <span className="text-primary-foreground/60 text-sm">Excellent on Trustpilot</span>
-                </div>
-
-                {/* Sample Reviews */}
-                <div className="space-y-4">
-                  <div className="border-l-2 border-primary-foreground/40 pl-4">
-                    <p className="text-primary-foreground/90 text-sm mb-2 leading-relaxed">
-                      "The best meal prep service I have used. Quality is outstanding and the convenience is unmatched."
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-primary-foreground/80 text-primary-foreground/80" />)}
-                      </div>
-                      <span className="text-primary-foreground/50 text-xs">- Sarah M.</span>
-                    </div>
-                  </div>
-
-                  <div className="border-l-2 border-primary-foreground/40 pl-4">
-                    <p className="text-primary-foreground/90 text-sm mb-2 leading-relaxed">
-                      "Perfect portions, amazing flavours. Has completely changed my approach to healthy eating."
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-primary-foreground/80 text-primary-foreground/80" />)}
-                      </div>
-                      <span className="text-primary-foreground/50 text-xs">- James R.</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
